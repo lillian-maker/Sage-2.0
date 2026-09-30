@@ -6,7 +6,7 @@ import re
 import shutil
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'src'))
-from localize_en import english_homepage, build_localized_pages
+from localize_en import english_homepage, build_localized_pages, language_dropdown
 
 ROOT = Path(__file__).resolve().parent
 BLOCKS = {
@@ -51,9 +51,9 @@ def build():
     if draft:
         html = html.replace("<title>Sage · 你的出海 AI 团队</title>", "<title>Sage · 商务科技配色视觉稿</title>")
     destination = ROOT / ("visual-draft.html" if draft else "index.html")
-    destination.write_bytes(html.encode("utf-8"))
+    destination.write_bytes(language_dropdown(html, 'index').encode("utf-8"))
     if not draft:
-        (ROOT / 'index-en.html').write_text(english_homepage(html), encoding='utf-8')
+        (ROOT / 'index-en.html').write_text(language_dropdown(english_homepage(html), 'index', True), encoding='utf-8')
     if '--release' in sys.argv:
         output = ROOT / 'dist'
         output.mkdir(exist_ok=True)

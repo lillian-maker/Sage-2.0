@@ -1,1 +1,31 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>个人账户 · Sage</title><link rel="stylesheet" href="redesign.css"><link rel="stylesheet" href="experience.css"><script src="experience.js" defer></script></head><body class="sage-page page-profile"><a class="skip-link" href="#main">跳至内容</a><header class="r-nav"><a class="r-brand" href="../index.html">Sage</a><a href="auth.html">登录</a><a class="page-language" href="profile-en.html">English</a></header><main id="main" class="xp-account"><aside class="xp-account-nav"><span class="xp-account-avatar" aria-hidden="true">S</span><h2>访客</h2><p>尚未登录</p><nav aria-label="账户设置"><button class="active" data-account="personal" aria-pressed="true">个人信息</button><button data-account="results" aria-pressed="false">我的成果</button><button data-account="credits" aria-pressed="false">积分明细</button><button data-account="billing" aria-pressed="false">订阅与账单</button><button data-account="security" aria-pressed="false">会话与安全</button></nav></aside><section class="xp-account-main"><div class="xp-account-banner"><div><strong>账户服务尚未接通</strong><p>这里展示账户页面结构，不代表已经登录。</p></div><a href="trial.html" class="r-button small">免费体验</a></div><h1 id="account-title">个人信息</h1><div id="account-content" class="xp-account-content"></div></section></main></body></html>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>个人账户 · Sage</title><link rel="stylesheet" href="redesign.css"><link rel="stylesheet" href="experience.css"><script src="experience.js" defer></script></head><body class="sage-page page-profile"><a class="skip-link" href="#main">跳至内容</a><header class="r-nav"><a class="r-brand" href="../index.html">Sage</a><a href="auth.html">登录</a><div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="选择语言" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="选择语言" hidden><li><a href="profile-en.html" lang="en" hreflang="en" >English</a></li><li><a href="profile.html" lang="zh-CN" hreflang="zh-CN" aria-current="true">中文</a></li></ul></div></header><main id="main" class="xp-account"><aside class="xp-account-nav"><span class="xp-account-avatar" aria-hidden="true">S</span><h2>访客</h2><p>尚未登录</p><nav aria-label="账户设置"><button class="active" data-account="personal" aria-pressed="true">个人信息</button><button data-account="results" aria-pressed="false">我的成果</button><button data-account="credits" aria-pressed="false">积分明细</button><button data-account="billing" aria-pressed="false">订阅与账单</button><button data-account="security" aria-pressed="false">会话与安全</button></nav></aside><section class="xp-account-main"><div class="xp-account-banner"><div><strong>账户服务尚未接通</strong><p>这里展示账户页面结构，不代表已经登录。</p></div><a href="trial.html" class="r-button small">免费体验</a></div><h1 id="account-title">个人信息</h1><div id="account-content" class="xp-account-content"></div></section></main><style>
+.sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
+.sage-language .sage-language-toggle{width:40px;height:40px;padding:8px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}
+.sage-language-toggle svg{width:24px;height:24px;display:block}
+.sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
+.sage-language .sage-language-menu{position:absolute;top:calc(100% + 14px);right:0;z-index:1000;min-width:204px;padding:7px;margin:0;border-radius:16px;background:#f9f9f9;color:#181818;box-shadow:0 12px 38px rgba(0,0,0,.18),0 2px 7px rgba(0,0,0,.06);list-style:none;text-align:left}
+.sage-language-menu[hidden]{display:none}
+.sage-language .sage-language-menu a{display:block;padding:12px 14px;border-radius:10px;font:400 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#181818;text-decoration:none;white-space:nowrap;letter-spacing:0}
+.sage-language .sage-language-menu a:hover{background:#ededed}
+.sage-language .sage-language-menu a[aria-current="true"]{background:#e3e3e3}
+.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #8295a7;outline-offset:3px}
+@media(max-width:420px){.sage-language .sage-language-menu{min-width:172px}.sage-language .sage-language-menu a{font-size:17px}}
+</style>
+<script>
+(()=>{
+ const root=document.querySelector('.sage-language');if(!root)return;
+ const button=root.querySelector('button'),menu=root.querySelector('ul'),links=[...menu.querySelectorAll('a')];
+ links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});
+ function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
+ button.addEventListener('click',()=>{const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
+ root.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){event.preventDefault();close(true);}
+   const i=links.indexOf(document.activeElement);
+   if(i>=0&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();links[(i+(event.key==='ArrowDown'?1:links.length-1))%links.length].focus();}
+ });
+ document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+ root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
+})();
+</script>
+</body></html>

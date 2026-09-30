@@ -20,6 +20,19 @@ const base = process.env.SAGE_URL || 'http://127.0.0.1:8896';
     await page.route('**/assets/people/**', route => route.abort());
     for (const entry of ['index.html', 'index-en.html']) {
       await page.goto(`${base}/${entry}`);
+      const languageButton = page.locator('.sage-language-toggle');
+      const languageMenu = page.locator('.sage-language-menu');
+      await languageButton.click();
+      assert.equal(await languageMenu.isVisible(), true);
+      assert.equal(await languageMenu.locator('a').count(), 2);
+      await page.keyboard.press('Escape');
+      assert.equal(await languageMenu.isVisible(), false);
+      await languageButton.focus();
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.evaluate(() => document.activeElement.textContent), 'English');
+      await page.keyboard.press('ArrowDown');
+      assert.equal(await page.evaluate(() => document.activeElement.textContent), '中文');
+      await page.keyboard.press('Escape');
       await page.locator('#scene-stage').scrollIntoViewIfNeeded();
       await page.mouse.move(0, 0);
       await page.waitForTimeout(400);
@@ -65,6 +78,15 @@ const base = process.env.SAGE_URL || 'http://127.0.0.1:8896';
       await page.waitForFunction(() => [...document.images].every(img => img.complete && img.naturalWidth > 0));
       report.links.push(url);
     }
+    await page.goto(`${base}/index.html`);
+    await page.locator('.sage-language-toggle').click();
+    await page.locator('.sage-language-menu a[lang="en"]').click();
+    await page.waitForURL('**/index-en.html');
+    assert.equal(await page.locator('html').getAttribute('lang'), 'en');
+    await page.locator('.sage-language-toggle').click();
+    await page.locator('.sage-language-menu a[lang="zh-CN"]').click();
+    await page.waitForURL('**/index.html');
+    assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN');
     assert.deepEqual(errors, []);
     console.log(JSON.stringify(report, null, 2));
   } finally { await browser.close(); }

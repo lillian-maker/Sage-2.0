@@ -772,7 +772,7 @@ html[lang="en"] .nav-tools{gap:22px}
 <span>Sage</span></a>
  <nav class="nav-links" aria-label="Main navigation"><span class="nav-soon" aria-disabled="true">Product</span><a href="pages/team-en.html">AI Team</a><a href="pages/enterprise-en.html">Enterprise</a><a href="pages/pricing-en.html">Pricing</a><a href="pages/docs-en.html">Docs</a></nav>
  <div class="nav-tools">
-  <button class="text-btn" id="language-status-button" aria-label="切换到中文">中文</button><a href="pages/auth-en.html">Log in</a>
+  <div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="Select language" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="Select language" hidden><li><a href="index-en.html" lang="en" hreflang="en" aria-current="true">English</a></li><li><a href="index.html" lang="zh-CN" hreflang="zh-CN" >中文</a></li></ul></div><a href="pages/auth-en.html">Log in</a>
   <a class="btn primary" href="#contact">Talk to us</a>
   <button class="menu-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></button>
  </div>
@@ -2400,5 +2400,35 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
 }
 
 
-initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});$('#language-status-button').addEventListener('click',()=>{location.href='index.html'});})();
-</script></body></html>
+initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});})();
+</script><style>
+.sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
+.sage-language .sage-language-toggle{width:40px;height:40px;padding:8px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}
+.sage-language-toggle svg{width:24px;height:24px;display:block}
+.sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
+.sage-language .sage-language-menu{position:absolute;top:calc(100% + 14px);right:0;z-index:1000;min-width:204px;padding:7px;margin:0;border-radius:16px;background:#f9f9f9;color:#181818;box-shadow:0 12px 38px rgba(0,0,0,.18),0 2px 7px rgba(0,0,0,.06);list-style:none;text-align:left}
+.sage-language-menu[hidden]{display:none}
+.sage-language .sage-language-menu a{display:block;padding:12px 14px;border-radius:10px;font:400 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#181818;text-decoration:none;white-space:nowrap;letter-spacing:0}
+.sage-language .sage-language-menu a:hover{background:#ededed}
+.sage-language .sage-language-menu a[aria-current="true"]{background:#e3e3e3}
+.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #8295a7;outline-offset:3px}
+@media(max-width:420px){.sage-language .sage-language-menu{min-width:172px}.sage-language .sage-language-menu a{font-size:17px}}
+</style>
+<script>
+(()=>{
+ const root=document.querySelector('.sage-language');if(!root)return;
+ const button=root.querySelector('button'),menu=root.querySelector('ul'),links=[...menu.querySelectorAll('a')];
+ links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});
+ function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
+ button.addEventListener('click',()=>{const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
+ root.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){event.preventDefault();close(true);}
+   const i=links.indexOf(document.activeElement);
+   if(i>=0&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();links[(i+(event.key==='ArrowDown'?1:links.length-1))%links.length].focus();}
+ });
+ document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+ root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
+})();
+</script>
+</body></html>

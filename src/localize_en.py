@@ -730,12 +730,19 @@ def translate(text):
 def english_links(text):
     return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|docs|download|trial|auth|profile)\.html', r'\1-en.html', text)
 
+def language_dropdown(html, page, english=False):
+    label = 'Select language' if english else '选择语言'
+    control = f'''<div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="{label}" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="{label}" hidden><li><a href="{page}-en.html" lang="en" hreflang="en" {'aria-current="true"' if english else ''}>English</a></li><li><a href="{page}.html" lang="zh-CN" hreflang="zh-CN" {'' if english else 'aria-current="true"'}>中文</a></li></ul></div>'''
+    html, count = re.subn(r'<button\b[^>]*id="language-status-button"[^>]*>.*?</button>|<a\b[^>]*class="page-language"[^>]*>.*?</a>', lambda _: control, html, count=1)
+    if count != 1:
+        raise ValueError(f'Missing language control: {page}')
+    fragment = Path(__file__).with_name('language-switch.html').read_text(encoding='utf-8')
+    return html.replace('</body>', fragment + '</body>')
+
 def english_homepage(html):
     html = translate(html)
     html = html.replace('lang="zh-CN"', 'lang="en"')
     html = english_links(html)
-    html = html.replace('id="language-status-button" aria-label="Switch to English">English', 'id="language-status-button" aria-label="切换到中文">中文')
-    html = html.replace("location.href='index-en.html'", "location.href='index.html'")
     # English copy expands naturally; preserve the approved composition without clipping.
     css = '''html[lang="en"] .v1 #hero-title{font-size:clamp(32px,3.1vw,52px);line-height:1.15;white-space:normal;max-width:100%;overflow-wrap:normal}
 html[lang="en"] .v1 #hero-title .hero-team-emphasis{font-size:1.08em;white-space:normal;display:inline}
@@ -776,7 +783,7 @@ def build_localized_pages(root):
         else:
             # Auth and trial already have their own shell; keep that layout intact.
             html = html.replace('</header>',f'<a class="page-language" href="{path.stem}-en.html">English</a></header>',1)
-        (destination / path.name).write_text(html,encoding='utf-8')
+        (destination / path.name).write_text(language_dropdown(html, path.stem) if path.stem != 'product' else html,encoding='utf-8')
         if path.stem == 'product':
             (destination / 'product-en.html').unlink(missing_ok=True)
             (destination / 'catalog-en.js').unlink(missing_ok=True)
@@ -784,4 +791,4 @@ def build_localized_pages(root):
         en = english_links(translate(html)).replace('lang="zh-CN"','lang="en"')
         en = re.sub(r'src="([\w-]+)\.js"',r'src="\1-en.js"',en)
         en = en.replace(f'href="{path.stem}-en.html">English',f'href="{path.stem}.html" lang="zh-CN">中文')
-        (destination / (path.stem + '-en.html')).write_text(en,encoding='utf-8')
+        (destination / (path.stem + '-en.html')).write_text(language_dropdown(en, path.stem, True),encoding='utf-8')
