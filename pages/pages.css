@@ -1,0 +1,20 @@
+/* Shared visual reset for existing functional pages; no business-flow changes. */
+body.sage-page.v1[data-theme=light],body.sage-page.v1{
+ --bg:#fff;--surface:#f7f7f5;--surface2:#eaf3ff;--ink:#161616;--muted:#60636a;--line:#e7e7e6;--accent:#276bd1;--on-accent:#fff;
+ --metal-fill:#276bd1;--metal-ink:#fff;--metal-border:#276bd1;--metal-highlight:transparent;--metal-shadow:transparent;--metal-line:#276bd1;
+ --good:#276a48;--danger:#a52f3d;background:#fff;color:#161616;color-scheme:light;
+ font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+.sage-page.v1 .nav{background:#fff;border-bottom:1px solid #f2f2f1;min-height:80px}
+.sage-page.v1 .nav .brand{font-size:32px;font-weight:800;letter-spacing:-.04em;gap:0}
+.sage-page.v1 .nav .brand .sage-brand-mark{display:none}.sage-page .nav .brand:after{content:"";width:7px;height:7px;border-radius:50%;background:#276bd1;margin:14px 0 0 3px}
+.sage-page .theme-toggle{display:none!important}
+.sage-page.v1 :is(.btn.primary,.flow-button.strong,.pricing-button-green,.info-button){background:#276bd1;color:white;border-color:#276bd1;box-shadow:none;border-radius:7px}
+.sage-page.v1 :is(.btn.primary,.flow-button.strong,.pricing-button-green,.info-button):hover{background:#1d57ac}
+.sage-page.v1 :is(.flow-main,.pricing-main,.info-main) h1{font-weight:750;line-height:1.25;font-size:clamp(34px,3.6vw,50px)}
+.sage-page.v1 :is(.flow-main,.pricing-main,.info-main) h2{font-weight:700;letter-spacing:-.025em}
+.sage-page.v1 .nav-links a{font-size:14px;font-weight:600}.sage-page.v1 .sage-footer{background:#fff}
+.sage-page.v1 :focus-visible{outline:3px solid #276bd1;outline-offset:4px}
+.sage-page.v1 ::selection{background:#cbe1ff;color:#142948}
+@media(max-width:760px){.sage-page.v1 .nav .brand{font-size:27px}.sage-page.v1 :is(.flow-main,.pricing-main,.info-main) h1{font-size:33px}}
+.sage-page.v1 .auth-wordmark:before{display:none;background:none;content:none}

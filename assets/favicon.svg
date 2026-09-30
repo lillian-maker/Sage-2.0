@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="WorldPilot">
+  <title>WorldPilot</title>
+  <desc>A governed operating course pauses at a gate and returns as a verified receipt.</desc>
+  <path d="m14 24 12-12c3.314-3.314 8.686-3.314 12 0l14 14c3.314 3.314 3.314 8.686 0 12L38 52c-3.314 3.314-8.686 3.314-12 0L12 38" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m12 38 12-8h6" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="29.5" y="25.5" width="9" height="9" rx="1.5" fill="currentColor"/>
+</svg>

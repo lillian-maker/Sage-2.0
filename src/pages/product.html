@@ -1,0 +1,17 @@
+<!-- Established Sage world: purple, white space, original people. The product is explained through inspectable artifacts and bounded handoffs, not fictional runtime. -->
+<main id="main" class="catalog-page product-catalog">
+  <div class="catalog-topline"><a id="product-back" href="../index.html#product">返回产品</a><label for="scene-select">切换方案 <select id="scene-select"></select></label></div>
+  <header class="catalog-heading"><h1 id="scene-title">产品方案</h1><p id="scene-question"></p><span class="catalog-status">产品设计范围</span></header>
+  <div class="scene-brief"><div><span>需要什么</span><p id="scene-input"></p></div><div><span>交付什么</span><strong id="scene-output"></strong></div></div>
+  <section class="solution-section" aria-label="产品方案和团队协作">
+    <div class="catalog-switch" role="group" aria-label="方案视图"><button type="button" data-solution-view="product" aria-pressed="true">产品方案</button><button type="button" data-solution-view="team" aria-pressed="false">团队协作</button></div>
+    <div id="solution-owner"></div><div id="solution-steps" class="solution-steps" role="group" aria-label="选择阶段"></div>
+    <div id="solution-canvas" class="solution-canvas"></div>
+    <div id="solution-detail" class="solution-detail" aria-live="polite"></div>
+    <details class="catalog-disclosure"><summary>遇到缺口时，如何处理？</summary><p id="scene-boundary"></p></details>
+  </section>
+  <section class="catalog-recording" aria-labelledby="recording-heading"><div class="recording-intro"><h2 id="recording-heading">把工作过程，看得更清楚。</h2><p>录屏待补充</p></div><div class="recording-story" id="recording-story"></div><details class="catalog-disclosure"><summary>查看本场景的录屏脚本</summary><p id="recording-script"></p></details></section>
+  <section class="scene-people"><h2>参与这项工作的伙伴</h2><div id="scene-people" class="participant-list"></div></section>
+  <div class="catalog-bottom"><a id="scene-return" class="text-link" href="../index.html#product">返回首页当前方案</a><a class="r-button secondary" href="enterprise.html">讨论企业落地</a></div>
+  <dialog id="catalog-dialog" class="catalog-dialog"><button class="dialog-close" type="button" aria-label="关闭详情">关闭</button><div id="catalog-dialog-content"></div></dialog>
+</main>
