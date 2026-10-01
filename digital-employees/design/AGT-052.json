@@ -1,0 +1,148 @@
+{
+  "ordinal": 52,
+  "id": "AGT-052",
+  "name": "筑程",
+  "job": "全栈工程师",
+  "count": null,
+  "deliver": "可运行应用、测试报告与部署交付包",
+  "plane": "数据与 Agent 平台",
+  "domain": "数据与 AI 运行",
+  "responsibility": "将业务需求落实为前后端应用，完成数据库建模、测试与部署交付。",
+  "skillsProposed": [
+    "需求拆解",
+    "前端界面开发",
+    "后端服务开发",
+    "数据库建模",
+    "接口实现",
+    "自动化测试",
+    "部署发布",
+    "缺陷定位与修复"
+  ],
+  "appearance": "East Asian man, age 25, fresh youthful softly square face, clear normal-sized brown eyes, close-cropped textured black hair, thin rectangular titanium eyeglasses, light teal-gray-blue casual overshirt over a white crewneck T-shirt, restrained friendly smile with a little teeth, clean-shaven.",
+  "poseKey": "shoulders-right",
+  "pose": "Torso and shoulders turn 15 degrees toward viewer right, head faces the viewer directly. Head perfectly vertical, zero sideways roll, eyes level; attentive direct gaze.",
+  "palette": {
+    "name": "teal",
+    "dark": "#627f8a",
+    "light": "#deedf0"
+  },
+  "identityReference": null,
+  "source": "sources/AGT-052.png",
+  "sourceDimensions": [
+    1774,
+    887
+  ],
+  "sourceSha256": "864243f6ca617a4030bec86565d2f1e3048af2af29112dd87d3d52ae87c5d9b3",
+  "prompt": "Use case: stylized-concept.\nCreate ONE production paired-theme avatar sheet for NEW fictional WorldPilot / DSH full-stack engineer 筑程 (Zhu Cheng). The two input portraits are STYLE references ONLY for the approved gently illustrated 2.5D realism, youthful adult face proportions and soft clean finish. Create a NEW DISTINCT man, do NOT clone the reference face or haircut.\nOutput geometry: EXACTLY 2:1 landscape, ideally 2048x1024. Exactly TWO equal square panels touching at center, no gutters, borders, frames, labels, words, circles, logos, badges, watermarks or UI. LEFT muted deep teal/slate background #627f8a, RIGHT pale cool teal #deedf0. Both show exactly same ONE man with identical face, pose, expression, garments, face lighting and crop, only the background changes.\nCharacter: 25-year-old East Asian man, youthful softly square face with visible but soft jaw corners and rounded broad chin, clear almond dark-brown eyes normal-sized, straight brows, youthful clean-shaven cheeks, a short neatly textured black crop haircut (clearly SHORTER than reference, tidy tapered sides, forehead partly visible, no long sweeping or wavy fringe). Thin titanium SILVER RECTANGULAR eyeglass frames, visible subtle horizontal upper rims, clear lenses without obscuring the eyes. Light cool teal-gray casual open overshirt with clean small collar over plain white crewneck tee, no hoodie. Small natural confident smile with a hint of upper teeth. Calm, approachable, bright engineering colleague; attractive believable grown-up, not rugged or stern.\nPose: torso and shoulders yaw about 15 degrees toward viewer's RIGHT; head turns gently back to look near the viewer, perfectly upright, ZERO sideways ROLL, level eyes and vertical neck. Do NOT tilt head toward shoulder. Distinguish by shoulder orientation, not diagonal head. Complete head and short hair silhouette, head ~63% of each panel height, clear 8-10% breathing room above hair, centered face, shoulders fill lower edge. Use EXACTLY MATCHING scale, pose and head position for the two halves. No hands or props.\nStyle: fresh young adult professional, polished gently stylized digital portrait illustration, subtle 2D/2.5D softness, matte natural skin shading with no photo pores or heavy texture, delicate clean hair, restrained illustration rather than huge-eyed anime. No wrinkles, beard, aged business executive, shiny plastic doll, heavy beauty-filter skin, game armor or cartoon outlines. Clean flat quiet backgrounds. Same delicate rendering style and face scale as reference. Final pair mechanically splits at exact middle to produce square avatars.\n",
+  "generationMethod": "built-in image_gen",
+  "assets": {
+    "dark": {
+      "png": {
+        "path": "assets/dark/AGT-052.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 765590,
+        "sha256": "7ce7e42c558b1d04ff7c58758c12c37629227784d8460c8553677340124e4e1d"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/dark/32/AGT-052.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 484
+        },
+        "48": {
+          "path": "assets/dark/48/AGT-052.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 848
+        },
+        "64": {
+          "path": "assets/dark/64/AGT-052.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1164
+        },
+        "80": {
+          "path": "assets/dark/80/AGT-052.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1648
+        },
+        "128": {
+          "path": "assets/dark/128/AGT-052.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3006
+        },
+        "256": {
+          "path": "assets/dark/256/AGT-052.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 7720
+        },
+        "512": {
+          "path": "assets/dark/512/AGT-052.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 20216
+        }
+      }
+    },
+    "light": {
+      "png": {
+        "path": "assets/light/AGT-052.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 749341,
+        "sha256": "fc8cb78a316be63c55df2a7d6ea01288da55477612858754f5dd188e58e05be3"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/light/32/AGT-052.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 504
+        },
+        "48": {
+          "path": "assets/light/48/AGT-052.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 846
+        },
+        "64": {
+          "path": "assets/light/64/AGT-052.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1174
+        },
+        "80": {
+          "path": "assets/light/80/AGT-052.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1640
+        },
+        "128": {
+          "path": "assets/light/128/AGT-052.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 2960
+        },
+        "256": {
+          "path": "assets/light/256/AGT-052.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 7432
+        },
+        "512": {
+          "path": "assets/light/512/AGT-052.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 20094
+        }
+      }
+    }
+  },
+  "animation": false,
+  "postProcessing": "equal-square crop, resize and format conversion only"
+}

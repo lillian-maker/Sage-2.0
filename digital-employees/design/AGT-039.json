@@ -1,0 +1,141 @@
+{
+  "ordinal": 39,
+  "id": "AGT-039",
+  "name": "同行",
+  "job": "用户教育与会员社区",
+  "count": 15,
+  "deliver": "教育内容与服务反馈",
+  "plane": "业务运营",
+  "domain": "服务与体验",
+  "appearance": "East Asian woman, 24, soft oval face, bright medium almond eyes and straight brows, black hair in a high ponytail with full hairstyle visible, pale sage blouse, cheerful encouraging smile.",
+  "poseKey": "yaw-left",
+  "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+  "palette": {
+    "name": "blue-gray",
+    "dark": "#6b7d91",
+    "light": "#e1e9f4"
+  },
+  "identityReference": null,
+  "source": "sources/AGT-039.png",
+  "sourceDimensions": [
+    1774,
+    887
+  ],
+  "sourceSha256": "921cf5aaecec30c608b8759698d740a9b68511d9fabd43cea03e33b77100c45f",
+  "prompt": "Use case: stylized-concept / identity-preserve.\nAsset: ONE fictional WorldPilot / DSH young adult employee's complete paired dark/light avatar production sheet, not a group collage.\n\nREFERENCE ROLES: approved-dark.png and approved-light.png define the USER-APPROVED rendering style, fresh youthful energy, face scale and color treatment. If a separate AGT image is provided it is the identity reference for THIS person: preserve their face, haircut, clothing and spirit while correcting sideways head roll to upright. For other employees use the written appearance to create a NEW DISTINCT face, not a copy of one of the six.\n\nEXACT OUTPUT GEOMETRY: a landscape image with width EXACTLY twice height, ideally 2048x1024 or comparable 2:1. Exactly TWO equally sized square panels edge-to-edge, NO gutter, NO exterior margin, NO decorative divider. LEFT panel is DARK background, RIGHT panel is LIGHT background. Same ONE employee appears once in each half at exactly the same scale, crop, pose, facial expression, face shape, hair and clothing. Only the backdrop theme changes. Each half is a FULL-BLEED SQUARE portrait, not a circular badge. No text, labels, IDs, names, frame, circle, shadow around a circle, icons, gradients that resemble halos, logos or watermarks anywhere. These halves will be mechanically split into clean square production avatars.\n\nCOMPOSITION: complete head, hair silhouette, neck and upper shoulders. The top of hair has about 8–10% breathing room, face centered horizontally within each half, shoulders visible to the bottom edge. Head including hair approximately 61–66% of panel height. At circle clipping for the product UI the face and hair must still fit naturally. Clean simple backdrop fills EVERY corner. No foreground hands or props. Keep entire hairstyle in frame, including buns/ponytails.\n\nSTYLE: closely match the approved board's fresh 23–27-year-old grown-up digital coworkers: polished, gently stylized digital character illustration, delicate soft 2D/2.5D volume, smooth youthful face shapes, small natural smile, normal human eye size and iris size, lively eyes, beautifully simplified individual hair silhouettes, light modern smart-casual clothing. Youthful but clearly ADULT, not teenager, not children. A believable attractive fictional person with slight illustrative stylization. Clean matte soft shading, no rough brush texture, no photo pores, no wrinkles, no facial hair, no deep aged cheek grooves, no rugged jaw shadows, no hard cinematic lighting, no beauty-filter plastic shine, no giant anime eyes or identical tiny pointed chins. Do not drift back into mature 35–45-year-old business portraits. Fresh face structure and light clothes are essential. Six-reference identity is style guidance rather than a set of faces to clone. Different face shapes, nose/brow forms, hairlines, hair texture, complexion, necklines and expression make individuals distinct.\n\nPOSE IS CRITICAL: no repeated neck tilting. Head remains vertical, zero sideways ROLL, eye line approximately horizontal. Use only the specified shoulder orientation and modest YAW; these are not head tilt. No leaning head against shoulder, no cocked neck, no diagonal passport portrait. Both panels have exactly matching upright pose.\n\nLIGHTING AND THEMES: use the specified muted slate/teal/sage/lilac dark backdrop on LEFT and its specified cool pale counterpart on RIGHT. Keep natural skin, garments, hair and shading MATCHED between panels, not recolored faces or changed clothes. No black/white surrounding board: each square is filled solely by its backdrop and portrait. No need to render a UI or text. Produce only the paired production image.\n\nEMPLOYEE ID (metadata only, never draw): AGT-039\nSUBJECT: East Asian woman, 24, soft oval face, bright medium almond eyes and straight brows, black hair in a high ponytail with full hairstyle visible, pale sage blouse, cheerful encouraging smile.\nPOSE: Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.\nPALETTE: blue-gray; LEFT DARK background #6b7d91; RIGHT LIGHT background #e1e9f4.\nImages 1 and 2 are style references only. Create the written NEW individual face. Do not reproduce the collage, circles, type, or existing identities.\nGenerate exactly ONE 2:1 production image with the same individual duplicated across the left dark and right light square. The central edge is just the boundary of two different full-bleed backgrounds, with no line or gap.\n",
+  "generationMethod": "built-in image_gen",
+  "assets": {
+    "dark": {
+      "png": {
+        "path": "assets/dark/AGT-039.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 889374,
+        "sha256": "2dabb7dc1d03931b11ecc3d07ad0b8fa714f5437a216764d119bbe52d5fc1a77"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/dark/32/AGT-039.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 552
+        },
+        "48": {
+          "path": "assets/dark/48/AGT-039.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 908
+        },
+        "64": {
+          "path": "assets/dark/64/AGT-039.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1276
+        },
+        "80": {
+          "path": "assets/dark/80/AGT-039.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1674
+        },
+        "128": {
+          "path": "assets/dark/128/AGT-039.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3402
+        },
+        "256": {
+          "path": "assets/dark/256/AGT-039.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 9350
+        },
+        "512": {
+          "path": "assets/dark/512/AGT-039.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 27026
+        }
+      }
+    },
+    "light": {
+      "png": {
+        "path": "assets/light/AGT-039.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 908645,
+        "sha256": "882e31f34062be63ae93b9a925bd561989e6109c132ae682aa85704397904157"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/light/32/AGT-039.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 564
+        },
+        "48": {
+          "path": "assets/light/48/AGT-039.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 956
+        },
+        "64": {
+          "path": "assets/light/64/AGT-039.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1336
+        },
+        "80": {
+          "path": "assets/light/80/AGT-039.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1744
+        },
+        "128": {
+          "path": "assets/light/128/AGT-039.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3494
+        },
+        "256": {
+          "path": "assets/light/256/AGT-039.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 9842
+        },
+        "512": {
+          "path": "assets/light/512/AGT-039.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 28146
+        }
+      }
+    }
+  },
+  "animation": false,
+  "postProcessing": "equal-square crop, resize and format conversion only",
+  "generationReferences": [
+    "references/approved-dark.png",
+    "references/approved-light.png"
+  ]
+}

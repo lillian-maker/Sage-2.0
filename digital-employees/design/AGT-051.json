@@ -1,0 +1,146 @@
+{
+  "ordinal": 51,
+  "id": "AGT-051",
+  "name": "BoBo",
+  "job": "管理员",
+  "count": null,
+  "deliver": "工作区配置、成员管理与变更记录",
+  "plane": "数据与 Agent 平台",
+  "domain": "数据与 AI 运行",
+  "responsibility": "维护工作区、成员和基础配置，执行已获授权的日常管理操作并保留变更记录。",
+  "skillsProposed": [
+    "工作区配置",
+    "成员生命周期管理",
+    "角色配置维护",
+    "数字员工启停配置",
+    "连接器配置管理",
+    "管理记录与问题分流"
+  ],
+  "appearance": "East Asian woman, age 26, fresh youthful softly rounded face, clear normal-sized dark-brown eyes, light chestnut-brown bob just below the ears with softly flicked tips, no glasses, light gray-blue collarless cardigan over a white crewneck T-shirt, warm confident small closed-lip smile.",
+  "poseKey": "frontal",
+  "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Relaxed shoulders, warm direct gaze.",
+  "palette": {
+    "name": "pearl-gray",
+    "dark": "#728191",
+    "light": "#e5e9ef"
+  },
+  "identityReference": null,
+  "source": "sources/AGT-051.png",
+  "sourceDimensions": [
+    1774,
+    887
+  ],
+  "sourceSha256": "740cc1b48fdd3600c5d4be4cb13dc53f03ef781a1492dc740a3a48e6cdee74db",
+  "prompt": "Use case: stylized-concept.\nCreate ONE production paired-theme avatar sheet for NEW fictional WorldPilot / DSH platform administrator BoBo. The two reference portraits are STYLE references ONLY, showing the approved gentle 2.5D illustrated realism, youthful adult face proportions, soft matte finish and simple full-bleed background. Do NOT copy that man's face, hairstyle or clothing: BoBo is a completely new WOMAN.\nOutput geometry: exactly 2:1 landscape, ideally 2048x1024, TWO equal square panels side-by-side touching at middle, no margin, divider, text, frame, logo, circle or watermark. Left is dark muted pearl blue-gray #728191 background; right is pale cool pearl #e5e9ef background. Exactly the SAME person, pose, face, clothing, lighting and expression repeated in each square, only background changes.\nCharacter: 26-year-old East Asian woman, fresh youthful adult face with softly rounded cheeks and rounded chin, lively natural-size warm brown eyes, softly straight individual brows, a small natural smile showing a hint of teeth. Distinctive chestnut brown clean ear-to-jaw-length bob with gently outward curved ends, one side tucked, neat side-swept short fringe. NO eyeglasses. Light gray-blue collarless cardigan open over a plain white crewneck tee. Friendly, efficient platform administrator, smart casual, relaxed modern professional. No props.\nPose: straight front-facing head and shoulders, completely upright neck, ZERO sideways head tilt, horizontally level eye line. Head and complete hair occupy around 64% of square height, 8% clear space above hair; upper shoulders continue to bottom edge, same comfortable centered crop as references, safe for circular UI clipping. Keep full hair silhouette within frame.\nRendering: match reference quality and restraint, polished gently stylized digital illustration with believable youthful anatomy, delicate soft 2D/2.5D volume, beautifully simplified hair strands, clean matte shading. Cheerful adult colleague. Not a photo, not heavy anime, no giant eyes, no plastic shiny doll, no business suit, no wrinkles or mature aged facial grooves. No hands, badges, headset, lanyard, additional figures, labels or UI. This pair will be divided at the exact center into separate square dark/light assets.\n",
+  "generationMethod": "built-in image_gen",
+  "assets": {
+    "dark": {
+      "png": {
+        "path": "assets/dark/AGT-051.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 910423,
+        "sha256": "b0e0e4ecc9dc1328b7e4398ebe1c9f8067d6c41e2b5f5033578f3be23b1d18cd"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/dark/32/AGT-051.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 528
+        },
+        "48": {
+          "path": "assets/dark/48/AGT-051.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 908
+        },
+        "64": {
+          "path": "assets/dark/64/AGT-051.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1252
+        },
+        "80": {
+          "path": "assets/dark/80/AGT-051.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1686
+        },
+        "128": {
+          "path": "assets/dark/128/AGT-051.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3176
+        },
+        "256": {
+          "path": "assets/dark/256/AGT-051.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 9228
+        },
+        "512": {
+          "path": "assets/dark/512/AGT-051.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 30844
+        }
+      }
+    },
+    "light": {
+      "png": {
+        "path": "assets/light/AGT-051.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 924443,
+        "sha256": "e286ef79f565da638415c8256bbbf247bab48cf8a09b81f2523a76b182d4b0df"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/light/32/AGT-051.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 570
+        },
+        "48": {
+          "path": "assets/light/48/AGT-051.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 942
+        },
+        "64": {
+          "path": "assets/light/64/AGT-051.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1290
+        },
+        "80": {
+          "path": "assets/light/80/AGT-051.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1706
+        },
+        "128": {
+          "path": "assets/light/128/AGT-051.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3270
+        },
+        "256": {
+          "path": "assets/light/256/AGT-051.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 9312
+        },
+        "512": {
+          "path": "assets/light/512/AGT-051.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 32752
+        }
+      }
+    }
+  },
+  "animation": false,
+  "postProcessing": "equal-square crop, resize and format conversion only"
+}

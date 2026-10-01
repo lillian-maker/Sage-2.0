@@ -1,0 +1,137 @@
+{
+  "ordinal": 67,
+  "id": "AGT-067",
+  "name": "星阑",
+  "job": "待分配岗位",
+  "count": null,
+  "deliver": "待岗位配置后确定",
+  "plane": "扩展成员",
+  "domain": "待分配",
+  "appearance": "25-year-old East Asian man with a heart-shaped face, pale warm skin, dark-brown eyes with gentle epicanthic folds, softly arched brows, a slim rounded nose and a tapered chin. Medium-length chestnut hair has loose natural curls around the forehead and ears. Clean-shaven. He wears a pearl-gray open-collar Oxford shirt with a white undershirt just visible. Relaxed small tooth smile; no glasses.",
+  "poseKey": "yaw-right",
+  "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+  "palette": {
+    "name": "pearl-gray",
+    "dark": "#728191",
+    "light": "#e5e9ef"
+  },
+  "identityReference": null,
+  "source": "sources/AGT-067.png",
+  "sourceDimensions": [
+    1774,
+    887
+  ],
+  "sourceSha256": "ab12a9b21833579c8b397050a0f2d43c218ca5da7c2e18389152b03ff1be2741",
+  "prompt": "Use case: identity-preserve / precise-object-edit.\nThe supplied image is the EXACT edit target for fictional WorldPilot colleague AGT-067, a youthful adult East Asian man. Preserve this man's face, individual eye shapes and iris size, nose, lips, expression, chestnut soft curls, pearl-gray Oxford shirt, white undershirt, youthful style, crop scale and paired dark/light backdrops.\nOnly fix his SIDEWAYS HEAD ROLL in both panels. Currently the eye line is diagonally tilted, with the eye on image-right lower. Make the head perfectly vertically UPRIGHT so both pupil centers are at exactly the SAME HORIZONTAL HEIGHT. The vertical face centerline from forehead through nose to chin must be straight up/down. Neck vertical, shoulders level. ZERO sideways head roll, no cocked neck, no leaning. Keep modest existing face yaw and the same direct gaze, smile and identity.\nBoth panels must match exactly in identity, upright pose, face size, expression, clothing, lighting and hair; only the backdrop colors differ. Maintain a complete hair silhouette with 8–10% top breathing room. The paired image must be EXACTLY 2:1 width-to-height with two equal edge-to-edge square portraits, dark on left and light on right, no gutter. Full-bleed simple backgrounds. No text, no circles, no frames, no logos, no watermarks. Do not add any person, prop, accessory, or graphic. Output only the corrected paired production image.\n",
+  "generationMethod": "built-in image_gen",
+  "assets": {
+    "dark": {
+      "png": {
+        "path": "assets/dark/AGT-067.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 845639,
+        "sha256": "63aaa1e909e3371be8ad5602e3d676e6594638e4f031d59cedbc1a7b32bd30c4"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/dark/32/AGT-067.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 566
+        },
+        "48": {
+          "path": "assets/dark/48/AGT-067.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 968
+        },
+        "64": {
+          "path": "assets/dark/64/AGT-067.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1380
+        },
+        "80": {
+          "path": "assets/dark/80/AGT-067.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1834
+        },
+        "128": {
+          "path": "assets/dark/128/AGT-067.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3576
+        },
+        "256": {
+          "path": "assets/dark/256/AGT-067.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 9616
+        },
+        "512": {
+          "path": "assets/dark/512/AGT-067.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 25376
+        }
+      }
+    },
+    "light": {
+      "png": {
+        "path": "assets/light/AGT-067.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 862188,
+        "sha256": "ee6097d876c21e93b3481130ffd5261a872739d49fcf5236e4c85f2e48200006"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/light/32/AGT-067.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 608
+        },
+        "48": {
+          "path": "assets/light/48/AGT-067.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 1006
+        },
+        "64": {
+          "path": "assets/light/64/AGT-067.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1412
+        },
+        "80": {
+          "path": "assets/light/80/AGT-067.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1946
+        },
+        "128": {
+          "path": "assets/light/128/AGT-067.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3678
+        },
+        "256": {
+          "path": "assets/light/256/AGT-067.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 9896
+        },
+        "512": {
+          "path": "assets/light/512/AGT-067.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 26918
+        }
+      }
+    }
+  },
+  "animation": false,
+  "postProcessing": "equal-square crop, resize and format conversion only"
+}

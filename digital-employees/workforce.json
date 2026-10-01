@@ -1,0 +1,1042 @@
+[
+  {
+    "ordinal": 1,
+    "id": "AGT-001",
+    "name": "衡远",
+    "job": "经营目标与资源统筹",
+    "count": 16,
+    "deliver": "目标与资源决策包",
+    "plane": "经营管理",
+    "domain": "经营与组织"
+  },
+  {
+    "ordinal": 2,
+    "id": "AGT-002",
+    "name": "枢衡",
+    "job": "场景自主编排与异常协调",
+    "count": 25,
+    "deliver": "场景规则、装配决策依据、Case 状态与自治异常分析",
+    "plane": "经营管理",
+    "domain": "经营与组织"
+  },
+  {
+    "ordinal": 3,
+    "id": "AGT-003",
+    "name": "明镜",
+    "job": "经营分析与决策支持",
+    "count": 18,
+    "deliver": "带来源的经营分析包",
+    "plane": "经营管理",
+    "domain": "经营与组织"
+  },
+  {
+    "ordinal": 4,
+    "id": "AGT-004",
+    "name": "知人",
+    "job": "组织能力与人事行政",
+    "count": 9,
+    "deliver": "能力矩阵与组织调整建议",
+    "plane": "经营管理",
+    "domain": "经营与组织"
+  },
+  {
+    "ordinal": 41,
+    "id": "AGT-005",
+    "name": "守衡",
+    "job": "内控审计与独立复核",
+    "count": 12,
+    "deliver": "复核结论与整改清单",
+    "plane": "独立控制",
+    "domain": "经营与组织"
+  },
+  {
+    "ordinal": 6,
+    "id": "AGT-006",
+    "name": "听澜",
+    "job": "消费者需求与 VOC 研究",
+    "count": 16,
+    "deliver": "需求证据与问题地图",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 7,
+    "id": "AGT-007",
+    "name": "望野",
+    "job": "市场竞争与机会研究",
+    "count": 19,
+    "deliver": "机会证据包与反证",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 8,
+    "id": "AGT-008",
+    "name": "拓新",
+    "job": "产品组合与新品孵化",
+    "count": 14,
+    "deliver": "新品组合与继续停止建议",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 9,
+    "id": "AGT-009",
+    "name": "定形",
+    "job": "产品定义与商业立项",
+    "count": 11,
+    "deliver": "产品定义与立项包",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 10,
+    "id": "AGT-010",
+    "name": "映物",
+    "job": "工业设计与用户体验",
+    "count": 10,
+    "deliver": "设计方案与体验验证计划",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 11,
+    "id": "AGT-011",
+    "name": "砺器",
+    "job": "硬件结构与材料工程",
+    "count": 3,
+    "deliver": "技术风险与工程验证清单",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 12,
+    "id": "AGT-012",
+    "name": "灵枢",
+    "job": "软件算法与应用生态",
+    "count": 9,
+    "deliver": "软件方案与验证证据",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 13,
+    "id": "AGT-013",
+    "name": "求证",
+    "job": "产品验证与研发项目",
+    "count": 8,
+    "deliver": "验证报告与缺陷闭合记录",
+    "plane": "业务运营",
+    "domain": "产品与创新"
+  },
+  {
+    "ordinal": 14,
+    "id": "AGT-014",
+    "name": "择源",
+    "job": "OEM 供应商开发与协同",
+    "count": 14,
+    "deliver": "供应商能力与风险档案",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 15,
+    "id": "AGT-015",
+    "name": "契约",
+    "job": "采购与合同履约",
+    "count": 16,
+    "deliver": "采购建议与交期异常记录",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 16,
+    "id": "AGT-016",
+    "name": "知量",
+    "job": "需求预测与补货计划",
+    "count": 15,
+    "deliver": "补货方案与预测区间",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 17,
+    "id": "AGT-017",
+    "name": "衡仓",
+    "job": "库存与商品生命周期",
+    "count": 17,
+    "deliver": "库存风险与处置方案",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 18,
+    "id": "AGT-018",
+    "name": "质守",
+    "job": "生产协同与质量控制",
+    "count": 13,
+    "deliver": "质量事件与纠正措施包",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 19,
+    "id": "AGT-019",
+    "name": "通途",
+    "job": "跨境物流与关务",
+    "count": 14,
+    "deliver": "运输方案与异常处置建议",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 20,
+    "id": "AGT-020",
+    "name": "行舟",
+    "job": "仓储履约与退货处置",
+    "count": 16,
+    "deliver": "履约与退货处置记录",
+    "plane": "业务运营",
+    "domain": "供应与履约"
+  },
+  {
+    "ordinal": 21,
+    "id": "AGT-021",
+    "name": "北辰",
+    "job": "Amazon 业务经营",
+    "count": 20,
+    "deliver": "Amazon 场景行动包",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 22,
+    "id": "AGT-022",
+    "name": "觅位",
+    "job": "Amazon 商品与搜索运营",
+    "count": 16,
+    "deliver": "商品与搜索优化包",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 23,
+    "id": "AGT-023",
+    "name": "自航",
+    "job": "独立站经营与转化",
+    "count": 19,
+    "deliver": "独立站经营与实验包",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 24,
+    "id": "AGT-024",
+    "name": "拓域",
+    "job": "其他平台与新市场经营",
+    "count": 17,
+    "deliver": "新渠道进入与验证方案",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 25,
+    "id": "AGT-025",
+    "name": "联商",
+    "job": "零售渠道与 B2B 拓展",
+    "count": 8,
+    "deliver": "渠道机会与合作建议",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 26,
+    "id": "AGT-026",
+    "name": "衡价",
+    "job": "定价促销与商品组合",
+    "count": 18,
+    "deliver": "价格与促销决策包",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 27,
+    "id": "AGT-027",
+    "name": "守店",
+    "job": "店铺账号健康与规则",
+    "count": 15,
+    "deliver": "账号健康与处置建议",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 28,
+    "id": "AGT-028",
+    "name": "译境",
+    "job": "本地化与市场适配",
+    "count": 13,
+    "deliver": "本地化内容与差异清单",
+    "plane": "业务运营",
+    "domain": "渠道经营"
+  },
+  {
+    "ordinal": 29,
+    "id": "AGT-029",
+    "name": "立言",
+    "job": "品牌战略与传播",
+    "count": 21,
+    "deliver": "品牌原则与传播方案",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 30,
+    "id": "AGT-030",
+    "name": "叙事",
+    "job": "内容与创意策划",
+    "count": 17,
+    "deliver": "内容方案与证据引用",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 31,
+    "id": "AGT-031",
+    "name": "绘影",
+    "job": "视觉视频与素材生产",
+    "count": 18,
+    "deliver": "带版本的渠道素材包",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 32,
+    "id": "AGT-032",
+    "name": "点火",
+    "job": "效果广告投放",
+    "count": 17,
+    "deliver": "广告行动与效果报告",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 33,
+    "id": "AGT-033",
+    "name": "结伴",
+    "job": "达人与联盟合作",
+    "count": 16,
+    "deliver": "合作候选与效果归因包",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 34,
+    "id": "AGT-034",
+    "name": "续缘",
+    "job": "CRM 留存与复购",
+    "count": 15,
+    "deliver": "用户经营计划与实验结果",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 35,
+    "id": "AGT-035",
+    "name": "试真",
+    "job": "增长实验与增量评估",
+    "count": 18,
+    "deliver": "实验协议与继续停止结论",
+    "plane": "业务运营",
+    "domain": "品牌与增长"
+  },
+  {
+    "ordinal": 36,
+    "id": "AGT-036",
+    "name": "安心",
+    "job": "售前服务与购买指导",
+    "count": 17,
+    "deliver": "有依据的售前答复与线索",
+    "plane": "业务运营",
+    "domain": "服务与体验"
+  },
+  {
+    "ordinal": 37,
+    "id": "AGT-037",
+    "name": "解忧",
+    "job": "售后客诉与服务补救",
+    "count": 16,
+    "deliver": "客诉工单与补救建议",
+    "plane": "业务运营",
+    "domain": "服务与体验"
+  },
+  {
+    "ordinal": 38,
+    "id": "AGT-038",
+    "name": "回声",
+    "job": "体验洞察与质量反馈",
+    "count": 16,
+    "deliver": "体验问题与根因假设",
+    "plane": "业务运营",
+    "domain": "服务与体验"
+  },
+  {
+    "ordinal": 39,
+    "id": "AGT-039",
+    "name": "同行",
+    "job": "用户教育与会员社区",
+    "count": 15,
+    "deliver": "教育内容与服务反馈",
+    "plane": "业务运营",
+    "domain": "服务与体验"
+  },
+  {
+    "ordinal": 40,
+    "id": "AGT-040",
+    "name": "清账",
+    "job": "GMV 结算与会计对账",
+    "count": 13,
+    "deliver": "对账表与差异处理包",
+    "plane": "业务运营",
+    "domain": "财务与合规"
+  },
+  {
+    "ordinal": 5,
+    "id": "AGT-041",
+    "name": "守金",
+    "job": "经营财务与资金",
+    "count": 18,
+    "deliver": "现金与资源约束方案",
+    "plane": "经营管理",
+    "domain": "财务与合规"
+  },
+  {
+    "ordinal": 42,
+    "id": "AGT-042",
+    "name": "合账",
+    "job": "税务与跨境实体协作",
+    "count": 13,
+    "deliver": "税务与实体事项清单",
+    "plane": "独立控制",
+    "domain": "财务与合规"
+  },
+  {
+    "ordinal": 43,
+    "id": "AGT-043",
+    "name": "律衡",
+    "job": "法务与知识产权",
+    "count": 13,
+    "deliver": "法律风险与处理建议",
+    "plane": "独立控制",
+    "domain": "财务与合规"
+  },
+  {
+    "ordinal": 44,
+    "id": "AGT-044",
+    "name": "安界",
+    "job": "产品合规与隐私",
+    "count": 17,
+    "deliver": "合规矩阵与证据缺口",
+    "plane": "独立控制",
+    "domain": "财务与合规"
+  },
+  {
+    "ordinal": 46,
+    "id": "AGT-045",
+    "name": "同尺",
+    "job": "业务口径与主数据",
+    "count": 18,
+    "deliver": "数据口径与对象关系契约",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行"
+  },
+  {
+    "ordinal": 47,
+    "id": "AGT-046",
+    "name": "清源",
+    "job": "数据工程与质量",
+    "count": 14,
+    "deliver": "带质量状态的数据产物",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行"
+  },
+  {
+    "ordinal": 48,
+    "id": "AGT-047",
+    "name": "接桥",
+    "job": "系统集成与业务工具",
+    "count": 14,
+    "deliver": "工具能力与验收包",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行"
+  },
+  {
+    "ordinal": 49,
+    "id": "AGT-048",
+    "name": "积知",
+    "job": "知识技能与 Playbook 治理",
+    "count": 17,
+    "deliver": "能力版本与评估记录",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行"
+  },
+  {
+    "ordinal": 50,
+    "id": "AGT-049",
+    "name": "稳行",
+    "job": "Agent 平台与可靠运行",
+    "count": 15,
+    "deliver": "运行状态与恢复证据",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行"
+  },
+  {
+    "ordinal": 45,
+    "id": "AGT-050",
+    "name": "门卫",
+    "job": "信息安全与权限",
+    "count": 16,
+    "deliver": "权限矩阵与访问证据",
+    "plane": "独立控制",
+    "domain": "数据与 AI 运行"
+  },
+  {
+    "ordinal": 51,
+    "id": "AGT-051",
+    "name": "BoBo",
+    "job": "管理员",
+    "count": null,
+    "deliver": "工作区配置、成员管理与变更记录",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "responsibility": "维护工作区、成员和基础配置，执行已获授权的日常管理操作并保留变更记录。",
+    "skillsProposed": [
+      "工作区配置",
+      "成员生命周期管理",
+      "角色配置维护",
+      "数字员工启停配置",
+      "连接器配置管理",
+      "管理记录与问题分流"
+    ]
+  },
+  {
+    "ordinal": 52,
+    "id": "AGT-052",
+    "name": "筑程",
+    "job": "全栈工程师",
+    "count": null,
+    "deliver": "可运行应用、测试报告与部署交付包",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "responsibility": "将业务需求落实为前后端应用，完成数据库建模、测试与部署交付。",
+    "skillsProposed": [
+      "需求拆解",
+      "前端界面开发",
+      "后端服务开发",
+      "数据库建模",
+      "接口实现",
+      "自动化测试",
+      "部署发布",
+      "缺陷定位与修复"
+    ]
+  },
+  {
+    "ordinal": 53,
+    "id": "AGT-053",
+    "name": "启澄",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 54,
+    "id": "AGT-054",
+    "name": "闻溪",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 55,
+    "id": "AGT-055",
+    "name": "予宁",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 56,
+    "id": "AGT-056",
+    "name": "昭禾",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 57,
+    "id": "AGT-057",
+    "name": "沐川",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 58,
+    "id": "AGT-058",
+    "name": "嘉树",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 59,
+    "id": "AGT-059",
+    "name": "云舒",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 60,
+    "id": "AGT-060",
+    "name": "景和",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 61,
+    "id": "AGT-061",
+    "name": "林序",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 62,
+    "id": "AGT-062",
+    "name": "若谷",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 63,
+    "id": "AGT-063",
+    "name": "知夏",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 64,
+    "id": "AGT-064",
+    "name": "舒言",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 65,
+    "id": "AGT-065",
+    "name": "青岑",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 66,
+    "id": "AGT-066",
+    "name": "宥安",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 67,
+    "id": "AGT-067",
+    "name": "星阑",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 68,
+    "id": "AGT-068",
+    "name": "映川",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 69,
+    "id": "AGT-069",
+    "name": "书砚",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 70,
+    "id": "AGT-070",
+    "name": "沅芷",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 71,
+    "id": "AGT-071",
+    "name": "时予",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 72,
+    "id": "AGT-072",
+    "name": "霁月",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 73,
+    "id": "AGT-073",
+    "name": "承晖",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 74,
+    "id": "AGT-074",
+    "name": "宁越",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 75,
+    "id": "AGT-075",
+    "name": "谨初",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 76,
+    "id": "AGT-076",
+    "name": "远音",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 77,
+    "id": "AGT-077",
+    "name": "怀瑾",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 78,
+    "id": "AGT-078",
+    "name": "溪桥",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 79,
+    "id": "AGT-079",
+    "name": "序白",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 80,
+    "id": "AGT-080",
+    "name": "南乔",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 81,
+    "id": "AGT-081",
+    "name": "以恒",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 82,
+    "id": "AGT-082",
+    "name": "清和",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 83,
+    "id": "AGT-083",
+    "name": "晴岚",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 84,
+    "id": "AGT-084",
+    "name": "望舒",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 85,
+    "id": "AGT-085",
+    "name": "若衡",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 86,
+    "id": "AGT-086",
+    "name": "书临",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 87,
+    "id": "AGT-087",
+    "name": "沐言",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 88,
+    "id": "AGT-088",
+    "name": "亦舟",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 89,
+    "id": "AGT-089",
+    "name": "栩然",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 90,
+    "id": "AGT-090",
+    "name": "语桐",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 91,
+    "id": "AGT-091",
+    "name": "泊宁",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 92,
+    "id": "AGT-092",
+    "name": "和颂",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 93,
+    "id": "AGT-093",
+    "name": "昭宁",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 94,
+    "id": "AGT-094",
+    "name": "景初",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 95,
+    "id": "AGT-095",
+    "name": "维清",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 96,
+    "id": "AGT-096",
+    "name": "云岫",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 97,
+    "id": "AGT-097",
+    "name": "安序",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 98,
+    "id": "AGT-098",
+    "name": "思齐",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 99,
+    "id": "AGT-099",
+    "name": "容与",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 100,
+    "id": "AGT-100",
+    "name": "予川",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 101,
+    "id": "AGT-101",
+    "name": "澄心",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  },
+  {
+    "ordinal": 102,
+    "id": "AGT-102",
+    "name": "知微",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配"
+  }
+]

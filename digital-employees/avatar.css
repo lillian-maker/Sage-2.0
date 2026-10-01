@@ -1,0 +1,10 @@
+.wp-employee-avatar {
+  display: inline-block;
+  flex: none;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.wp-employee-avatar[data-shape="rounded"] { border-radius: 20%; }

@@ -1,0 +1,28 @@
+{
+  "expectedEmployees": 102,
+  "sourceSheets": 102,
+  "pngFiles": 204,
+  "webpFiles": 1428,
+  "themes": [
+    "dark",
+    "light"
+  ],
+  "webpSizes": [
+    32,
+    48,
+    64,
+    80,
+    128,
+    256,
+    512
+  ],
+  "duplicatePngHashes": [],
+  "missing": [],
+  "sourceDimensions": {
+    "1774x887": 102
+  },
+  "nativePngDimensions": {
+    "887x887": 204
+  },
+  "verificationScope": "File integrity, dimensions, complete ID mapping, byte uniqueness and source split integrity. Visual review recorded separately. No browser rendering claim."
+}

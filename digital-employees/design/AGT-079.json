@@ -1,0 +1,137 @@
+{
+  "ordinal": 79,
+  "id": "AGT-079",
+  "name": "序白",
+  "job": "待分配岗位",
+  "count": null,
+  "deliver": "待岗位配置后确定",
+  "plane": "扩展成员",
+  "domain": "待分配",
+  "appearance": "28-year-old East Asian man with a soft pentagonal face, medium olive-beige skin, slightly hooded dark eyes, thick gently angled brows, a medium broad nose and pronounced rounded cheekbones. Short black curls cluster naturally over the forehead with neatly trimmed sides. Clean-shaven. He wears a pearl-gray open shawl-collar cardigan over a soft white crew-neck shirt. Calm friendly closed-lip smile; no glasses.",
+  "poseKey": "shoulders-left",
+  "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+  "palette": {
+    "name": "pearl-gray",
+    "dark": "#728191",
+    "light": "#e5e9ef"
+  },
+  "identityReference": null,
+  "source": "sources/AGT-079.png",
+  "sourceDimensions": [
+    1774,
+    887
+  ],
+  "sourceSha256": "b018ca35d376468c9e938c1a60c9fdf962809b712bb1e568a10e19689ea291dd",
+  "prompt": "Use case: stylized-concept / identity-preserve.\nAsset: ONE fictional WorldPilot / DSH young adult employee's complete paired dark/light avatar production sheet, not a group collage.\n\nREFERENCE ROLES: approved-dark.png and approved-light.png define the USER-APPROVED rendering style, fresh youthful energy, face scale and color treatment. If a separate AGT image is provided it is the identity reference for THIS person: preserve their face, haircut, clothing and spirit while correcting sideways head roll to upright. For other employees use the written appearance to create a NEW DISTINCT face, not a copy of one of the six.\n\nEXACT OUTPUT GEOMETRY: a landscape image with width EXACTLY twice height, ideally 2048x1024 or comparable 2:1. Exactly TWO equally sized square panels edge-to-edge, NO gutter, NO exterior margin, NO decorative divider. LEFT panel is DARK background, RIGHT panel is LIGHT background. Same ONE employee appears once in each half at exactly the same scale, crop, pose, facial expression, face shape, hair and clothing. Only the backdrop theme changes. Each half is a FULL-BLEED SQUARE portrait, not a circular badge. No text, labels, IDs, names, frame, circle, shadow around a circle, icons, gradients that resemble halos, logos or watermarks anywhere. These halves will be mechanically split into clean square production avatars.\n\nCOMPOSITION: complete head, hair silhouette, neck and upper shoulders. The top of hair has about 8–10% breathing room, face centered horizontally within each half, shoulders visible to the bottom edge. Head including hair approximately 61–66% of panel height. At circle clipping for the product UI the face and hair must still fit naturally. Clean simple backdrop fills EVERY corner. No foreground hands or props. Keep entire hairstyle in frame, including buns/ponytails.\n\nSTYLE: closely match the approved board's fresh 23–27-year-old grown-up digital coworkers: polished, gently stylized digital character illustration, delicate soft 2D/2.5D volume, smooth youthful face shapes, small natural smile, normal human eye size and iris size, lively eyes, beautifully simplified individual hair silhouettes, light modern smart-casual clothing. Youthful but clearly ADULT, not teenager, not children. A believable attractive fictional person with slight illustrative stylization. Clean matte soft shading, no rough brush texture, no photo pores, no wrinkles, no facial hair, no deep aged cheek grooves, no rugged jaw shadows, no hard cinematic lighting, no beauty-filter plastic shine, no giant anime eyes or identical tiny pointed chins. Do not drift back into mature 35–45-year-old business portraits. Fresh face structure and light clothes are essential. Six-reference identity is style guidance rather than a set of faces to clone. Different face shapes, nose/brow forms, hairlines, hair texture, complexion, necklines and expression make individuals distinct.\n\nPOSE IS CRITICAL: no repeated neck tilting. Head remains vertical, zero sideways ROLL, eye line approximately horizontal. Use only the specified shoulder orientation and modest YAW; these are not head tilt. No leaning head against shoulder, no cocked neck, no diagonal passport portrait. Both panels have exactly matching upright pose.\n\nLIGHTING AND THEMES: use the specified muted slate/teal/sage/lilac dark backdrop on LEFT and its specified cool pale counterpart on RIGHT. Keep natural skin, garments, hair and shading MATCHED between panels, not recolored faces or changed clothes. No black/white surrounding board: each square is filled solely by its backdrop and portrait. No need to render a UI or text. Produce only the paired production image.\n\nEXTENSION COLLECTION: These are brand-new fictional colleagues AGT-053 to AGT-102. Prior approved boards are stylistic references ONLY; NEVER duplicate any existing face. Follow the character-specific shape of face, cheek width, nose, brows, hairstyle, eyewear and neckline rather than copying a reference person. Maintain a relaxed, youthful 23-29 year-old ADULT appearance. No wrinkles, no teen/child proportions, no mature executive look. Exactly one identity in two equal square panels, left dark, right light. Flat full-bleed backdrop in every corner, NO circles or surrounding presentation board, NO labels or text. Absolutely no sideways head roll; modest shoulder or face YAW as specified. No animation, no extra expressions.\n\nPERSON TO CREATE (do not render text): AGT-079 序白\nAPPEARANCE AND DISTINCT IDENTITY: 28-year-old East Asian man with a soft pentagonal face, medium olive-beige skin, slightly hooded dark eyes, thick gently angled brows, a medium broad nose and pronounced rounded cheekbones. Short black curls cluster naturally over the forehead with neatly trimmed sides. Clean-shaven. He wears a pearl-gray open shawl-collar cardigan over a soft white crew-neck shirt. Calm friendly closed-lip smile; no glasses.\nPOSE: Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.\nBACKDROP: LEFT DARK #728191; RIGHT LIGHT #e5e9ef. Both are calm full-bleed flat backdrops with NO frame/circle. Same exact person and pose in both halves.\n\n\nFINAL REFERENCE OVERRIDE AND IDENTITY PRIORITY: The ONLY supplied image is a WOMAN used as STYLE ONLY. Do not preserve her identity. Create a NEW MAN whose soft PENTAGONAL FACE has pronounced rounded cheekbones, slightly hooded eyes, THICK gently angled brows and a MEDIUM BROAD NOSE. Preserve medium OLIVE-BEIGE skin and rounded face structure rather than generic pale pointed chin. Short BLACK CURLS cluster as small natural ringlets over the forehead with NEATLY TRIMMED SIDES, no straight swept fringe. He wears a pearl-gray SHAWL-COLLAR cardigan over white crewneck. Calm closed-lip smile. Both panels match exactly; head straight vertical and eye line horizontal, with shoulder yaw only. No text.\n",
+  "generationMethod": "built-in image_gen",
+  "assets": {
+    "dark": {
+      "png": {
+        "path": "assets/dark/AGT-079.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 868647,
+        "sha256": "c2d789a3fd66d004f42df34e3f6b7e09f4235d7a96da8715b1057a97b8e95ffa"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/dark/32/AGT-079.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 506
+        },
+        "48": {
+          "path": "assets/dark/48/AGT-079.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 878
+        },
+        "64": {
+          "path": "assets/dark/64/AGT-079.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1216
+        },
+        "80": {
+          "path": "assets/dark/80/AGT-079.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1694
+        },
+        "128": {
+          "path": "assets/dark/128/AGT-079.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3146
+        },
+        "256": {
+          "path": "assets/dark/256/AGT-079.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 8892
+        },
+        "512": {
+          "path": "assets/dark/512/AGT-079.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 27108
+        }
+      }
+    },
+    "light": {
+      "png": {
+        "path": "assets/light/AGT-079.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 877266,
+        "sha256": "1648cb6df82014aca1f81083ead6bc6615d48c30bcd216d3152c4966f2437043"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/light/32/AGT-079.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 542
+        },
+        "48": {
+          "path": "assets/light/48/AGT-079.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 900
+        },
+        "64": {
+          "path": "assets/light/64/AGT-079.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1232
+        },
+        "80": {
+          "path": "assets/light/80/AGT-079.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1678
+        },
+        "128": {
+          "path": "assets/light/128/AGT-079.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3092
+        },
+        "256": {
+          "path": "assets/light/256/AGT-079.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 8524
+        },
+        "512": {
+          "path": "assets/light/512/AGT-079.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 26756
+        }
+      }
+    }
+  },
+  "animation": false,
+  "postProcessing": "equal-square crop, resize and format conversion only"
+}

@@ -1,0 +1,144 @@
+{
+  "ordinal": 6,
+  "id": "AGT-006",
+  "name": "听澜",
+  "job": "消费者需求与 VOC 研究",
+  "count": 16,
+  "deliver": "需求证据与问题地图",
+  "plane": "业务运营",
+  "domain": "产品与创新",
+  "appearance": "Female young adult age 24, warm medium-tan skin, rounded oval face, bright almond eyes, short organic brown springy curls forming an asymmetric ear-length silhouette, pale sage relaxed shirt, small stud earrings, modest friendly smile showing a little teeth.",
+  "poseKey": "yaw-right",
+  "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+  "palette": {
+    "name": "stone",
+    "dark": "#8a8583",
+    "light": "#e8eaed"
+  },
+  "identityReference": "references/AGT-006.png",
+  "source": "sources/AGT-006.png",
+  "sourceDimensions": [
+    1774,
+    887
+  ],
+  "sourceSha256": "8fbfa7102b5a9f5cd92f3d0df460f409ae3a499351d016bd3802e5d0c311d4f1",
+  "prompt": "DIRECT EDIT TASK: Input image 1 is the paired production sheet to edit. Input images 2 and 3 are approved style boards; input image 4 is identity. Preserve the woman from image 1, but straighten her head. Her current left pupil is visibly higher than right: reduce the clockwise head roll to ZERO. Rotate only the physical head pose, not the picture or backdrop. Her head and nose bridge should stand vertically, with eye line horizontal. Use a near-frontal face angle if needed to reliably straighten the pose, retaining gently turned shoulders. Preserve her identity, curls, clothing, smile, lighting and paired 2:1 structure. Make the correction obvious.\n\nUse case: stylized-concept / identity-preserve.\nAsset: ONE fictional WorldPilot / DSH young adult employee's complete paired dark/light avatar production sheet, not a group collage.\n\nREFERENCE ROLES: approved-dark.png and approved-light.png define the USER-APPROVED rendering style, fresh youthful energy, face scale and color treatment. If a separate AGT image is provided it is the identity reference for THIS person: preserve their face, haircut, clothing and spirit while correcting sideways head roll to upright. For other employees use the written appearance to create a NEW DISTINCT face, not a copy of one of the six.\n\nEXACT OUTPUT GEOMETRY: a landscape image with width EXACTLY twice height, ideally 2048x1024 or comparable 2:1. Exactly TWO equally sized square panels edge-to-edge, NO gutter, NO exterior margin, NO decorative divider. LEFT panel is DARK background, RIGHT panel is LIGHT background. Same ONE employee appears once in each half at exactly the same scale, crop, pose, facial expression, face shape, hair and clothing. Only the backdrop theme changes. Each half is a FULL-BLEED SQUARE portrait, not a circular badge. No text, labels, IDs, names, frame, circle, shadow around a circle, icons, gradients that resemble halos, logos or watermarks anywhere. These halves will be mechanically split into clean square production avatars.\n\nCOMPOSITION: complete head, hair silhouette, neck and upper shoulders. The top of hair has about 8–10% breathing room, face centered horizontally within each half, shoulders visible to the bottom edge. Head including hair approximately 61–66% of panel height. At circle clipping for the product UI the face and hair must still fit naturally. Clean simple backdrop fills EVERY corner. No foreground hands or props. Keep entire hairstyle in frame, including buns/ponytails.\n\nSTYLE: closely match the approved board's fresh 23–27-year-old grown-up digital coworkers: polished, gently stylized digital character illustration, delicate soft 2D/2.5D volume, smooth youthful face shapes, small natural smile, normal human eye size and iris size, lively eyes, beautifully simplified individual hair silhouettes, light modern smart-casual clothing. Youthful but clearly ADULT, not teenager, not children. A believable attractive fictional person with slight illustrative stylization. Clean matte soft shading, no rough brush texture, no photo pores, no wrinkles, no facial hair, no deep aged cheek grooves, no rugged jaw shadows, no hard cinematic lighting, no beauty-filter plastic shine, no giant anime eyes or identical tiny pointed chins. Do not drift back into mature 35–45-year-old business portraits. Fresh face structure and light clothes are essential. Six-reference identity is style guidance rather than a set of faces to clone. Different face shapes, nose/brow forms, hairlines, hair texture, complexion, necklines and expression make individuals distinct.\n\nPOSE IS CRITICAL: no repeated neck tilting. Head remains vertical, zero sideways ROLL, eye line approximately horizontal. Use only the specified shoulder orientation and modest YAW; these are not head tilt. No leaning head against shoulder, no cocked neck, no diagonal passport portrait. Both panels have exactly matching upright pose.\n\nLIGHTING AND THEMES: use the specified muted slate/teal/sage/lilac dark backdrop on LEFT and its specified cool pale counterpart on RIGHT. Keep natural skin, garments, hair and shading MATCHED between panels, not recolored faces or changed clothes. No black/white surrounding board: each square is filled solely by its backdrop and portrait. No need to render a UI or text. Produce only the paired production image.\n\nPERSON-SPECIFIC BRIEF (do not render this text):\nEmployee identity: AGT-006 听澜\nAppearance: Female young adult age 24, warm medium-tan skin, rounded oval face, bright almond eyes, short organic brown springy curls forming an asymmetric ear-length silhouette, pale sage relaxed shirt, small stud earrings, modest friendly smile showing a little teeth.\nPose: Shoulders gently turned, face nearly frontal, skull centered over a vertical neck, absolutely zero roll or tilt, both pupils level.\nBackground LEFT dark: #8a8583; background RIGHT light: #e8eaed.\nThe fourth attached image is THIS EMPLOYEE identity reference. Preserve recognizable facial identity, hairstyle and clothing while making the head exactly upright.\n\nHEAD-ROLL CORRECTION IS MORE IMPORTANT THAN COPYING THE REFERENCE POSE: The supplied identity crop shows a tilted head. Correct that tilted head! Keep her same curly hair, face, smile, skin and sage shirt, but rotate the physical head to an upright centered neck. LEFT and RIGHT pupil centers exactly at same image height. Nose bridge vertical. No side bending and no diagonal eye line. The forehead, nose and chin have an upright axis. The modest yaw may remain, but absolutely zero sideways ROLL. The output should visibly fix the reference head tilt.\n",
+  "generationMethod": "built-in image_gen",
+  "assets": {
+    "dark": {
+      "png": {
+        "path": "assets/dark/AGT-006.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 849831,
+        "sha256": "46a3cefda178c2bfc57b4dc334407432b53f4c08cd9f0391062f2a0300163c19"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/dark/32/AGT-006.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 582
+        },
+        "48": {
+          "path": "assets/dark/48/AGT-006.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 1016
+        },
+        "64": {
+          "path": "assets/dark/64/AGT-006.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1448
+        },
+        "80": {
+          "path": "assets/dark/80/AGT-006.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 1980
+        },
+        "128": {
+          "path": "assets/dark/128/AGT-006.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 3764
+        },
+        "256": {
+          "path": "assets/dark/256/AGT-006.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 10368
+        },
+        "512": {
+          "path": "assets/dark/512/AGT-006.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 27960
+        }
+      }
+    },
+    "light": {
+      "png": {
+        "path": "assets/light/AGT-006.png",
+        "width": 887,
+        "height": 887,
+        "bytes": 872830,
+        "sha256": "6e08b46dd97c0d7daf9ac99434c8b9884984620efa3912abcd342e9f1cb80f6e"
+      },
+      "webp": {
+        "32": {
+          "path": "assets/light/32/AGT-006.webp",
+          "width": 32,
+          "height": 32,
+          "bytes": 632
+        },
+        "48": {
+          "path": "assets/light/48/AGT-006.webp",
+          "width": 48,
+          "height": 48,
+          "bytes": 1132
+        },
+        "64": {
+          "path": "assets/light/64/AGT-006.webp",
+          "width": 64,
+          "height": 64,
+          "bytes": 1668
+        },
+        "80": {
+          "path": "assets/light/80/AGT-006.webp",
+          "width": 80,
+          "height": 80,
+          "bytes": 2228
+        },
+        "128": {
+          "path": "assets/light/128/AGT-006.webp",
+          "width": 128,
+          "height": 128,
+          "bytes": 4310
+        },
+        "256": {
+          "path": "assets/light/256/AGT-006.webp",
+          "width": 256,
+          "height": 256,
+          "bytes": 11736
+        },
+        "512": {
+          "path": "assets/light/512/AGT-006.webp",
+          "width": 512,
+          "height": 512,
+          "bytes": 30492
+        }
+      }
+    }
+  },
+  "animation": false,
+  "postProcessing": "equal-square crop, resize and format conversion only",
+  "generationInputs": [
+    "design/AGT-006.edit-input.png",
+    "references/approved-dark.png",
+    "references/approved-light.png",
+    "references/AGT-006.png"
+  ],
+  "qaNote": "Direct imagegen correction made head near-frontal and eye line level while preserving approved identity."
+}

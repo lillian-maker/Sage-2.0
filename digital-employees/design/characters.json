@@ -1,0 +1,1940 @@
+[
+  {
+    "ordinal": 1,
+    "id": "AGT-001",
+    "name": "衡远",
+    "job": "经营目标与资源统筹",
+    "count": 16,
+    "deliver": "目标与资源决策包",
+    "plane": "经营管理",
+    "domain": "经营与组织",
+    "appearance": "East Asian man, age 25, youthful softly rectangular face and full young cheeks, expressive clear normal-sized brown eyes, short textured black side-swept fringe, light gray crewneck with slate-blue open casual overshirt, gentle confident closed-lip smile, clean-shaven.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": "references/AGT-001.png"
+  },
+  {
+    "ordinal": 2,
+    "id": "AGT-002",
+    "name": "枢衡",
+    "job": "场景自主编排与异常协调",
+    "count": 25,
+    "deliver": "场景规则、装配决策依据、Case 状态与自治异常分析",
+    "plane": "经营管理",
+    "domain": "经营与组织",
+    "appearance": "East Asian woman, 25, softly angular oval face, lively almond brown eyes, neat ink-black pixie hair with a sweeping fringe, pale sage open-collar shirt, warm confident closed-lip smile.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 3,
+    "id": "AGT-003",
+    "name": "明镜",
+    "job": "经营分析与决策支持",
+    "count": 18,
+    "deliver": "带来源的经营分析包",
+    "plane": "经营管理",
+    "domain": "经营与组织",
+    "appearance": "East Asian woman, 26, slender oval face, medium brown eyes, shoulder-length chestnut hair tucked behind one ear, delicate oval dark-metal glasses, powder-blue knit top, bright thoughtful smile with a little teeth.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 4,
+    "id": "AGT-004",
+    "name": "知人",
+    "job": "组织能力与人事行政",
+    "count": 9,
+    "deliver": "能力矩阵与组织调整建议",
+    "plane": "经营管理",
+    "domain": "经营与组织",
+    "appearance": "East Asian man, 26, broad rounded face, cheerful softly curved eyes and thick straight eyebrows, short neat brown hair brushed right, soft mint-green knit over a white tee, friendly open smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 41,
+    "id": "AGT-005",
+    "name": "守衡",
+    "job": "内控审计与独立复核",
+    "count": 12,
+    "deliver": "复核结论与整改清单",
+    "plane": "独立控制",
+    "domain": "经营与组织",
+    "appearance": "East Asian woman, 27, longer oval face with soft defined cheeks, warm almond eyes, black hair in a low bun with loose side fringe, pearl-gray collared blouse, assured gentle closed-lip smile.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 6,
+    "id": "AGT-006",
+    "name": "听澜",
+    "job": "消费者需求与 VOC 研究",
+    "count": 16,
+    "deliver": "需求证据与问题地图",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "Female young adult age 24, warm medium-tan skin, rounded oval face, bright almond eyes, short organic brown springy curls forming an asymmetric ear-length silhouette, pale sage relaxed shirt, small stud earrings, modest friendly smile showing a little teeth.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": "references/AGT-006.png"
+  },
+  {
+    "ordinal": 7,
+    "id": "AGT-007",
+    "name": "望野",
+    "job": "市场竞争与机会研究",
+    "count": 19,
+    "deliver": "机会证据包与反证",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "East Asian man, 25, slender oblong face, softly defined straight nose, gently arched brows, wavy black hair brushed back, pale denim-blue overshirt, playful asymmetrical closed-lip smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "blue-gray",
+      "dark": "#6b7d91",
+      "light": "#e1e9f4"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 8,
+    "id": "AGT-008",
+    "name": "拓新",
+    "job": "产品组合与新品孵化",
+    "count": 14,
+    "deliver": "新品组合与继续停止建议",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "East Asian woman, 24, soft square face with gentle cheeks, lively almond eyes, ear-length chestnut pixie bob, light apricot fine-knit top, cheerful toothy smile and faint dimples.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "muted-green",
+      "dark": "#6e8580",
+      "light": "#e0eeea"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 9,
+    "id": "AGT-009",
+    "name": "定形",
+    "job": "产品定义与商业立项",
+    "count": 11,
+    "deliver": "产品定义与立项包",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "East Asian man, 27, balanced rectangular face and strong gentle eyebrows, neat short black crewcut with a textured top, warm brown eyes, slate-blue relaxed polo, confident friendly closed-lip smile.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 10,
+    "id": "AGT-010",
+    "name": "映物",
+    "job": "工业设计与用户体验",
+    "count": 10,
+    "deliver": "设计方案与体验验证计划",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "East Asian woman, 25, soft triangular face with normal rounded chin, almond brown eyes, sleek black jaw-length side-parted bob, pale mint-green blouse, open easy smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 11,
+    "id": "AGT-011",
+    "name": "砺器",
+    "job": "硬件结构与材料工程",
+    "count": 3,
+    "deliver": "技术风险与工程验证清单",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "East Asian man, 27, strong softly squared jaw, broad brows, close-cropped textured black hair, clear dark eyes, cornflower-blue zip-collar knit, relaxed confident half-smile.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 12,
+    "id": "AGT-012",
+    "name": "灵枢",
+    "job": "软件算法与应用生态",
+    "count": 9,
+    "deliver": "软件方案与验证证据",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "South Asian woman, 26, warm medium-brown skin, oval face, expressive dark eyebrows and eyes, dark wavy hair in a loose low tie, pale lavender shirt, bright kind toothy smile.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 13,
+    "id": "AGT-013",
+    "name": "求证",
+    "job": "产品验证与研发项目",
+    "count": 8,
+    "deliver": "验证报告与缺陷闭合记录",
+    "plane": "业务运营",
+    "domain": "产品与创新",
+    "appearance": "East Asian man, 24, narrow oval face, thin black rectangular glasses, neat short black side-parted hair, smooth brows, light sky-blue overshirt and white tee, eager optimistic closed-lip smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 14,
+    "id": "AGT-014",
+    "name": "择源",
+    "job": "OEM 供应商开发与协同",
+    "count": 14,
+    "deliver": "供应商能力与风险档案",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "East Asian woman, 26, rounded oval face and softly arched brows, shoulder-length black hair with off-center part, pale sage blouse, welcoming open smile with a slight cheek dimple.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 15,
+    "id": "AGT-015",
+    "name": "契约",
+    "job": "采购与合同履约",
+    "count": 16,
+    "deliver": "采购建议与交期异常记录",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "East Asian man, 26, broad cheekbones and compact almond eyes, straight short black hair and silver rectangular glasses, muted teal knit over white tee, warm composed closed-lip smile.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "blue-gray",
+      "dark": "#6b7d91",
+      "light": "#e1e9f4"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 16,
+    "id": "AGT-016",
+    "name": "知量",
+    "job": "需求预测与补货计划",
+    "count": 15,
+    "deliver": "补货方案与预测区间",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "East Asian woman, 25, softly heart-shaped face with adult jaw proportions, clear dark eyes, chin-length black bob with airy side fringe, fresh pastel-blue blouse, cheerful small toothy smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "muted-green",
+      "dark": "#6e8580",
+      "light": "#e0eeea"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 17,
+    "id": "AGT-017",
+    "name": "衡仓",
+    "job": "库存与商品生命周期",
+    "count": 17,
+    "deliver": "库存风险与处置方案",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "East Asian man, 26, soft square face, short upswept wavy black hair, widely spaced brown eyes, rounded nose, powder-blue casual jacket over white tee, friendly toothy smile.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 18,
+    "id": "AGT-018",
+    "name": "质守",
+    "job": "生产协同与质量控制",
+    "count": 13,
+    "deliver": "质量事件与纠正措施包",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "Black woman, 25, warm rich-brown skin, sculpted soft cheekbones, expressive dark eyes, close-cropped natural coily hair, light sage crewneck knit, radiant confident smile.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 19,
+    "id": "AGT-019",
+    "name": "通途",
+    "job": "跨境物流与关务",
+    "count": 14,
+    "deliver": "运输方案与异常处置建议",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "Male young adult age 27, light warm skin, slender soft oval face and fresh compact features, light chestnut hair with soft low side part, light stone-gray zip cardigan over an ivory T-shirt, relaxed subtle closed-lip smile, no facial hair.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": "references/AGT-019.png"
+  },
+  {
+    "ordinal": 20,
+    "id": "AGT-020",
+    "name": "行舟",
+    "job": "仓储履约与退货处置",
+    "count": 16,
+    "deliver": "履约与退货处置记录",
+    "plane": "业务运营",
+    "domain": "供应与履约",
+    "appearance": "East Asian woman, 26, soft square face with full cheeks, straight brows and lively eyes, black hair in a low ponytail with loose front strands, pale blue-gray blouse, sunny toothy smile.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 21,
+    "id": "AGT-021",
+    "name": "北辰",
+    "job": "Amazon 业务经营",
+    "count": 20,
+    "deliver": "Amazon 场景行动包",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "East Asian man, 27, broad rounded face, gentle smiling crescent eyes and straight brows, tidy short black cropped hair, light sage-green overshirt, warm optimistic open smile.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 22,
+    "id": "AGT-022",
+    "name": "觅位",
+    "job": "Amazon 商品与搜索运营",
+    "count": 16,
+    "deliver": "商品与搜索优化包",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "East Asian woman, 25, elongated oval face, softly defined cheeks, slim almond eyes, long straight black hair with center part behind ears, cool pearl-gray shirt, calm confident closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 23,
+    "id": "AGT-023",
+    "name": "自航",
+    "job": "独立站经营与转化",
+    "count": 19,
+    "deliver": "独立站经营与实验包",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "Male young adult age 24, warm complexion, wider softly rounded face, short tight dark-brown curls with neat sides, friendly asymmetric eyebrows, muted periwinkle-blue cotton crewneck, modest open smile, clean-shaven.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "blue-gray",
+      "dark": "#6b7d91",
+      "light": "#e1e9f4"
+    },
+    "identityReference": "references/AGT-023.png"
+  },
+  {
+    "ordinal": 24,
+    "id": "AGT-024",
+    "name": "拓域",
+    "job": "其他平台与新市场经营",
+    "count": 17,
+    "deliver": "新渠道进入与验证方案",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "Latin American man, 25, medium olive skin, soft rectangular face, wide-set brown eyes, short textured dark-brown hair, sage-blue casual shirt, welcoming toothy smile; clean-shaven.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "muted-green",
+      "dark": "#6e8580",
+      "light": "#e0eeea"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 25,
+    "id": "AGT-025",
+    "name": "联商",
+    "job": "零售渠道与 B2B 拓展",
+    "count": 8,
+    "deliver": "渠道机会与合作建议",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "East Asian woman, 26, warm tan skin, angular oval face and softly broad nose, expressive dark eyes, ear-length black bob with sweeping long fringe, pale mint knit, lively closed-lip smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 26,
+    "id": "AGT-026",
+    "name": "衡价",
+    "job": "定价促销与商品组合",
+    "count": 18,
+    "deliver": "价格与促销决策包",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "East Asian man, 26, long oval face and open forehead, gentle narrow eyes and cheek dimples, neatly cropped black hair with short fringe, pale slate-blue polo, confident warm small smile.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 27,
+    "id": "AGT-027",
+    "name": "守店",
+    "job": "店铺账号健康与规则",
+    "count": 15,
+    "deliver": "账号健康与处置建议",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "East Asian woman, 27, round face and soft full cheeks, delicate oval wire glasses, softly wavy black bob, lavender-blue blouse, cheerful toothy smile.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 28,
+    "id": "AGT-028",
+    "name": "译境",
+    "job": "本地化与市场适配",
+    "count": 13,
+    "deliver": "本地化内容与差异清单",
+    "plane": "业务运营",
+    "domain": "渠道经营",
+    "appearance": "European woman, 26, fair warm skin with just a few subtly drawn freckles, hazel eyes, oval face and soft cheekbones, shoulder-length honey-brown loose waves, light sage-green knit, relaxed open smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 29,
+    "id": "AGT-029",
+    "name": "立言",
+    "job": "品牌战略与传播",
+    "count": 21,
+    "deliver": "品牌原则与传播方案",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "East Asian man, 25, softly triangular longer face and noticeable ears, lively brows, short textured black hair, warm brown eyes, muted cobalt-blue overshirt and white tee, confident friendly smile.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 30,
+    "id": "AGT-030",
+    "name": "叙事",
+    "job": "内容与创意策划",
+    "count": 17,
+    "deliver": "内容方案与证据引用",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "East Asian woman, 24, softly heart-shaped face, naturally sized expressive brown eyes, chin-length dark-brown bob with airy fringe, pale apricot knit top, joyful smile and small dimples.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 31,
+    "id": "AGT-031",
+    "name": "绘影",
+    "job": "视觉视频与素材生产",
+    "count": 18,
+    "deliver": "带版本的渠道素材包",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "Black woman, 26, warm medium-brown skin, slim oval face, wide-set dark eyes and graceful eyebrows, shoulder-length softly wavy black hair, soft powder-blue blouse, radiant gentle smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "blue-gray",
+      "dark": "#6b7d91",
+      "light": "#e1e9f4"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 32,
+    "id": "AGT-032",
+    "name": "点火",
+    "job": "效果广告投放",
+    "count": 17,
+    "deliver": "广告行动与效果报告",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "East Asian man, 25, broad jaw and soft cheekbones, short playful spiky black hair, bright almond eyes, muted sky-blue casual bomber over white tee, energetic small toothy smile.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "muted-green",
+      "dark": "#6e8580",
+      "light": "#e0eeea"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 33,
+    "id": "AGT-033",
+    "name": "结伴",
+    "job": "达人与联盟合作",
+    "count": 16,
+    "deliver": "合作候选与效果归因包",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "Black man, 25, warm deep-brown skin, oblong face with a soft square jaw, short neat natural curls, lively dark eyes, pale sage casual polo, welcoming open smile; clean-shaven.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 34,
+    "id": "AGT-034",
+    "name": "续缘",
+    "job": "CRM 留存与复购",
+    "count": 15,
+    "deliver": "用户经营计划与实验结果",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "East Asian female young adult age 24, soft heart-oval face, straight black hair just above the shoulders with offset part and one side tucked behind ear, light dusty-lavender fine-knit round neck, small confident closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": "references/AGT-034.png"
+  },
+  {
+    "ordinal": 35,
+    "id": "AGT-035",
+    "name": "试真",
+    "job": "增长实验与增量评估",
+    "count": 18,
+    "deliver": "实验协议与继续停止结论",
+    "plane": "业务运营",
+    "domain": "品牌与增长",
+    "appearance": "East Asian man, 26, long oval face and high forehead, expressive narrow almond eyes, clear pale-gray rectangular glasses, neat short black side part, pearl-blue crewneck knit, thoughtful warm smile.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 36,
+    "id": "AGT-036",
+    "name": "安心",
+    "job": "售前服务与购买指导",
+    "count": 17,
+    "deliver": "有依据的售前答复与线索",
+    "plane": "业务运营",
+    "domain": "服务与体验",
+    "appearance": "East Asian woman, 26, softly rounded cheeks with adult proportions, dark eyes, tiny subtle beauty mark near cheek, smooth chestnut chin-length bob, light peach blouse, warm sunny small toothy smile.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 37,
+    "id": "AGT-037",
+    "name": "解忧",
+    "job": "售后客诉与服务补救",
+    "count": 16,
+    "deliver": "客诉工单与补救建议",
+    "plane": "业务运营",
+    "domain": "服务与体验",
+    "appearance": "East Asian man, 26, broad soft face, gentle upward-curving eyes, smile dimples and thick straight brows, short black hair brushed left, light teal-blue knit, easy reassuring smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 38,
+    "id": "AGT-038",
+    "name": "回声",
+    "job": "体验洞察与质量反馈",
+    "count": 16,
+    "deliver": "体验问题与根因假设",
+    "plane": "业务运营",
+    "domain": "服务与体验",
+    "appearance": "South Asian man, 26, warm medium-brown skin, long oval face, rounded straight nose, deep dark eyes, short thick black curls, pale slate-blue polo, cheerful smile with a little teeth; clean-shaven.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 39,
+    "id": "AGT-039",
+    "name": "同行",
+    "job": "用户教育与会员社区",
+    "count": 15,
+    "deliver": "教育内容与服务反馈",
+    "plane": "业务运营",
+    "domain": "服务与体验",
+    "appearance": "East Asian woman, 24, soft oval face, bright medium almond eyes and straight brows, black hair in a high ponytail with full hairstyle visible, pale sage blouse, cheerful encouraging smile.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "blue-gray",
+      "dark": "#6b7d91",
+      "light": "#e1e9f4"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 40,
+    "id": "AGT-040",
+    "name": "清账",
+    "job": "GMV 结算与会计对账",
+    "count": 13,
+    "deliver": "对账表与差异处理包",
+    "plane": "业务运营",
+    "domain": "财务与合规",
+    "appearance": "East Asian female young adult age 26, soft square-round face, short layered brown-black pixie-bob with light irregular fringe, small thin gray rounded-rectangle glasses, pale sky-blue casual shirt, attentive friendly eyes and slight smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "muted-green",
+      "dark": "#6e8580",
+      "light": "#e0eeea"
+    },
+    "identityReference": "references/AGT-040.png"
+  },
+  {
+    "ordinal": 5,
+    "id": "AGT-041",
+    "name": "守金",
+    "job": "经营财务与资金",
+    "count": 18,
+    "deliver": "现金与资源约束方案",
+    "plane": "经营管理",
+    "domain": "财务与合规",
+    "appearance": "East Asian man, 27, broad oval face and gently low brows, calm almond brown eyes, tidy short black side part, muted steel-blue overshirt and white tee, assured kind smile with subtle dimples.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 42,
+    "id": "AGT-042",
+    "name": "合账",
+    "job": "税务与跨境实体协作",
+    "count": 13,
+    "deliver": "税务与实体事项清单",
+    "plane": "独立控制",
+    "domain": "财务与合规",
+    "appearance": "East Asian woman, 26, slim angular face, rounded nose, lively dark eyes, cropped black pixie with short side fringe, light mint open-neck shirt, upbeat asymmetrical smile.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 43,
+    "id": "AGT-043",
+    "name": "律衡",
+    "job": "法务与知识产权",
+    "count": 13,
+    "deliver": "法律风险与处理建议",
+    "plane": "独立控制",
+    "domain": "财务与合规",
+    "appearance": "East Asian man, 26, lean rectangular face with defined cheeks, close-cropped black hair with lightly spiked top, medium oval brown eyes, muted blue-gray cotton shirt, warm confident closed-lip smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 44,
+    "id": "AGT-044",
+    "name": "安界",
+    "job": "产品合规与隐私",
+    "count": 17,
+    "deliver": "合规矩阵与证据缺口",
+    "plane": "独立控制",
+    "domain": "财务与合规",
+    "appearance": "East Asian woman, 25, softly rounded oval face, gentle eyebrows, clear brown eyes, long straight black hair with a center part, light lavender-gray blouse, relaxed encouraging closed-lip smile.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 46,
+    "id": "AGT-045",
+    "name": "同尺",
+    "job": "业务口径与主数据",
+    "count": 18,
+    "deliver": "数据口径与对象关系契约",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian man, 25, rounded face with wider cheeks, small round dark-metal glasses, short soft wavy black hair, gentle rounded nose, pale mint-blue knit, enthusiastic warm toothy smile.",
+    "poseKey": "yaw-left",
+    "pose": "Natural shallow three-quarter view: face and shoulders yaw only 12 degrees toward viewer left. Neck vertical, NO sideways head tilt, eyes stay level; gaze gently returns toward viewer.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 47,
+    "id": "AGT-046",
+    "name": "清源",
+    "job": "数据工程与质量",
+    "count": 14,
+    "deliver": "带质量状态的数据产物",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian woman, 26, slender oval face, elegant almond eyes and fuller lips, chestnut chin-length side-parted bob, soft dusty-lilac casual shirt, friendly calm open smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 18 degrees toward viewer right, face near-frontal toward viewer. Head perfectly vertical, eye corners horizontal, no neck bending.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 48,
+    "id": "AGT-047",
+    "name": "接桥",
+    "job": "系统集成与业务工具",
+    "count": 14,
+    "deliver": "工具能力与验收包",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "European man, 26, light warm skin, hazel eyes, softly squared oval face, cropped chestnut waves, straight nose, muted cornflower-blue polo, optimistic warm smile; clean-shaven.",
+    "poseKey": "frontal",
+    "pose": "Square front-facing upright head, balanced level shoulders, naturally relaxed neck. No sideways tilt at all; a fresh thoughtful expression.",
+    "palette": {
+      "name": "blue-gray",
+      "dark": "#6b7d91",
+      "light": "#e1e9f4"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 49,
+    "id": "AGT-048",
+    "name": "积知",
+    "job": "知识技能与 Playbook 治理",
+    "count": 17,
+    "deliver": "能力版本与评估记录",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian woman, 26, oval face and softly defined cheekbones, delicate round wire glasses, black hair in a compact top bun fully within frame with margin, bright brown eyes, pale blue shirt, cheerful bright smile.",
+    "poseKey": "yaw-right",
+    "pose": "Face and shoulders naturally yaw 12 degrees toward viewer right. Absolutely no roll or neck tilt, head vertical and eyes level, gently attentive gaze.",
+    "palette": {
+      "name": "muted-green",
+      "dark": "#6e8580",
+      "light": "#e0eeea"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 50,
+    "id": "AGT-049",
+    "name": "稳行",
+    "job": "Agent 平台与可靠运行",
+    "count": 15,
+    "deliver": "运行状态与恢复证据",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian man, 24, open forehead and slender adult jaw, gentle dark eyes, short black hair with a soft airy fringe, pale blue casual overshirt over a light-gray hoodie, spirited friendly smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Differentiate through expression and facial structure.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 45,
+    "id": "AGT-050",
+    "name": "门卫",
+    "job": "信息安全与权限",
+    "count": 16,
+    "deliver": "权限矩阵与访问证据",
+    "plane": "独立控制",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian woman, 26, soft square face, brown almond eyes and graceful brows, black chin-length asymmetrical bob with side part, light slate-blue shirt, welcoming small toothy smile.",
+    "poseKey": "shoulders-left",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer left, head faces the viewer directly. Head vertical, zero roll, eyes level; calm direct gaze.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 51,
+    "id": "AGT-051",
+    "name": "BoBo",
+    "job": "管理员",
+    "count": null,
+    "deliver": "工作区配置、成员管理与变更记录",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian woman, age 26, fresh youthful softly rounded face, clear normal-sized dark-brown eyes, light chestnut-brown bob just below the ears with softly flicked tips, no glasses, light gray-blue collarless cardigan over a white crewneck T-shirt, warm confident small closed-lip smile.",
+    "poseKey": "frontal",
+    "pose": "Torso and head face front. Keep the head perfectly UPRIGHT, ZERO sideways tilt, eyes horizontally level. Relaxed shoulders, warm direct gaze.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 52,
+    "id": "AGT-052",
+    "name": "筑程",
+    "job": "全栈工程师",
+    "count": null,
+    "deliver": "可运行应用、测试报告与部署交付包",
+    "plane": "数据与 Agent 平台",
+    "domain": "数据与 AI 运行",
+    "appearance": "East Asian man, age 25, fresh youthful softly square face, clear normal-sized brown eyes, close-cropped textured black hair, thin rectangular titanium eyeglasses, light teal-gray-blue casual overshirt over a white crewneck T-shirt, restrained friendly smile with a little teeth, clean-shaven.",
+    "poseKey": "shoulders-right",
+    "pose": "Torso and shoulders turn 15 degrees toward viewer right, head faces the viewer directly. Head perfectly vertical, zero sideways roll, eyes level; attentive direct gaze.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 53,
+    "id": "AGT-053",
+    "name": "启澄",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "East Asian man, age26, youthful gently oblong rectangular face noticeably longer than wide, softly squared rounded jaw rather than taperedV, slightly high cheekbones, narrow warm-brown MONOLID eyes with short straight lid lines, broad gently straight eyebrows, medium-wide straight nose and understated compact lips. Black hair is a neat SHORT LOW-VOLUME side-part crop with tapered sides, exposing most of a wider forehead; absolutely NO long fringe, NO voluminous K-pop haircut, NO curly hair. Clean-shaven, no glasses. Soft slate-blue unstructured casual blazer over ivory crewneck knit. Calm confident closed-lip smile, natural adult cheeks without wrinkles.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 54,
+    "id": "AGT-054",
+    "name": "闻溪",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old East Asian woman with a soft heart-shaped face, fair neutral skin, medium almond brown eyes, softly arched brows, a small straight nose and softly rounded cheeks. Her glossy black chin-length bob curves inward with a deep side part and one ear tucked clear. She wears a sage collarless jacket over a cream round-neck blouse, tiny pearl studs and a relaxed closed-lip smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 55,
+    "id": "AGT-055",
+    "name": "予宁",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old East Asian man with a gently square face, light beige skin, small dark almond eyes, dense straight brows, a broad straight nose and a compact jaw. Cropped charcoal-black hair has a lightly tousled crown and short scissor-cut sides. Clean-shaven, wearing thin round gunmetal eyeglasses. A pearl-gray fine-knit polo with an open two-button placket creates a quiet, precise appearance; slight closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 56,
+    "id": "AGT-056",
+    "name": "昭禾",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "26-year-old East Asian woman with an elongated oval face, warm light skin, normal-sized dark-brown eyes, straight slim eyebrows, a softly rounded nose tip and a delicate chin. Long dark-brown hair is tied into a low ponytail with smooth center-parted front sections. A muted teal V-neck cardigan covers a pale high scoop-neck top. Tiny silver studs; friendly small tooth smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 57,
+    "id": "AGT-057",
+    "name": "沐川",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old East Asian man with a broad oval face, light golden skin, dark hooded eyes, straight medium brows, a low-to-medium straight nose bridge and a rounded jaw. Thick near-black hair forms a short rounded crop with a broken fringe well above the eyebrows. Clean-shaven. He wears a dusty lilac crew-neck sweatshirt under a soft charcoal overshirt with the collar open. Fresh, restrained closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 58,
+    "id": "AGT-058",
+    "name": "嘉树",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old East Asian woman with a softly angular rectangular face, light olive skin, slim almond brown eyes, defined low-arched brows, a straight medium nose and a neat strong chin. Her dark espresso hair forms a sleek ear-length pixie with a longer side-swept top. A stone-colored notch-lapel blazer frames a cream boat-neck knit. Small gold disk studs and a confident closed-lip smile; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 59,
+    "id": "AGT-059",
+    "name": "云舒",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "26-year-old East Asian man with a narrow diamond-shaped face, fair cool skin, slightly upturned dark-brown eyes, fine straight eyebrows, a slim nose and high soft cheekbones. Medium-length black hair is center-parted into subtle curtain waves ending above the ears. Clean-shaven. A pale slate-blue band-collar shirt is buttoned neatly below the throat. A quietly attentive expression with a slight smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 60,
+    "id": "AGT-060",
+    "name": "景和",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old East Asian woman with a round face, warm porcelain skin, gently downturned brown eyes, soft straight brows, a button-like rounded nose and full cheeks. Her shoulder-length dark-brown hair has a light outward flip and airy eyebrow-length bangs. Translucent champagne oval eyeglasses frame normal-sized eyes. She wears a sage knit vest over a white pointed-collar shirt, with a small warm tooth smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 61,
+    "id": "AGT-061",
+    "name": "林序",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "29-year-old East Asian man with a softly rectangular face, medium warm beige skin, dark almond eyes, thick flat brows, a prominent straight nose and a balanced chin. His black hair is brushed back loosely with a low-volume wave and neatly tapered temples. Clean-shaven. A pearl-gray cardigan with a shallow V neckline layers over a soft white crew-neck shirt. Composed closed-lip expression; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 62,
+    "id": "AGT-062",
+    "name": "若谷",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old East Asian woman with a delicate oval face, light peach skin, medium dark eyes, gently feathered brows, a petite rounded nose and a short soft chin. A straight black jaw-length bob has a crisp center part and ends just below her ears. She wears a muted teal stand-collar blouse with concealed buttons and tiny silver hoops. Calm, youthful closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 63,
+    "id": "AGT-063",
+    "name": "知夏",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old East Asian man with a round-to-square face, fair pink-neutral skin, gently hooded brown eyes, medium straight brows, a short broad nose and full cheekbones. His dark chestnut hair is softly wavy on top with a side fringe and close sides. Clean-shaven. He wears a dusty lilac zipped knit cardigan half open over an ivory crew-neck tee. Friendly small tooth smile; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 64,
+    "id": "AGT-064",
+    "name": "舒言",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old East Asian woman with a long heart-shaped face, warm beige skin, dark almond eyes, slim arched brows, a straight narrow nose and a softly pointed chin. Long black hair falls in smooth loose waves past both shoulders with an off-center part. A stone-gray round-neck jacket has subtle piping over a warm-white scoop-neck blouse. Minimal stud earrings and a gentle closed-lip smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 65,
+    "id": "AGT-065",
+    "name": "青岑",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old East Asian man with an oval face, light olive skin, deep brown monolid eyes, strong straight brows, a broad medium nose and a softly defined jaw. Short black hair has a precise short side part, very low crown volume and full natural hairline. Clean-shaven, with matte dark-slate rectangular eyeglasses. He wears a pale blue mandarin-collar overshirt over a white round-neck knit; calm closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 66,
+    "id": "AGT-066",
+    "name": "宥安",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old East Asian woman with a compact diamond-shaped face, fair neutral skin, medium almond dark eyes, gently angled brows, a small straight nose and prominent but soft cheekbones. Her black hair is gathered in a low bun with a clean side part and one fine temple strand. A sage ribbed mock-neck knit and small oval silver earrings complete a clear, composed look; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 67,
+    "id": "AGT-067",
+    "name": "星阑",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old East Asian man with a heart-shaped face, pale warm skin, dark-brown eyes with gentle epicanthic folds, softly arched brows, a slim rounded nose and a tapered chin. Medium-length chestnut hair has loose natural curls around the forehead and ears. Clean-shaven. He wears a pearl-gray open-collar Oxford shirt with a white undershirt just visible. Relaxed small tooth smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 68,
+    "id": "AGT-068",
+    "name": "映川",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "29-year-old East Asian woman with a broad oval face, golden beige skin, dark hooded almond eyes, thick straight brows, a medium straight nose and a rounded chin. A dense dark espresso bob reaches her shoulders, with a deep side part and softly waved ends. Her teal blazer frames a cream shallow V-neck blouse. Small brushed-metal studs, poised closed-lip smile; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 69,
+    "id": "AGT-069",
+    "name": "书砚",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "26-year-old East Asian man with a long softly angular face, light neutral skin, slightly narrow brown eyes, level brows, a long straight nose and a modestly pointed chin. His blue-black hair is closely clipped at the sides with a textured upright top, not spiky. Clean-shaven. A lilac-gray collarless jacket over an ivory crew-neck knit adds understated structure. Neutral attentive expression with softened lips; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 70,
+    "id": "AGT-070",
+    "name": "沅芷",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old East Asian woman with a soft square face, warm light skin, round-almond dark eyes, straight natural brows, a short nose with a rounded tip and gently padded cheeks. Dark chestnut hair is braided into one low side braid with a soft diagonal fringe. Thin rose-gold round eyeglasses, a stone button-front cardigan and an ivory high scoop-neck shirt; cheerful small tooth smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 71,
+    "id": "AGT-071",
+    "name": "时予",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old East Asian man with a compact oval face, medium beige skin, deep-set dark almond eyes, short thick brows, a medium-width nose and a firm rounded chin. His near-black hair is a neat cropped Caesar style with a short uneven horizontal fringe. Clean-shaven. A slate-blue knit polo has a structured collar and closed top button. Calm closed-lip expression; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 72,
+    "id": "AGT-072",
+    "name": "霁月",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old East Asian woman with a long oval face, pale cool skin, softly hooded brown eyes, gently curved brows, a small high-bridged straight nose and a tapered jaw. Her ash-brown shoulder-length hair has loose S-shaped waves and a middle part. A sage cardigan is worn over a white boat-neck top, with small silver ball studs. Subtle welcoming closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 73,
+    "id": "AGT-073",
+    "name": "承晖",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "East Asian man age27, youthful WIDE rounded-square face, noticeably broad full cheeks, soft squared jaw corners, rounded flat-bottomed chin. Warm medium-tan skin. Narrow deep-set brown monolid eyes, SHORT thick straight eyebrows, a broad gently rounded nose base, small calm closed-lip smile with NO teeth. NO resemblance to a narrow-chin pop-idol face. Neat very SHORT dark-brown brushed-back hair with low flat volume and fully exposed forehead, NO long fringe, NO wavy forelock, NO curly mop. Clean-shaven, no glasses. Pearl-gray lightweight soft blazer over plain white band-collar shirt. Fresh contemporary colleague, not aged, no wrinkles.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 74,
+    "id": "AGT-074",
+    "name": "宁越",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "26-year-old East Asian woman with a rounded heart-shaped face, warm ivory skin, normal-sized dark eyes, fine straight brows, a petite straight nose and a neat tapered chin. Her black hair forms a long low ponytail, with full airy bangs separated at the middle. A muted teal fine-knit sweater has a narrow crew neckline and subtle raglan seams. Tiny gold studs, serene closed-lip smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 75,
+    "id": "AGT-075",
+    "name": "谨初",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old East Asian man with an elongated oval face, fair neutral skin, narrow dark-brown eyes, soft low-arched brows, a slender nose and softly defined cheekbones. His black hair is medium length with a side-swept fringe and ear-skimming ends. Thin silver half-rim eyeglasses; clean-shaven. A muted lilac sweater layers over a white shirt with a small spread collar. Thoughtful closed-lip expression.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 76,
+    "id": "AGT-076",
+    "name": "远音",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old East Asian woman with a gently rectangular face, light golden skin, medium almond brown eyes, strong tapered eyebrows, a straight nose and a round-ended chin. Her dark hair is pulled into a small neat top bun, with a short soft side fringe. She wears a stone-colored collared blouse with a modest open neckline and tiny geometric stud earrings. Warm closed-lip smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 77,
+    "id": "AGT-077",
+    "name": "怀瑾",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old East Asian man with a rounded triangular face, light warm beige skin, wide-set almond brown eyes, short straight eyebrows, a small rounded nose and a soft broad jaw. His thick black hair forms a loose bowl-shaped crop with textured edges and ears partly visible. Clean-shaven. A slate-blue crew-neck knit over a pale shirt shows only the collar tips. Cheerful restrained tooth smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 78,
+    "id": "AGT-078",
+    "name": "溪桥",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old East Asian woman with a narrow oval face, fair cool skin, long dark almond eyes, slim feathered brows, a straight narrow nose and a subtle chin cleft. A straight espresso-black lob reaches the collarbone with a precise side part and one side tucked back. Her sage tailored vest sits over an ivory round-neck blouse. Tiny silver hoops, composed closed-lip smile; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 79,
+    "id": "AGT-079",
+    "name": "序白",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old East Asian man with a soft pentagonal face, medium olive-beige skin, slightly hooded dark eyes, thick gently angled brows, a medium broad nose and pronounced rounded cheekbones. Short black curls cluster naturally over the forehead with neatly trimmed sides. Clean-shaven. He wears a pearl-gray open shawl-collar cardigan over a soft white crew-neck shirt. Calm friendly closed-lip smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 80,
+    "id": "AGT-080",
+    "name": "南乔",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old East Asian woman with a small round face, porcelain beige skin, softly upturned brown eyes, fine arched brows, a petite rounded nose and a small chin. Her dark-brown hair is cut in a fluffy short bob with natural waves and a clear forehead. Slim dark-teal softened-square eyeglasses; a muted teal blouse has a small rounded collar. Bright small tooth smile and tiny stud earrings.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 81,
+    "id": "AGT-081",
+    "name": "以恒",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old East Asian man with a narrow square face, warm fair skin, dark monolid eyes, level full brows, a straight medium nose and a lightly pronounced jaw. His jet-black hair has a low side part and a smooth brushed-over top, ending cleanly above the ears. Clean-shaven. A muted lilac-gray blazer frames a white high crew-neck tee. Quiet, assured closed-lip smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 82,
+    "id": "AGT-082",
+    "name": "清和",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "29-year-old East Asian woman with a long diamond-shaped face, light olive skin, medium almond dark eyes, gently angled brows, a long narrow nose and soft high cheekbones. Her black hair is in a low loose knot with a center part and two short face-framing pieces. A stone-gray knit top has a modest square neckline beneath a collarless jacket. Small gold studs, relaxed closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 83,
+    "id": "AGT-083",
+    "name": "晴岚",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "East Asian man age25, broad round-oval face with full youthful cheeks and a broad rounded chin, warm medium beige skin, relaxed narrow brown eyes, softly arched short eyebrows, gently wide short nose, medium fuller lips giving a bright small tooth smile. Dense very SHORT 10mm BLACK BUZZ CUT with even fine velvety texture across the head, hairline and entire forehead fully visible. No fringe, no side-swept front, no waves, no curls, no long strands, no quiff. This buzz haircut is absolutely essential for a distinct silhouette. Completely clean-shaven, no glasses. Slate-blue casual overshirt with large soft collar over cream fine-knit crewneck. Youthful 25 adult warmth, smooth matte illustrated skin no pores/wrinkles.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 84,
+    "id": "AGT-084",
+    "name": "望舒",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old East Asian woman with a soft oval face, warm pale skin, normal-sized dark-brown eyes, natural straight brows, a slim low-bridge nose and smooth cheeks. Long near-black hair is straight with a side part and a single slim section tucked behind one ear. A sage short-sleeve cardigan with a round neckline is neatly buttoned. Delicate silver studs and a calm closed-lip smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 85,
+    "id": "AGT-085",
+    "name": "若衡",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old South Asian man with a long oval face, medium warm-brown skin, deep-set dark-brown eyes, thick arched eyebrows, a strong straight nose and a rounded jaw. Dense black hair is short with soft waves pushed back from the forehead. Clean-shaven, wearing slender bronze round eyeglasses. A pearl-gray band-collar shirt under a charcoal knit vest gives a polished silhouette. Gentle closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 86,
+    "id": "AGT-086",
+    "name": "书临",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old South Asian woman with a heart-shaped face, rich golden-brown skin, normal-sized almond dark eyes, full softly curved brows, a straight nose with a rounded tip and a delicate chin. Her thick dark hair falls in long loose waves with an off-center part. A muted teal collarless jacket frames an ivory round-neck blouse. Small gold hoops and a warm small tooth smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 87,
+    "id": "AGT-087",
+    "name": "沐言",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old Black West African man with a broad oval face, deep brown skin, normal-sized dark-brown eyes, defined straight eyebrows, a wide rounded nose and a soft square jaw. His tightly coiled black hair is cut into a compact rounded high top with tapered sides. Clean-shaven. He wears a dusty lilac crew-neck knit and a stone open overshirt. Relaxed closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 88,
+    "id": "AGT-088",
+    "name": "亦舟",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old Black East African woman with a long elegant oval face, deep warm-brown skin, almond dark eyes, softly arched eyebrows, a slim straight nose and pronounced smooth cheekbones. Her natural coiled hair forms a short rounded halo with a crisp ear-level silhouette. A stone-gray V-neck cardigan layers over an ivory high-neck shell. Small silver disk earrings and a confident closed-lip smile; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 89,
+    "id": "AGT-089",
+    "name": "栩然",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "26-year-old Mediterranean man with a gently rectangular face, light olive skin, hazel almond eyes, dense dark eyebrows, a subtly aquiline nose and a rounded strong chin. Short dark chestnut curls form a loose textured top above soft scissor-cut sides. Clean-shaven. A slate-blue spread-collar shirt is open one button at the neck. His natural small tooth smile feels easy and calm; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 90,
+    "id": "AGT-090",
+    "name": "语桐",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old Mediterranean woman with an oval face, warm olive skin, normal-sized brown eyes, strong low-arched brows, a straight prominent nose and full cheeks. Her dark espresso hair is cut into a chin-length wavy bob with a side part. Transparent olive-gray softened-rectangle eyeglasses, small gold studs and a sage boat-neck knit create a distinct silhouette. Calm closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 91,
+    "id": "AGT-091",
+    "name": "泊宁",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "29-year-old Latino man with a softly square face, medium bronze skin, normal-sized dark-brown eyes, straight thick brows, a broad straight nose and a rounded chin. Dense dark-brown hair is neatly brushed to one side with a low wave and naturally full sides. Clean-shaven. A pearl-gray soft blazer frames a white knit polo with a short open placket. Friendly small tooth smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 92,
+    "id": "AGT-092",
+    "name": "和颂",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old Latina woman with a rounded diamond face, golden tan skin, slightly hooded hazel eyes, softly angled brows, a small broad-tipped nose and smooth high cheekbones. Her dark-brown curls form a shoulder-length layered bob with a side part. A muted teal button-front cardigan covers a cream scoop-neck top. Small silver hoops and a gentle closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 93,
+    "id": "AGT-093",
+    "name": "昭宁",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old Arab man with a long oval face, warm light-brown skin, deep brown almond eyes, thick gently curved eyebrows, a prominent straight nose and a tapered rounded jaw. Short black hair is swept upward and back in a soft low quiff with trimmed sides. Clean-shaven. He wears a lilac-gray collarless overshirt over an ivory crew-neck shirt. Calm attentive closed-lip expression; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 94,
+    "id": "AGT-094",
+    "name": "景初",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old Arab woman with a softly square face, warm olive skin, dark almond eyes, long gently arched brows, a medium straight nose and a softly rounded chin. Her dark-brown hair is gathered into a smooth low ponytail with a deep side part. A stone blazer frames a modest cream mock-neck knit; tiny gold ball studs. Warm small tooth smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 95,
+    "id": "AGT-095",
+    "name": "维清",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old Northern European man with a long softly angular face, fair neutral skin, normal-sized gray-blue eyes, straight light-brown brows, a straight narrow nose and a rounded prominent chin. Short sandy-blond hair has a side part and a light wave over the forehead. Clean-shaven, with slim navy oval eyeglasses. A slate-blue crew-neck sweater is layered over a white small-collar shirt. Reserved closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 96,
+    "id": "AGT-096",
+    "name": "云岫",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "24-year-old Northern European woman with a round-to-oval face, fair peach skin with a few delicate natural freckles, normal-sized gray-green eyes, softly curved light brows, a short straight nose and full cheeks. Her copper-auburn hair is cut in a textured ear-length pixie with a long side fringe. A sage round-neck jacket and cream top frame small silver studs. Cheerful small tooth smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 97,
+    "id": "AGT-097",
+    "name": "安序",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "23-year-old Southeast Asian man with a compact square face, warm medium-tan skin, dark almond eyes, straight fine eyebrows, a medium-width rounded nose and a soft jawline. Straight black hair forms a short textured crop with a subtly off-center fringe and softly faded temples. Clean-shaven. He wears a pearl-gray short-sleeve knit polo with a clean two-button neckline. Calm closed-lip smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "pearl-gray",
+      "dark": "#728191",
+      "light": "#e5e9ef"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 98,
+    "id": "AGT-098",
+    "name": "思齐",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "26-year-old Southeast Asian woman with a rounded heart-shaped face, golden medium-brown skin, dark softly hooded eyes, straight tapered brows, a petite rounded nose and a neat chin. Long black hair is loosely tied into a low side ponytail with a smooth middle part. A teal collarless blouse has a modest high V opening; tiny pearl studs. Warm relaxed closed-lip smile; no glasses.",
+    "poseKey": "frontal",
+    "pose": "Upright frontal head-and-shoulders portrait, head facing the viewer, shoulders level, neck vertical and eye line horizontal. ZERO sideways head roll; no leaning. Natural direct gaze.",
+    "palette": {
+      "name": "teal",
+      "dark": "#627f8a",
+      "light": "#deedf0"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 99,
+    "id": "AGT-099",
+    "name": "容与",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "27-year-old Afro-Latino man with a broad diamond-shaped face, medium-deep brown skin, warm brown almond eyes, thick level brows, a broad straight nose and full sculpted cheeks. Short tight dark curls have a rounded top and neatly trimmed sides without a hard shaved line. Clean-shaven. A lilac fine-knit cardigan is worn over an ivory high crew-neck tee. Open small tooth smile; no glasses.",
+    "poseKey": "shoulders-left",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-left and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "lilac",
+      "dark": "#817187",
+      "light": "#ebe3ee"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 100,
+    "id": "AGT-100",
+    "name": "予川",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "25-year-old Afro-Caribbean woman with an oval face, deep golden-brown skin, normal-sized dark-brown eyes, gently arched full brows, a rounded broad nose and a softly defined chin. Her hair is arranged in neat medium-width braids gathered into a low bun, with clean center-parted front sections. Thin warm-tortoiseshell cat-eye eyeglasses, a stone collared blouse and tiny gold studs. Quiet closed-lip smile.",
+    "poseKey": "shoulders-right",
+    "pose": "Upright head-and-shoulders portrait with the shoulder line turned 15 degrees toward image-right and the face returned toward the viewer. Head vertical, ZERO sideways head roll, level eye line and relaxed even shoulders. No leaning.",
+    "palette": {
+      "name": "stone",
+      "dark": "#8a8583",
+      "light": "#e8eaed"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 101,
+    "id": "AGT-101",
+    "name": "澄心",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "29-year-old multiracial man with a narrow oval face, light caramel skin, normal-sized dark hazel eyes, gently angled medium-brown brows, a medium straight nose and a softly pointed chin. His dark chestnut hair falls in loose short curls with a naturally uneven forelock. Clean-shaven. A slate-blue open-lapel cardigan frames a cream band-collar shirt. Relaxed friendly closed-lip smile; no glasses.",
+    "poseKey": "yaw-left",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-left, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "slate-blue",
+      "dark": "#5b7087",
+      "light": "#dce8f2"
+    },
+    "identityReference": null
+  },
+  {
+    "ordinal": 102,
+    "id": "AGT-102",
+    "name": "知微",
+    "job": "待分配岗位",
+    "count": null,
+    "deliver": "待岗位配置后确定",
+    "plane": "扩展成员",
+    "domain": "待分配",
+    "appearance": "28-year-old Pacific Islander woman with a broad oval face, warm medium-brown skin, normal-sized almond dark eyes, full straight brows, a softly rounded wide nose and smooth generous cheeks. Thick black hair falls in long large waves from a clean side part, with one ear visible. A sage blazer frames an ivory shallow scoop-neck blouse. Small silver hoops and a bright small tooth smile; no glasses.",
+    "poseKey": "yaw-right",
+    "pose": "Upright head-and-shoulders portrait, shoulders nearly frontal and head gently yawed 12 degrees toward image-right, eyes looking naturally toward the viewer. Neck vertical, horizontal eye line, ZERO sideways head roll and no leaning.",
+    "palette": {
+      "name": "sage",
+      "dark": "#80928b",
+      "light": "#e1ece7"
+    },
+    "identityReference": null
+  }
+]

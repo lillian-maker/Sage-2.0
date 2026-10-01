@@ -1,6 +1,12 @@
 # Sage 2.0
 
-独立中英文官网。该仓库不替代已有 Sage 或 WorldPilot 仓库。
+独立中英文官网，并承接 WorldPilot 数字员工设计素材；不替代已有 Sage 仓库。
+
+## 数字员工设计素材
+
+完整素材保存在 [`digital-employees/`](digital-employees/README.md)，包含 102 位数字员工的深浅色头像、原始生成图、七种 WebP 尺寸、提示词、岗位数据、资源清单和展示组件。通过 `digital-employees/WorldPilot_Youth_Avatars.html` 预览。原始文件名和设计来源保持不变，不改写历史身份或岗位定义；新增 50 人的业务域与岗位配置状态以素材包说明为准。
+
+2026-10-01 从 `lillian-maker/WorldPilot` 的 `2e676da87999c88fbc70baae9eb5dbf72c2b757e` 迁入 `digital-employees/` 全目录（1,971 个文件），逐文件 Git blob 校验一致，并核对头像清单哈希与尺寸资源字节数。后续维护素材前同时阅读该目录 README。官网现有内嵌头像和业务配置不受迁移影响。
 
 ## 开发与构建
 

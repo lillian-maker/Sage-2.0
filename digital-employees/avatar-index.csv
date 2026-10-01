@@ -1,0 +1,103 @@
+﻿id,name,job,domain,dark_png,light_png,dark_webp_512,light_webp_512,pose
+AGT-001,衡远,经营目标与资源统筹,经营与组织,assets/dark/AGT-001.png,assets/light/AGT-001.png,assets/dark/512/AGT-001.webp,assets/light/512/AGT-001.webp,frontal
+AGT-002,枢衡,场景自主编排与异常协调,经营与组织,assets/dark/AGT-002.png,assets/light/AGT-002.png,assets/dark/512/AGT-002.webp,assets/light/512/AGT-002.webp,shoulders-left
+AGT-003,明镜,经营分析与决策支持,经营与组织,assets/dark/AGT-003.png,assets/light/AGT-003.png,assets/dark/512/AGT-003.webp,assets/light/512/AGT-003.webp,yaw-left
+AGT-004,知人,组织能力与人事行政,经营与组织,assets/dark/AGT-004.png,assets/light/AGT-004.png,assets/dark/512/AGT-004.webp,assets/light/512/AGT-004.webp,shoulders-right
+AGT-005,守衡,内控审计与独立复核,经营与组织,assets/dark/AGT-005.png,assets/light/AGT-005.png,assets/dark/512/AGT-005.webp,assets/light/512/AGT-005.webp,frontal
+AGT-006,听澜,消费者需求与 VOC 研究,产品与创新,assets/dark/AGT-006.png,assets/light/AGT-006.png,assets/dark/512/AGT-006.webp,assets/light/512/AGT-006.webp,yaw-right
+AGT-007,望野,市场竞争与机会研究,产品与创新,assets/dark/AGT-007.png,assets/light/AGT-007.png,assets/dark/512/AGT-007.webp,assets/light/512/AGT-007.webp,frontal
+AGT-008,拓新,产品组合与新品孵化,产品与创新,assets/dark/AGT-008.png,assets/light/AGT-008.png,assets/dark/512/AGT-008.webp,assets/light/512/AGT-008.webp,shoulders-left
+AGT-009,定形,产品定义与商业立项,产品与创新,assets/dark/AGT-009.png,assets/light/AGT-009.png,assets/dark/512/AGT-009.webp,assets/light/512/AGT-009.webp,yaw-left
+AGT-010,映物,工业设计与用户体验,产品与创新,assets/dark/AGT-010.png,assets/light/AGT-010.png,assets/dark/512/AGT-010.webp,assets/light/512/AGT-010.webp,shoulders-right
+AGT-011,砺器,硬件结构与材料工程,产品与创新,assets/dark/AGT-011.png,assets/light/AGT-011.png,assets/dark/512/AGT-011.webp,assets/light/512/AGT-011.webp,frontal
+AGT-012,灵枢,软件算法与应用生态,产品与创新,assets/dark/AGT-012.png,assets/light/AGT-012.png,assets/dark/512/AGT-012.webp,assets/light/512/AGT-012.webp,yaw-right
+AGT-013,求证,产品验证与研发项目,产品与创新,assets/dark/AGT-013.png,assets/light/AGT-013.png,assets/dark/512/AGT-013.webp,assets/light/512/AGT-013.webp,frontal
+AGT-014,择源,OEM 供应商开发与协同,供应与履约,assets/dark/AGT-014.png,assets/light/AGT-014.png,assets/dark/512/AGT-014.webp,assets/light/512/AGT-014.webp,shoulders-left
+AGT-015,契约,采购与合同履约,供应与履约,assets/dark/AGT-015.png,assets/light/AGT-015.png,assets/dark/512/AGT-015.webp,assets/light/512/AGT-015.webp,yaw-left
+AGT-016,知量,需求预测与补货计划,供应与履约,assets/dark/AGT-016.png,assets/light/AGT-016.png,assets/dark/512/AGT-016.webp,assets/light/512/AGT-016.webp,shoulders-right
+AGT-017,衡仓,库存与商品生命周期,供应与履约,assets/dark/AGT-017.png,assets/light/AGT-017.png,assets/dark/512/AGT-017.webp,assets/light/512/AGT-017.webp,frontal
+AGT-018,质守,生产协同与质量控制,供应与履约,assets/dark/AGT-018.png,assets/light/AGT-018.png,assets/dark/512/AGT-018.webp,assets/light/512/AGT-018.webp,yaw-right
+AGT-019,通途,跨境物流与关务,供应与履约,assets/dark/AGT-019.png,assets/light/AGT-019.png,assets/dark/512/AGT-019.webp,assets/light/512/AGT-019.webp,frontal
+AGT-020,行舟,仓储履约与退货处置,供应与履约,assets/dark/AGT-020.png,assets/light/AGT-020.png,assets/dark/512/AGT-020.webp,assets/light/512/AGT-020.webp,shoulders-left
+AGT-021,北辰,Amazon 业务经营,渠道经营,assets/dark/AGT-021.png,assets/light/AGT-021.png,assets/dark/512/AGT-021.webp,assets/light/512/AGT-021.webp,yaw-left
+AGT-022,觅位,Amazon 商品与搜索运营,渠道经营,assets/dark/AGT-022.png,assets/light/AGT-022.png,assets/dark/512/AGT-022.webp,assets/light/512/AGT-022.webp,shoulders-right
+AGT-023,自航,独立站经营与转化,渠道经营,assets/dark/AGT-023.png,assets/light/AGT-023.png,assets/dark/512/AGT-023.webp,assets/light/512/AGT-023.webp,frontal
+AGT-024,拓域,其他平台与新市场经营,渠道经营,assets/dark/AGT-024.png,assets/light/AGT-024.png,assets/dark/512/AGT-024.webp,assets/light/512/AGT-024.webp,yaw-right
+AGT-025,联商,零售渠道与 B2B 拓展,渠道经营,assets/dark/AGT-025.png,assets/light/AGT-025.png,assets/dark/512/AGT-025.webp,assets/light/512/AGT-025.webp,frontal
+AGT-026,衡价,定价促销与商品组合,渠道经营,assets/dark/AGT-026.png,assets/light/AGT-026.png,assets/dark/512/AGT-026.webp,assets/light/512/AGT-026.webp,shoulders-left
+AGT-027,守店,店铺账号健康与规则,渠道经营,assets/dark/AGT-027.png,assets/light/AGT-027.png,assets/dark/512/AGT-027.webp,assets/light/512/AGT-027.webp,yaw-left
+AGT-028,译境,本地化与市场适配,渠道经营,assets/dark/AGT-028.png,assets/light/AGT-028.png,assets/dark/512/AGT-028.webp,assets/light/512/AGT-028.webp,shoulders-right
+AGT-029,立言,品牌战略与传播,品牌与增长,assets/dark/AGT-029.png,assets/light/AGT-029.png,assets/dark/512/AGT-029.webp,assets/light/512/AGT-029.webp,frontal
+AGT-030,叙事,内容与创意策划,品牌与增长,assets/dark/AGT-030.png,assets/light/AGT-030.png,assets/dark/512/AGT-030.webp,assets/light/512/AGT-030.webp,yaw-right
+AGT-031,绘影,视觉视频与素材生产,品牌与增长,assets/dark/AGT-031.png,assets/light/AGT-031.png,assets/dark/512/AGT-031.webp,assets/light/512/AGT-031.webp,frontal
+AGT-032,点火,效果广告投放,品牌与增长,assets/dark/AGT-032.png,assets/light/AGT-032.png,assets/dark/512/AGT-032.webp,assets/light/512/AGT-032.webp,shoulders-left
+AGT-033,结伴,达人与联盟合作,品牌与增长,assets/dark/AGT-033.png,assets/light/AGT-033.png,assets/dark/512/AGT-033.webp,assets/light/512/AGT-033.webp,yaw-left
+AGT-034,续缘,CRM 留存与复购,品牌与增长,assets/dark/AGT-034.png,assets/light/AGT-034.png,assets/dark/512/AGT-034.webp,assets/light/512/AGT-034.webp,shoulders-right
+AGT-035,试真,增长实验与增量评估,品牌与增长,assets/dark/AGT-035.png,assets/light/AGT-035.png,assets/dark/512/AGT-035.webp,assets/light/512/AGT-035.webp,frontal
+AGT-036,安心,售前服务与购买指导,服务与体验,assets/dark/AGT-036.png,assets/light/AGT-036.png,assets/dark/512/AGT-036.webp,assets/light/512/AGT-036.webp,yaw-right
+AGT-037,解忧,售后客诉与服务补救,服务与体验,assets/dark/AGT-037.png,assets/light/AGT-037.png,assets/dark/512/AGT-037.webp,assets/light/512/AGT-037.webp,frontal
+AGT-038,回声,体验洞察与质量反馈,服务与体验,assets/dark/AGT-038.png,assets/light/AGT-038.png,assets/dark/512/AGT-038.webp,assets/light/512/AGT-038.webp,shoulders-left
+AGT-039,同行,用户教育与会员社区,服务与体验,assets/dark/AGT-039.png,assets/light/AGT-039.png,assets/dark/512/AGT-039.webp,assets/light/512/AGT-039.webp,yaw-left
+AGT-040,清账,GMV 结算与会计对账,财务与合规,assets/dark/AGT-040.png,assets/light/AGT-040.png,assets/dark/512/AGT-040.webp,assets/light/512/AGT-040.webp,shoulders-right
+AGT-041,守金,经营财务与资金,财务与合规,assets/dark/AGT-041.png,assets/light/AGT-041.png,assets/dark/512/AGT-041.webp,assets/light/512/AGT-041.webp,frontal
+AGT-042,合账,税务与跨境实体协作,财务与合规,assets/dark/AGT-042.png,assets/light/AGT-042.png,assets/dark/512/AGT-042.webp,assets/light/512/AGT-042.webp,yaw-right
+AGT-043,律衡,法务与知识产权,财务与合规,assets/dark/AGT-043.png,assets/light/AGT-043.png,assets/dark/512/AGT-043.webp,assets/light/512/AGT-043.webp,frontal
+AGT-044,安界,产品合规与隐私,财务与合规,assets/dark/AGT-044.png,assets/light/AGT-044.png,assets/dark/512/AGT-044.webp,assets/light/512/AGT-044.webp,shoulders-left
+AGT-045,同尺,业务口径与主数据,数据与 AI 运行,assets/dark/AGT-045.png,assets/light/AGT-045.png,assets/dark/512/AGT-045.webp,assets/light/512/AGT-045.webp,yaw-left
+AGT-046,清源,数据工程与质量,数据与 AI 运行,assets/dark/AGT-046.png,assets/light/AGT-046.png,assets/dark/512/AGT-046.webp,assets/light/512/AGT-046.webp,shoulders-right
+AGT-047,接桥,系统集成与业务工具,数据与 AI 运行,assets/dark/AGT-047.png,assets/light/AGT-047.png,assets/dark/512/AGT-047.webp,assets/light/512/AGT-047.webp,frontal
+AGT-048,积知,知识技能与 Playbook 治理,数据与 AI 运行,assets/dark/AGT-048.png,assets/light/AGT-048.png,assets/dark/512/AGT-048.webp,assets/light/512/AGT-048.webp,yaw-right
+AGT-049,稳行,Agent 平台与可靠运行,数据与 AI 运行,assets/dark/AGT-049.png,assets/light/AGT-049.png,assets/dark/512/AGT-049.webp,assets/light/512/AGT-049.webp,frontal
+AGT-050,门卫,信息安全与权限,数据与 AI 运行,assets/dark/AGT-050.png,assets/light/AGT-050.png,assets/dark/512/AGT-050.webp,assets/light/512/AGT-050.webp,shoulders-left
+AGT-051,BoBo,管理员,数据与 AI 运行,assets/dark/AGT-051.png,assets/light/AGT-051.png,assets/dark/512/AGT-051.webp,assets/light/512/AGT-051.webp,frontal
+AGT-052,筑程,全栈工程师,数据与 AI 运行,assets/dark/AGT-052.png,assets/light/AGT-052.png,assets/dark/512/AGT-052.webp,assets/light/512/AGT-052.webp,shoulders-right
+AGT-053,启澄,待分配岗位,待分配,assets/dark/AGT-053.png,assets/light/AGT-053.png,assets/dark/512/AGT-053.webp,assets/light/512/AGT-053.webp,frontal
+AGT-054,闻溪,待分配岗位,待分配,assets/dark/AGT-054.png,assets/light/AGT-054.png,assets/dark/512/AGT-054.webp,assets/light/512/AGT-054.webp,shoulders-left
+AGT-055,予宁,待分配岗位,待分配,assets/dark/AGT-055.png,assets/light/AGT-055.png,assets/dark/512/AGT-055.webp,assets/light/512/AGT-055.webp,shoulders-right
+AGT-056,昭禾,待分配岗位,待分配,assets/dark/AGT-056.png,assets/light/AGT-056.png,assets/dark/512/AGT-056.webp,assets/light/512/AGT-056.webp,yaw-left
+AGT-057,沐川,待分配岗位,待分配,assets/dark/AGT-057.png,assets/light/AGT-057.png,assets/dark/512/AGT-057.webp,assets/light/512/AGT-057.webp,yaw-right
+AGT-058,嘉树,待分配岗位,待分配,assets/dark/AGT-058.png,assets/light/AGT-058.png,assets/dark/512/AGT-058.webp,assets/light/512/AGT-058.webp,frontal
+AGT-059,云舒,待分配岗位,待分配,assets/dark/AGT-059.png,assets/light/AGT-059.png,assets/dark/512/AGT-059.webp,assets/light/512/AGT-059.webp,shoulders-left
+AGT-060,景和,待分配岗位,待分配,assets/dark/AGT-060.png,assets/light/AGT-060.png,assets/dark/512/AGT-060.webp,assets/light/512/AGT-060.webp,shoulders-right
+AGT-061,林序,待分配岗位,待分配,assets/dark/AGT-061.png,assets/light/AGT-061.png,assets/dark/512/AGT-061.webp,assets/light/512/AGT-061.webp,yaw-left
+AGT-062,若谷,待分配岗位,待分配,assets/dark/AGT-062.png,assets/light/AGT-062.png,assets/dark/512/AGT-062.webp,assets/light/512/AGT-062.webp,yaw-right
+AGT-063,知夏,待分配岗位,待分配,assets/dark/AGT-063.png,assets/light/AGT-063.png,assets/dark/512/AGT-063.webp,assets/light/512/AGT-063.webp,frontal
+AGT-064,舒言,待分配岗位,待分配,assets/dark/AGT-064.png,assets/light/AGT-064.png,assets/dark/512/AGT-064.webp,assets/light/512/AGT-064.webp,shoulders-left
+AGT-065,青岑,待分配岗位,待分配,assets/dark/AGT-065.png,assets/light/AGT-065.png,assets/dark/512/AGT-065.webp,assets/light/512/AGT-065.webp,shoulders-right
+AGT-066,宥安,待分配岗位,待分配,assets/dark/AGT-066.png,assets/light/AGT-066.png,assets/dark/512/AGT-066.webp,assets/light/512/AGT-066.webp,yaw-left
+AGT-067,星阑,待分配岗位,待分配,assets/dark/AGT-067.png,assets/light/AGT-067.png,assets/dark/512/AGT-067.webp,assets/light/512/AGT-067.webp,yaw-right
+AGT-068,映川,待分配岗位,待分配,assets/dark/AGT-068.png,assets/light/AGT-068.png,assets/dark/512/AGT-068.webp,assets/light/512/AGT-068.webp,frontal
+AGT-069,书砚,待分配岗位,待分配,assets/dark/AGT-069.png,assets/light/AGT-069.png,assets/dark/512/AGT-069.webp,assets/light/512/AGT-069.webp,shoulders-left
+AGT-070,沅芷,待分配岗位,待分配,assets/dark/AGT-070.png,assets/light/AGT-070.png,assets/dark/512/AGT-070.webp,assets/light/512/AGT-070.webp,shoulders-right
+AGT-071,时予,待分配岗位,待分配,assets/dark/AGT-071.png,assets/light/AGT-071.png,assets/dark/512/AGT-071.webp,assets/light/512/AGT-071.webp,yaw-left
+AGT-072,霁月,待分配岗位,待分配,assets/dark/AGT-072.png,assets/light/AGT-072.png,assets/dark/512/AGT-072.webp,assets/light/512/AGT-072.webp,yaw-right
+AGT-073,承晖,待分配岗位,待分配,assets/dark/AGT-073.png,assets/light/AGT-073.png,assets/dark/512/AGT-073.webp,assets/light/512/AGT-073.webp,frontal
+AGT-074,宁越,待分配岗位,待分配,assets/dark/AGT-074.png,assets/light/AGT-074.png,assets/dark/512/AGT-074.webp,assets/light/512/AGT-074.webp,shoulders-left
+AGT-075,谨初,待分配岗位,待分配,assets/dark/AGT-075.png,assets/light/AGT-075.png,assets/dark/512/AGT-075.webp,assets/light/512/AGT-075.webp,shoulders-right
+AGT-076,远音,待分配岗位,待分配,assets/dark/AGT-076.png,assets/light/AGT-076.png,assets/dark/512/AGT-076.webp,assets/light/512/AGT-076.webp,yaw-left
+AGT-077,怀瑾,待分配岗位,待分配,assets/dark/AGT-077.png,assets/light/AGT-077.png,assets/dark/512/AGT-077.webp,assets/light/512/AGT-077.webp,yaw-right
+AGT-078,溪桥,待分配岗位,待分配,assets/dark/AGT-078.png,assets/light/AGT-078.png,assets/dark/512/AGT-078.webp,assets/light/512/AGT-078.webp,frontal
+AGT-079,序白,待分配岗位,待分配,assets/dark/AGT-079.png,assets/light/AGT-079.png,assets/dark/512/AGT-079.webp,assets/light/512/AGT-079.webp,shoulders-left
+AGT-080,南乔,待分配岗位,待分配,assets/dark/AGT-080.png,assets/light/AGT-080.png,assets/dark/512/AGT-080.webp,assets/light/512/AGT-080.webp,shoulders-right
+AGT-081,以恒,待分配岗位,待分配,assets/dark/AGT-081.png,assets/light/AGT-081.png,assets/dark/512/AGT-081.webp,assets/light/512/AGT-081.webp,yaw-left
+AGT-082,清和,待分配岗位,待分配,assets/dark/AGT-082.png,assets/light/AGT-082.png,assets/dark/512/AGT-082.webp,assets/light/512/AGT-082.webp,yaw-right
+AGT-083,晴岚,待分配岗位,待分配,assets/dark/AGT-083.png,assets/light/AGT-083.png,assets/dark/512/AGT-083.webp,assets/light/512/AGT-083.webp,frontal
+AGT-084,望舒,待分配岗位,待分配,assets/dark/AGT-084.png,assets/light/AGT-084.png,assets/dark/512/AGT-084.webp,assets/light/512/AGT-084.webp,shoulders-left
+AGT-085,若衡,待分配岗位,待分配,assets/dark/AGT-085.png,assets/light/AGT-085.png,assets/dark/512/AGT-085.webp,assets/light/512/AGT-085.webp,shoulders-right
+AGT-086,书临,待分配岗位,待分配,assets/dark/AGT-086.png,assets/light/AGT-086.png,assets/dark/512/AGT-086.webp,assets/light/512/AGT-086.webp,yaw-left
+AGT-087,沐言,待分配岗位,待分配,assets/dark/AGT-087.png,assets/light/AGT-087.png,assets/dark/512/AGT-087.webp,assets/light/512/AGT-087.webp,yaw-right
+AGT-088,亦舟,待分配岗位,待分配,assets/dark/AGT-088.png,assets/light/AGT-088.png,assets/dark/512/AGT-088.webp,assets/light/512/AGT-088.webp,frontal
+AGT-089,栩然,待分配岗位,待分配,assets/dark/AGT-089.png,assets/light/AGT-089.png,assets/dark/512/AGT-089.webp,assets/light/512/AGT-089.webp,shoulders-left
+AGT-090,语桐,待分配岗位,待分配,assets/dark/AGT-090.png,assets/light/AGT-090.png,assets/dark/512/AGT-090.webp,assets/light/512/AGT-090.webp,shoulders-right
+AGT-091,泊宁,待分配岗位,待分配,assets/dark/AGT-091.png,assets/light/AGT-091.png,assets/dark/512/AGT-091.webp,assets/light/512/AGT-091.webp,yaw-left
+AGT-092,和颂,待分配岗位,待分配,assets/dark/AGT-092.png,assets/light/AGT-092.png,assets/dark/512/AGT-092.webp,assets/light/512/AGT-092.webp,yaw-right
+AGT-093,昭宁,待分配岗位,待分配,assets/dark/AGT-093.png,assets/light/AGT-093.png,assets/dark/512/AGT-093.webp,assets/light/512/AGT-093.webp,frontal
+AGT-094,景初,待分配岗位,待分配,assets/dark/AGT-094.png,assets/light/AGT-094.png,assets/dark/512/AGT-094.webp,assets/light/512/AGT-094.webp,shoulders-left
+AGT-095,维清,待分配岗位,待分配,assets/dark/AGT-095.png,assets/light/AGT-095.png,assets/dark/512/AGT-095.webp,assets/light/512/AGT-095.webp,shoulders-right
+AGT-096,云岫,待分配岗位,待分配,assets/dark/AGT-096.png,assets/light/AGT-096.png,assets/dark/512/AGT-096.webp,assets/light/512/AGT-096.webp,yaw-left
+AGT-097,安序,待分配岗位,待分配,assets/dark/AGT-097.png,assets/light/AGT-097.png,assets/dark/512/AGT-097.webp,assets/light/512/AGT-097.webp,yaw-right
+AGT-098,思齐,待分配岗位,待分配,assets/dark/AGT-098.png,assets/light/AGT-098.png,assets/dark/512/AGT-098.webp,assets/light/512/AGT-098.webp,frontal
+AGT-099,容与,待分配岗位,待分配,assets/dark/AGT-099.png,assets/light/AGT-099.png,assets/dark/512/AGT-099.webp,assets/light/512/AGT-099.webp,shoulders-left
+AGT-100,予川,待分配岗位,待分配,assets/dark/AGT-100.png,assets/light/AGT-100.png,assets/dark/512/AGT-100.webp,assets/light/512/AGT-100.webp,shoulders-right
+AGT-101,澄心,待分配岗位,待分配,assets/dark/AGT-101.png,assets/light/AGT-101.png,assets/dark/512/AGT-101.webp,assets/light/512/AGT-101.webp,yaw-left
+AGT-102,知微,待分配岗位,待分配,assets/dark/AGT-102.png,assets/light/AGT-102.png,assets/dark/512/AGT-102.webp,assets/light/512/AGT-102.webp,yaw-right
