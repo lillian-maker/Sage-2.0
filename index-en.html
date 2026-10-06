@@ -632,7 +632,13 @@ body.v1[data-theme=light]{
 @media(max-width:1000px){#scene-stage{grid-template-columns:1fr}.reference-artifacts{grid-template-columns:1fr 1fr}.reference-goal{max-width:350px}.assurance-work{grid-template-columns:1fr}.enterprise-section,.contact-section{gap:35px}.nav-tools .text-btn{display:none}}
 @media(max-width:760px){.cinema-section,.ensemble-section,.assurance-section,.enterprise-section,.contact-section{width:calc(100% - 36px)}.enterprise-section,.contact-section{display:block}.contact-section form{margin-top:35px}.team-principles{grid-template-columns:1fr 1fr}.assurance-diagram{grid-template-columns:1fr}.assurance-gate{text-align:left}.assurance-tabs{gap:16px}.assurance-tabs button{font-size:13px}.v1 .hero h1{font-size:34px}.nav-tools>a:not(.btn){display:none}#relay-people{grid-template-columns:repeat(var(--member-count),minmax(72px,1fr))}.recording-placeholder{min-height:180px}}
 /* Review only: midnight / porcelain / original silver. */
-body.v1[data-theme=dark]{background:#030408}
+body.v1[data-theme=dark]{background:#fff}
+body.v1[data-theme=dark] .nav.nav-light{background:rgba(255,255,255,.97);color:#202b38;border-bottom:1px solid #e4e9ef;--ink:#202b38;--muted:#526171}
+.v1 .nav.nav-light :is(.brand,.nav-links a,.nav-tools>a:not(.btn),.text-btn,.menu-toggle){color:#202b38}
+body.v1[data-theme=dark] .nav.nav-light .brand svg{color:#202b38}
+.v1:has(.nav.nav-light) .mobile-nav{background:#fff;color:#202b38}
+.v1 .footer.wrap{width:100%;max-width:none;padding-inline:max(28px,calc((100vw - 1344px)/2))}
+.v1 #contact{scroll-margin-top:100px}
 body.v1[data-theme=dark] .nav{background:rgba(3,4,8,.94)}
 .v1 .hero{background:radial-gradient(ellipse at 72% 18%,#25426835,transparent 48%),radial-gradient(ellipse at 34% 78%,#25355230,transparent 50%),#030408;isolation:isolate;position:relative}
 .v1 .hero::before,.v1 .hero::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background-repeat:repeat}
@@ -655,7 +661,7 @@ body.v1[data-theme=dark] .nav{background:rgba(3,4,8,.94)}
 @media(max-width:1000px){.v1 .hero-layout::before{left:83%;width:70px}.v1 .hero-layout::after{display:none}}
 @media(prefers-reduced-motion:reduce){.v1 .hero-layout::before,.v1 .hero-layout::after{display:none;animation:none}.v1 .hero::before,.v1 .hero::after{animation:none}.v1 .hero::before{opacity:.85}.v1 .hero::after{opacity:.5}}
 .v1 .nav-tools{gap:28px}
-.v1 .nav-tools>a,.v1 .nav-tools>button,.v1 .nav-links>a,.v1 .nav-links>span{font-family:inherit;font-size:14px;font-weight:500;letter-spacing:0}
+.v1 .nav-tools>a,.v1 .nav-tools>button,.v1 .nav-links>a,.v1 .nav-links>span{font-family:inherit;font-size:15px;font-weight:400;letter-spacing:0}
 .v1 #language-status-button{padding:0}
 .v1 #hero-title{font-size:clamp(40px,4.2vw,67px);line-height:1.25;letter-spacing:-.04em;font-weight:700}
 .v1 #hero-title .hero-team-emphasis{display:inline;font-size:1.21em;font-weight:inherit;letter-spacing:inherit;white-space:nowrap}
@@ -663,9 +669,23 @@ body.v1[data-theme=dark] .nav{background:rgba(3,4,8,.94)}
 @media(max-width:1100px){.v1 .nav-tools{gap:18px}}
 @media(max-width:760px){.v1 #hero-title{font-size:39px}.v1 .nav-tools{gap:14px}.v1 .nav-tools>a,.v1 .nav-tools>button{font-size:12px}}
 body.v1[data-theme=dark]{--bg:#0b1220;--surface:#142033;--ink:#f4f7fb;--muted:#aab8ca;--accent:#c4d0dc;--line:#26344a;--on-accent:#0b1220}
-body.v1[data-theme=light]{--bg:#ffffff;--surface:#f4f7fb;--ink:#14243a;--muted:#53647a;--accent:#3d566e;--line:#dce4ef;--on-accent:#ffffff}
-.v1 .btn.primary{background:#c4d0dc;color:#14243a;border-color:transparent;box-shadow:0 7px 24px #14243a16}
-.v1 .btn.primary:hover{background:#e1e8ef}
+body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--surface2:#edf3f9;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;--on-accent:#ffffff}
+.v1 .btn{background:#fff;color:#202b38;border-color:#e4e9ef}
+.v1 .btn:hover{background:#edf3f9}
+.v1 .btn.primary{background:#aec8e2;color:#14243a;border-color:transparent;box-shadow:0 3px 10px #14243a0c}
+.v1 .btn.primary:hover{background:#c2d8ec}
+.v1 .btn.primary:active{background:#9ebad6}
+.v1 .btn:focus-visible{outline:2px solid #396397;outline-offset:4px}
+.v1{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
+.v1 .nav{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:88px;padding:0 max(28px,calc((100vw - 1344px)/2));gap:24px}
+.v1 .nav .brand{grid-column:1;justify-self:start}
+.v1 .nav-links{grid-column:2;position:static;transform:none;justify-self:center;gap:28px}
+.v1 .nav-tools{grid-column:3;justify-self:end;margin:0;gap:24px}
+.v1 .btn,.v1 #hero-actions .btn{font-size:14px;font-weight:500;line-height:1.5;min-height:48px;border-radius:8px;padding:12px 22px}
+.v1 .nav .btn{font-size:14px;font-weight:500;min-height:44px;height:44px;padding:10px 18px}
+@media(max-width:1180px){.v1 .nav{display:flex;height:72px;padding:0 20px;gap:18px}.v1 .nav-tools{margin-left:auto;gap:18px}.v1 .nav-links{display:none}.v1 .menu-toggle{border:1px solid #e4e9ef33;border-radius:8px;background:transparent;min-width:44px;min-height:44px}.v1 .menu-toggle svg{width:20px;height:20px}.v1 .nav-tools>a,.v1 .nav-tools>button{font-size:14px}.v1 .brand{font-size:23px}}
+@media(max-width:1180px){.v1 .nav-tools>.btn{display:none}.v1 .menu-toggle{order:-1}.v1 .nav-tools>a:not(.btn){display:inline-flex;align-items:center;min-height:44px}.v1 .mobile-nav{top:72px}}
+@media(max-width:380px){.v1 .nav{padding-inline:16px;gap:12px}.v1 .nav-tools{gap:12px}}
 .v1 #scene-stage{grid-template-columns:max-content minmax(0,1fr) 205px;gap:32px;border-top:0;align-items:center}
 .v1 .reference-goal{border:0;background:none;box-shadow:none;padding:14px 0;gap:12px;max-width:none;color:var(--ink);border-radius:0}
 .v1 .reference-goal span{white-space:nowrap;font-size:16px;font-weight:600;letter-spacing:-.025em}
@@ -681,14 +701,128 @@ body.v1[data-theme=light]{--bg:#ffffff;--surface:#f4f7fb;--ink:#14243a;--muted:#
 .v1 #relay-people{gap:10px}
 .v1 .relay-person img{border:0}
 .v1 .cinema-section,.v1 .ensemble-section,.v1 .assurance-section,.v1 .enterprise-section,.v1 .contact-section{width:100%;padding-left:max(44px,calc((100% - 1240px)/2));padding-right:max(44px,calc((100% - 1240px)/2))}
-.v1 .cinema-section,.v1 .assurance-section,.v1 .contact-section{--bg:#ffffff;--surface:#f4f7fb;--ink:#14243a;--muted:#53647a;--accent:#3d566e;--line:#dce4ef;background:var(--bg);color:var(--ink)}
-.v1 .ensemble-section,.v1 .enterprise-section{--bg:#f4f7fb;--surface:#ffffff;--ink:#14243a;--muted:#53647a;--accent:#3d566e;--line:#dce4ef;background:var(--bg);color:var(--ink)}
+.v1 .cinema-section,.v1 .assurance-section,.v1 .contact-section,.v1 .footer{--bg:#ffffff;--surface:#f4f7fb;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;background:var(--bg);color:var(--ink)}
+.v1 .ensemble-section,.v1 .enterprise-section{--bg:#f4f7fb;--surface:#ffffff;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;background:var(--bg);color:var(--ink)}
 .v1 .recording-placeholder{border:0;border-radius:14px;background:var(--surface);box-shadow:0 18px 70px #152d5010}
 .v1 .evidence-sheet,.v1 .contact-section form{border:0;border-radius:10px;box-shadow:0 12px 40px #14243a08}
 .v1 .enterprise-paths a{border-top:0;border-bottom:1px solid var(--line)}
 .v1 .section-heading h2{color:var(--ink)}
 @media(max-width:1100px){.v1 #scene-stage{grid-template-columns:1fr}.v1 .reference-artifacts{grid-template-columns:1fr 1fr;gap:24px}.v1 .reference-goal{justify-self:start}.v1 .reference-paper{padding:0}}
 @media(max-width:760px){.v1 .cinema-section,.v1 .ensemble-section,.v1 .assurance-section,.v1 .enterprise-section,.v1 .contact-section{padding-left:20px;padding-right:20px}.v1 .reference-goal span{font-size:15px}.v1 .reference-artifacts{gap:16px}.v1 .reference-paper{grid-template-columns:20px 1fr;gap:8px}}
+.v1 .nav .brand{font-size:25px;font-weight:600;gap:10px;letter-spacing:-1px}
+.v1 .nav .brand svg{width:29px;height:29px}
+@media(max-width:900px){.v1 .nav .brand{font-size:23px}}
+/* White editorial shell shared only by the approved Chinese content pages. */
+.sage-account-menu{position:relative;color:inherit;font-size:15px}
+.sage-account-menu summary{cursor:pointer;list-style:none;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:44px;display:flex;align-items:center;gap:8px}
+.sage-account-menu summary::after{content:'⌄';font-size:13px}.sage-account-menu summary::-webkit-details-marker{display:none}
+.sage-account-panel{position:absolute;right:0;top:calc(100% + 8px);width:208px;padding:8px;border:1px solid #e4e9ef;border-radius:12px;background:#fff;color:#202b38;box-shadow:0 12px 36px #14243a18;z-index:100}
+.sage-account-panel :is(a,button){display:flex;align-items:center;width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:6px;background:transparent;color:#202b38;font:inherit;text-decoration:none;text-align:left;cursor:pointer}
+.sage-account-panel :is(a,button):hover{background:#edf3f9}.sage-account-panel p{padding:8px 12px;font-size:13px;color:#9b3434}
+.sage-consult-dialog{width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;margin:auto;padding:36px;border:1px solid #e4e9ef;border-radius:16px;background:#fff;color:#202b38;box-shadow:0 24px 80px #14243a26}
+.sage-consult-dialog::backdrop{background:#14243a66;backdrop-filter:blur(4px)}
+.sage-consult-dialog h2{font-size:28px;font-weight:500;margin:0 0 26px}
+.sage-consult-close{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:8px;background:transparent;color:#526171;font-size:26px;cursor:pointer}
+.sage-consult-dialog label{display:block;font-size:14px;margin:0 0 18px}
+.sage-consult-dialog :is(input,textarea){display:block;width:100%;margin-top:8px;padding:12px;border:1px solid #d7e2ed;border-radius:8px;background:#f9fbfd;color:#202b38;font:inherit;min-height:48px;resize:vertical}
+.sage-consult-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sage-consult-note,.sage-consult-status{font-size:13px;color:#526171;line-height:1.7;margin:0 0 18px}
+.sage-consult-submit{width:100%;min-height:48px;background:#aec8e2;color:#14243a;border:0;border-radius:8px;font:inherit;font-size:14px;font-weight:500;cursor:pointer}.sage-consult-submit:hover{background:#c2d8ec}
+body:has(.sage-consult-dialog[open]){overflow:hidden}.sage-consult-status{margin:12px 0 0}
+.sage-profile{max-width:1040px;margin:64px auto;padding:0 24px 80px}.sage-profile h1{font-size:36px;font-weight:500;margin-bottom:36px}.sage-profile-layout{display:grid;grid-template-columns:200px 1fr;gap:48px}.sage-profile aside a{display:block;padding:12px;color:#526171;border-radius:8px}.sage-profile aside a[aria-current]{background:#edf3f9;color:#396397}.sage-profile-card{border:1px solid #e4e9ef;border-radius:12px;padding:28px;background:#fff}.sage-profile-card h2{font-size:22px;font-weight:500;margin:0 0 24px}.sage-profile-card dl{margin:0}.sage-profile-card dl>div{display:grid;grid-template-columns:130px 1fr;gap:20px;padding:20px 0;border-bottom:1px solid #e4e9ef}.sage-profile-card dt{color:#526171}.sage-profile-card dd{margin:0;overflow-wrap:anywhere}.sage-profile-card select{max-width:100%;min-height:44px;border:1px solid #d7e2ed;border-radius:8px;padding:8px;background:#fff;font:inherit}
+.profile-section{margin-top:28px;padding-top:24px;border-top:1px solid #e4e9ef}.profile-section:first-child{margin-top:0;padding-top:0;border:0}.profile-section h3{font-size:18px;font-weight:500}.profile-section label{display:block;margin:16px 0;color:#526171}.profile-section input:not([type=checkbox]){display:block;width:100%;max-width:420px;min-height:44px;border:1px solid #d7e2ed;border-radius:8px;padding:10px;font:inherit;background:#f8fafc}.profile-section input[type=checkbox]{margin-right:10px}.profile-section button{margin:8px 12px 8px 0;font:inherit}.profile-section button:disabled{opacity:.55;cursor:not-allowed}.profile-avatar{width:72px;height:72px;display:grid;place-items:center;overflow:hidden;border-radius:50%;background:#edf3f9;color:#396397;font-size:26px}.profile-avatar img{width:100%;height:100%;object-fit:cover}.profile-avatar-preview{display:block;object-fit:cover;border-radius:50%;margin:12px 0}.profile-avatar-preview[hidden]{display:none}.profile-sessions{width:100%;border-collapse:collapse;font-size:13px}.profile-sessions td,.profile-sessions th{padding:12px 6px;border-bottom:1px solid #e4e9ef;text-align:left;overflow-wrap:anywhere}.profile-sessions td button{padding:8px}
+@media(max-width:600px){.sage-consult-dialog{padding:28px 20px}.sage-consult-pair{grid-template-columns:1fr;gap:0}.sage-profile{margin-top:32px}.sage-profile-layout{grid-template-columns:1fr;gap:24px}.sage-profile aside{display:flex;gap:12px;flex-wrap:wrap}.sage-profile-card{padding:20px}.sage-profile-card dl>div{grid-template-columns:1fr;gap:8px}.profile-sessions{display:block;overflow-x:auto}.profile-sessions td,.profile-sessions th{min-width:90px}}
+/* Shared website foundation; later page rules retain their content-specific layout. */
+:root{color-scheme:light;--cp-ink:#202b38;--cp-copy:#526171;--cp-muted:#718092;--cp-line:#e4e9ef;--cp-silver:#edf1f5;--cp-teal:#247c7c}
+.pricing-page .segmented{background:#edf3f9;border-color:#e4e9ef}
+.pricing-page .segmented button{color:#526171}
+.pricing-page .segmented button[aria-pressed=true]{background:#aec8e2;color:#14243a;box-shadow:0 2px 6px #202b380d}
+.pricing-page .segmented button:hover{background:#c2d8ec;color:#14243a}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:106px}body.content-site{margin:0;background:#fff;color:var(--cp-ink);font:400 16px/1.7 Arial,"PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit}a{color:inherit}button,a,input,select{touch-action:manipulation}button{cursor:pointer}img{max-width:100%}[hidden]{display:none!important}:focus-visible{outline:2px solid var(--cp-teal);outline-offset:5px}.cp-skip{position:fixed;top:-80px;left:20px;background:#fff;padding:12px 20px;z-index:100}.cp-skip:focus{top:12px}.cp-nav{height:88px;padding:0 max(28px,calc((100vw - 1344px)/2));display:flex;align-items:center;gap:38px;border-bottom:1px solid var(--cp-line);background:rgba(255,255,255,.97);position:sticky;top:0;z-index:30}.cp-brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-size:25px;font-weight:600;letter-spacing:-1px}.cp-brand img{width:29px;height:29px}.cp-links,.cp-tools{display:flex;align-items:center;gap:28px}.cp-links a{text-decoration:none;font-size:15px;color:var(--cp-copy);padding:29px 0;white-space:nowrap;border-bottom:2px solid transparent}.cp-links a[aria-current=page]{color:var(--cp-ink);border-bottom-color:var(--cp-ink)}.cp-tools{margin-left:auto;gap:28px;font-size:14px;white-space:nowrap}.cp-tools a{text-decoration:none}.cp-tools .cp-consult,.cp-button{display:inline-flex;justify-content:center;align-items:center;padding:11px 22px;min-height:44px;background:#232d38;color:#fff;border-radius:7px;text-decoration:none;border:1px solid #232d38;font-weight:500}.cp-button.silver{background:linear-gradient(145deg,#e1e8ee,#c0ccd8);color:var(--cp-ink);border:0}.cp-link{text-underline-offset:8px;text-decoration-color:#bcc7d1}.cp-menu{display:none;background:#fff;border:1px solid var(--cp-line);border-radius:6px;min-width:44px;min-height:44px;color:var(--cp-ink)}.cp-account{max-width:140px;overflow:hidden;text-overflow:ellipsis}.cp-footer{border-top:1px solid var(--cp-line);max-width:1248px;margin:0 auto;padding:34px 24px;display:flex;align-items:center;gap:24px;justify-content:space-between;color:var(--cp-muted);font-size:13px}.cp-footer a{text-decoration:none}.cp-footer>div{display:flex;gap:22px}.cp-footer p{margin:0}.cp-service-note{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--cp-line);box-shadow:0 6px 30px #202b3820;max-width:calc(100% - 32px);padding:14px 20px;border-radius:8px;z-index:40;font-size:14px}.cp-service-note button{border:0;background:none;margin-left:15px;color:var(--cp-teal)}
+@media(max-width:1100px){.cp-nav{gap:25px;padding:0 24px}.cp-links,.cp-tools{gap:19px}.cp-tools .cp-consult{padding:10px 14px}}@media(max-width:900px){.cp-nav{height:72px;gap:18px;padding:0 20px}.cp-brand{font-size:23px}.cp-menu{display:block;margin-left:auto}.cp-links{display:none;position:absolute;top:71px;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:#fff;border-bottom:1px solid var(--cp-line);padding:10px 20px;box-shadow:0 12px 22px #202b3808}.cp-links.open{display:flex}.cp-links a{padding:12px 8px;border:0}.cp-links a[aria-current=page]{background:var(--cp-silver);border-radius:5px}.cp-tools{margin-left:0;gap:18px}.cp-tools .cp-consult{display:none}html{scroll-padding-top:88px}.cp-footer{display:block}.cp-footer>div{margin:14px 0}.cp-account{max-width:80px}}@media(max-width:380px){.cp-nav{padding:0 16px;gap:12px}.cp-tools{gap:12px;font-size:13px}.cp-brand img{width:25px;height:25px}.cp-brand{gap:7px}.cp-menu{font-size:13px}.cp-footer{padding:24px 18px}.cp-footer>div{gap:16px;flex-wrap:wrap}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
+.cp-menu,.cp-links a,.cp-tools a{transition:color .15s ease,background .15s ease}.cp-tools>a:not(.cp-consult){min-height:44px;display:inline-flex;align-items:center}.cp-links a:hover{color:var(--cp-ink)}
+.cp-footer{color:#657487}
+:root{--cp-silver:#edf3f9;--cp-teal:#396397;--cp-blue:#aec8e2;--cp-blue-hover:#c2d8ec}
+.cp-tools .cp-consult,.cp-button,.cp-button.silver{background:var(--cp-blue);color:#14243a;border-color:transparent;box-shadow:0 3px 10px #14243a0c}
+.cp-tools .cp-consult:hover,.cp-button:hover{background:var(--cp-blue-hover)}
+.cp-links a[aria-current=page]{color:var(--cp-teal);border-bottom-color:var(--cp-teal)}
+/* Common brand, typography and interaction tokens across legacy and account routes. */
+body:not(.v1){--ink:#202b38;--muted:#526171;--line:#e4e9ef;--surface:#f4f7fb;--accent:#396397;--blue:#396397;--pale-blue:#edf3f9;--focus:#396397;--lilac:#edf3f9;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#202b38;background:#fff}
+body:not(.v1) :is(.r-nav,.billing-nav){min-height:88px;padding:18px max(28px,calc((100vw - 1344px)/2));gap:38px;border-bottom:1px solid #e4e9ef;flex-wrap:nowrap;font-size:14px}
+body:not(.v1) :is(.r-brand,.billing-brand){display:flex;align-items:center;gap:10px;font-size:25px;font-weight:600!important;letter-spacing:-1px;color:#202b38!important;text-decoration:none}
+body:not(.v1) :is(.r-brand,.billing-brand) img{width:29px;height:29px;filter:none}
+body:not(.v1) :is(.r-nav,.billing-nav) nav{display:flex;align-items:center;gap:28px;font-size:15px}
+body:not(.v1) :is(.r-nav,.billing-nav) nav a{font-size:15px;font-weight:400;color:#526171;text-decoration:none;white-space:nowrap}
+body:not(.v1) :is(.r-nav,.billing-nav) nav a[aria-current=page]{color:#396397;border-bottom:2px solid #396397}
+body:not(.v1) :is(.r-nav,.billing-nav) nav a:hover{color:#202b38}
+body:not(.v1) :is(.r-tools,.nav-actions){display:flex;align-items:center;margin-left:auto;gap:24px;font-size:14px}
+body:not(.v1) :is(.button.primary,.r-button:not(.secondary)){background:#aec8e2!important;color:#14243a!important;border-color:transparent!important;box-shadow:0 3px 10px #14243a0c;border-radius:7px;font-weight:500;min-height:44px}
+body:not(.v1) :is(.button.primary,.r-button:not(.secondary)):not(:disabled):not([aria-disabled=true]):hover{background:#c2d8ec!important}
+body:not(.v1) :is(.button,.r-button).secondary{background:#fff!important;color:#202b38!important;border:1px solid #e4e9ef!important;border-radius:7px}
+body:not(.v1) :is(.button,.r-button):is(:disabled,[aria-disabled=true]){background:#edf3f9!important;border-color:#e4e9ef!important;color:#657487!important;box-shadow:none;cursor:not-allowed}
+body:not(.v1) :is(a,button,input,select,textarea,summary):focus-visible{outline:2px solid #396397!important;outline-offset:4px}
+body:not(.v1) :is(.info-page-head h1,.tp-intro h1,.catalog-heading h1){font:500 clamp(32px,4.2vw,56px)/1.25 Arial,"PingFang SC","Microsoft YaHei",sans-serif!important;letter-spacing:-.035em;white-space:normal;text-wrap:balance}
+body:not(.v1) :is(.button,.r-button){border-radius:7px;min-height:44px}
+body:not(.v1) .audience-control{background:#edf3f9}.account-menu a[aria-current]{background:#edf3f9;color:#396397}.account-metrics>div{background:#f4f7fb}.catalog-page{--catalog-purple:#396397;--catalog-pale:#edf3f9;--catalog-deep:#396397}
+body:not(.v1) #r-menu-toggle{display:none;background:#fff;color:#202b38;border:1px solid #e4e9ef;border-radius:6px;min-width:44px;min-height:44px;font-size:14px}
+body:not(.v1) .r-nav{position:sticky;top:0;z-index:30;background:#fff}
+@media(max-width:1100px){body:not(.v1) :is(.r-nav,.billing-nav){gap:24px}body:not(.v1) :is(.r-nav,.billing-nav) nav{gap:19px}body:not(.v1) :is(.r-tools,.nav-actions){gap:18px}}
+@media(max-width:900px){body:not(.v1) :is(.r-nav,.billing-nav){min-height:72px;padding:14px 20px;gap:18px;position:sticky;top:0;z-index:30;background:#fff}body:not(.v1) #r-menu-toggle{display:inline-flex;align-items:center;justify-content:center;margin-left:auto}body:not(.v1) :is(.r-nav,.billing-nav) #r-menu{display:none;position:absolute;top:71px;left:0;right:0;width:auto;margin:0;padding:10px 20px;background:#fff;border-bottom:1px solid #e4e9ef;box-shadow:0 12px 22px #202b3808;flex-direction:column;align-items:stretch;gap:0;overflow:visible;order:initial}body:not(.v1) :is(.r-nav,.billing-nav) #r-menu.open{display:flex}body:not(.v1) :is(.r-nav,.billing-nav) #r-menu a{padding:12px 8px;border:0}body:not(.v1) :is(.r-nav,.billing-nav) #r-menu a[aria-current=page]{background:#edf3f9;border-radius:5px}body:not(.v1) :is(.r-tools,.nav-actions){margin-left:0;gap:18px}body:not(.v1) :is(.r-tools,.nav-actions)>:is(.button.primary,.r-button.small){display:none}body:not(.v1) :is(.r-brand,.billing-brand){font-size:23px}.sage-language .sage-language-toggle{flex-shrink:0}}
+@media(max-width:380px){body:not(.v1) :is(.r-nav,.billing-nav){padding:14px 16px;gap:12px}body:not(.v1) :is(.r-tools,.nav-actions){gap:12px;font-size:13px}}
+/* Sign-in is a task page, not a marketing hero. */
+body[data-auth-page]{background:#f4f7fb;min-height:100vh}
+body[data-auth-page] .billing-nav{background:transparent;border-bottom:0}
+body[data-auth-page] .auth-page{max-width:460px;padding:38px 20px 56px;margin:auto}
+body[data-auth-page] .page-heading h1{font-size:32px;font-weight:500;line-height:1.3;margin:0 0 12px}
+body[data-auth-page] .page-heading p{font-size:14px;line-height:1.6;color:#657487}
+body[data-auth-page] .auth-card{padding:26px;border-radius:10px;border:1px solid #e4e9ef;box-shadow:0 8px 24px #14243a06}
+body[data-auth-page] .auth-card input{border-radius:7px;border-color:#d7e0e9;font-size:14px}
+/* Approved site-wide geometry: centered navigation, with task-page exceptions. */
+:root{--site-nav-height:88px}
+body:not(.v1) :is(.cp-nav,.r-nav,.billing-nav){display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:88px;min-height:88px;padding:0 max(28px,calc((100vw - 1344px)/2));gap:24px}
+body:not(.v1) :is(.cp-brand,.r-brand,.billing-brand){grid-column:1;justify-self:start;line-height:1.7}
+body:not(.v1) :is(.cp-links,.r-nav nav,.billing-nav nav){grid-column:2;align-self:stretch;gap:28px}
+body:not(.v1) :is(.cp-links,.r-nav nav,.billing-nav nav)>a{display:flex;align-items:center;align-self:stretch;padding:0;border:0;position:relative;font-size:15px;font-weight:400}
+body:not(.v1) :is(.cp-links,.r-nav nav,.billing-nav nav)>a[aria-current=page]::after{content:"";position:absolute;inset:auto 0 0;height:2px;background:#396397}
+body:not(.v1) :is(.cp-tools,.r-tools,.nav-actions){grid-column:3;justify-self:end;margin-left:0;gap:24px}
+body:not(.v1) :is(.cp-menu,#r-menu-toggle){display:none}
+body:not(.v1) :is(.cp-menu,#r-menu-toggle) svg{width:20px;height:20px;display:block;pointer-events:none}
+body:not(.v1) :is(.cp-button,.cp-consult,.button.primary,.button.secondary,.button,.r-button,.ep-button){font-size:14px;font-weight:500;border-radius:8px;min-height:48px;line-height:1.5;padding:12px 22px}
+body:not(.v1) :is(.cp-consult,.billing-nav .button,.r-nav .r-button){min-height:44px;height:44px;padding:10px 18px}
+body:not(.v1) .pricing-page .plan{border-radius:16px}
+body:not(.v1) .credits-entry{background:#edf3f9;border:1px solid #e4e9ef;border-radius:12px}
+body[data-auth-page] .auth-methods{border-radius:8px;background:#f4f7fb;padding:4px}
+body[data-auth-page] .auth-methods button{border-radius:6px;min-height:44px;font-size:14px;font-weight:500}
+body[data-auth-page] .auth-rules{text-align:center;font-size:13px;line-height:1.8;color:#526171;margin-top:22px}
+body[data-auth-page] .auth-rules a{color:#396397;text-underline-offset:4px}
+body.page-trial .xp-toolbar{justify-content:flex-end;font-size:13px}
+body.page-trial .xp-scene-symbol{color:#396397!important}
+body.page-trial img.xp-scene-symbol{filter:brightness(0) saturate(100%) invert(37%) sepia(18%) saturate(1392%) hue-rotate(174deg) brightness(91%) contrast(86%)}
+body.page-trial .xp-scene.active{border-color:#396397!important;background:#edf3f9!important}
+body.page-trial .r-nav #r-menu-toggle{border-radius:8px}
+body:not(.v1) :is(.cp-tools,.r-tools,.nav-actions)>a{font-size:14px}
+body:not(.v1) .trial-account{max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:1180px){
+ :root{--site-nav-height:72px}
+ body:not(.v1) :is(.cp-nav,.r-nav,.billing-nav){display:flex;height:72px;min-height:72px;padding:0 20px;gap:18px}
+ body:not(.v1) :is(.cp-brand,.r-brand,.billing-brand){font-size:23px}
+ body:not(.v1) :is(.cp-menu,#r-menu-toggle){display:flex;align-items:center;justify-content:center;margin-left:auto;flex:none;min-width:44px;min-height:44px;border:1px solid #e4e9ef;border-radius:8px;background:transparent;color:#202b38}
+ body:not(.v1) :is(.cp-links,.r-nav #r-menu,.billing-nav #r-menu){display:none;position:absolute;top:71px;left:0;right:0;width:auto;margin:0;padding:10px 20px;flex-direction:column;align-items:stretch;gap:0;background:#fff;border-bottom:1px solid #e4e9ef;box-shadow:0 12px 22px #202b3808}
+ body:not(.v1) :is(.cp-links,.r-nav #r-menu,.billing-nav #r-menu).open{display:flex}
+ body:not(.v1) :is(.cp-links,.r-nav #r-menu,.billing-nav #r-menu)>a{padding:12px 8px;min-height:44px}
+ body:not(.v1) :is(.cp-links,.r-nav #r-menu,.billing-nav #r-menu)>a[aria-current=page]{background:#edf3f9;border-radius:6px}
+ body:not(.v1) :is(.cp-links,.r-nav #r-menu,.billing-nav #r-menu)>a::after{display:none}
+ body:not(.v1) :is(.cp-tools,.r-tools,.nav-actions){margin-left:0;gap:18px}
+ body:not(.v1) :is(.cp-consult,.r-nav .r-button.small,.billing-nav .nav-actions>.button.primary){display:none}
+ body[data-auth-page] .nav-actions{margin-left:auto}
+ body:not(.v1) .trial-account{max-width:80px}
+}
+@media(max-width:380px){body:not(.v1) :is(.cp-nav,.r-nav,.billing-nav){padding-inline:16px;gap:12px}body:not(.v1) :is(.cp-tools,.r-tools,.nav-actions){gap:12px}}
+body[data-auth-page] .auth-methods{background:#f4f7fb;border-radius:7px;padding:4px}
+body[data-auth-page] .auth-methods button{font-size:14px}
+body[data-auth-page] .auth-methods button[aria-pressed=true]{background:#edf3f9;color:#396397;box-shadow:none}
+@media(max-width:480px){body[data-auth-page] .auth-page{padding:28px 16px 40px}body[data-auth-page] .auth-card{padding:20px}}
+.r-tools .r-button.small,.billing-nav .button.primary{font-size:14px;font-weight:500}
+.r-nav .r-tools>a,.billing-nav .nav-actions>a{min-height:44px;display:inline-flex;align-items:center}
 html[lang="en"] .v1 #hero-title{font-size:clamp(32px,3.1vw,52px);line-height:1.15;white-space:normal;max-width:100%;overflow-wrap:normal}
 html[lang="en"] .v1 #hero-title .hero-team-emphasis{font-size:1.08em;white-space:normal;display:inline}
 html[lang="en"] .hero-body{max-width:560px;line-height:1.65}
@@ -770,14 +904,14 @@ html[lang="en"] .nav-tools{gap:22px}
   <rect x="29.5" y="25.5" width="9" height="9" rx="1.5" fill="currentColor"></rect>
 </svg>
 <span>Sage</span></a>
- <nav class="nav-links" aria-label="Main navigation"><span class="nav-soon" aria-disabled="true">Product</span><a href="pages/team-en.html">AI Team</a><a href="pages/enterprise-en.html">Enterprise</a><a href="pages/pricing-en.html">Pricing</a><a href="pages/docs-en.html">Docs</a></nav>
+ <nav class="nav-links" aria-label="Main navigation"><span class="nav-soon" aria-disabled="true">Product</span><a href="pages/team-en.html">AI team</a><a href="pages/enterprise-en.html">Enterprise services</a><a href="pages/pricing-en.html">Pricing</a><a href="pages/docs-en.html">Docs</a></nav>
  <div class="nav-tools">
-  <div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="Select language" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="Select language" hidden><li><a href="index-en.html" lang="en" hreflang="en" aria-current="true">English</a></li><li><a href="index.html" lang="zh-CN" hreflang="zh-CN" >中文</a></li></ul></div><a href="pages/auth-en.html">Log in</a>
-  <a class="btn primary" href="#contact">Talk to us</a>
+  <div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="Select language" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="Select language" hidden><li><a href="index-en.html" lang="en" hreflang="en" aria-current="true">English</a></li><li><a href="index.html" lang="zh-CN" hreflang="zh-CN" >中文</a></li></ul></div><a data-account-entry href="pages/auth-en.html?return=%2Findex.html">Log in</a>
+  <a class="btn primary" href="#contact">Contact sales</a>
   <button class="menu-toggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-nav"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></button>
  </div>
 </header>
-<div id="mobile-nav" class="mobile-nav" hidden><span class="nav-soon" aria-disabled="true">Product</span><a href="pages/team-en.html">AI Team</a><a href="pages/enterprise-en.html">Enterprise</a><a href="pages/pricing-en.html">Pricing</a><a href="pages/docs-en.html">Docs</a><a href="pages/auth-en.html">Log in</a><a href="#contact">Talk to us</a></div><main id="main"><section class="hero" id="positioning" aria-labelledby="hero-title"><div class="cosmic-twinkles" aria-hidden="true"><i style="--x:6%;--y:12%;--duration:7s;--delay:-2s"></i><i style="--x:46%;--y:8%;--duration:9s;--delay:-6s"></i><i style="--x:94%;--y:23%;--duration:8s;--delay:-1s"></i><i style="--x:55%;--y:44%;--duration:11s;--delay:-4s"></i><i style="--x:8%;--y:57%;--duration:10s;--delay:-7s"></i><i style="--x:92%;--y:68%;--duration:8s;--delay:-5s"></i><i style="--x:42%;--y:66%;--duration:9s;--delay:-2s"></i><i style="--x:70%;--y:88%;--duration:12s;--delay:-8s"></i></div>
+<div id="mobile-nav" class="mobile-nav" hidden><span class="nav-soon" aria-disabled="true">Product</span><a href="pages/team-en.html">AI team</a><a href="pages/enterprise-en.html">Enterprise services</a><a href="pages/pricing-en.html">Pricing</a><a href="pages/docs-en.html">Docs</a><a data-account-entry href="pages/auth-en.html?return=%2Findex.html">Log in</a><a href="#contact">Contact sales</a></div><main id="main"><section class="hero" id="positioning" aria-labelledby="hero-title"><div class="cosmic-twinkles" aria-hidden="true"><i style="--x:6%;--y:12%;--duration:7s;--delay:-2s"></i><i style="--x:46%;--y:8%;--duration:9s;--delay:-6s"></i><i style="--x:94%;--y:23%;--duration:8s;--delay:-1s"></i><i style="--x:55%;--y:44%;--duration:11s;--delay:-4s"></i><i style="--x:8%;--y:57%;--duration:10s;--delay:-7s"></i><i style="--x:92%;--y:68%;--duration:8s;--delay:-5s"></i><i style="--x:42%;--y:66%;--duration:9s;--delay:-2s"></i><i style="--x:70%;--y:88%;--duration:12s;--delay:-8s"></i></div>
  
  <div class="wrap hero-content">
   <div class="hero-layout">
@@ -796,11 +930,11 @@ html[lang="en"] .nav-tools{gap:22px}
 <div class="assurance-tabs" role="group" aria-label="Choose a trust mechanism"><button type="button" data-assurance="evidence" aria-pressed="true">Evidence-backed decisions</button><button type="button" data-assurance="permission" aria-pressed="false">Authorization before action</button><button type="button" data-assurance="receipt" aria-pressed="false">Verifiable outcomes</button></div>
 <div class="sketch-frame"><div class="assurance-work" id="assurance-work" aria-live="polite"></div></div><div class="assurance-foot"><span>Independent review</span><i></i><span>Human decision rights</span><i></i><span>Versioning and audit</span></div></section>
 <section class="section enterprise-section" id="enterprise"><div class="enterprise-story"><h2>Built for your business.<br>Deployed with purpose.</h2><p>Start with the product or integrate it into your operations.<br>Choose the path that fits your business.</p></div><div class="enterprise-paths"><a href="pages/enterprise-en.html?path=product"><h3>Product procurement <span aria-hidden="true">↗</span></h3><p>Workflow → Organization and data → Permissions → Acceptance</p></a><a href="pages/enterprise-en.html?path=fde"><h3>FDE deployment <span aria-hidden="true">↗</span></h3><p>Scope → Controlled pilot → Joint acceptance → Ongoing operation</p></a></div></section>
-<section class="section contact-section" id="contact"><div><h2>Your next business challenge.<br>Start with Sage.</h2><a href="pages/trial-en.html" class="btn primary">Try Sage</a></div><form id="r-contact-form"><h3>Tell us about your business</h3><label>Company / brand<input name="company" required autocomplete="organization" maxlength="100"></label><div class="form-pair"><label>Phone number<input name="phone" type="tel" required autocomplete="tel" maxlength="30"></label><label>Work email (optional)<input name="email" type="email" autocomplete="email" maxlength="254"></label></div><label>What business problem would you like to solve?<textarea name="goal" rows="3" required maxlength="2000"></textarea></label><p class="contact-data-notice">Contact details are for business inquiries only. This preview has no connected submission service. Nothing you enter is sent or saved.</p><button class="btn primary" type="submit">Talk to us</button><p id="r-form-status" role="status"></p></form></section></main><footer class="footer wrap"><a class="brand" href="index-en.html">Sage</a><p>An AI team grounded in real business.</p><nav><a href="pages/docs-en.html">Docs</a> · <a href="pages/pricing-en.html">Pricing</a> · <a href="pages/enterprise-en.html">Enterprise</a></nav><small>Product preview · Authentication, payments and live tasks are not connected</small></footer><script>/* Static design catalog. No production availability is implied. */
+<section class="section contact-section" id="contact"><div><h2>Your next business challenge.<br>Start with Sage.</h2><a href="pages/trial-en.html" class="btn primary">Try Sage</a></div><form id="r-contact-form"><h3>Contact sales</h3><label>Company / brand<input name="company" required autocomplete="organization" maxlength="100"></label><div class="form-pair"><label>Phone number<input name="phone" type="tel" required autocomplete="tel" maxlength="30"></label><label>Work email (optional)<input name="email" type="email" autocomplete="email" maxlength="254"></label></div><label>What business problem would you like to solve?<textarea name="goal" rows="3" required maxlength="2000"></textarea></label><p class="contact-data-notice">Contact details are for business inquiries only. This preview has no connected submission service. Nothing you enter is sent or saved.</p><button class="btn primary" type="submit">Submit request</button><p id="r-form-status" role="status"></p></form></section></main><footer class="footer wrap"><a class="brand" href="index-en.html">Sage</a><p>An AI team grounded in real business.</p><nav><a href="pages/docs-en.html">Docs</a> · <a href="pages/pricing-en.html">Pricing</a> · <a href="pages/billing-en.html">Subscription and billing</a> · <a href="pages/billing-en.html#credits">Sage Credits</a> · <a href="pages/enterprise-en.html">Enterprise services</a></nav><small>Product preview · Authentication, payments and live tasks are not connected</small></footer><script>/* Static design catalog. No production availability is implied. */
 window.SAGE_CATALOG = {
   "version": "0.3",
   "status": "design-scope",
-  "source": "Sage_九场景与全员目录_v0.3_2026-09-24.md",
+  "source": "Sage_九Scenarios与全员目录_v0.3_2026-09-24.md",
   "people": [
     {
       "id": "AGT-001",
@@ -1262,9 +1396,9 @@ window.SAGE_CATALOG = {
       "question": "增长受什么约束, 下一步先改哪里？",
       "output": "Business action plan",
       "owner": "AGT-023",
-      "input": "渠道, 店铺, 商品, 时间窗及可比经营基线；可用的广告, 商品, 库存, 财务数据与质量状态.",
-      "boundary": "无可靠基线只能输出诊断假设；预算或库存不允许则停在方案；未知执行效果先查回执, 不重跑整单.",
-      "script": "0–8 选店铺/时间范围；8–20 点开一项有Evidence的经营约束；20–32 切团队视图, 看Zihang交给Zhiliang核查库存；32–44 展开行动包的预算/停止条件；44–55 展示回执与评估结构, 缺实际效果数据留空.",
+      "input": "渠道, 店铺, 商品, 时间窗及可比经营基线；可用的广告, 商品, 库存, 财务Data与质量状态.",
+      "boundary": "无可靠基线只能输出诊断假设；预算或库存不允许则停在Proposal；未知执行效果先查回执, 不重跑整单.",
+      "script": "0–8 选店铺/时间范围；8–20 点开一项有Evidence的经营约束；20–32 切团队视图, 看Zihang交给Zhiliang核查库存；32–44 展开行动包的预算/停止条件；44–55 展示回执与评估结构, 缺实际效果Data留空.",
       "steps": [
         {
           "label": "Opportunities雷达",
@@ -1274,7 +1408,7 @@ window.SAGE_CATALOG = {
         {
           "label": "联合诊断",
           "artifact": "Growth Diagnosis",
-          "detail": "可能原因, 反证, 数据缺口, 供应约束"
+          "detail": "可能原因, 反证, Data缺口, 供应约束"
         },
         {
           "label": "Business action plan",
@@ -1364,7 +1498,7 @@ window.SAGE_CATALOG = {
       "output": "Product hypothesis and validation plan",
       "owner": "AGT-008",
       "input": "类目/Product scope, 消费者与市场Evidence, 来源及样本限制；后续阶段需要可验证的工程, 样品和准入资料.",
-      "boundary": "单人编码, 小样本不能输出市场占比；无样品/安全资料停在Opportunities验证, 不生成“已准入”；法律或产品风险不通过不得发布.",
+      "boundary": "单人编码, 小样本不能输出市场占比；无样品/安全资料停在Opportunities验证, 不生成“已准入”；法律或产品风险不Approve不得发布.",
       "script": "0–8 选择经批准脱敏的 VOC 范围；8–20 一条反馈拆成舒适正向与稳定性顾虑；20–30 加入反证并切情境；30–42 生成“待验证Opportunities”卡；42–52 团队视图展示Tinglan交付Evidence, Tuoxin/Dingxing接受并定义验证；52–60 展示未完成的样品/准入门槛.不得用快进暗示已完成真实实验.",
       "steps": [
         {
@@ -1470,9 +1604,9 @@ window.SAGE_CATALOG = {
       "question": "怎样平衡缺货, 库存和资金？",
       "output": "Constraint-based replenishment and fulfillment plan",
       "owner": "AGT-016",
-      "input": "SKU, 节点, 需求版本, 现货/在途, 交期, 供应能力, 资金约束；未知数据不填零.",
+      "input": "SKU, 节点, 需求版本, 现货/在途, 交期, 供应能力, 资金约束；未知Data不填零.",
       "boundary": "关键交期缺失时保留候选而不承诺到货；计划批准不等于采购单已发；物流异常回流对应节点.",
-      "script": "0–10 选SKU/需求版本；10–22 展开库存和现金约束；22–32 比较两个候选计划, 展示取舍而非随意最优分数；32–42 切Team handoffZhiliang→Tongtu→Qingzhang；42–50 核对里程碑与可售, 异常保持待核验.",
+      "script": "0–10 选SKU/需求版本；10–22 展开库存和现金约束；22–32 比较两个Candidate plans, 展示取舍而非随意最优分数；32–42 切Team handoffZhiliang→Tongtu→Qingzhang；42–50 核对里程碑与可售, 异常保持待核验.",
       "steps": [
         {
           "label": "需求真相",
@@ -1562,8 +1696,8 @@ window.SAGE_CATALOG = {
       "question": "进入这个市场, 准备和准入齐了吗？",
       "output": "Market entry and launch package",
       "owner": "AGT-024",
-      "input": "明确市场, 渠道, 账号, 产品；产品主数据, 适用准入要求, 内容与物流/税务资料.",
-      "boundary": "缺法规/产品资料不编造认证；语言翻译不能替代准入；Draft通过不等于已上线.",
+      "input": "明确市场, 渠道, 账号, 产品；产品主Data, 适用准入要求, 内容与物流/税务资料.",
+      "boundary": "缺法规/产品资料不编造认证；语言翻译不能替代准入；DraftApprove不等于已上线.",
       "script": "0–8 选目标市场/产品；8–20 看准入矩阵缺口；20–32 Yijing/Xushi形成发布内容包；32–43 Independent controls确认读写与Evidence范围；43–55 展示真实回执应出现的位置, 无回执时保留未上线.",
       "steps": [
         {
@@ -1579,7 +1713,7 @@ window.SAGE_CATALOG = {
         {
           "label": "发布包",
           "artifact": "Market Launch Bundle",
-          "detail": "主数据, 本地化, 素材, 商品信息"
+          "detail": "主Data, 本地化, 素材, 商品信息"
         },
         {
           "label": "受控上线",
@@ -1683,7 +1817,7 @@ window.SAGE_CATALOG = {
           "detail": "体验断点, 根因假设, 影响对象"
         },
         {
-          "label": "修复方案",
+          "label": "修复Proposal",
           "artifact": "Recovery Package",
           "detail": "内容/产品/服务修复任务"
         },
@@ -1761,14 +1895,14 @@ window.SAGE_CATALOG = {
     {
       "id": "BVS-06",
       "title": "Data products and business tools",
-      "product": "数据产品工作台",
-      "deliverables": ["业务需求Qiyue", "版本化数据Qiyue", "工具与界面候选版本", "独立验收Evidence", "运行与Value review"],
-      "question": "哪些决策卡在数据和工具上？",
+      "product": "Data产品工作台",
+      "deliverables": ["业务需求Qiyue", "版本化DataQiyue", "工具与界面候选版本", "独立验收Evidence", "运行与Value review"],
+      "question": "哪些决策卡在Data和工具上？",
       "output": "Acceptance-ready data products and tools",
       "owner": "AGT-047",
-      "input": "谁要做什么经营决策, 当前数据和系统, 对象范围, 验收标准；不是一个“帮我搭平台”的无限需求.",
-      "boundary": "数据质量不够不发布可信结论；接口候选不等于可用工具；没有验收回执不跳到生产.",
-      "script": "0–10 经营者提出明确决策问题；10–22 Tongchi解释两个口径差异；22–35 Jieqiao/Qingyuan交付最小工具候选；35–45 Menwei与Anjie检查权限；45–55 展示验收记录与发布状态, 未通过保留候选.",
+      "input": "谁要做什么经营决策, 当前Data和Systems, 对象范围, 验收标准；不是一个“帮我搭平台”的无限需求.",
+      "boundary": "Data质量不够不发布可信结论；接口候选不等于可用工具；没有验收回执不跳到生产.",
+      "script": "0–10 经营者提出明确决策问题；10–22 Tongchi解释两个口径差异；22–35 Jieqiao/Qingyuan交付最小工具候选；35–45 Menwei与Anjie检查权限；45–55 展示验收记录与发布状态, 未Approve保留候选.",
       "steps": [
         {
           "label": "需求Qiyue",
@@ -1776,7 +1910,7 @@ window.SAGE_CATALOG = {
           "detail": "使用人, 决策, 对象, 验收"
         },
         {
-          "label": "数据Qiyue",
+          "label": "DataQiyue",
           "artifact": "Versioned Data Contract",
           "detail": "口径, 血缘, 质量, 失败语义"
         },
@@ -1860,7 +1994,7 @@ window.SAGE_CATALOG = {
       "id": "BVS-07",
       "title": "Quality and account incidents",
       "product": "重大事件控制室",
-      "deliverables": ["事件信号记录", "Immediate safeguards方案", "受控处置回执", "根因与整改计划", "恢复Evidence"],
+      "deliverables": ["事件信号记录", "Immediate safeguardsProposal", "受控处置回执", "根因与整改计划", "恢复Evidence"],
       "question": "出现严重风险, 如何控制影响并恢复？",
       "output": "Incident response and recovery evidence",
       "owner": "AGT-018",
@@ -1891,7 +2025,7 @@ window.SAGE_CATALOG = {
         {
           "label": "恢复与学习",
           "artifact": "Recovery Evidence",
-          "detail": "恢复条件, 复核, 正常策略Evidence"
+          "detail": "恢复条件, Review, 正常策略Evidence"
         }
       ],
       "team": [
@@ -1977,7 +2111,7 @@ window.SAGE_CATALOG = {
       "owner": "AGT-001",
       "input": "可比Business facts, 异常账, 财务与风险Evidence, 岗位/技能/工具运行记录.",
       "boundary": "相关性不是能力缺口因果；缺完整账本不做确定性归因；新能力不能绕过评估直接替换运行版本.",
-      "script": "0–10 选择复盘周期；10–22 展开一个事实与口径；22–32 Mingjing提交差距, Shouheng复核；32–43 Zhiren/Jizhi提出能力调整；43–55 展示版本评估与下一周期验证, 不伪造经营改善数字.",
+      "script": "0–10 选择复盘周期；10–22 展开一个事实与口径；22–32 Mingjing提交差距, ShouhengReview；32–43 Zhiren/Jizhi提出能力调整；43–55 展示版本评估与下一周期验证, 不伪造经营改善数字.",
       "steps": [
         {
           "label": "Evidence账本",
@@ -1997,7 +2131,7 @@ window.SAGE_CATALOG = {
         {
           "label": "版本化变更",
           "artifact": "Change Release Set",
-          "detail": "岗位/知识/工具/运行版本与回退"
+          "detail": "岗位/Knowledge/工具/运行版本与回退"
         },
         {
           "label": "周期核对",
@@ -2076,13 +2210,13 @@ window.SAGE_CATALOG = {
       "id": "SHOPIFY-OPS",
       "title": "Shopify operations",
       "product": "已有店铺诊断与持续运营",
-      "deliverables": ["店铺诊断范围", "可追溯Business snapshot", "Multidimensional diagnosis报告", "优先Actions and experiments方案", "运营Execution verification and review记录"],
+      "deliverables": ["店铺诊断范围", "可追溯Business snapshot", "Multidimensional diagnosis报告", "优先Actions and experimentsProposal", "运营Execution verification and review记录"],
       "question": "已有店铺先修什么, 如何持续改进？",
       "output": "Store diagnosis and prioritized actions",
       "owner": "AGT-023",
-      "input": "店铺身份, 目标, 数据访问范围和基线成熟度.游客仅公开首页＋一个代表性商品页；深度阶段可接授权的经营数据, 不能从公开URL推断后台访问权.",
+      "input": "店铺身份, 目标, Data访问范围和基线成熟度.游客仅公开首页＋一个代表性商品页；深度阶段可接授权的经营Data, 不能从公开URL推断后台访问权.",
       "boundary": "店铺锁定/反爬/无权限时不绕过；商品不匹配需用户确认；缺商品事实的建议稿使用To be confirmed字段.只有Draft不显示发布成功.",
-      "script": "0–8 粘贴已有店链接；8–16 确认公开页面范围/积分上限；16–30 展开一个可定位内容问题；30–42 展示原文与建议；42–52 切团队看Zihang与Xushi交付/复核；52–60 看下一步选择: 保存诊断, 接入授权数据或另行确认行动.演示不实际修改店铺.",
+      "script": "0–8 粘贴已有店链接；8–16 确认公开页面范围/积分上限；16–30 展开一个可定位内容问题；30–42 展示原文与建议；42–52 切团队看Zihang与Xushi交付/Review；52–60 看下一步选择: 保存诊断, 接入授权Data或另行确认行动.演示不实际修改店铺.",
       "steps": [
         {
           "label": "店铺与Scope confirmation",
@@ -2101,12 +2235,12 @@ window.SAGE_CATALOG = {
         },
         {
           "label": "优先Actions and experiments",
-          "artifact": "优先清单, 内容Draft, 实验方案",
+          "artifact": "优先清单, 内容Draft, 实验Proposal",
           "detail": "Zihang整合；Shizhen定义验证；Shoujin审资源, Anjie/Menwei按风险Assurance"
         },
         {
           "label": "Execution verification and review",
-          "artifact": "实施回执与效果复核",
+          "artifact": "实施回执与效果Review",
           "detail": "对应主价值流负责人履责；Shizhen评估, 诊断页汇总状态"
         }
       ],
@@ -2188,8 +2322,127 @@ window.SAGE_CATALOG = {
 };
 
 </script><script>(() => {
+ 'use strict';
+ const isHome=document.body.classList.contains('v1'), en=document.documentElement.lang==='en';
+ const pageURL=name=>(isHome?'pages/':'')+name+(en?'-en':'')+'.html';
+ const text=(zh,english)=>en?english:zh;
+ function accountMenu(session){
+  if(!session.authenticated||!session.user?.id)return;
+  document.querySelectorAll('[data-account-entry],.cp-account,.trial-account').forEach(link=>{
+   if(link.closest('.mobile-nav'))return;
+   const menu=document.createElement('details');menu.className='sage-account-menu';
+   const summary=document.createElement('summary');summary.textContent=session.user.display_name||session.user.masked_identifier||text('My account','My account');
+   const panel=document.createElement('div');panel.className='sage-account-panel';
+   const settings=document.createElement('a');settings.href=pageURL('profile');settings.textContent=text('个人设置','Personal settings');
+   const logout=document.createElement('button');logout.type='button';logout.textContent=text('退出Log in','Sign out');
+   const status=document.createElement('p');status.setAttribute('role','status');status.hidden=true;
+   logout.addEventListener('click',async()=>{
+    logout.disabled=true;status.hidden=true;
+    try{
+     if(!session.csrf_token)throw Error('SESSION_UNAVAILABLE');
+     const response=await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/json','X-CSRFToken':session.csrf_token},body:'{}',signal:AbortSignal.timeout(10000)});
+     if(!response.ok||(await response.json()).ok!==true)throw Error('LOGOUT_UNCONFIRMED');
+     const check=await fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+     if(!check.ok||(await check.json()).authenticated!==false)throw Error('LOGOUT_UNCONFIRMED');
+     location.reload();
+    }catch(_){status.hidden=false;status.textContent=text('退出未能确认, 请重试.','Sign-out could not be confirmed. Try again.');logout.disabled=false;}
+   });
+   panel.append(settings,logout,status);menu.append(summary,panel);link.replaceWith(menu);
+  });
+ }
+ window.addEventListener('sage:session',event=>accountMenu(event.detail));
+ if(window.sageSession)accountMenu(window.sageSession);
+ document.addEventListener('click',event=>document.querySelectorAll('.sage-account-menu[open],.nav-account[open]').forEach(menu=>{if(!menu.contains(event.target))menu.open=false;}));
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.sage-account-menu[open],.nav-account[open]').forEach(menu=>{menu.open=false;menu.querySelector('summary').focus();});});
+ if(isHome){
+  const nav=document.querySelector('.nav'),hero=document.querySelector('.hero');let pending=false;
+  function updateNav(){nav.classList.toggle('nav-light',hero.getBoundingClientRect().bottom<=nav.offsetHeight);pending=false;}
+  addEventListener('scroll',()=>{if(!pending){pending=true;requestAnimationFrame(updateNav);}},{passive:true});addEventListener('resize',updateNav);updateNav();
+ }
+ let consult,consultTrigger;
+ document.addEventListener('click',event=>{
+  const trigger=event.target.closest('a,button');
+  if(!trigger||!['Contact sales','Contact sales'].includes(trigger.textContent.replace(/[→↗]/g,'').trim()))return;
+  if(trigger.closest('form'))return;
+  event.preventDefault();event.stopImmediatePropagation();
+  close();document.querySelector('.cp-links')?.classList.remove('open');document.querySelector('.cp-menu')?.setAttribute('aria-expanded','false');
+  const homeMenu=document.querySelector('.mobile-nav');if(homeMenu)homeMenu.hidden=true;document.querySelector('.menu-toggle')?.setAttribute('aria-expanded','false');
+  if(isHome){document.querySelector('#contact').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});return;}
+  consultTrigger=trigger;
+  if(!consult){
+   consult=document.createElement('dialog');consult.className='sage-consult-dialog';consult.setAttribute('aria-labelledby','sage-consult-title');
+   consult.innerHTML=`<button type="button" class="sage-consult-close" aria-label="${text('Close','Close')}">×</button><h2 id="sage-consult-title">${text('Contact sales','Consultation and demo')}</h2><form><label>${text('Company / brand','Company / brand')}<input name="company" required autocomplete="organization" maxlength="100"></label><div class="sage-consult-pair"><label>${text('Phone number','Phone number')}<input name="phone" type="tel" required autocomplete="tel" maxlength="30"></label><label>${text('Work email (optional)','Work email (optional)')}<input name="email" type="email" autocomplete="email" maxlength="254"></label></div><label>${text('What business problem would you like to solve?','Your business question')}<textarea name="goal" rows="3" required maxlength="2000"></textarea></label><p class="sage-consult-note">${text('Contact details are for business inquiries only. This preview has no connected submission service. Nothing you enter is sent or saved.','Contact details are for business inquiries only. The receiving service is not connected; your input is not sent or saved.')}</p><button type="submit" class="sage-consult-submit">${text('Submit request','Submit request')}</button><p role="status" class="sage-consult-status"></p></form>`;
+   document.body.append(consult);
+   consult.querySelector('.sage-consult-close').onclick=()=>consult.close();
+   consult.addEventListener('click',e=>{if(e.target===consult){const r=consult.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)consult.close();}});
+   consult.addEventListener('close',()=>{consult.querySelector('form').reset();consult.querySelector('[role=status]').textContent='';consultTrigger?.focus();});
+   wireConsultation(consult.querySelector('form'));
+  }
+  consult.showModal();
+ },true);
+ function wireConsultation(form){
+  let requestKey=null,submittedPayload=null,busy=false;
+  const status=form.querySelector('[role=status]'),button=form.querySelector('[type=submit]');
+  const notice=form.querySelector('.sage-consult-note,.contact-data-notice');
+  const phone=form.querySelector('[name=phone]');if(phone){phone.placeholder='+86 138 0000 0000';phone.setAttribute('aria-description',text('请包含国际区号, 例如 +86.','Include the country calling code, for example +86.'));}
+  if(notice)notice.textContent=text('联系方式仅用于处理本次咨询.已完成咨询的联系方式和问题内容将在完成后90天清除.','Contact details are used to handle this inquiry. Contact details and question content are cleared 90 days after the inquiry is completed.');
+  form.addEventListener('submit',async event=>{
+   event.preventDefault();if(busy||!form.reportValidity())return;
+   const fields=new FormData(form),payload={company:fields.get('company'),phone:fields.get('phone'),email:fields.get('email')||'',question:fields.get('goal')||fields.get('question')};
+   const serialized=JSON.stringify(payload);
+   if(serialized!==submittedPayload){requestKey=crypto.randomUUID();submittedPayload=serialized;}
+   busy=true;button.disabled=true;status.textContent=text('正在提交…','Submitting…');
+   try{
+    const sessionResponse=await fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
+    if(!sessionResponse.ok)throw Error('SERVICE_UNAVAILABLE');
+    const session=await sessionResponse.json();if(!session.csrf_token)throw Error('CSRF_UNAVAILABLE');
+    const response=await fetch('/api/consultations',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json','Content-Type':'application/json','X-CSRFToken':session.csrf_token,'Idempotency-Key':requestKey},body:serialized,signal:AbortSignal.timeout(10000)});
+    const result=await response.json();
+    if(!response.ok){const error=Error(result.error?.code||'REQUEST_FAILED');error.status=response.status;throw error;}
+    if(typeof result.receipt_id!=='string'||!result.receipt_id)throw Error('INVALID_RECEIPT');
+    status.textContent=text('预约申请已提交.','Your request has been submitted.');form.reset();requestKey=null;submittedPayload=null;
+   }catch(error){status.textContent=error.status===429?text('提交过于频繁, 请稍后再试.','Too many requests. Please try again later.'):error.status===400?text('请检查填写内容后重试.','Check your input and try again.'):text('未能确认提交Results, 请重试；相同内容不会重复创建申请.','Submission could not be confirmed. Retry with the same details to avoid creating a duplicate request.');}
+   finally{busy=false;button.disabled=false;}
+  });
+ }
+ const homeConsultation=document.querySelector('#r-contact-form');if(homeConsultation)wireConsultation(homeConsultation);
+ document.querySelectorAll('#hero-actions a[href*="download"]').forEach(link=>{link.setAttribute('aria-disabled','true');link.addEventListener('click',event=>event.preventDefault());});
+ function alignNavigation(){
+  document.querySelectorAll('.cp-menu,#r-menu-toggle').forEach(button=>{if(button.dataset.iconReady)return;button.dataset.iconReady='true';button.setAttribute('aria-label',document.documentElement.lang==='en'?'Open navigation menu':'Open navigation menu');button.innerHTML='<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>';});
+  document.querySelectorAll('.cp-tools,.r-tools,.nav-actions').forEach(tools=>{const language=tools.closest('header')?.querySelector('.sage-language');if(language&&tools.firstElementChild!==language)tools.prepend(language);});
+ }
+ alignNavigation();
+ new MutationObserver(alignNavigation).observe(document.body,{childList:true,subtree:true});
+ const trialAccount=document.querySelector('.trial-account');
+ if(trialAccount){
+  const en=document.documentElement.lang==='en';
+  trialAccount.href='auth'+(en?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);
+  fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)}).then(async response=>{if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('ACCOUNT_SERVICE_UNAVAILABLE');const session=await response.json();if(typeof session.authenticated!=='boolean'||(session.authenticated&&!session.user?.id))throw Error('INVALID_SESSION');trialAccount.textContent=session.authenticated?(session.user.display_name||session.user.masked_identifier||(en?'My account':'My account')):(en?'Sign in':'Log in');window.dispatchEvent(new CustomEvent('sage:session',{detail:session}));if(session.authenticated)trialAccount.href='profile'+(en?'-en':'')+'.html';}).catch(()=>{trialAccount.textContent=en?'Sign in':'Log in';trialAccount.title=en?'Sign in with email or phone':'Sign in with email or phone verification';});
+ }
+ document.querySelectorAll('.mobile-download,.r-tools a.r-button.small[href="download-en.html"]').forEach(link=>{link.textContent='Contact sales';link.href='../index-en.html#contact';});
+ function close(){document.querySelector('#r-menu')?.classList.remove('open');document.querySelector('#r-menu-toggle')?.setAttribute('aria-expanded','false');}
+ document.addEventListener('click',e=>{const menu=document.querySelector('#r-menu'),toggle=document.querySelector('#r-menu-toggle');if(!menu||!toggle)return;if(e.target.closest('#r-menu-toggle')){const open=!menu.classList.contains('open');menu.classList.toggle('open',open);toggle.setAttribute('aria-expanded',String(open));}else if(e.target.closest('#r-menu a')||!e.target.closest('.r-nav,.billing-nav'))close();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('#r-menu')?.classList.contains('open')){close();document.querySelector('#r-menu-toggle').focus();}});
+ const language=document.querySelector('#r-language'),status=document.querySelector('#language-status');
+ language?.addEventListener('click',()=>{status.hidden=!status.hidden;status.textContent='当前提供中文预览.英文内容尚未完成校对, 不切换为不完整的翻译.';});
+ const dialog=document.querySelector('#site-dialog');
+ document.querySelectorAll('[data-legal]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#site-dialog-title').textContent=b.dataset.legal==='privacy'?'隐私说明':'使用条款';document.querySelector('#site-dialog-copy').textContent='当前为本地产品预览, 不接入认证, 支付, 店铺或销售服务.正式条款与隐私政策将在真实服务开放前提供.演示成果只在当前浏览器会话留存, 请勿提交敏感资料.';dialog.showModal();}));
+ dialog?.querySelector('.dialog-close')?.addEventListener('click',()=>dialog.close());
+ document.addEventListener('error',e=>{if(e.target instanceof HTMLImageElement){e.target.classList.add('image-unavailable');e.target.alt=e.target.alt||'头像暂不可用';}},true);
+})();
+
+(() => {
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const accountLinks=$$('.nav-tools>a[data-account-entry],.mobile-nav>a[data-account-entry]');
+accountLinks.forEach(link=>{link.textContent=document.documentElement.lang==='en'?'Sign in':'Log in';link.href='pages/auth'+(document.documentElement.lang==='en'?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);});
+if(accountLinks.length)fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)}).then(async response=>{
+ if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('ACCOUNT_SERVICE_UNAVAILABLE');
+ const session=await response.json(),en=document.documentElement.lang==='en';
+ if(typeof session.authenticated!=='boolean'||(session.authenticated&&!session.user?.id))throw Error('INVALID_SESSION');
+ window.sageSession=session;window.dispatchEvent(new CustomEvent('sage:session',{detail:session}));
+ accountLinks.forEach(link=>{link.textContent=session.authenticated?(session.user.display_name||session.user.masked_identifier||(en?'My account':'My account')):(en?'Sign in':'Log in');link.href=session.authenticated?'pages/profile'+(en?'-en':'')+'.html':'pages/auth'+(en?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);});
+}).catch(()=>accountLinks.forEach(link=>{link.title=document.documentElement.lang==='en'?'Account service is unavailable':'暂时无法读取Account状态';}));
 const data=window.SAGE_CATALOG;
 if(!data){throw new Error('Workflow data failed to load');return;}
 
@@ -2229,7 +2482,6 @@ function paintAssurance(key){
  $('#assurance-work').innerHTML='<div class="assurance-copy"><h3>'+a.title+'</h3><p>'+a.body+'</p><span class="assurance-boundary">Product design illustration</span></div><div class="assurance-diagram"><div class="evidence-sheet"><div class="sheet-head"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M4 2h11l5 5v19H4zM15 2v6h5M8 14h8M8 19h6"/></svg><strong>'+a.left+'</strong></div>'+a.rows.map((r,i)=>'<div class="evidence-row"><span class="evidence-pin"></span>'+r+'</div>').join('')+'</div><div class="assurance-gate"><span class="gate-line"></span><div class="gate-symbol"><svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 3 5 9v12c0 10 15 19 15 19s15-9 15-19V9z"/><path d="m12 20 6 6 12-13"/></svg></div><strong>'+a.gate+'</strong></div><div class="assurance-result"><strong>'+a.right+'</strong><span>'+a.detail+'</span><p>'+a.state+'</p></div></div>';
 }
 $$('[data-assurance]').forEach(b=>b.addEventListener('click',()=>paintAssurance(b.dataset.assurance)));paintAssurance('evidence');
-$('#r-contact-form').addEventListener('submit',e=>{e.preventDefault();$('#r-form-status').textContent='The inquiry service is not connected. Your information was not sent or saved. Please do not enter sensitive information in this preview.';});
 })();
 
 (()=>{const $=s=>document.querySelector(s);const D={chains:window.SAGE_CATALOG.scenes};const v1={reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,globePaused:false,globeTime:3,globeFrame:0,globeOptIn:false};
@@ -2400,27 +2652,41 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
 }
 
 
-initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});})();
+initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mobile-nav').hidden){$('#mobile-nav').hidden=true;const toggle=document.querySelector('.menu-toggle');toggle.setAttribute('aria-expanded','false');toggle.focus();}});document.addEventListener('click',e=>{if(!e.target.closest('.nav,#mobile-nav')){$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');}});})();
 </script><style>
 .sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
-.sage-language .sage-language-toggle{width:40px;height:40px;padding:8px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}
+.sage-language .sage-language-toggle{width:44px;height:44px;padding:10px;display:grid;place-items:center;border:1px solid transparent;border-radius:8px;background:transparent;color:inherit;cursor:pointer;touch-action:manipulation}
 .sage-language-toggle svg{width:24px;height:24px;display:block}
 .sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
-.sage-language .sage-language-menu{position:absolute;top:calc(100% + 14px);right:0;z-index:1000;min-width:204px;padding:7px;margin:0;border-radius:16px;background:#f9f9f9;color:#181818;box-shadow:0 12px 38px rgba(0,0,0,.18),0 2px 7px rgba(0,0,0,.06);list-style:none;text-align:left}
+.sage-language .sage-language-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:1000;width:184px;max-width:calc(100vw - 32px);padding:6px;margin:0;border:1px solid #e4e9ef;border-radius:10px;background:#fff;color:#202b38;box-shadow:0 8px 28px #14243a14,0 2px 6px #14243a08;list-style:none;text-align:left}
 .sage-language-menu[hidden]{display:none}
-.sage-language .sage-language-menu a{display:block;padding:12px 14px;border-radius:10px;font:400 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#181818;text-decoration:none;white-space:nowrap;letter-spacing:0}
-.sage-language .sage-language-menu a:hover{background:#ededed}
-.sage-language .sage-language-menu a[aria-current="true"]{background:#e3e3e3}
-.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #8295a7;outline-offset:3px}
-@media(max-width:420px){.sage-language .sage-language-menu{min-width:172px}.sage-language .sage-language-menu a{font-size:17px}}
+.sage-language .sage-language-menu a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:10px 12px;border:0;border-radius:6px;font:400 14px/1.5 Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#526171;text-decoration:none;white-space:nowrap;letter-spacing:0}
+.sage-language .sage-language-menu a:hover{background:#f4f7fb;color:#202b38}
+.sage-language .sage-language-menu a[aria-current="true"]{background:#edf3f9;color:#396397;font-weight:500}
+.sage-language .sage-language-menu a[aria-current="true"]::after{content:'✓';font-size:15px}
+.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #396397;outline-offset:3px}
 </style>
 <script>
 (()=>{
- const root=document.querySelector('.sage-language');if(!root)return;
+ function initialize(){
+ let root=document.querySelector('.sage-language');
+ if(!root){
+   const link=document.querySelector('.cp-tools>a[lang],.nav-actions>a[lang],.r-tools>a[lang]');
+   if(!link)return;
+   const en=document.documentElement.lang==='en',name=location.pathname.split('/').pop().replace('-en.html','').replace('.html','');
+   if(name==='product')return; // No published English product route.
+   root=document.createElement('div');root.className='sage-language';
+   root.innerHTML=`<button class="sage-language-toggle" type="button" aria-label="${en?'Select language':'选择语言'}" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="${en?'Select language':'选择语言'}" hidden><li><a href="${name}-en.html" lang="en" hreflang="en" ${en?'aria-current="true"':''}>English</a></li><li><a href="${name}.html" lang="zh-CN" hreflang="zh-CN" ${en?'':'aria-current="true"'}>中文</a></li></ul>`;
+   link.replaceWith(root);
+ }
+ if(root.dataset.languageReady)return;root.dataset.languageReady='true';
  const button=root.querySelector('button'),menu=root.querySelector('ul'),links=[...menu.querySelectorAll('a')];
- links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});
+ function syncLinks(){links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});}
+ syncLinks();
+ document.addEventListener('sage:location-updated',syncLinks);
+ window.addEventListener('popstate',syncLinks);
  function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
- button.addEventListener('click',()=>{const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ button.addEventListener('click',()=>{syncLinks();const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
  button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
  root.addEventListener('keydown',event=>{
    if(event.key==='Escape'){event.preventDefault();close(true);}
@@ -2429,6 +2695,9 @@ initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{
  });
  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
  root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
+ }
+ initialize();
+ new MutationObserver(initialize).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body></html>

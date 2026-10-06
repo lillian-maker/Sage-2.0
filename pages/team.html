@@ -1,58 +1,63 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI 团队 · Sage</title><link rel="stylesheet" href="redesign.css"><link rel="stylesheet" href="pages.css"><link rel="stylesheet" href="catalog.css"><link rel="stylesheet" href="team-page.css"><link rel="stylesheet" href="info-pages.css"><style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style><script src="catalog-data.js" defer></script><script src="team-page.js" defer></script><script src="site-shell.js" defer></script></head><body><header class="r-nav"><a class="r-brand" href="../index.html">Sage</a><nav class="r-links" aria-label="主导航"><span aria-disabled="true">产品</span><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav><div class="r-tools"><div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="选择语言" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="选择语言" hidden><li><a href="team-en.html" lang="en" hreflang="en" >English</a></li><li><a href="team.html" lang="zh-CN" hreflang="zh-CN" aria-current="true">中文</a></li></ul></div><a href="auth.html">登录</a><a class="r-button small" href="../index.html#contact">咨询和演示</a></div></header><main id="main" class="team-page">
-  <!-- Established-world organization atlas: white, ink, purple and source portraits. People, accepted outputs and bounded permissions lead; not an office dashboard. -->
-  <section class="tp-intro" id="organization">
-    <h1>各有专长，一起把事做好。</h1><div class="tp-intro-copy"><p>从经营判断到业务执行，<br>让合适的数字员工承担明确的责任。</p><a class="tp-link" href="#people">认识 50 位数字员工 <span aria-hidden="true">↗</span></a></div>
-    <div class="tp-constellation" id="team-constellation" aria-label="四个协作平面"></div>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI 团队 · Sage</title><meta name="description" content="Sage 的AI 团队：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg"><link rel="stylesheet" href="content-pages.css?v=10f07fb19f64"><link rel="stylesheet" href="ai-team.css?v=4e0fa0f6b692"><script src="content-pages.js?v=2adea2710aad" defer></script><script src="catalog-data.js?v=b6fda741f812" defer></script><script src="ai-team.js?v=a3c2f8488dc9" defer></script><script src="site-shell.js?v=d7d771dfb6d7" defer></script></head><body class="content-site content-team"><a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img src="../assets/favicon.svg" alt="" width="29" height="29">Sage</a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航"><a href="../index.html#product">产品</a><a href="team.html" aria-current="page">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav><div class="cp-tools"><a href="team-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="enterprise.html#contact">咨询和演示</a></div></header><main id="main" class="sage-team">
+  <section class="at-hero" id="organization"><p class="at-eyebrow">SAGE AI TEAM</p><h1>从专业岗位，到有序协作</h1><p class="at-intro">不是让更多 AI 给出更多答案，<br class="at-desktop-break">而是让不同专业共同看清，一项经营决策是否成立。</p>
+    <figure class="at-professional-visual"><img src="icons/team-human-ai-workspace.png" width="2061" height="763" alt="人与 AI 数字员工共同讨论业务方案，背景中的更多团队成员在不同工作位协作"></figure>
   </section>
-  <nav class="tp-local-nav" aria-label="团队章节"><a href="#people">全员名录</a><a href="#assets">分身资产</a><a href="#collaboration">团队协作</a><a href="#governance">Agent 治理</a></nav>
-  <section class="tp-section" id="people">
-    <div class="tp-section-heading"><h2>认识你的 AI 团队</h2><label class="tp-search"><span class="sr-only">搜索员工、职责或交付物</span><input id="people-search" type="search" placeholder="搜索姓名、职责或交付物" autocomplete="off"></label></div>
-    <div class="tp-filters" id="team-domains" aria-label="按专业域筛选"></div><p class="tp-count" id="roster-count" role="status"></p>
-    <div id="people-roster" class="tp-roster"></div>
-    <aside class="tp-person-detail" id="person-detail" tabindex="-1" hidden></aside>
-    <details class="tp-management"><summary>管理决策层：经营方向、增长与治理</summary><div><p>CEO / CGO / CGOv 是管理决策职能，不计入 50 个执行岗位。</p><p>独立复核结论直达 CEO 与真人所有者；涉及治理官自身的争议，由真人所有者裁决。</p></div></details>
+  <section class="at-mechanisms" id="assets" aria-labelledby="at-mechanism-heading"><div class="at-section-head"><p class="at-eyebrow">WHAT MAKES AN AI EMPLOYEE PROFESSIONAL</p><h2 id="at-mechanism-heading">专业性，落实在判断的方法与标准里</h2><p>Agent、Skills 与 MCP 是实现手段。对业务而言，更重要的是它们支持什么判断、留下什么依据。</p></div><div class="at-principles">
+    <article><span class="at-index">01 / AGENT</span><h3>职责决定问题的问法</h3><p>专业岗位不仅有角色名称，还要明确要解决的决策、允许使用的资料、必须检查的约束与交付标准。机会研究先问证据是否成立；商业判断再问成立后是否值得投入。</p><p>同一个模型可以承担不同岗位，但岗位身份本身不证明专业能力。能力要在具体任务中接受验收。</p></article>
+    <article><span class="at-index">02 / SKILLS</span><h3>方法不能只靠临场发挥</h3><p>Skills 将可复用的分析步骤、判断规则和成果要求交给岗位。VOC 研究不能只归类情绪，还应核对样本、需求频次、现有替代方案与反证；经营分析不能只读增长率，还应核对口径与约束。</p><p>方法需要版本、适用条件和测试样本。更新一段提示词，不等于改善了业务判断。</p></article>
+    <article><span class="at-index">03 / CONTEXT</span><h3>先理解这家企业，再讨论行业经验</h3><p>品牌定位、目标市场、渠道、商品结构、资金约束与历史决策共同构成业务上下文。通用行业知识无法替代这些条件；同一建议，对不同品牌可能有相反的结果。</p><p>共享上下文要保留资料来源、时间和权限，并把事实、推断与缺失信息分开，避免把过期经验当成当前事实。</p></article>
+    <article><span class="at-index">04 / MCP</span><h3>工具提供依据，而不是授予权力</h3><p>MCP 用于规范工具与数据连接。查询记录、执行计算、检索资料，让判断能够接触可核对的业务依据，而不是仅依赖模型记忆。</p><p>连接成功不代表数据准确，也不代表可以改价、采购或发布。访问权限、执行授权与真实结果必须分别确认。</p></article>
+    <article><span class="at-index">05 / HANDOFF</span><h3>交接的是可使用的成果</h3><p>研究岗位不能只交一份长报告。下一岗位需要知道：证据来自哪里，覆盖什么范围，哪些假设未验证，什么条件下才能继续决策。</p><p>交接标准决定成果能否被复用。清晰的来源、约束与未决问题，比更多聊天记录更重要。</p></article>
+    <article><span class="at-index">06 / REVIEW</span><h3>复核需要不同的检查职责</h3><p>让另一个 AI 重复问同一个问题，并不等于独立复核。复核岗位应检查来源、计算、遗漏条件、反例和授权范围，并有能力提出退回或需要补证。</p><p>多岗位也可能共享同一种偏差。重要结论仍需外部证据、确定性校验和人工判断共同支持。</p></article>
+    <article id="governance"><span class="at-index">07 / CONTROL</span><h3>判断与业务执行不是同一权限</h3><p>提出方案、批准方案、执行动作和确认完成，分别承担不同责任。涉及资金、公开发布或外部系统变更时，应明确负责人、预算和可撤回条件。</p><p>AI 的建议不能代替企业授权；工具返回成功，也不能直接证明经营目标已经实现。</p></article>
+    <article><span class="at-index">08 / EVALUATION</span><h3>专业能力必须能被反复检验</h3><p>任务验收应覆盖事实正确性、计算口径、证据充分性、约束遵守与交接可用性。版本变化后，需要在相同任务上比较，不能用一次顺利演示证明稳定。</p><p>评估结果支持方法改进，不支持“绝不出错”或“保证增长”的承诺。</p></article>
+  </div></section>
+  <section class="at-deep-section" id="collaboration" aria-labelledby="at-collaboration-heading"><div class="at-section-head"><p class="at-eyebrow">COLLABORATION WITH A REASON</p><h2 id="at-collaboration-heading">团队的意义，不是意见更多<br>而是让判断经得起不同专业的追问</h2></div>
+    <div class="at-argument-grid"><article><h3>需要协作的，是相互影响的判断</h3><p>当需求证据、产品可行性、利润条件与进入风险相互牵制时，分专业研究能保持各自的检查深度。汇总时不应抹平分歧，而应指出结论依赖哪些条件、缺什么证据、由谁确认。</p><p>岗位按问题组织，不是让全部员工同时运行。研究可以并行，依赖同一结论的工作则需要明确接收条件。</p></article><article><h3>不需要团队的，保持简单</h3><p>明确的字段校验、计算、单次检索或短文案任务，可以用规则、工具或单个岗位完成。只有增加协作能够改善覆盖范围、复核质量或交接可靠性时，才值得承担额外耗时与 Sage Credits 消耗。</p><p>团队数量不等于结果质量。Sage 的组织设计应服务于任务，而不是为了展示更多 Agent。</p></article></div>
   </section>
-  <section class="tp-section tp-assets" id="assets">
-    <div class="tp-section-heading"><div><h2>专长背后，是可维护的资产</h2><p>身份、方法和运行配置各自有据，不靠一句提示词定义岗位。</p></div></div>
-    <div class="tp-asset-composition"><div class="tp-asset-person" id="asset-person-summary"></div><div class="tp-asset-pages"><article><span>Soul</span><h3>知道自己负责什么</h3><p>岗位职责 · 交付标准 · 责任边界</p></article><article><span>Playbook</span><h3>知道工作如何完成</h3><p>输入依据 · 工作方法 · 验收条件</p></article><article><span>Preset</span><h3>知道能力如何运行</h3><p>知识与工具 · 版本 · 访问范围</p></article></div></div>
-    <details class="tp-disclosure"><summary>查看资产契约与维护机制</summary><div class="tp-contracts"><p><strong>五类契约</strong>业务、技能、运行、访问与保障，分别说明责任、方法、约束、权限和验证。</p><p><strong>四类能力供应</strong>岗位与场景、知识与技能、工具与连接、发布与运行持续维护。</p><p>具体岗位绑定与版本以发布契约为准；当前展示资产结构，不代表已完成生产发布。</p></div></details>
+  <section class="at-deep-section" aria-labelledby="at-acceptance-heading"><div class="at-section-head"><p class="at-eyebrow">JUDGE THE WORK, NOT THE PERSONA</p><h2 id="at-acceptance-heading">如何判断 AI 团队真的帮上了忙</h2><p>不要只看报告是否完整，要看它是否支持下一项真实决策。</p></div><dl class="at-acceptance"><div><dt>依据可核对</dt><dd>关键结论能找到来源、时间、计算口径与适用范围；不能确认的信息明确保留。</dd></div><div><dt>取舍说得清</dt><dd>不只提出一个建议，也说明备选方案、约束条件、潜在影响与尚未解决的分歧。</dd></div><div><dt>成果能接手</dt><dd>下一位负责人知道需要验证什么、谁来确认、接收什么成果，而不需要重新研究全部背景。</dd></div><div><dt>边界不混淆</dt><dd>分析完成、方案批准、执行完成与经营改善分别有证据，不用一份报告替代业务结果。</dd></div></dl>
   </section>
-  <section class="tp-section" id="collaboration">
-    <div class="tp-section-heading"><div><h2>让成果接力，而不只是对话</h2><p>一位负责人，明确的参与者，每一步都有交接标准。</p></div></div>
-    <div class="tp-scene-selector" id="collaboration-scene" role="group" aria-label="选择一项工作，查看五步协作"></div>
-    <p class="tp-scene-current" id="collaboration-current" role="status"></p>
-    <div id="collaboration-preview" class="tp-handoffs"></div>
-    <div class="tp-handoff-detail" id="handoff-detail" aria-live="polite"></div>
-    <p class="tp-boundary">研究可以止于成果。涉及外部操作时，另行确认权限并核对真实回执。</p>
+  <section class="at-organization" aria-labelledby="at-map-heading"><div class="at-section-head"><p class="at-eyebrow">SAGE ORGANIZATION DESIGN</p><h2 id="at-map-heading">组织有分工，职责有依据</h2><p>53 个数字员工的组织设计，包含 3 个管理职能与 50 个专业岗位。<br>岗位配置与协作范围随具体经营问题确定，不以头像数量衡量专业性。</p></div>
+    <div class="at-management" aria-label="管理职能"><div><span>天时</span><strong>CEO</strong><p>经营方向与资源统筹</p></div><div><span>地利</span><strong>CMO</strong><p>市场判断与增长策略</p></div><div><span>人和</span><strong>CHO</strong><p>组织协同与责任边界</p></div></div>
+    <div class="at-staff-directory" id="at-staff-directory" aria-label="50 个专业岗位"></div>
+    <noscript><p>请启用 JavaScript 查看全部数字员工，或阅读下方岗位职责说明。</p></noscript>
   </section>
-  <section class="tp-section tp-governance" id="governance">
-    <div class="tp-section-heading"><div><h2>能力可进化，边界不越过</h2><p>先验证，再开放；出现异常，保留证据并隔离影响。</p></div></div>
-    <div class="tp-lifecycle" id="governance-states" aria-label="能力生命周期"></div><div id="governance-detail" class="tp-governance-detail" aria-live="polite"></div>
-    <div class="tp-controls"><div><strong>人保留决策权</strong><p>按政策确认关键动作，AI 不能自行扩大授权。</p></div><div><strong>权限在模型之外</strong><p>访问对象、动作与资源范围，由运行边界约束。</p></div><div><strong>回退有明确边界</strong><p>版本回退不等于撤销业务动作，实际撤回需核对系统与回执。</p></div></div>
-    <p class="tp-boundary">岗位、协作与治理为产品设计范围；本页不是生产发布记录或审计报告。</p>
-  </section>
-  <section class="tp-closing"><h2>让专业协作进入你的业务</h2><a class="r-button primary" href="trial.html">免费体验</a><a class="tp-link" href="enterprise.html">企业产品与 FDE 落地 <span aria-hidden="true">↗</span></a></section>
+  <section class="at-closing"><p class="at-eyebrow">START WITH A REAL BUSINESS QUESTION</p><h2>从一个值得认真判断的问题开始</h2><p>先明确需要做什么决策，再确定需要哪些专业与依据。</p><div class="at-actions"><a class="cp-button silver" href="trial.html">查看体验入口</a><a class="cp-link" href="enterprise.html">了解企业服务 →</a></div></section>
 </main>
-<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p><small>本地产品预览 · 认证、支付与真实任务尚未接入</small></footer><style>
+<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div><p>具体开放能力以产品内说明为准</p></footer><style>
 .sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
-.sage-language .sage-language-toggle{width:40px;height:40px;padding:8px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}
+.sage-language .sage-language-toggle{width:44px;height:44px;padding:10px;display:grid;place-items:center;border:1px solid transparent;border-radius:8px;background:transparent;color:inherit;cursor:pointer;touch-action:manipulation}
 .sage-language-toggle svg{width:24px;height:24px;display:block}
 .sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
-.sage-language .sage-language-menu{position:absolute;top:calc(100% + 14px);right:0;z-index:1000;min-width:204px;padding:7px;margin:0;border-radius:16px;background:#f9f9f9;color:#181818;box-shadow:0 12px 38px rgba(0,0,0,.18),0 2px 7px rgba(0,0,0,.06);list-style:none;text-align:left}
+.sage-language .sage-language-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:1000;width:184px;max-width:calc(100vw - 32px);padding:6px;margin:0;border:1px solid #e4e9ef;border-radius:10px;background:#fff;color:#202b38;box-shadow:0 8px 28px #14243a14,0 2px 6px #14243a08;list-style:none;text-align:left}
 .sage-language-menu[hidden]{display:none}
-.sage-language .sage-language-menu a{display:block;padding:12px 14px;border-radius:10px;font:400 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#181818;text-decoration:none;white-space:nowrap;letter-spacing:0}
-.sage-language .sage-language-menu a:hover{background:#ededed}
-.sage-language .sage-language-menu a[aria-current="true"]{background:#e3e3e3}
-.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #8295a7;outline-offset:3px}
-@media(max-width:420px){.sage-language .sage-language-menu{min-width:172px}.sage-language .sage-language-menu a{font-size:17px}}
+.sage-language .sage-language-menu a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:10px 12px;border:0;border-radius:6px;font:400 14px/1.5 Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#526171;text-decoration:none;white-space:nowrap;letter-spacing:0}
+.sage-language .sage-language-menu a:hover{background:#f4f7fb;color:#202b38}
+.sage-language .sage-language-menu a[aria-current="true"]{background:#edf3f9;color:#396397;font-weight:500}
+.sage-language .sage-language-menu a[aria-current="true"]::after{content:'✓';font-size:15px}
+.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #396397;outline-offset:3px}
 </style>
 <script>
 (()=>{
- const root=document.querySelector('.sage-language');if(!root)return;
+ function initialize(){
+ let root=document.querySelector('.sage-language');
+ if(!root){
+   const link=document.querySelector('.cp-tools>a[lang],.nav-actions>a[lang],.r-tools>a[lang]');
+   if(!link)return;
+   const en=document.documentElement.lang==='en',name=location.pathname.split('/').pop().replace('-en.html','').replace('.html','');
+   if(name==='product')return; // No published English product route.
+   root=document.createElement('div');root.className='sage-language';
+   root.innerHTML=`<button class="sage-language-toggle" type="button" aria-label="${en?'Select language':'选择语言'}" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="${en?'Select language':'选择语言'}" hidden><li><a href="team-en.html" lang="en" hreflang="en" ${en?'aria-current="true"':''}>English</a></li><li><a href="team.html" lang="zh-CN" hreflang="zh-CN" ${en?'':'aria-current="true"'}>中文</a></li></ul>`;
+   link.replaceWith(root);
+ }
+ if(root.dataset.languageReady)return;root.dataset.languageReady='true';
  const button=root.querySelector('button'),menu=root.querySelector('ul'),links=[...menu.querySelectorAll('a')];
- links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});
+ function syncLinks(){links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});}
+ syncLinks();
+ document.addEventListener('sage:location-updated',syncLinks);
+ window.addEventListener('popstate',syncLinks);
  function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
- button.addEventListener('click',()=>{const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ button.addEventListener('click',()=>{syncLinks();const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
  button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
  root.addEventListener('keydown',event=>{
    if(event.key==='Escape'){event.preventDefault();close(true);}
@@ -61,6 +66,9 @@
  });
  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
  root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
+ }
+ initialize();
+ new MutationObserver(initialize).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body></html>

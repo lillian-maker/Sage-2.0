@@ -1,0 +1,15 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const read = name => fs.readFileSync(new URL('../' + name, 'file://' + __filename), 'utf8');
+const shell = read('src/pages/site-shell.js');
+assert.ok(shell.includes("fetch('/api/consultations'"), 'Shared consultation must persist through the API');
+assert.ok(shell.includes("'Idempotency-Key'"), 'Unknown submit outcomes must retain the same request identity');
+assert.ok(shell.includes("receipt_id"), 'Do not display success without a saved receipt');
+assert.ok(!read('src/app.js').includes("$('#r-contact-form').addEventListener('submit'"), 'Homepage must use the shared submission path');
+const profile = read('src/pages/profile.js');
+for (const route of ['/api/account/profile','/api/account/sessions','/api/account/preferences']) assert.ok(profile.includes(route), route);
+assert.ok(profile.includes('示例数据 · 不产生实际扣费'));
+assert.ok(profile.includes("navigator.clipboard.writeText"));
+assert.ok(profile.includes("other_sessions:true"));
+assert.ok(!profile.includes("fetch('/api/account/delete'"), 'Deletion must remain gated until retention policy is approved');
+console.log('Website account source contracts passed');

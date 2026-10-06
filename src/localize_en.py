@@ -5,6 +5,9 @@ Proper names retain their romanized identity; translation adds no capability cla
 """
 import re
 import json
+import ast
+from html import escape
+from hashlib import sha256
 from pathlib import Path
 
 COPY = r"""
@@ -15,15 +18,23 @@ Sage，53个数字员工组建完整的经营组织。结论有证据，执行�
 53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	53 digital employees. One complete business organization. Evidence-backed decisions. Human-authorized execution.
 跳转到正文	Skip to content
 主导航	Main navigation
+Sage 首页	Sage home
+页脚导航	Footer navigation
+产品文档	Product documentation
+订阅方案	Subscription plans
+>产品</a>	>Product</a>
 打开导航菜单	Open navigation menu
 下载Sage	Download Sage
 免费体验	Try Sage
 咨询和演示	Talk to us
+提交预约	Submit request
 AI 团队	AI Team
 企业服务	Enterprise
 价格	Pricing
 文档	Docs
 登录	Log in
+账户	Account
+订阅与账单	Billing
 产品</span>	Product</span>
 九个经营场景的协作演示	Team collaboration across nine business workflows
 切换经营场景	Next business workflow
@@ -719,8 +730,252 @@ VOC / Shopify 本地示例	Local VOC / Shopify examples
 返回任务确认	Return to task confirmation
 """
 
+CONTENT_COPY = r"""
+咨询和演示	Contact sales
+使用邮箱或手机号验证登录	Sign in with email or phone verification
+管理账户与订阅	Manage your account and subscription
+我的账户	My account
+从专业岗位，到有序协作	From specialist roles to coordinated collaboration
+不是让更多 AI 给出更多答案，	Not more AI producing more answers,
+而是让不同专业共同看清，一项经营决策是否成立。	but different disciplines testing whether a business decision stands up.
+人与 AI 数字员工共同讨论业务方案，背景中的更多团队成员在不同工作位协作	People and AI digital employees discuss a business proposal, with more teams collaborating across the workspace
+专业性，落实在判断的方法与标准里	Professional judgment starts with methods and standards
+Agent、Skills 与 MCP 是实现手段。对业务而言，更重要的是它们支持什么判断、留下什么依据。	Agents, Skills and MCP are implementation tools. What matters to the business is the judgment they support and the evidence they preserve.
+职责决定问题的问法	Responsibilities shape the questions
+专业岗位不仅有角色名称，还要明确要解决的决策、允许使用的资料、必须检查的约束与交付标准。机会研究先问证据是否成立；商业判断再问成立后是否值得投入。	A specialist role needs more than a name: it defines the decision, permitted information, required constraint checks and deliverable standards. Opportunity research first tests the evidence; commercial judgment then asks whether the supported opportunity merits investment.
+同一个模型可以承担不同岗位，但岗位身份本身不证明专业能力。能力要在具体任务中接受验收。	One model may serve different roles, but a role label does not prove expertise. Capability must be evaluated on specific tasks.
+方法不能只靠临场发挥	Methods must be repeatable
+Skills 将可复用的分析步骤、判断规则和成果要求交给岗位。VOC 研究不能只归类情绪，还应核对样本、需求频次、现有替代方案与反证；经营分析不能只读增长率，还应核对口径与约束。	Skills give roles reusable analytical steps, judgment rules and output requirements. VOC research checks samples, demand frequency, alternatives and contrary evidence, not just sentiment. Business analysis checks definitions and constraints, not just growth rates.
+方法需要版本、适用条件和测试样本。更新一段提示词，不等于改善了业务判断。	Methods need versions, applicability conditions and test samples. Editing a prompt does not itself improve business judgment.
+先理解这家企业，再讨论行业经验	Understand the company before applying industry knowledge
+品牌定位、目标市场、渠道、商品结构、资金约束与历史决策共同构成业务上下文。通用行业知识无法替代这些条件；同一建议，对不同品牌可能有相反的结果。	Positioning, markets, channels, product mix, financial constraints and prior decisions form the business context. General industry knowledge cannot replace these conditions; the same recommendation may have opposite effects for different brands.
+共享上下文要保留资料来源、时间和权限，并把事实、推断与缺失信息分开，避免把过期经验当成当前事实。	Shared context preserves sources, dates and permissions, separating facts, inferences and missing information so outdated experience is not mistaken for current evidence.
+工具提供依据，而不是授予权力	Tools provide evidence, not authority
+MCP 用于规范工具与数据连接。查询记录、执行计算、检索资料，让判断能够接触可核对的业务依据，而不是仅依赖模型记忆。	MCP standardizes tool and data connections. Record queries, calculations and retrieval ground judgments in checkable business evidence rather than model memory alone.
+连接成功不代表数据准确，也不代表可以改价、采购或发布。访问权限、执行授权与真实结果必须分别确认。	A successful connection does not prove data accuracy or authorize price changes, procurement or publishing. Access, execution permission and actual results must be confirmed separately.
+交接的是可使用的成果	Handoff work that others can use
+研究岗位不能只交一份长报告。下一岗位需要知道：证据来自哪里，覆盖什么范围，哪些假设未验证，什么条件下才能继续决策。	A research role cannot hand over only a long report. The next role needs to know where evidence comes from, what it covers, which assumptions remain untested and when the decision can proceed.
+交接标准决定成果能否被复用。清晰的来源、约束与未决问题，比更多聊天记录更重要。	Handoff standards determine reusability. Clear sources, constraints and unresolved questions matter more than a longer chat history.
+复核需要不同的检查职责	Review needs a distinct checking responsibility
+让另一个 AI 重复问同一个问题，并不等于独立复核。复核岗位应检查来源、计算、遗漏条件、反例和授权范围，并有能力提出退回或需要补证。	Asking another AI the same question is not independent review. Reviewers check sources, calculations, missing conditions, counterexamples and authorization, and can return work or request more evidence.
+多岗位也可能共享同一种偏差。重要结论仍需外部证据、确定性校验和人工判断共同支持。	Multiple roles can share the same bias. Important conclusions still need external evidence, deterministic checks and human judgment.
+判断与业务执行不是同一权限	Judgment and execution require different authority
+提出方案、批准方案、执行动作和确认完成，分别承担不同责任。涉及资金、公开发布或外部系统变更时，应明确负责人、预算和可撤回条件。	Proposing, approving, executing and confirming completion have distinct responsibilities. Financial actions, publishing and external system changes require an owner, budget and revocation conditions.
+AI 的建议不能代替企业授权；工具返回成功，也不能直接证明经营目标已经实现。	AI advice does not replace company authorization. A successful tool response does not prove that a business goal has been achieved.
+专业能力必须能被反复检验	Expertise must withstand repeated evaluation
+任务验收应覆盖事实正确性、计算口径、证据充分性、约束遵守与交接可用性。版本变化后，需要在相同任务上比较，不能用一次顺利演示证明稳定。	Acceptance checks factual accuracy, calculation definitions, sufficient evidence, constraints and usable handoffs. Compare versions on the same tasks; one successful demonstration does not establish reliability.
+评估结果支持方法改进，不支持“绝不出错”或“保证增长”的承诺。	Evaluation informs method improvements, not promises of zero errors or guaranteed growth.
+团队的意义，不是意见更多	A team is not about more opinions
+而是让判断经得起不同专业的追问	It is about judgments that withstand cross-disciplinary scrutiny
+需要协作的，是相互影响的判断	Collaborate where judgments influence one another
+当需求证据、产品可行性、利润条件与进入风险相互牵制时，分专业研究能保持各自的检查深度。汇总时不应抹平分歧，而应指出结论依赖哪些条件、缺什么证据、由谁确认。	When demand evidence, product feasibility, profitability and entry risks constrain one another, specialist research maintains depth. Synthesis should preserve disagreement, identify conditions and evidence gaps, and name the person who must confirm them.
+岗位按问题组织，不是让全部员工同时运行。研究可以并行，依赖同一结论的工作则需要明确接收条件。	Organize roles around the question, not run every employee at once. Research may proceed in parallel; dependent work needs explicit acceptance conditions.
+不需要团队的，保持简单	Keep simple work simple
+明确的字段校验、计算、单次检索或短文案任务，可以用规则、工具或单个岗位完成。只有增加协作能够改善覆盖范围、复核质量或交接可靠性时，才值得承担额外耗时与 Sage Credits 消耗。	Field validation, calculations, a single retrieval or short copy may need only a rule, tool or one role. Extra time and Sage Credits are worthwhile only when collaboration improves coverage, review quality or handoff reliability.
+团队数量不等于结果质量。Sage 的组织设计应服务于任务，而不是为了展示更多 Agent。	Team size is not output quality. Sage’s organization design serves the task rather than showcasing more agents.
+如何判断 AI 团队真的帮上了忙	How to judge whether an AI team helped
+不要只看报告是否完整，要看它是否支持下一项真实决策。	Look beyond report completeness: does it support the next real decision?
+依据可核对	Checkable evidence
+关键结论能找到来源、时间、计算口径与适用范围；不能确认的信息明确保留。	Key conclusions identify sources, time, calculation definitions and applicability. Unconfirmed information remains explicitly unresolved.
+取舍说得清	Clear trade-offs
+不只提出一个建议，也说明备选方案、约束条件、潜在影响与尚未解决的分歧。	Explain alternatives, constraints, potential effects and unresolved disagreements, not just one recommendation.
+成果能接手	Usable handoffs
+下一位负责人知道需要验证什么、谁来确认、接收什么成果，而不需要重新研究全部背景。	The next owner knows what to validate, who confirms it and what to receive without researching the whole background again.
+边界不混淆	Distinct boundaries
+分析完成、方案批准、执行完成与经营改善分别有证据，不用一份报告替代业务结果。	Analysis, approval, execution and business improvement each need their own evidence. A report is not a substitute for business outcomes.
+组织有分工，职责有依据	Defined roles, grounded responsibilities
+53 个数字员工的组织设计，包含 3 个管理职能与 50 个专业岗位。	The design includes 53 digital employees: 3 management functions and 50 specialist roles.
+岗位配置与协作范围随具体经营问题确定，不以头像数量衡量专业性。	Role combinations and collaboration depend on the question. Avatar count is not a measure of expertise.
+管理职能	Management functions
+天时	Tianshi
+地利	Dili
+人和	Renhe
+经营方向与资源统筹	Business direction and resource coordination
+市场判断与增长策略	Market judgment and growth strategy
+组织协同与责任边界	Organizational coordination and responsibility
+50 个专业岗位	50 specialist roles
+请启用 JavaScript 查看全部数字员工，或阅读下方岗位职责说明。	Enable JavaScript to view the full directory, or consult the documentation on role responsibilities.
+从一个值得认真判断的问题开始	Start with a question worth careful judgment
+查看体验入口	Explore the experience
+了解企业服务 →	Explore enterprise services →
+先明确需要做什么决策，再确定需要哪些专业与依据。	Define the decision first, then the expertise and evidence it requires.
+数字员工目录暂未加载，请刷新重试。	The digital employee directory could not be loaded. Refresh to retry.
+让 AI 理解业务，而不只是做工具	Let AI understand the business, not just supply tools
+从标准 Sage 开始。	Start with standard Sage.
+把企业特有的数据、知识、流程与系统，转化为可交付的能力。	Turn company-specific data, knowledge, processes and systems into deliverable capabilities.
+01 / 企业依据	01 / Business evidence
+02 / 智能协作	02 / Intelligent collaboration
+03 / 授权与交付	03 / Authorization and delivery
+企业实施结构示意	Illustrative enterprise implementation structure
+业务系统与数据	Business systems and data
+打通企业现有系统与多源数据	Connect existing systems and multiple data sources
+订单 · 财务 · 供应链	Orders · Finance · Supply chain
+客户 · 商机 · 服务	Customers · Opportunities · Service
+组织 · 人员 · 绩效	Organization · People · Performance
+其他系统	Other systems
+业务数据	Business data
+文档资料	Documents
+报表记录	Reports
+企业知识	Enterprise knowledge
+沉淀企业的核心业务资产	Build reusable core business assets
+业务规则	Business rules
+制度规范	Policies
+决策规则	Decision rules
+合规要求	Compliance requirements
+指标口径	Metric definitions
+业务指标定义	Business metric definitions
+统计口径	Reporting definitions
+计算逻辑	Calculation logic
+流程约束	Process constraints
+业务流程	Business processes
+审批规则	Approval rules
+角色与权限	Roles and permissions
+人工授权	Human authorization
+复核	Review
+数据采集与治理	Data collection and governance
+企业知识与知识图谱	Enterprise knowledge and knowledge graphs
+数据	Data
+知识	Knowledge
+场景	Scenarios
+系统	Systems
+结果	Results
+明确目标、范围	Define objectives, scope
+理解 · 推理 · 执行	Understand · Reason · Execute
+连接企业知识与业务系统	Connect enterprise knowledge and business systems
+让 AI 成为可交付的生产力	Make AI a deliverable business capability
+人工审批	Human approval
+关键决策，始终由人把关	People retain control of key decisions
+审批意见示意，非操作按钮	Illustrative approval decision, not interactive controls
+审批意见	Approval decision
+驳回	Reject
+通过	Approve
+验证与交付	Verification and delivery
+生成结果并回写到业务系统	Produce results and write back to business systems
+业务执行结果	Execution results
+相关文档与过程记录	Documents and process records
+执行结果与数据指标	Results and data metrics
+系统回写	System write-back
+更新企业业务系统	Update business systems
+标准产品与企业实施的关系	Standard product and enterprise implementation
+01 / 标准产品	01 / Standard product
+02 / 企业实施	02 / Enterprise implementation
+复用共同能力	Reuse shared capabilities
+经营场景 · 专业岗位 · 协作与授权	Business scenarios · Specialist roles · Collaboration and authorization
+经营目标	Business goal
+明确问题与指标	Define questions and metrics
+方案	Proposal
+基于 Sage 能力	Built on Sage capabilities
+生成可行动方案	Propose actionable plans
+关键决策由人把关	Human control of key decisions
+结果核验与应用	Verify and apply outcomes
+双方合作	Joint work
+交付成果：	Deliverables:
+交付成果	Deliverables
+适配企业差异	Adapt to company differences
+接入企业数据，统一指标口径	Connect company data and align metrics
+沉淀业务知识与关键业务关系	Capture knowledge and key business relationships
+适配业务流程与审批规则，确保落地	Adapt workflows and approvals for implementation
+对接现有系统，先评估只读集成	Connect existing systems, assessing read-only integration first
+每一项定制，都对应一份明确的成果	Every customization has a defined deliverable
+基于你的业务需求，从数据、知识、场景到系统，交付可落地的成果。	Deliver usable outcomes across data, knowledge, scenarios and systems, based on your business needs.
+打通经授权的多源数据，建立统一的数据标准与字段体系，形成可复用的企业数据资产。	Connect authorized sources, align standards and fields, and build reusable company data assets.
+数据清单、指标字典与质量报告	Data inventory, metric dictionary and quality reports
+梳理企业的业务知识与规则，构建可被 AI 理解和调用的知识库。知识图谱按实际需求评估范围。	Organize business knowledge and rules into a knowledge base AI can reference. Assess knowledge-graph scope against actual needs.
+企业知识库、引用规则与关系模型	Knowledge base, citation rules and relationship model
+业务场景与数字员工定制	Scenario and digital employee customization
+围绕具体业务场景，设计人机协同的工作流程与数字员工，嵌入企业的实际流程与审批规则。	Design human–AI workflows and roles around specific scenarios, integrated with actual processes and approvals.
+岗位分工、业务规则与成果模板	Role responsibilities, business rules and deliverable templates
+产品与系统集成	Product and system integration
+通过标准接口或定制开发，连接你的既有系统，在权限控制下完成数据读取与业务操作；写入另行授权。	Connect existing systems through standard interfaces or custom development. Control access and business operations with permissions; writes require separate authorization.
+业务工作台、接口与验证记录	Business workspace, interfaces and verification records
+从一项问题开始，逐步扩展	Start with one problem, then expand
+在合适的范围内快速验证，逐步扩展到更多场景。	Validate within an appropriate scope, then extend to more scenarios.
+联合实施阶段	Joint implementation phases
+问题诊断	Problem diagnosis
+明确目标与范围	Define goals and scope
+数据准备	Data preparation
+打通与整理数据	Connect and organize data
+联合设计	Joint design
+设计方案与评估	Design and evaluate
+受控试点	Controlled pilot
+小范围验证效果	Validate within limited scope
+联合验收	Joint acceptance
+确认成果与推广	Confirm outcomes before expansion
+持续运行	Ongoing operation
+迭代优化与扩展	Iterate and extend
+阶段成果	Stage deliverables
+进入下一阶段	Next-stage conditions
+一起明确要支持的经营决策、当前做法与业务约束，确定目标、负责人及本次不包含的范围。	Define the decision to support, current practices and constraints together. Agree on objectives, ownership and exclusions.
+问题说明、现状流程与基线指标	Problem statement, current workflow and baseline metrics
+业务负责人确认问题、目标与范围；资料不足时先补充，不直接开始实施。	The business owner confirms the problem, goals and scope. Gather missing information before implementation.
+核对合法授权、字段口径、数据质量与现有系统的访问条件，识别关键缺口及撤权路径。	Verify lawful authorization, field definitions, quality and system access. Identify critical gaps and revocation paths.
+数据就绪清单、字段映射与风险说明	Data-readiness checklist, field mappings and risks
+核心依据可获得，权限与口径有负责人确认；无法补齐时缩小范围或停止。	Core evidence is available and owners confirm permissions and definitions. Reduce scope or stop if gaps cannot be resolved.
+用历史任务共同设计专业分工、成果格式、业务规则与人工确认点，先验证正常与边界情况。	Use historical tasks to jointly design roles, output formats, rules and human checkpoints. Validate normal and boundary cases first.
+场景规格、样例成果与评测用例	Scenario specifications, sample deliverables and evaluation cases
+业务负责人认可成果格式；缺失、冲突与异常用例具有明确处理路径。	The owner accepts deliverable formats. Missing, conflicting and exceptional inputs have explicit handling paths.
+在限定范围内进行只读或影子运行；必要的有限动作逐项批准，记录错误、接管、成本与结果差异。	Run read-only or shadow work within a limited scope. Approve any necessary limited actions individually and record errors, takeovers, costs and outcome differences.
+试点记录、问题清单与效果评估	Pilot records, issues and outcome evaluation
+满足双方约定标准；关键风险消除或明确接受。试点通过不自动扩大授权。	Meet agreed criteria and eliminate or explicitly accept key risks. Pilot acceptance does not expand authorization automatically.
+核验真实成果、权限、监测与异常升级，测试撤权、重复动作和失败处理，并交接运行责任。	Verify actual deliverables, permissions, monitoring and escalation. Test revocation, repeat actions and failure handling, then transfer operational responsibility.
+验收报告、运行手册与移交清单	Acceptance report, operating guide and handover checklist
+约定用例与接管路径通过核验，负责人签收；技术验收与经营效果分开确认。	Verify agreed cases and takeover paths with owner sign-off. Confirm technical acceptance separately from business impact.
+按约定范围复查效果、版本、数据变化与费用，把验证有效的方法沉淀为可维护的资产。	Review outcomes, versions, data changes and costs within the agreed scope. Preserve validated methods as maintainable assets.
+版本记录、回归用例与维护说明	Version records, regression cases and maintenance guidance
+新增范围先确认预算、责任与再验收；客户专有知识不跨企业复用。	New scope needs budget, responsibility and renewed acceptance first. Customer-specific knowledge is not reused across companies.
+示例场景	Illustrative scenario
+补货与履约	Replenishment and fulfillment
+把需求、交期与资金约束，	Bring demand, lead time and funding constraints
+放进同一份候选计划。	into one candidate plan.
+让正确的商品，在合适的时间，到达合适的市场。	Get the right products to the right markets at the right time.
+场景规格	Scenario specification
+与业务规则	and business rules
+候选计划	Candidate plans
+生成多套补货建议	Propose replenishment alternatives
+审批记录	Approval records
+人工审核与调整	Human review and adjustment
+待审批	Awaiting approval
+验收清单	Acceptance checklist
+验证结果与推广条件	Verify outcomes and expansion criteria
+选择适合你当前阶段的合作方式	Choose the right way to work together
+标准 Sage 产品	Standard Sage product
+开箱即用，适用标准经营场景，	Ready to use for standard scenarios,
+从当前已开放的产品能力开始。	starting with currently released capabilities.
+专项实施与定制	Dedicated implementation and customization
+基于你的业务需求、数据、知识与场景，	Based on your needs, data, knowledge and scenarios,
+按范围交付，稳步推进。	delivered within agreed scope, step by step.
+一起定义你的第一项经营工作	Define your first business task together
+让企业数据、业务知识与 AI 能力，真正服务于你的团队与业务。	Put company data, business knowledge and AI capabilities to work for your team.
+文档目录	Documentation contents
+搜索文档	Search documentation
+搜索标题或正文	Search titles or content
+清空搜索	Clear search
+清空	Clear
+章节	Chapters
+正在加载产品文档…	Loading documentation…
+请启用 JavaScript 查看章节。你也可以访问	Enable JavaScript to browse chapters. You can also visit
+请启用 JavaScript 使用搜索和文章导航。完整正文可在上方展开阅读。	Enable JavaScript for search and article navigation. Complete articles remain readable in the expandable sections above.
+</a>或<a	</a> or <a
+有疑问？请先查阅帮助与平台规则。	Have a question? Start with help and platform rules.
+阅读常见问题	Read common questions
+本页内容	On this page
+产品文档	Documentation
+具体开放能力以产品内说明为准	Available capabilities follow product disclosures
+企业合作	Enterprise services
+订阅方案	Subscription plans
+AI 团队	AI team
+企业服务	Enterprise services
+文档	Docs
+主导航	Main navigation
+菜单	Menu
+跳至内容	Skip to content
+Sage 首页	Sage home
+切换到英文版	Switch language
+"""
+
 def translate(text):
     pairs = dict(line.split('\t', 1) for line in COPY.strip().splitlines())
+    pairs.update(line.split('\t', 1) for line in CONTENT_COPY.strip().splitlines())
     extra = Path(__file__).with_name('english-experience.json')
     if extra.exists():
         pairs.update(json.loads(extra.read_text(encoding='utf-8')))
@@ -728,7 +983,7 @@ def translate(text):
     return pattern.sub(lambda match: pairs[match.group()], text).replace('。', '.').replace('，', ', ').replace('、', ', ').replace('：', ': ')
 
 def english_links(text):
-    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|docs|download|trial|auth|profile)\.html', r'\1-en.html', text)
+    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile)\.html', r'\1-en.html', text)
 
 def language_dropdown(html, page, english=False):
     label = 'Select language' if english else '选择语言'
@@ -758,12 +1013,39 @@ html[lang="en"] .nav-tools{gap:22px}
     return html.replace('</style>', css + '</style>', 1)
 
 
+def static_documentation(source, english=False):
+    """Render reviewed literal data, not execute browser JavaScript during the build."""
+    if english:
+        literal = (source / 'docs-articles-en.js').read_text(encoding='utf-8').split('window.SAGE_DOCS_EN = ', 1)[1].rsplit(';', 1)[0]
+    else:
+        literal = (source / 'docs-page.js').read_text(encoding='utf-8').split('window.SAGE_DOCS_EN : ', 1)[1].split('\n  ];', 1)[0] + '\n  ]'
+    literal = re.sub(r'([,{])(\s*)(list|ordered):', r"\1\2'\3':", literal)
+    literal = re.sub(r"('ordered':)true\b", r'\1True', literal)
+    articles = ast.literal_eval(literal)
+    if len(articles) != 40 or len({article[0] for article in articles}) != 40:
+        raise ValueError('Expected 40 unique documentation articles')
+    def body(article):
+        markup = '<p>' + escape(article[3]) + '</p>'
+        for section in article[4]:
+            markup += '<section>' + ('<h2>' + escape(section[0]) + '</h2>' if section[0] else '')
+            for block in section[1:]:
+                if isinstance(block, str):
+                    markup += '<p>' + escape(block) + '</p>'
+                else:
+                    tag = 'ol' if block.get('ordered') else 'ul'
+                    markup += '<' + tag + '>' + ''.join('<li>' + escape(item) + '</li>' for item in block['list']) + '</' + tag + '>'
+            markup += '</section>'
+        return markup
+    return '<h1>' + escape(articles[0][2]) + '</h1>' + body(articles[0]) + '<noscript>' + ''.join('<details id="doc-readable-' + article[0] + '"><summary>' + escape(article[2]) + '</summary>' + body(article) + '</details>' for article in articles) + '</noscript>'
+
 def build_localized_pages(root):
     """Wrap legacy page fragments and emit reviewed English routes and scripts."""
     source, destination = root / 'src/pages', root / 'pages'
     titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'下载 Sage','product':'产品方案'}
     scripts = {'team':['catalog-data','team-page'], 'enterprise':['info-pages'], 'pricing':['info-pages'], 'product':['catalog-data','catalog']}
     for path in source.glob('*.js'):
+        if path.stem in {'billing', 'auth', 'profile', 'docs-page', 'docs-articles-en'}:
+            continue  # Account and billing use explicit bilingual copy, not substring translation.
         if path.stem == 'catalog':
             continue  # Unreleased product-design route; not linked from English navigation.
         code = english_links(translate(path.read_text(encoding='utf-8')))
@@ -772,10 +1054,56 @@ def build_localized_pages(root):
         (destination / (path.stem + '-en.js')).write_text(code, encoding='utf-8')
     for path in source.glob('*.html'):
         html = path.read_text(encoding='utf-8')
+        if path.stem in {'team', 'enterprise', 'docs'}:
+            # Both languages use the same approved structure and reviewed full copy.
+            name = path.stem
+            css = {'team':'ai-team', 'enterprise':'enterprise-page', 'docs':'docs-page'}[name]
+            dependencies = ['catalog-data', 'ai-team'] if name == 'team' else [css]
+            assets = ['content-pages.css', css + '.css'] + [item + '.js' for item in ['content-pages'] + dependencies]
+            versions = {item: sha256((source / item).read_bytes()).hexdigest()[:12] for item in assets}
+            styles = ''.join(f'<link rel="stylesheet" href="{item}.css?v={versions[item + ".css"]}">' for item in ['content-pages', css])
+            js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
+            items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
+            nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
+            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img src="../assets/favicon.svg" alt="" width="29" height="29">Sage</a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="enterprise.html#contact">咨询和演示</a></div></header>'
+            footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div><p>具体开放能力以产品内说明为准</p></footer>'
+            document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
+            (destination / path.name).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
+            localized = english_links(translate(document)).replace('lang="zh-CN"', 'lang="en"')
+            localized = re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="Explore Sage specialist roles, enterprise implementation and product usage rules.">', localized)
+            localized = localized.replace('lang="en" aria-label="Switch language">中文 ⌄', 'lang="zh-CN" aria-label="Switch language">English ⌄')
+            localized = localized.replace(f'href="{name}-en.html" lang="zh-CN" aria-label="Switch language">English ⌄', f'href="{name}.html" lang="zh-CN" aria-label="Switch to Chinese">Chinese ⌄')
+            for item in ['content-pages'] + dependencies:
+                if item != 'docs-page':
+                    localized = localized.replace(f'src="{item}.js', f'src="{item}-en.js')
+            if name == 'docs':
+                localized = localized.replace('<script src="docs-page.js', '<script src="docs-articles-en.js" defer></script><script src="docs-page.js')
+                localized = localized.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source, True))
+            # Fail closed rather than publish mixed-language content from an old page.
+            untranslated = re.findall(r'[\u4e00-\u9fff]+', localized)
+            if untranslated:
+                raise ValueError(f'{name}: English content remains untranslated: {sorted(set(untranslated))}')
+            (destination / (name + '-en.html')).write_text(localized, encoding='utf-8')
+            continue
+        if path.stem == 'auth':
+            (destination / path.name).write_text(html, encoding='utf-8')
+            en = html.replace('lang="zh-CN"', 'lang="en"').replace('登录 · Sage', 'Sign in · Sage')
+            en = en.replace('正在连接账户服务…', 'Connecting to account services…').replace('请启用 JavaScript。未验证身份前不会开通账户。', 'Enable JavaScript. Identity verification is required to access an account.')
+            (destination / 'auth-en.html').write_text(en, encoding='utf-8')
+            continue
+        if 'data-billing-page=' in html:
+            (destination / path.name).write_text(html, encoding='utf-8')
+            en = html.replace('lang="zh-CN"', 'lang="en"')
+            title = {'pricing': 'Pricing', 'checkout': 'Review plan', 'billing': 'Billing'}[path.stem]
+            en = re.sub(r'<title>.*?</title>', f'<title>{title} · Sage</title>', en)
+            en = en.replace('正在加载 Sage 方案…', 'Loading Sage plans…').replace('正在加载方案…', 'Loading plan…').replace('正在加载账单中心…', 'Loading billing…')
+            en = en.replace('请启用 JavaScript 查看方案。当前未开放收款。', 'Enable JavaScript to view plans. Payments are not available.').replace('请启用 JavaScript。当前未开放收款。', 'Enable JavaScript. Payments are not available.').replace('请启用 JavaScript。未登录时不会展示账户数据。', 'Enable JavaScript. Account data requires authentication.')
+            (destination / (path.stem + '-en.html')).write_text(en, encoding='utf-8')
+            continue
         if '<!doctype' not in html.lower():
             styles = ''.join(f'<link rel="stylesheet" href="{name}.css">' for name in ['redesign','pages','catalog','team-page','info-pages'])
-            nav = '<nav class="r-links" aria-label="主导航"><span aria-disabled="true">产品</span><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav>'
-            header = f'<header class="r-nav"><a class="r-brand" href="../index.html">Sage</a>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="../index.html#contact">咨询和演示</a></div></header>'
+            nav = '<nav id="r-menu" class="r-links" aria-label="主导航"><a href="../index.html#product">产品</a><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav>'
+            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img src="../assets/favicon.svg" width="29" height="29" alt="">Sage</a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="../index.html#contact">咨询和演示</a></div></header>'
             footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p><small>本地产品预览 · 认证、支付与真实任务尚未接入</small></footer>'
             js = ''.join(f'<script src="{name}.js" defer></script>' for name in scripts.get(path.stem,[]) + ['site-shell'])
             layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
@@ -790,5 +1118,9 @@ def build_localized_pages(root):
             continue
         en = english_links(translate(html)).replace('lang="zh-CN"','lang="en"')
         en = re.sub(r'src="([\w-]+)\.js"',r'src="\1-en.js"',en)
+        if path.stem == 'profile':
+            en = en.replace('src="profile-en.js"', 'src="profile.js"')
+            for chinese, english in [('个人设置','Personal settings'),('个人信息','Personal information'),('用量明细','Usage details'),('我的账单','My bills'),('返回官网','Back to website'),('正在读取账户资料…','Loading account data…')]:
+                en = en.replace(chinese, english)
         en = en.replace(f'href="{path.stem}-en.html">English',f'href="{path.stem}.html" lang="zh-CN">中文')
         (destination / (path.stem + '-en.html')).write_text(language_dropdown(en, path.stem, True),encoding='utf-8')

@@ -11,11 +11,15 @@ const base = process.env.SAGE_URL || 'http://127.0.0.1:8896';
     window.auditTimers = [];
     const original = window.setInterval;
     window.setInterval = (fn, ms, ...args) => {
-      if (ms === 3000) window.auditTimers.push(fn);
+      // Batch coverage has one clock source; real-time behavior is tested separately.
+      if (ms === 3000) {
+        window.auditTimers.push(() => fn(...args));
+        return 0;
+      }
       return original(fn, ms, ...args);
     };
   });
-  const report = { batches: 0, responsive: [], links: [] };
+  const report = { batches: 0, responsive: [], links: [], realTime: [] };
   try {
     await page.route('**/assets/people/**', route => route.abort());
     for (const entry of ['index.html', 'index-en.html']) {
@@ -36,6 +40,7 @@ const base = process.env.SAGE_URL || 'http://127.0.0.1:8896';
       await page.locator('#scene-stage').scrollIntoViewIfNeeded();
       await page.mouse.move(0, 0);
       await page.waitForTimeout(400);
+      assert.equal(await page.evaluate(() => window.auditTimers.length), 1, `${entry}: one 3000ms workflow timer`);
       const stages = new Set();
       for (let i = 0; i < 45; i++) {
         await page.waitForFunction(() => [...document.querySelectorAll('#relay-people img')]
@@ -87,6 +92,53 @@ const base = process.env.SAGE_URL || 'http://127.0.0.1:8896';
     await page.locator('.sage-language-menu a[lang="zh-CN"]').click();
     await page.waitForURL('**/index.html');
     assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN');
+
+    // Observe native intervals without manually invoking callbacks or changing time.
+    const livePage = await browser.newPage({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'no-preference' });
+    livePage.on('pageerror', e => errors.push(e.message));
+    await livePage.addInitScript(() => {
+      window.auditNativeTicks = [];
+      window.auditNativePeriods = [];
+      const original = window.setInterval;
+      const state = () => document.querySelector('#scene-title')?.textContent + ':' + document.querySelector('#relay-title')?.textContent;
+      window.setInterval = (fn, ms, ...args) => {
+        if (ms !== 3000) return original(fn, ms, ...args);
+        window.auditNativePeriods.push(ms);
+        return original(() => {
+          const before = state(), at = performance.now();
+          const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          fn(...args);
+          window.auditNativeTicks.push({ at, before, after: state(), reduced, hidden: document.hidden });
+        }, ms);
+      };
+    });
+    try {
+      for (const entry of ['index.html', 'index-en.html']) {
+        await livePage.goto(`${base}/${entry}`);
+        await livePage.bringToFront();
+        await livePage.locator('#scene-stage').scrollIntoViewIfNeeded();
+        await livePage.mouse.move(0, 0);
+        assert.deepEqual(await livePage.evaluate(() => window.auditNativePeriods), [3000], `${entry}: native interval is 3 seconds`);
+        await livePage.waitForFunction(() => window.auditNativeTicks.filter(t => !t.reduced && t.before !== t.after).length >= 2,
+          null, { timeout: 15000, polling: 100 });
+        const running = await livePage.evaluate(() => window.auditNativeTicks.filter(t => !t.reduced && t.before !== t.after).slice(0, 2));
+        const interval = running[1].at - running[0].at;
+        assert.ok(interval >= 2800 && interval <= 6000, `${entry}: native interval was ${Math.round(interval)}ms`);
+
+        await livePage.emulateMedia({ reducedMotion: 'reduce' });
+        const pausedState = await livePage.evaluate(() => document.querySelector('#scene-title').textContent + ':' + document.querySelector('#relay-title').textContent);
+        await livePage.waitForFunction(() => window.auditNativeTicks.filter(t => t.reduced).length >= 2,
+          null, { timeout: 15000, polling: 100 });
+        const paused = await livePage.evaluate(() => window.auditNativeTicks.filter(t => t.reduced));
+        assert.ok(paused.every(t => !t.hidden && t.before === pausedState && t.after === pausedState), `${entry}: reduced motion must pause native ticks`);
+
+        await livePage.emulateMedia({ reducedMotion: 'no-preference' });
+        const resumeFrom = await livePage.evaluate(() => window.auditNativeTicks.length);
+        await livePage.waitForFunction(start => window.auditNativeTicks.slice(start).some(t => !t.reduced && !t.hidden && t.before !== t.after),
+          resumeFrom, { timeout: 15000, polling: 100 });
+        report.realTime.push({ entry, intervalMs: Math.round(interval), autoAdvances: running.length, pausedTicks: paused.length, resumed: true });
+      }
+    } finally { await livePage.close(); }
     assert.deepEqual(errors, []);
     console.log(JSON.stringify(report, null, 2));
   } finally { await browser.close(); }

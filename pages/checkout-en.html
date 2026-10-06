@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review plan · Sage</title><link rel="stylesheet" href="billing.css?v=747fc0f5c789"><script src="billing.js?v=0fc116ac0a6e" defer></script><link rel="stylesheet" href="content-pages.css?v=10f07fb19f64"><script src="site-shell.js?v=d7d771dfb6d7" defer></script></head>
+<body data-billing-page="checkout"><div id="billing-root"><p role="status">Loading plan…</p></div><noscript>Enable JavaScript. Payments are not available.</noscript><style>
+.sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
+.sage-language .sage-language-toggle{width:44px;height:44px;padding:10px;display:grid;place-items:center;border:1px solid transparent;border-radius:8px;background:transparent;color:inherit;cursor:pointer;touch-action:manipulation}
+.sage-language-toggle svg{width:24px;height:24px;display:block}
+.sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
+.sage-language .sage-language-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:1000;width:184px;max-width:calc(100vw - 32px);padding:6px;margin:0;border:1px solid #e4e9ef;border-radius:10px;background:#fff;color:#202b38;box-shadow:0 8px 28px #14243a14,0 2px 6px #14243a08;list-style:none;text-align:left}
+.sage-language-menu[hidden]{display:none}
+.sage-language .sage-language-menu a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:10px 12px;border:0;border-radius:6px;font:400 14px/1.5 Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#526171;text-decoration:none;white-space:nowrap;letter-spacing:0}
+.sage-language .sage-language-menu a:hover{background:#f4f7fb;color:#202b38}
+.sage-language .sage-language-menu a[aria-current="true"]{background:#edf3f9;color:#396397;font-weight:500}
+.sage-language .sage-language-menu a[aria-current="true"]::after{content:'✓';font-size:15px}
+.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #396397;outline-offset:3px}
+</style>
+<script>
+(()=>{
+ function initialize(){
+ let root=document.querySelector('.sage-language');
+ if(!root){
+   const link=document.querySelector('.cp-tools>a[lang],.nav-actions>a[lang],.r-tools>a[lang]');
+   if(!link)return;
+   const en=document.documentElement.lang==='en',name=location.pathname.split('/').pop().replace('-en.html','').replace('.html','');
+   if(name==='product')return; // No published English product route.
+   root=document.createElement('div');root.className='sage-language';
+   root.innerHTML=`<button class="sage-language-toggle" type="button" aria-label="${en?'Select language':'选择语言'}" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="${en?'Select language':'选择语言'}" hidden><li><a href="checkout-en.html" lang="en" hreflang="en" ${en?'aria-current="true"':''}>English</a></li><li><a href="checkout.html" lang="zh-CN" hreflang="zh-CN" ${en?'':'aria-current="true"'}>中文</a></li></ul>`;
+   link.replaceWith(root);
+ }
+ if(root.dataset.languageReady)return;root.dataset.languageReady='true';
+ const button=root.querySelector('button'),menu=root.querySelector('ul'),links=[...menu.querySelectorAll('a')];
+ function syncLinks(){links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});}
+ syncLinks();
+ document.addEventListener('sage:location-updated',syncLinks);
+ window.addEventListener('popstate',syncLinks);
+ function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
+ button.addEventListener('click',()=>{syncLinks();const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
+ root.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){event.preventDefault();close(true);}
+   const i=links.indexOf(document.activeElement);
+   if(i>=0&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();links[(i+(event.key==='ArrowDown'?1:links.length-1))%links.length].focus();}
+ });
+ document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+ root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
+ }
+ initialize();
+ new MutationObserver(initialize).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+</body></html>

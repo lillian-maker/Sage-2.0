@@ -1,6 +1,15 @@
 (() => {
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const accountLinks=$$('.nav-tools>a[data-account-entry],.mobile-nav>a[data-account-entry]');
+accountLinks.forEach(link=>{link.textContent=document.documentElement.lang==='en'?'Sign in':'登录';link.href='pages/auth'+(document.documentElement.lang==='en'?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);});
+if(accountLinks.length)fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)}).then(async response=>{
+ if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('ACCOUNT_SERVICE_UNAVAILABLE');
+ const session=await response.json(),en=document.documentElement.lang==='en';
+ if(typeof session.authenticated!=='boolean'||(session.authenticated&&!session.user?.id))throw Error('INVALID_SESSION');
+ window.sageSession=session;window.dispatchEvent(new CustomEvent('sage:session',{detail:session}));
+ accountLinks.forEach(link=>{link.textContent=session.authenticated?(session.user.display_name||session.user.masked_identifier||(en?'My account':'我的账户')):(en?'Sign in':'登录');link.href=session.authenticated?'pages/profile'+(en?'-en':'')+'.html':'pages/auth'+(en?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);});
+}).catch(()=>accountLinks.forEach(link=>{link.title=document.documentElement.lang==='en'?'Account service is unavailable':'暂时无法读取账户状态';}));
 const data=window.SAGE_CATALOG;
 if(!data){throw new Error('场景资料未加载');return;}
 
@@ -40,7 +49,6 @@ function paintAssurance(key){
  $('#assurance-work').innerHTML='<div class="assurance-copy"><h3>'+a.title+'</h3><p>'+a.body+'</p><span class="assurance-boundary">产品机制示意</span></div><div class="assurance-diagram"><div class="evidence-sheet"><div class="sheet-head"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M4 2h11l5 5v19H4zM15 2v6h5M8 14h8M8 19h6"/></svg><strong>'+a.left+'</strong></div>'+a.rows.map((r,i)=>'<div class="evidence-row"><span class="evidence-pin"></span>'+r+'</div>').join('')+'</div><div class="assurance-gate"><span class="gate-line"></span><div class="gate-symbol"><svg viewBox="0 0 40 44" aria-hidden="true"><path d="M20 3 5 9v12c0 10 15 19 15 19s15-9 15-19V9z"/><path d="m12 20 6 6 12-13"/></svg></div><strong>'+a.gate+'</strong></div><div class="assurance-result"><strong>'+a.right+'</strong><span>'+a.detail+'</span><p>'+a.state+'</p></div></div>';
 }
 $$('[data-assurance]').forEach(b=>b.addEventListener('click',()=>paintAssurance(b.dataset.assurance)));paintAssurance('evidence');
-$('#r-contact-form').addEventListener('submit',e=>{e.preventDefault();$('#r-form-status').textContent='咨询接收服务尚未接通。内容未发送、未保存，请勿在预览中填写敏感资料。';});
 })();
 
 (()=>{const $=s=>document.querySelector(s);const D={chains:window.SAGE_CATALOG.scenes};const v1={reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,globePaused:false,globeTime:3,globeFrame:0,globeOptIn:false};
@@ -211,4 +219,4 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
 }
 
 
-initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});})();
+initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mobile-nav').hidden){$('#mobile-nav').hidden=true;const toggle=document.querySelector('.menu-toggle');toggle.setAttribute('aria-expanded','false');toggle.focus();}});document.addEventListener('click',e=>{if(!e.target.closest('.nav,#mobile-nav')){$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');}});})();

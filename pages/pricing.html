@@ -1,35 +1,39 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>价格 · Sage</title><link rel="stylesheet" href="redesign.css"><link rel="stylesheet" href="pages.css"><link rel="stylesheet" href="catalog.css"><link rel="stylesheet" href="team-page.css"><link rel="stylesheet" href="info-pages.css"><style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style><script src="info-pages.js" defer></script><script src="site-shell.js" defer></script></head><body><header class="r-nav"><a class="r-brand" href="../index.html">Sage</a><nav class="r-links" aria-label="主导航"><span aria-disabled="true">产品</span><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav><div class="r-tools"><div class="sage-language"><button class="sage-language-toggle" type="button" aria-label="选择语言" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="选择语言" hidden><li><a href="pricing-en.html" lang="en" hreflang="en" >English</a></li><li><a href="pricing.html" lang="zh-CN" hreflang="zh-CN" aria-current="true">中文</a></li></ul></div><a href="auth.html">登录</a><a class="r-button small" href="../index.html#contact">咨询和演示</a></div></header><main id="main" class="info-page price-page">
-  <!-- Established Sage world: white, shared purple actions and concise decision layouts. Pricing compares proposed scope; no quotation or payment is created. -->
-  <header class="info-page-head"><h1>为下一阶段经营，<br>选择合适的方案。</h1><p>从一次机会洞察，到团队协作，再到企业流程落地。</p></header>
-  <div class="info-section-bar"><div class="info-tabs" role="tablist" aria-label="方案类型"><button id="plan-tab-self" role="tab" type="button" aria-selected="true" aria-controls="plan-panel" data-plan-type="self">个人 / 自助</button><button id="plan-tab-business" role="tab" type="button" aria-selected="false" aria-controls="plan-panel" tabindex="-1" data-plan-type="business">企业</button></div><p class="info-fine">金额占位 · 正式权益待确认</p></div>
-  <section id="plan-panel" role="tabpanel" aria-labelledby="plan-tab-self" tabindex="0"><div id="info-plan-cards" class="info-plan-grid"></div><noscript><p>请启用 JavaScript 查看候选套餐。当前没有开放支付，可前往企业服务页了解交付路径。</p></noscript></section>
-  <div id="info-plan-selection" class="info-inline-selection" hidden tabindex="-1"><div><strong id="info-plan-selection-title"></strong><p id="info-plan-selection-copy"></p></div><a class="r-button secondary small" href="enterprise.html#contact">讨论适合的方案</a><button id="info-plan-dismiss" class="info-quiet" type="button" aria-label="关闭方案说明">收起</button></div>
-  <p class="info-pricing-boundary">0 / 20 / 60 / 200、40 / 20 均为沿用的版式占位数字，不是 Sage 有效报价。币种、计费周期、席位单位及积分规则确认后才会开放购买。</p>
-  <section class="info-credit-section" aria-labelledby="credit-pack-title"><div><h2 id="credit-pack-title">任务需要更多计算，<br>按需补充积分。</h2><p>资源包只用于已授权任务的计算，不会扩大数据访问或店铺写入权限。</p><button type="button" class="r-button secondary" id="info-pack-details" aria-expanded="false" aria-controls="info-pack-note">查看资源包规则</button></div><div class="info-credit-diagram" aria-label="积分使用说明"><div><span>剩余积分</span><strong>可用于新任务</strong></div><svg viewBox="0 0 32 24" aria-hidden="true"><path d="M2 12h26m-8-7 8 7-8 7"/></svg><div><span>预留积分</span><strong>确认任务后预留</strong></div><svg viewBox="0 0 32 24" aria-hidden="true"><path d="M2 12h26m-8-7 8 7-8 7"/></svg><div><span>本次消耗</span><strong>按实际账本结算</strong></div><p>计费流程示意；当前未接入正式积分账本。</p></div><p id="info-pack-note" class="info-inline-note" hidden>资源包数量、单价、有效期、适用方案及退款规则尚未配置；当前不提供报价计算，不创建订单。注册或访问本页都不会追加积分。</p></section>
-  <section class="info-comparison" aria-labelledby="info-compare-title"><div class="info-section-title"><h2 id="info-compare-title">把权益边界看清楚。</h2><p>以下为 Sage 权益讨论框架，具体分档与数量尚未确认。</p></div><div class="info-table-scroll" role="region" aria-label="套餐权益对照，可横向滚动" tabindex="0"><table id="info-plan-table"><caption class="info-visually-hidden">候选套餐权益对照，不构成正式服务承诺</caption><thead></thead><tbody></tbody></table></div><p class="info-fine">50 个 AI 岗位属于产品角色体系，不等于 50 个人类登录席位。购买方案不自动获得外部系统权限。</p></section>
-  <section class="info-faq" aria-labelledby="info-faq-title"><h2 id="info-faq-title">你可能关心的问题。</h2><details><summary>积分如何消耗？</summary><p>计划流程是执行前展示预计及最高消耗，确认后预留积分，再按实际任务记录结算。预览示例不代表真实计价；积分数量、计算权重与有效期尚未确定。</p></details><details><summary>失败或停止任务，如何结算？</summary><p>正式结算需要可验证的任务记录和积分账本。失败、部分完成、停止及退还规则仍待确认，当前不承诺统一全额扣减或全额退还。</p></details><details><summary>注册后，成果能保留多久？</summary><p>正式成果留存期限尚未确定。当前仅提供本地示例与当前浏览器会话状态，认证和长期保存尚未接入；注册不会追加免费积分。</p></details><details><summary>团队订阅和 FDE 有什么不同？</summary><p>团队方案讨论既有产品的组织协作与使用范围；FDE 围绕企业数据、系统和流程另行界定实施与持续服务。定制范围、费用与验收标准需独立确认。</p></details><details><summary>选择方案后会自动继续原任务吗？</summary><p>不会。当前没有支付服务；返回原任务后，已有成果仍可查看。任何新增计算都需要重新确认范围与消耗。</p></details></section>
-  <aside id="info-task-return" class="info-task-return" hidden><div><strong id="info-task-title">返回原任务</strong><p id="info-task-note">查看方案不会追加积分或启动计算。</p></div><a id="info-task-back" class="r-button" href="trial.html">返回原成果</a></aside>
-</main>
-<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p><small>本地产品预览 · 认证、支付与真实任务尚未接入</small></footer><style>
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>价格 · Sage</title><link rel="stylesheet" href="billing.css?v=747fc0f5c789"><script src="billing.js?v=0fc116ac0a6e" defer></script><link rel="stylesheet" href="content-pages.css?v=10f07fb19f64"><script src="site-shell.js?v=d7d771dfb6d7" defer></script></head>
+<body data-billing-page="pricing"><div id="billing-root"><p role="status">正在加载 Sage 方案…</p></div><noscript>请启用 JavaScript 查看方案。当前未开放收款。</noscript><style>
 .sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
-.sage-language .sage-language-toggle{width:40px;height:40px;padding:8px;display:grid;place-items:center;border:0;border-radius:50%;background:transparent;color:inherit;cursor:pointer}
+.sage-language .sage-language-toggle{width:44px;height:44px;padding:10px;display:grid;place-items:center;border:1px solid transparent;border-radius:8px;background:transparent;color:inherit;cursor:pointer;touch-action:manipulation}
 .sage-language-toggle svg{width:24px;height:24px;display:block}
 .sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
-.sage-language .sage-language-menu{position:absolute;top:calc(100% + 14px);right:0;z-index:1000;min-width:204px;padding:7px;margin:0;border-radius:16px;background:#f9f9f9;color:#181818;box-shadow:0 12px 38px rgba(0,0,0,.18),0 2px 7px rgba(0,0,0,.06);list-style:none;text-align:left}
+.sage-language .sage-language-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:1000;width:184px;max-width:calc(100vw - 32px);padding:6px;margin:0;border:1px solid #e4e9ef;border-radius:10px;background:#fff;color:#202b38;box-shadow:0 8px 28px #14243a14,0 2px 6px #14243a08;list-style:none;text-align:left}
 .sage-language-menu[hidden]{display:none}
-.sage-language .sage-language-menu a{display:block;padding:12px 14px;border-radius:10px;font:400 18px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;color:#181818;text-decoration:none;white-space:nowrap;letter-spacing:0}
-.sage-language .sage-language-menu a:hover{background:#ededed}
-.sage-language .sage-language-menu a[aria-current="true"]{background:#e3e3e3}
-.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #8295a7;outline-offset:3px}
-@media(max-width:420px){.sage-language .sage-language-menu{min-width:172px}.sage-language .sage-language-menu a{font-size:17px}}
+.sage-language .sage-language-menu a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:10px 12px;border:0;border-radius:6px;font:400 14px/1.5 Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#526171;text-decoration:none;white-space:nowrap;letter-spacing:0}
+.sage-language .sage-language-menu a:hover{background:#f4f7fb;color:#202b38}
+.sage-language .sage-language-menu a[aria-current="true"]{background:#edf3f9;color:#396397;font-weight:500}
+.sage-language .sage-language-menu a[aria-current="true"]::after{content:'✓';font-size:15px}
+.sage-language button:focus-visible,.sage-language a:focus-visible{outline:2px solid #396397;outline-offset:3px}
 </style>
 <script>
 (()=>{
- const root=document.querySelector('.sage-language');if(!root)return;
+ function initialize(){
+ let root=document.querySelector('.sage-language');
+ if(!root){
+   const link=document.querySelector('.cp-tools>a[lang],.nav-actions>a[lang],.r-tools>a[lang]');
+   if(!link)return;
+   const en=document.documentElement.lang==='en',name=location.pathname.split('/').pop().replace('-en.html','').replace('.html','');
+   if(name==='product')return; // No published English product route.
+   root=document.createElement('div');root.className='sage-language';
+   root.innerHTML=`<button class="sage-language-toggle" type="button" aria-label="${en?'Select language':'选择语言'}" aria-expanded="false" aria-controls="sage-language-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/></svg></button><ul class="sage-language-menu" id="sage-language-menu" aria-label="${en?'Select language':'选择语言'}" hidden><li><a href="pricing-en.html" lang="en" hreflang="en" ${en?'aria-current="true"':''}>English</a></li><li><a href="pricing.html" lang="zh-CN" hreflang="zh-CN" ${en?'':'aria-current="true"'}>中文</a></li></ul>`;
+   link.replaceWith(root);
+ }
+ if(root.dataset.languageReady)return;root.dataset.languageReady='true';
  const button=root.querySelector('button'),menu=root.querySelector('ul'),links=[...menu.querySelectorAll('a')];
- links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});
+ function syncLinks(){links.forEach(link=>{const url=new URL(link.href);url.search=location.search;url.hash=location.hash;link.href=url.href;});}
+ syncLinks();
+ document.addEventListener('sage:location-updated',syncLinks);
+ window.addEventListener('popstate',syncLinks);
  function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
- button.addEventListener('click',()=>{const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ button.addEventListener('click',()=>{syncLinks();const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
  button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
  root.addEventListener('keydown',event=>{
    if(event.key==='Escape'){event.preventDefault();close(true);}
@@ -38,6 +42,9 @@
  });
  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
  root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
+ }
+ initialize();
+ new MutationObserver(initialize).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
 </body></html>

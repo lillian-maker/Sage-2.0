@@ -1,0 +1,6 @@
+Django>=5.2,<5.3
+psycopg[binary]>=3.2,<4
+gunicorn>=23,<24
+Pillow>=12,<13
+tencentcloud-sdk-python-ses>=3.0,<4
+tencentcloud-sdk-python-sms>=3.0,<4

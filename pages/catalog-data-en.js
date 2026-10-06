@@ -2,7 +2,7 @@
 window.SAGE_CATALOG = {
   "version": "0.3",
   "status": "design-scope",
-  "source": "Sage_九场景与全员目录_v0.3_2026-09-24.md",
+  "source": "Sage_九Scenarios与全员目录_v0.3_2026-09-24.md",
   "people": [
     {
       "id": "AGT-001",
@@ -464,9 +464,9 @@ window.SAGE_CATALOG = {
       "question": "增长受什么约束, 下一步先改哪里？",
       "output": "Business action plan",
       "owner": "AGT-023",
-      "input": "渠道, 店铺, 商品, 时间窗及可比经营基线；可用的广告, 商品, 库存, 财务数据与质量状态.",
-      "boundary": "无可靠基线只能输出诊断假设；预算或库存不允许则停在方案；未知执行效果先查回执, 不重跑整单.",
-      "script": "0–8 选店铺/时间范围；8–20 点开一项有Evidence的经营约束；20–32 切团队视图, 看Zihang交给Zhiliang核查库存；32–44 展开行动包的预算/停止条件；44–55 展示回执与评估结构, 缺实际效果数据留空.",
+      "input": "渠道, 店铺, 商品, 时间窗及可比经营基线；可用的广告, 商品, 库存, 财务Data与质量状态.",
+      "boundary": "无可靠基线只能输出诊断假设；预算或库存不允许则停在Proposal；未知执行效果先查回执, 不重跑整单.",
+      "script": "0–8 选店铺/时间范围；8–20 点开一项有Evidence的经营约束；20–32 切团队视图, 看Zihang交给Zhiliang核查库存；32–44 展开行动包的预算/停止条件；44–55 展示回执与评估结构, 缺实际效果Data留空.",
       "steps": [
         {
           "label": "Opportunities雷达",
@@ -476,7 +476,7 @@ window.SAGE_CATALOG = {
         {
           "label": "联合诊断",
           "artifact": "Growth Diagnosis",
-          "detail": "可能原因, 反证, 数据缺口, 供应约束"
+          "detail": "可能原因, 反证, Data缺口, 供应约束"
         },
         {
           "label": "Business action plan",
@@ -566,7 +566,7 @@ window.SAGE_CATALOG = {
       "output": "Product hypothesis and validation plan",
       "owner": "AGT-008",
       "input": "类目/Product scope, 消费者与市场Evidence, 来源及样本限制；后续阶段需要可验证的工程, 样品和准入资料.",
-      "boundary": "单人编码, 小样本不能输出市场占比；无样品/安全资料停在Opportunities验证, 不生成“已准入”；法律或产品风险不通过不得发布.",
+      "boundary": "单人编码, 小样本不能输出市场占比；无样品/安全资料停在Opportunities验证, 不生成“已准入”；法律或产品风险不Approve不得发布.",
       "script": "0–8 选择经批准脱敏的 VOC 范围；8–20 一条反馈拆成舒适正向与稳定性顾虑；20–30 加入反证并切情境；30–42 生成“待验证Opportunities”卡；42–52 团队视图展示Tinglan交付Evidence, Tuoxin/Dingxing接受并定义验证；52–60 展示未完成的样品/准入门槛.不得用快进暗示已完成真实实验.",
       "steps": [
         {
@@ -672,9 +672,9 @@ window.SAGE_CATALOG = {
       "question": "怎样平衡缺货, 库存和资金？",
       "output": "Constraint-based replenishment and fulfillment plan",
       "owner": "AGT-016",
-      "input": "SKU, 节点, 需求版本, 现货/在途, 交期, 供应能力, 资金约束；未知数据不填零.",
+      "input": "SKU, 节点, 需求版本, 现货/在途, 交期, 供应能力, 资金约束；未知Data不填零.",
       "boundary": "关键交期缺失时保留候选而不承诺到货；计划批准不等于采购单已发；物流异常回流对应节点.",
-      "script": "0–10 选SKU/需求版本；10–22 展开库存和现金约束；22–32 比较两个候选计划, 展示取舍而非随意最优分数；32–42 切Team handoffZhiliang→Tongtu→Qingzhang；42–50 核对里程碑与可售, 异常保持待核验.",
+      "script": "0–10 选SKU/需求版本；10–22 展开库存和现金约束；22–32 比较两个Candidate plans, 展示取舍而非随意最优分数；32–42 切Team handoffZhiliang→Tongtu→Qingzhang；42–50 核对里程碑与可售, 异常保持待核验.",
       "steps": [
         {
           "label": "需求真相",
@@ -764,8 +764,8 @@ window.SAGE_CATALOG = {
       "question": "进入这个市场, 准备和准入齐了吗？",
       "output": "Market entry and launch package",
       "owner": "AGT-024",
-      "input": "明确市场, 渠道, 账号, 产品；产品主数据, 适用准入要求, 内容与物流/税务资料.",
-      "boundary": "缺法规/产品资料不编造认证；语言翻译不能替代准入；Draft通过不等于已上线.",
+      "input": "明确市场, 渠道, 账号, 产品；产品主Data, 适用准入要求, 内容与物流/税务资料.",
+      "boundary": "缺法规/产品资料不编造认证；语言翻译不能替代准入；DraftApprove不等于已上线.",
       "script": "0–8 选目标市场/产品；8–20 看准入矩阵缺口；20–32 Yijing/Xushi形成发布内容包；32–43 Independent controls确认读写与Evidence范围；43–55 展示真实回执应出现的位置, 无回执时保留未上线.",
       "steps": [
         {
@@ -781,7 +781,7 @@ window.SAGE_CATALOG = {
         {
           "label": "发布包",
           "artifact": "Market Launch Bundle",
-          "detail": "主数据, 本地化, 素材, 商品信息"
+          "detail": "主Data, 本地化, 素材, 商品信息"
         },
         {
           "label": "受控上线",
@@ -885,7 +885,7 @@ window.SAGE_CATALOG = {
           "detail": "体验断点, 根因假设, 影响对象"
         },
         {
-          "label": "修复方案",
+          "label": "修复Proposal",
           "artifact": "Recovery Package",
           "detail": "内容/产品/服务修复任务"
         },
@@ -963,14 +963,14 @@ window.SAGE_CATALOG = {
     {
       "id": "BVS-06",
       "title": "Data products and business tools",
-      "product": "数据产品工作台",
-      "deliverables": ["业务需求Qiyue", "版本化数据Qiyue", "工具与界面候选版本", "独立验收Evidence", "运行与Value review"],
-      "question": "哪些决策卡在数据和工具上？",
+      "product": "Data产品工作台",
+      "deliverables": ["业务需求Qiyue", "版本化DataQiyue", "工具与界面候选版本", "独立验收Evidence", "运行与Value review"],
+      "question": "哪些决策卡在Data和工具上？",
       "output": "Acceptance-ready data products and tools",
       "owner": "AGT-047",
-      "input": "谁要做什么经营决策, 当前数据和系统, 对象范围, 验收标准；不是一个“帮我搭平台”的无限需求.",
-      "boundary": "数据质量不够不发布可信结论；接口候选不等于可用工具；没有验收回执不跳到生产.",
-      "script": "0–10 经营者提出明确决策问题；10–22 Tongchi解释两个口径差异；22–35 Jieqiao/Qingyuan交付最小工具候选；35–45 Menwei与Anjie检查权限；45–55 展示验收记录与发布状态, 未通过保留候选.",
+      "input": "谁要做什么经营决策, 当前Data和Systems, 对象范围, 验收标准；不是一个“帮我搭平台”的无限需求.",
+      "boundary": "Data质量不够不发布可信结论；接口候选不等于可用工具；没有验收回执不跳到生产.",
+      "script": "0–10 经营者提出明确决策问题；10–22 Tongchi解释两个口径差异；22–35 Jieqiao/Qingyuan交付最小工具候选；35–45 Menwei与Anjie检查权限；45–55 展示验收记录与发布状态, 未Approve保留候选.",
       "steps": [
         {
           "label": "需求Qiyue",
@@ -978,7 +978,7 @@ window.SAGE_CATALOG = {
           "detail": "使用人, 决策, 对象, 验收"
         },
         {
-          "label": "数据Qiyue",
+          "label": "DataQiyue",
           "artifact": "Versioned Data Contract",
           "detail": "口径, 血缘, 质量, 失败语义"
         },
@@ -1062,7 +1062,7 @@ window.SAGE_CATALOG = {
       "id": "BVS-07",
       "title": "Quality and account incidents",
       "product": "重大事件控制室",
-      "deliverables": ["事件信号记录", "Immediate safeguards方案", "受控处置回执", "根因与整改计划", "恢复Evidence"],
+      "deliverables": ["事件信号记录", "Immediate safeguardsProposal", "受控处置回执", "根因与整改计划", "恢复Evidence"],
       "question": "出现严重风险, 如何控制影响并恢复？",
       "output": "Incident response and recovery evidence",
       "owner": "AGT-018",
@@ -1093,7 +1093,7 @@ window.SAGE_CATALOG = {
         {
           "label": "恢复与学习",
           "artifact": "Recovery Evidence",
-          "detail": "恢复条件, 复核, 正常策略Evidence"
+          "detail": "恢复条件, Review, 正常策略Evidence"
         }
       ],
       "team": [
@@ -1179,7 +1179,7 @@ window.SAGE_CATALOG = {
       "owner": "AGT-001",
       "input": "可比Business facts, 异常账, 财务与风险Evidence, 岗位/技能/工具运行记录.",
       "boundary": "相关性不是能力缺口因果；缺完整账本不做确定性归因；新能力不能绕过评估直接替换运行版本.",
-      "script": "0–10 选择复盘周期；10–22 展开一个事实与口径；22–32 Mingjing提交差距, Shouheng复核；32–43 Zhiren/Jizhi提出能力调整；43–55 展示版本评估与下一周期验证, 不伪造经营改善数字.",
+      "script": "0–10 选择复盘周期；10–22 展开一个事实与口径；22–32 Mingjing提交差距, ShouhengReview；32–43 Zhiren/Jizhi提出能力调整；43–55 展示版本评估与下一周期验证, 不伪造经营改善数字.",
       "steps": [
         {
           "label": "Evidence账本",
@@ -1199,7 +1199,7 @@ window.SAGE_CATALOG = {
         {
           "label": "版本化变更",
           "artifact": "Change Release Set",
-          "detail": "岗位/知识/工具/运行版本与回退"
+          "detail": "岗位/Knowledge/工具/运行版本与回退"
         },
         {
           "label": "周期核对",
@@ -1278,13 +1278,13 @@ window.SAGE_CATALOG = {
       "id": "SHOPIFY-OPS",
       "title": "Shopify operations",
       "product": "已有店铺诊断与持续运营",
-      "deliverables": ["店铺诊断范围", "可追溯Business snapshot", "Multidimensional diagnosis报告", "优先Actions and experiments方案", "运营Execution verification and review记录"],
+      "deliverables": ["店铺诊断范围", "可追溯Business snapshot", "Multidimensional diagnosis报告", "优先Actions and experimentsProposal", "运营Execution verification and review记录"],
       "question": "已有店铺先修什么, 如何持续改进？",
       "output": "Store diagnosis and prioritized actions",
       "owner": "AGT-023",
-      "input": "店铺身份, 目标, 数据访问范围和基线成熟度.游客仅公开首页＋一个代表性商品页；深度阶段可接授权的经营数据, 不能从公开URL推断后台访问权.",
+      "input": "店铺身份, 目标, Data访问范围和基线成熟度.游客仅公开首页＋一个代表性商品页；深度阶段可接授权的经营Data, 不能从公开URL推断后台访问权.",
       "boundary": "店铺锁定/反爬/无权限时不绕过；商品不匹配需用户确认；缺商品事实的建议稿使用To be confirmed字段.只有Draft不显示发布成功.",
-      "script": "0–8 粘贴已有店链接；8–16 确认公开页面范围/积分上限；16–30 展开一个可定位内容问题；30–42 展示原文与建议；42–52 切团队看Zihang与Xushi交付/复核；52–60 看下一步选择: 保存诊断, 接入授权数据或另行确认行动.演示不实际修改店铺.",
+      "script": "0–8 粘贴已有店链接；8–16 确认公开页面范围/积分上限；16–30 展开一个可定位内容问题；30–42 展示原文与建议；42–52 切团队看Zihang与Xushi交付/Review；52–60 看下一步选择: 保存诊断, 接入授权Data或另行确认行动.演示不实际修改店铺.",
       "steps": [
         {
           "label": "店铺与Scope confirmation",
@@ -1303,12 +1303,12 @@ window.SAGE_CATALOG = {
         },
         {
           "label": "优先Actions and experiments",
-          "artifact": "优先清单, 内容Draft, 实验方案",
+          "artifact": "优先清单, 内容Draft, 实验Proposal",
           "detail": "Zihang整合；Shizhen定义验证；Shoujin审资源, Anjie/Menwei按风险Assurance"
         },
         {
           "label": "Execution verification and review",
-          "artifact": "实施回执与效果复核",
+          "artifact": "实施回执与效果Review",
           "detail": "对应主价值流负责人履责；Shizhen评估, 诊断页汇总状态"
         }
       ],

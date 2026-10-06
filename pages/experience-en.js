@@ -1,215 +1,249 @@
 (() => {
   'use strict';
-  const $ = (s) => document.querySelector(s);
-  const $$ = (s) => [...document.querySelectorAll(s)];
+  const en = document.documentElement.lang.startsWith('en');
+  const t = (zh, english) => en ? english : zh;
+  const page = name => name + (en ? '-en' : '') + '.html';
   const params = new URLSearchParams(location.search);
-  const KEY = 'sage.experience.v1';
-  const costs = { voc: 30, shopify: 50 };
-  const names = { voc: 'VOC opportunity insights', shopify: 'Shopify store diagnosis' };
-  let state = { version: 1, spent: 0, task: null, ledger: [], history: [] };
-  let storageOK = true;
-  try {
-    const raw = sessionStorage.getItem(KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.version !== 1 || !Number.isFinite(parsed.spent) || parsed.spent < 0 || parsed.spent > 100 || !Array.isArray(parsed.ledger)) throw new Error('Invalid demo state');
-      if (parsed.task && (!costs[parsed.task.scene] || !['running', 'complete', 'stopped', 'example'].includes(parsed.task.status) || typeof parsed.task.id !== 'string')) throw new Error('Invalid demo task');
-      state = parsed;
-      state.history = Array.isArray(parsed.history) ? parsed.history.filter(t => costs[t.scene] && ['complete', 'example'].includes(t.status) && typeof t.id === 'string') : [];
+
+  // Legacy URLs share the server-backed account; no local wallet is restored.
+  if (document.body.classList.contains('page-profile')) {
+    const aliases = { personal: 'subscription', billing: 'subscription', credits: 'credits',
+      orders: 'orders', invoices: 'invoices', organization: 'organization',
+      procurement: 'procurement', 'payment-methods': 'payment-methods' };
+    const requested = location.hash.slice(1) || params.get('tab');
+    const target = Object.prototype.hasOwnProperty.call(aliases, requested) ? aliases[requested] : 'subscription';
+    location.replace(page('billing') + '#' + target);
+    return;
+  }
+
+  const root = document.querySelector('#trial-root');
+  if (!root) return;
+  const $ = selector => root.querySelector(selector);
+  let scene = params.get('mission') === 'shopify' || params.get('example') === 'shopify' ? 'shopify' : 'voc';
+  const scenes = {
+    voc: {
+      name: t('VOC opportunity insights', 'VOC opportunity insights'),
+      description: t('从消费者反馈找到待验证的Opportunities', 'Find opportunities to validate in customer feedback'),
+      input: t('品牌名称', 'Brand name'),
+      scope: t('读取公开可访问的消费者反馈, 区分体验, 使用情境, 支持Evidence与反证.', 'Review publicly accessible customer feedback, separating experiences, context, supporting evidence and counter-evidence.'),
+      example: [
+        [t('原始线索', 'Source material'), t('反馈来源, 读取时间与使用情境；无法确认的条件标为未知.', 'Feedback sources, access dates and usage context. Unverified conditions remain unknown.')],
+        [t('Evidence对照', 'Evidence comparison'), t('认可与顾虑并排呈现, 不把单条反馈换算为市场占比.', 'Present praise and concerns together. A single comment cannot establish market prevalence.')],
+        [t('待验证Opportunities', 'Opportunity to validate'), t('形成假设, 反证, 下一步验证与岗位交接, 不直接承诺销量改善.', 'Set out hypotheses, counter-evidence, next checks and team handoffs, without claiming a sales uplift.')]
+      ]
+    },
+    shopify: {
+      name: t('Shopify store diagnosis', 'Shopify store diagnosis'),
+      description: t('梳理购买信息与页面优化顺序', 'Review buying information and page improvements'),
+      input: t('Shopify 店铺链接', 'Shopify store URL'),
+      scope: t('检查公开可访问的店铺页面, 无需店铺后台授权；不据此推断实际订单, 转化率, 广告或库存.', 'Review publicly accessible storefront pages without admin access. These pages cannot establish actual orders, conversion rates, ad performance or inventory.'),
+      example: [
+        [t('页面依据', 'Page evidence'), t('每项观察对应页面位置, URL 与读取时间；受限页面不绕过访问限制.', 'Link observations to page locations, URLs and access dates. Do not bypass access restrictions.')],
+        [t('购买信息', 'Buying information'), t('检查商品说明, Specifications, shipping and returns, 区分缺失信息和待商家确认的事实.', 'Review product details, specifications, shipping and returns, distinguishing missing information from facts the merchant must confirm.')],
+        [t('优化建议', 'Recommendations'), t('给出有Evidence的建议和验证顺序；改价, 发布与广告操作需另行授权.', 'Provide evidence-led recommendations and validation priorities. Price changes, publishing and advertising require separate authorization.')]
+      ]
     }
-  } catch (_) { storageOK = false; }
-  let scene = params.get('mission') === 'shopify' ? 'shopify' : 'voc';
-  let resultScene = scene;
-  function persist() {
-    try { sessionStorage.setItem(KEY, JSON.stringify(state)); return true; }
-    catch (_) { storageOK = false; message('Browser session storage is unavailable, so this demo task cannot be restored. Keep this page open; free examples remain available.'); return false; }
-  }
-  function message(text) { if ($('#xp-message')) $('#xp-message').textContent = text; }
-  function reserved() { return state.task?.status === 'running' ? costs[state.task.scene] : 0; }
-  function available() { return 100 - state.spent - reserved(); }
-  function credits() {
-    if ($('#credit-count')) $('#credit-count').textContent = String(available());
-    if ($('#credit-detail')) $('#credit-detail').textContent = `Reserved: ${reserved()} credits · Demo credits used: ${state.spent}. Demo progress is retained only in this browser session.`;
-  }
-  function show(id) {
-    ['trial-input', 'trial-confirm', 'trial-running', 'trial-result'].forEach(x => { if ($('#' + x)) $('#' + x).hidden = x !== id; });
-    credits();
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }
-  function returnParams() {
-    const p = new URLSearchParams({ return: 'trial', mission: resultScene });
-    if (state.task) p.set('result', state.task.id);
-    p.set('lang', document.documentElement.lang.startsWith('en') ? 'en' : 'zh');
-    return p.toString();
-  }
+  };
+
+  root.innerHTML = `<div class="xp-toolbar"><a href="${page('pricing')}">${t('查看Subscription plans', 'View subscription plans')}</a></div>
+    <section class="xp-entry" aria-labelledby="trial-title">
+      <span class="xp-eyebrow">${t('一次Try Sage · 两个Scenarios任选其一', 'One free trial · Choose one of two scenarios')}</span>
+      <h1 id="trial-title">${t('Turn a question成为下一步行动', 'Turn one question into your next step')}</h1>
+      <p class="xp-intro">${t('Start with customer experiences or an existing store.', 'Start with customer experiences or an active storefront.')}</p>
+      <div class="xp-scene-choice" role="group" aria-label="${t('选择Demo workflow', 'Choose a trial scenario')}">
+        ${Object.entries(scenes).map(([key, item]) => `<button type="button" class="xp-scene" data-scene="${key}" aria-pressed="false"><img class="xp-scene-symbol" src="icons/${key === 'voc' ? 'search' : 'boxes'}.svg" width="30" height="30" alt=""><strong>${item.name}</strong><span>${item.description}</span></button>`).join('')}
+      </div>
+      <section class="xp-prompt trial-scope" aria-labelledby="scope-title">
+        <span class="xp-eyebrow">${t('你需要准备', 'What to prepare')}</span>
+        <h2 id="scope-title"></h2><p id="scope-description"></p>
+        <div class="xp-note" id="trial-availability" role="status"><strong>${t('真实体验暂未开放', 'Live trials are not available yet')}</strong>
+          <p>${t('分析服务尚未开放, 当前不接收品牌或店铺链接, 也不会创建任务或占用体验资格.你可以先了解报告结构, 或进入Account与账单.', 'The analysis service is not available yet. This page does not accept brand names or store URLs, create tasks or use a trial entitlement. You can review the report structure or visit account and billing.')}</p></div>
+        <div class="xp-actions"><button type="button" class="r-button" id="start-trial" disabled aria-describedby="trial-availability">${t('暂不可开始', 'Not available yet')}</button><button type="button" class="r-button secondary" id="view-example" aria-expanded="false" aria-controls="trial-example">${t('查看示例结构', 'View example structure')}</button><a class="xp-text-button" href="${page('billing')}">${t('进入Account与账单', 'Go to account and billing')} →</a></div>
+      </section>
+      <section class="trial-policy" aria-labelledby="trial-policy-title"><h2 id="trial-policy-title">${t('Try Sage如何计算', 'How the free trial works')}</h2>
+        <ul><li>${t('每位用户仅一次成功体验: VOC opportunity insights与 Shopify store diagnosis二选一, 并非每个Scenarios各一次.', 'Each user gets one successful trial: either VOC opportunity insights or Shopify store diagnosis, not one of each.')}</li>
+        <li>${t('正式启动后, Scenarios和品牌／店铺对象锁定.可恢复的任务ContinueOriginal task；完整报告生成, 保存且可查看后才核销资格.', 'Once a live task starts, its scenario and brand or store are locked. Recoverable tasks resume the same run; the entitlement is used only after a complete report is saved and available to view.')}</li>
+        <li>${t('体验资格不等于 Sage Credits.查看下方示例不会创建任务, 扣减资格或扣除 Sage Credits.', 'A trial entitlement is not Sage Credits. Viewing the examples below creates no task and uses neither your entitlement nor Sage Credits.')}</li></ul>
+      </section>
+    </section>
+    <section id="trial-example" class="trial-example" aria-labelledby="example-title" hidden>
+      <span class="xp-eyebrow">${t('静态结构示例 · 不是实际分析Results', 'Static structure example · Not an analysis result')}</span>
+      <h2 id="example-title" tabindex="-1"></h2>
+      <p>${t('以下只说明正式报告将如何组织信息, 未读取任何品牌或店铺, 也不代表你已完成Try Sage.', 'This illustrates how a report is organized. No brand or store has been analyzed, and no free trial has been completed.')}</p>
+      <div class="xp-chain" id="example-content"></div>
+    </section>
+    <section class="xp-note trial-record" aria-labelledby="saved-trial-title"><h2 id="saved-trial-title">${t('我的体验记录', 'My trial')}</h2><div id="saved-trial" aria-live="polite"></div><button type="button" class="xp-text-button" id="refresh-trial">${t('刷新记录', 'Refresh record')}</button></section>`;
+
   function setScene(next) {
     scene = next;
-    $$('.xp-scene').forEach(b => { const yes = b.dataset.scene === next; b.classList.toggle('active', yes); b.setAttribute('aria-pressed', String(yes)); });
-  }
-  function confirm() {
-    if (state.task?.status === 'running') { running(); return; }
-    $('#confirm-title').textContent = names[scene];
-    $('#scope-summary').textContent = scene === 'voc' ? 'Explore customer experiences, supporting and opposing evidence, and opportunities to validate. This preview uses anonymized qualitative examples.' : 'Explore purchase-information checks, improvement recommendations and authorization boundaries for an existing store. This preview uses a generic assessment example.';
-    $('#confirm-available').textContent = String(available());
-    $('#confirm-estimate').textContent = `${costs[scene]} credits`;
-    $('#confirm-maximum').textContent = `${costs[scene]} credits`;
-    $('#confirm-after').textContent = available() >= costs[scene] ? `${available() - costs[scene]} credits` : 'Insufficient credits';
-    $('#start-demo').disabled = available() < costs[scene] || !storageOK;
-    $('#confirmation-limit').textContent = !storageOK ? 'Session storage is unavailable. The credit demo is paused; free examples remain available.' : available() < costs[scene] ? `You need ${costs[scene] - available()} more credits to continue this demo. Existing results remain readable. Viewing plans does not add credits or trigger a payment.` : 'Starting reserves the maximum credit amount. Credits are settled only when you choose to complete the demo. Stopping releases the full reservation.';
-    $('#confirm-pricing').href = `pricing-en.html?${new URLSearchParams({ return: 'trial', mission: scene, step: 'confirm' })}`;
-    show('trial-confirm');
-  }
-  function start() {
-    if (state.task?.status === 'running' || !storageOK || available() < costs[scene]) return;
-    const task = { id: `demo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, scene, status: 'running' };
-    rememberTask(); state.task = task;
-    state.ledger.push({ task: task.id, scene, type: 'Reserved credits', amount: costs[scene], at: new Date().toISOString() });
-    persist(); running();
-  }
-  function rememberTask() {
-    if (state.task && ['complete', 'example'].includes(state.task.status) && !state.history.some(t => t.id === state.task.id)) state.history.push({ ...state.task });
-  }
-  function recentTasks() {
-    const box = $('#saved-task');
-    if (!box) return;
-    const all = [...state.history];
-    if (state.task && ['complete', 'example'].includes(state.task.status) && !all.some(t => t.id === state.task.id)) all.push(state.task);
-    box.replaceChildren(); box.hidden = !all.length;
-    if (!all.length) return;
-    const title = document.createElement('strong'); title.textContent = 'Results in this session'; box.append(title);
-    all.slice(-6).reverse().forEach(t => {
-      const row = document.createElement('div'); const button = document.createElement('button'); button.className = 'xp-text-button';
-      button.textContent = `${names[t.scene]} · ${t.status === 'complete' ? 'Demo completed' : 'Free example'} →`;
-      button.addEventListener('click', () => { rememberTask(); state.task = { ...t }; persist(); renderResult(t.scene, t.status === 'example'); }); row.append(button); box.append(row);
-    });
-  }
-  function running() {
-    scene = state.task.scene;
-    $('#running-reserved').textContent = `${reserved()} credits`;
-    $('#running-available').textContent = `${available()} credits`;
-    show('trial-running');
-  }
-  function finish() {
-    if (state.task?.status !== 'running') return;
-    const cost = costs[state.task.scene];
-    state.spent += cost;
-    state.task.status = 'complete';
-    state.ledger.push({ task: state.task.id, scene: state.task.scene, type: 'Credits used', amount: cost, at: new Date().toISOString() });
-    persist(); renderResult(state.task.scene, false);
-    message(`Demo completed. ${cost} credits used. Refreshing or reopening this task will not deduct credits again.`);
-  }
-  function stop() {
-    if (state.task?.status !== 'running') return;
-    const cost = costs[state.task.scene];
-    state.task.status = 'stopped';
-    state.ledger.push({ task: state.task.id, scene: state.task.scene, type: 'Reserved credits released', amount: cost, at: new Date().toISOString() });
-    persist(); show('trial-input');
-    message(`Demo stopped. ${cost} reserved credits released; 0 credits used. You can still view examples for free.`);
-  }
-  const vocViews = {
-    summary: `<article class="xp-story"><span class="xp-eyebrow">Key insight</span><h2>Comfort earns praise.<br>That does not mean support meets expectations.</h2><p>Separate positive and negative experiences to identify expectation gaps. These anonymized qualitative examples do not establish market-wide conclusions.</p><div class="xp-duo"><div class="xp-paper"><h3>What customers value</h3><span class="xp-tag">Softness</span><span class="xp-tag">Breathability</span><span class="xp-tag">Discreet under clothing</span><p>Feedback describes positive experiences with feel and everyday wear.</p></div><div class="xp-paper"><h3>Unmet expectations</h3><span class="xp-tag">Support</span><span class="xp-tag">Upper-strap stability</span><p>Validate expectation gaps against fit, wearing method and use context.</p></div></div><div class="xp-insight"><h3>Validate fit and use conditions before changing the product.</h3><p>Compare wearing conditions, fit range and intended use to distinguish product limitations, user understanding and individual differences.</p></div><button class="xp-text-button" data-evidence>Review the supporting evidence →</button></article>`,
-    experience: `<article class="xp-story"><h2>One review can contain several experiences.</h2><p>Overall sentiment cannot replace attribute-level analysis. Limited support should not erase positive feedback about comfort.</p><div class="xp-table-wrap"><table class="xp-table"><thead><tr><th>Experience attribute</th><th>Feedback direction</th><th>Next assessment</th></tr></thead><tbody><tr><td>Softness / Breathability</td><td>Positive experience</td><td>Treat as a potential strength; check whether it recurs across sources</td></tr><tr><td>Discreet under clothing</td><td>Positive experience</td><td>Distinguish clothing conditions; do not generalize the result</td></tr><tr><td>Overall support</td><td>Below expectations</td><td>Compare intended use, size and wearing method</td></tr><tr><td>Upper-strap position</td><td>Concern about movement</td><td>Distinguish an observed issue from an anticipated concern</td></tr></tbody></table></div><div class="xp-note">One review may receive multiple attribute codes. Code counts are not customer counts or market proportions.</div><button class="xp-text-button" data-evidence>Review evidence and coding limitations →</button></article>`,
-    context: `<article class="xp-story"><h2>Put the experience back in context.</h2><p>Not every difference comes from the product. Establish the conditions affecting each experience. Do not infer age, body characteristics or health information from images of people.</p><div class="xp-chain"><div><strong>Before purchase</strong><p>What support was expected? Which product information shaped that expectation?</p></div><div><strong>During fitting</strong><p>Are size, adjustment instructions and wearing position clear? Leave unspecified conditions unknown.</p></div><div><strong>Continued use</strong><p>Do comfort and stability change with clothing or activity? Further observation is needed.</p></div></div><div class="xp-paper"><h3>What this example cannot establish</h3><p>Population representativeness, issue prevalence, the impact of product changes, or any medical or health benefits.</p></div></article>`,
-    opportunity: `<article class="xp-story"><span class="xp-eyebrow">An opportunity to validate—not an established conclusion</span><h2>Turn the support expectation gap<br>into a testable question.</h2><div class="xp-insight"><h3>Could fitting guidance reduce misunderstandings about fit and support?</h3><p>Observation: comfort praise coexists with unmet support expectations. Counterevidence: other feedback praises back support while raising fit concerns. Validate the conditions before recommending a redesign for greater support.</p></div><div class="xp-duo"><div class="xp-paper"><h3>Validation tasks</h3><ul><li>Review sources and deduplication of supporting and opposing evidence</li><li>Establish wearing position, size and intended use</li><li>Compare current guidance with customer understanding</li></ul></div><div class="xp-paper"><h3>Team handoff</h3><ul><li>Consumer research: organize evidence and its scope of application</li><li>Product research: distinguish design issues from use-related issues</li><li>Content and service: draft guidance for review</li></ul></div></div><p>Deliverables: an evidence package, hypotheses and a validation plan. Do not publish performance claims before validation.</p></article>`,
-    evidence: `<article class="xp-story"><h2>Make every conclusion traceable to evidence.</h2><p>Content has been anonymized and paraphrased to illustrate the analysis structure. Original materials and internal business data are not published here.</p><div class="xp-paper"><h3>Compare supporting and opposing evidence</h3><p>Supporting signals: customers value softness, breathability and discretion under clothing, while raising concerns about support and upper-strap position.</p><p>Contrasting signals: positive support experiences also accompany fit concerns. Distinguish the conditions behind each response.</p><button class="xp-text-button" data-evidence>Open evidence details →</button></div><div class="xp-note"><strong>Evidence limitations</strong><p>Coded by one person; consistency has not been independently reviewed. Qualitative examples cannot support sales forecasts, overall satisfaction rates or improvement percentages.</p></div></article>`
-  };
-  const shopViews = {
-    summary: `<article class="xp-story"><span class="xp-eyebrow">Generic assessment example · No live store accessed</span><h2>Make the purchase decision clear<br>before diagnosing growth barriers.</h2><p>Separate visible page issues from questions that require backend data. No fabricated store screenshots or conversion figures are presented here.</p><div class="xp-duo"><div class="xp-paper"><h3>What a page review can assess</h3><ul><li>Whether the intended customer and product differences are clear</li><li>Whether specifications and usage guidance are easy to find</li><li>Whether shipping and return policies are clear</li></ul></div><div class="xp-paper"><h3>What requires additional data</h3><ul><li>Traffic sources and purchase journeys</li><li>Actual inventory and fulfillment performance</li><li>Order, advertising and repeat-purchase performance</li></ul></div></div><div class="xp-insight"><h3>Prepare recommendations. Do not publish on the merchant's behalf.</h3><p>Confirm product facts and validate business conclusions first. Price changes, listings, advertising and order actions each require separate authorization.</p></div></article>`,
-    experience: `<article class="xp-story"><h2>Link every issue to its evidence.</h2><div class="xp-table-wrap"><table class="xp-table"><thead><tr><th>Review area</th><th>Review focus</th><th>Required evidence</th></tr></thead><tbody><tr><td>Product page hero</td><td>Intended customers, differentiation and pricing</td><td>Actual page URL and access time; not connected in this preview</td></tr><tr><td>Purchase section</td><td>Specifications, shipping and returns</td><td>Merchant-verified product facts and policies</td></tr><tr><td>Purchase journey</td><td>Whether information gaps exist</td><td>Authorized analytics data; the page alone is not sufficient</td></tr></tbody></table></div></article>`,
-    context: `<article class="xp-story"><h2>From page observations to business validation.</h2><div class="xp-chain"><div><strong>Arriving at the store</strong><p>Can customers understand what the brand offers and why it is relevant to them?</p></div><div><strong>Evaluating the product</strong><p>Are product facts, supporting evidence and limitations easy to understand?</p></div><div><strong>Deciding to buy</strong><p>Are pricing, delivery, returns and trust information complete?</p></div></div><div class="xp-note">This is an assessment framework, not a list of issues found in your store. An actual diagnosis requires access to pages within the authorized scope.</div></article>`,
-    opportunity: `<article class="xp-story"><h2>Three paths from recommendations to action.</h2><div class="xp-chain"><div><strong>Ready for manual editing</strong><p>Add merchant-verified content and prepare revised copy with a review checklist.</p></div><div><strong>Requires data validation</strong><p>Prioritize using actual journey and order data rather than estimating conversion losses without evidence.</p></div><div><strong>Requires separate authorization</strong><p>Publishing, price changes, advertising and order actions are not executed in this public preview.</p></div></div><div class="xp-paper"><h3>Team responsibilities</h3><p>The store operations lead confirms the objective. Content specialists prepare recommendations, data specialists verify evidence, and permission checks plus independent review control any write actions.</p></div></article>`,
-    evidence: `<article class="xp-story"><h2>Keep conclusions within the evidence.</h2><p>Live store evidence, URLs, access times and backend data are not connected. This example illustrates validation rules; it is not a report on your store.</p><div class="xp-paper"><h3>Evidence required for an actual diagnosis</h3><ul><li>Locate page issues precisely and record the access time</li><li>Source product benefits, prices and inventory from merchant-verified records</li><li>State data sources, time windows and limitations for business conclusions</li><li>Stop when access is restricted; do not bypass access controls</li></ul></div></article>`
-  };
-  function resultTab(tab) {
-    $$('#result-tabs button').forEach(b => { b.classList.toggle('active', b.dataset.tab === tab); b.setAttribute('aria-pressed', String(b.dataset.tab === tab)); });
-    $('#result-content').innerHTML = (resultScene === 'voc' ? vocViews : shopViews)[tab];
-    $$('[data-evidence]').forEach(b => b.addEventListener('click', () => $('#evidence-dialog').showModal()));
-  }
-  function renderResult(next, example = true) {
-    resultScene = next; scene = next;
-    if (example && state.task?.status !== 'running') {
-      rememberTask(); state.task = { id: `example-${next}`, scene: next, status: 'example' }; persist();
+    const item = scenes[scene];
+    for (const button of root.querySelectorAll('[data-scene]')) {
+      const active = button.dataset.scene === scene;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', String(active));
     }
-    $('#result-kind').textContent = example ? 'Prepared example · Free to view' : 'Credit demo completed · Prepared example';
-    $('#result-title').textContent = next === 'voc' ? 'What do customers value—and what still falls short?' : 'See what to improve next in your store.';
-    $('#result-scope-title').textContent = next === 'voc' ? 'Wearable support products' : 'Existing store · Generic assessment';
-    $('#result-scope-text').textContent = next === 'voc' ? 'Anonymized qualitative example · Multidimensional coding of individual feedback · Not a basis for market-share or sales estimates' : 'Homepage and product-page review framework · No live store accessed · No order, advertising or inventory data';
-    $('#result-cost').textContent = `Credits used: ${example ? 0 : costs[next]} · Remaining: ${available()}`;
-    $('#save-result').href = `auth-en.html?${returnParams()}&mode=register`;
-    $('#upgrade-result').href = `pricing-en.html?${returnParams()}`;
-    resultTab('summary'); show('trial-result');
-  }
-  if ($('#trial-input')) {
-    setScene(scene); credits();
-    $$('.xp-scene').forEach(b => b.addEventListener('click', () => setScene(b.dataset.scene)));
-    $('#scope-form').addEventListener('submit', e => { e.preventDefault(); confirm(); });
-    $('#view-example').addEventListener('click', () => renderResult(scene));
-    $('#confirm-example').addEventListener('click', () => renderResult(scene));
-    $('#back-input').addEventListener('click', () => show('trial-input'));
-    $('#start-demo').addEventListener('click', start);
-    $('#finish-demo').addEventListener('click', finish);
-    $('#stop-demo').addEventListener('click', stop);
-    $('#new-task').addEventListener('click', () => { recentTasks(); show('trial-input'); });
-    $('#change-scene').addEventListener('click', () => { recentTasks(); show('trial-input'); });
-    $('#continue-analysis').addEventListener('click', confirm);
-    $$('#result-tabs button').forEach(b => b.addEventListener('click', () => resultTab(b.dataset.tab)));
-    $('#credit-toggle').addEventListener('click', () => { $('#credit-panel').hidden = !$('#credit-panel').hidden; $('#credit-toggle').setAttribute('aria-expanded', String(!$('#credit-panel').hidden)); });
-    $('.xp-dialog-close').addEventListener('click', () => $('#evidence-dialog').close());
-    const returned = state.history.find(t => t.id === params.get('result'));
-    if (returned && state.task?.status !== 'running') { rememberTask(); state.task = { ...returned }; persist(); }
-    const task = state.task;
-    if (task?.status === 'running') running();
-    else if (['voc', 'shopify'].includes(params.get('example'))) renderResult(params.get('example'), true);
-    else if (task && ['complete', 'example'].includes(task.status)) {
-      if (params.get('result') && params.get('result') !== task.id) message('The requested task is unavailable in this session. No other task was restored. You can reopen a free example.');
-      else renderResult(task.scene, task.status === 'example');
-    } else if (params.get('step') === 'confirm') confirm();
-    if (!storageOK) message('Session storage is unavailable or demo records are invalid. The credit demo is paused; free examples remain available.');
-    recentTasks();
-  }
-  function safeReturn() {
-    const requested = params.get('return');
-    if (requested === 'trial' || requested === 'trial-en.html') {
-      const p = new URLSearchParams();
-      ['mission', 'result', 'step', 'lang'].forEach(k => { if (params.has(k)) p.set(k, params.get(k)); });
-      return `trial-en.html?${p}`;
-    }
-    return requested === 'pricing' || requested === 'pricing-en.html' ? 'pricing-en.html' : 'trial-en.html';
-  }
-  if ($('#auth-form')) {
-    let method = 'email';
-    let mode = params.get('mode') === 'register' ? 'register' : 'login';
-    const feedback = text => { $('#auth-feedback').textContent = text; };
-    function updateMode() {
-      $$('[data-auth-mode]').forEach(b => { const active = b.dataset.authMode === mode; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active)); });
-      $('#invite-fields').hidden = mode !== 'register';
-      $('#invite-code').required = mode === 'register' && !$('#no-invite').checked;
-    }
-    $$('.xp-return').forEach(a => a.href = safeReturn());
-    $$('[data-auth-mode]').forEach(b => b.addEventListener('click', () => { mode = b.dataset.authMode; updateMode(); }));
-    $$('[data-auth-method]').forEach(b => b.addEventListener('click', () => {
-      method = b.dataset.authMethod;
-      $$('[data-auth-method]').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-pressed', String(x === b)); });
-      const input = $('#auth-contact'); input.value = ''; input.type = method === 'email' ? 'email' : 'tel'; input.autocomplete = method === 'email' ? 'email' : 'tel'; input.placeholder = method === 'email' ? 'you@company.com' : '+Country code and phone number'; $('#contact-label').textContent = method === 'email' ? 'Email' : 'Phone number (with country code)';
-      if (method === 'phone') input.pattern = '[+0-9 ()-]{7,22}'; else input.removeAttribute('pattern');
+    $('#scope-title').textContent = item.input;
+    $('#scope-description').textContent = item.scope;
+    $('#example-title').textContent = item.name;
+    $('#example-content').replaceChildren(...item.example.map(([title, detail]) => {
+      const card = document.createElement('div'), heading = document.createElement('h3'), text = document.createElement('p');
+      heading.textContent = title; text.textContent = detail; card.append(heading, text); return card;
     }));
-    $('#no-invite').addEventListener('change', () => { $('#invite-code').disabled = $('#no-invite').checked; updateMode(); });
-    $('#request-code').addEventListener('click', () => { if ($('#auth-contact').reportValidity()) feedback('Verification is not connected. No code was sent. Your contact details were neither uploaded nor saved in browser records.'); });
-    $('#auth-form').addEventListener('submit', e => { e.preventDefault(); feedback('Identity verification and account saving are unavailable. Return to your task; your existing preview will not incur additional credits.'); });
-    updateMode();
+    const url = new URL(location.href);
+    url.searchParams.set('mission', scene);
+    if (['voc', 'shopify'].includes(url.searchParams.get('example'))) url.searchParams.set('example', scene);
+    else url.searchParams.delete('example');
+    // Old demo task IDs are not server-backed and cannot restore an entitlement.
+    for (const key of ['result', 'step']) url.searchParams.delete(key);
+    history.replaceState(null, '', url);
   }
-  if ($('#account-content')) {
-    const titles = { personal: 'Personal details', results: 'My results', credits: 'Credit history', billing: 'Subscription and billing', security: 'Sessions and security' };
-    const empty = (title, text, link, label) => `<div class="xp-empty"><h2>${title}</h2><p>${text}</p><a class="r-button small" href="${link}">${label}</a></div>`;
-    const views = {
-      personal: `<div class="xp-account-row"><strong>Account name</strong><span>Not signed in</span></div><div class="xp-account-row"><strong>Email or phone number</strong><span>Not verified</span></div><div class="xp-account-row"><strong>Current plan</strong><span>Not activated</span></div><div class="xp-note">Access to personal information requires identity verification. Entering an email address alone does not grant account access.</div><a class="r-button small" href="auth-en.html">Go to login</a>`,
-      results: empty('No saved results yet', 'Preview results have not been saved to the cloud. Return to the demo to view prepared examples from this session.', 'trial-en.html', 'Back to the demo'),
-      credits: empty('Account credits unavailable', 'The account ledger is not connected. An unknown balance is not displayed as zero. Demo credits are retained only in this browser session.', 'trial-en.html', 'View the demo'),
-      billing: empty('No active subscription', 'Payments and billing are not connected. No orders or charges will be created.', 'pricing-en.html', 'Explore plan features'),
-      security: empty('No verified sessions', 'You are not signed in. No fabricated devices, IP addresses or locations are shown.', 'auth-en.html', 'Go to login')
-    };
-    function account(tab) { $('#account-title').textContent = titles[tab]; $('#account-content').innerHTML = views[tab]; $$('[data-account]').forEach(b => { b.classList.toggle('active', b.dataset.account === tab); b.setAttribute('aria-pressed', String(b.dataset.account === tab)); }); }
-    $$('[data-account]').forEach(b => b.addEventListener('click', () => account(b.dataset.account)));
-    account('personal');
+
+  for (const button of root.querySelectorAll('[data-scene]')) button.addEventListener('click', () => setScene(button.dataset.scene));
+  $('#view-example').addEventListener('click', () => {
+    const example = $('#trial-example');
+    example.hidden = !example.hidden;
+    $('#view-example').setAttribute('aria-expanded', String(!example.hidden));
+    const url = new URL(location.href);
+    if (example.hidden) url.searchParams.delete('example');
+    else url.searchParams.set('example', scene);
+    history.replaceState(null, '', url);
+    if (!example.hidden) $('#example-title').focus();
+  });
+  setScene(scene);
+  function reportReading(report) {
+    const article = document.createElement('article'), title = document.createElement('h3');
+    article.className = 'trial-report';
+    title.textContent = t('已存报告', 'Saved report');
+    article.append(title);
+    const note = document.createElement('p');
+    note.className = 'trial-report-note';
+    note.textContent = t('以下按原报告字段展示, 不补写结论；JSON 下载保留完整原始内容.', 'The fields below preserve the saved report without adding conclusions. The JSON download contains the complete original content.');
+    article.append(note);
+    let nodes = 0;
+    function content(value, depth) {
+      // Keep large or deeply nested reports readable without creating an unbounded DOM.
+      // The fallback retains the complete subtree, rather than silently truncating it.
+      if (++nodes > 500 || depth > 8 || (value !== null && typeof value === 'object' &&
+          Object.keys(value).length > 500 - nodes)) {
+        const raw = document.createElement('pre');
+        raw.className = 'trial-report-raw';
+        raw.textContent = JSON.stringify(value, null, 2);
+        return raw;
+      }
+      if (Array.isArray(value)) {
+        if (!value.length) return content(t('空列表', 'Empty list'), depth + 1);
+        const list = document.createElement('ol');
+        for (const item of value) {
+          const entry = document.createElement('li');
+          entry.append(content(item, depth + 1)); list.append(entry);
+        }
+        return list;
+      }
+      if (value !== null && typeof value === 'object') {
+        if (!Object.keys(value).length) return content(t('空Target', 'Empty object'), depth + 1);
+        const fields = document.createElement('dl');
+        for (const [key, item] of Object.entries(value)) {
+          const name = document.createElement('dt'), detail = document.createElement('dd');
+          name.textContent = key; detail.append(content(item, depth + 1));
+          fields.append(name, detail);
+        }
+        return fields;
+      }
+      const text = document.createElement('p');
+      text.textContent = value === null ? t('未提供（null）', 'Not provided (null)') :
+        value === '' ? t('空文本', 'Empty text') : String(value);
+      return text;
+    }
+    if (Object.keys(report).length > 500) {
+      article.append(content(report, 0));
+      return article;
+    }
+    for (const [key, value] of Object.entries(report)) {
+      const section = document.createElement('section'), heading = document.createElement('h4');
+      heading.textContent = key;
+      section.append(heading, content(value, 0)); article.append(section);
+    }
+    return article;
+  }
+  let trialReadVersion = 0, reportDownloadUrl = null, reportDownloadTimer = null;
+  function clearReportDownload() {
+    if (reportDownloadTimer !== null) clearTimeout(reportDownloadTimer);
+    if (reportDownloadUrl !== null) URL.revokeObjectURL(reportDownloadUrl);
+    reportDownloadTimer = null; reportDownloadUrl = null;
+  }
+  async function loadTrial() {
+    const version = ++trialReadVersion;
+    const target = $('#saved-trial'), refresh = $('#refresh-trial');
+    clearReportDownload();
+    refresh.disabled = true;
+    target.textContent = t('正在读取你的体验记录…', 'Loading your trial…');
+    try {
+      const response = await fetch('/api/trial', {credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000)});
+      if (version !== trialReadVersion) return;
+      if (response.status === 401) {
+        const link = document.createElement('a');
+        // Use only this page's current context; auth.safeReturn remains the
+        // destination allowlist. Never forward a caller-supplied return URL.
+        const updateReturn = () => { link.href = page('auth') + '?return=' + encodeURIComponent(location.pathname + location.search + location.hash); };
+        updateReturn(); link.addEventListener('click', updateReturn);
+        link.textContent = t('Log in后查看你的体验资格与Original task', 'Sign in to view your trial entitlement and original task');
+        target.replaceChildren(link); return;
+      }
+      if (!response.ok) throw new Error('TRIAL_READ_FAILED');
+      const data = await response.json();
+      if (version !== trialReadVersion) return;
+      if (!['available', 'locked', 'consumed'].includes(data.eligibility)) throw new Error('INVALID_TRIAL_RESPONSE');
+      const attempt = data.attempt;
+      const states = {
+        running: t('Original task处理中, 刷新可查看最新状态.', 'Your original task is in progress. Refresh for an update.'),
+        cancelled: t('Original task已取消, 体验对象仍锁定.当前暂不支持恢复任务.', 'The original task was cancelled. Its subject remains locked; resuming is not available yet.'),
+        recoverable_failure: t('Original task遇到可恢复问题, 尚未核销资格.当前暂不支持重试.', 'The original task has a recoverable issue. Your entitlement has not been used; retry is not available yet.'),
+        completed: t('报告已保存, 本次Try Sage已完成.', 'Your report is saved and your free trial is complete.')
+      };
+      if (!attempt) {
+        if (data.eligibility !== 'available') throw new Error('INVALID_TRIAL_RESPONSE');
+        target.textContent = t('你仍有一次Try Sage资格.分析服务开放后, 可选择一个Scenarios开始.', 'You have one free trial available. Choose a scenario when the analysis service opens.');
+        return;
+      }
+      if (!states[attempt.task_state] || typeof attempt.input_value !== 'string' ||
+          !['voc', 'shopify_diagnosis'].includes(attempt.scenario) ||
+          data.eligibility !== (attempt.task_state === 'completed' ? 'consumed' : 'locked')) throw new Error('INVALID_TRIAL_RESPONSE');
+      if (attempt.task_state === 'completed' && (!attempt.report || typeof attempt.report !== 'object' ||
+          Array.isArray(attempt.report) || !Object.keys(attempt.report).length)) throw new Error('INVALID_TRIAL_RESPONSE');
+      const heading = document.createElement('h3'), subject = document.createElement('p'), status = document.createElement('p');
+      heading.textContent = scenes[attempt.scenario === 'voc' ? 'voc' : 'shopify'].name;
+      subject.textContent = attempt.input_value;
+      status.textContent = states[attempt.task_state];
+      target.replaceChildren(heading, subject, status);
+      if (attempt.task_state === 'completed') {
+        const download = document.createElement('button');
+        download.type = 'button'; download.className = 'xp-text-button';
+        download.textContent = t('下载已存报告（JSON）', 'Download saved report (JSON)');
+        download.addEventListener('click', () => {
+          if (version !== trialReadVersion) return;
+          clearReportDownload();
+          reportDownloadUrl = URL.createObjectURL(new Blob([JSON.stringify(attempt.report, null, 2)], {type: 'application/json'}));
+          const link = document.createElement('a'); link.href = reportDownloadUrl; link.download = 'sage-trial-report.json';
+          link.click(); reportDownloadTimer = setTimeout(clearReportDownload, 1000);
+        });
+        target.append(download, reportReading(attempt.report));
+      }
+    } catch {
+      if (version !== trialReadVersion) return;
+      target.textContent = t('暂时无法读取体验记录, 资格状态未知.请刷新重试；这不会创建任务或消耗资格.', 'Your trial record could not be loaded, so entitlement status is unknown. Refresh to retry; this will not create a task or use your entitlement.');
+    } finally { if (version === trialReadVersion) refresh.disabled = false; }
+  }
+  $('#refresh-trial').addEventListener('click', loadTrial);
+  window.addEventListener('pagehide', () => {
+    ++trialReadVersion;
+    clearReportDownload();
+    $('#saved-trial').replaceChildren();
+    $('#refresh-trial').disabled = true;
+  });
+  window.addEventListener('pageshow', event => { if (event.persisted) loadTrial(); });
+  loadTrial();
+  if (['voc', 'shopify'].includes(params.get('example'))) {
+    $('#trial-example').hidden = false;
+    $('#view-example').setAttribute('aria-expanded', 'true');
   }
 })();
