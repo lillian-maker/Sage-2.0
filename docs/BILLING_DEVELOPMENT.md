@@ -22,6 +22,8 @@
 
 最终回归揭示报价201后购买页仍写旧 `.nav-actions > a[lang]`，空节点抛错被误显示为接口失败。已删除三处旧节点写入，URL变化通知既有语言菜单syncLinks，不新增另一套导航；真实购买Chrome HTTP测试在最终PG已通过。敏感账务POST同事务持会话行锁，撤销先提交时等待请求401零写；GET仍只读。
 
+实现提交 `a7659d2`，纳入确认保留的此前官网/账务基线；没有git add全工作区，临时目录、数据库、凭证均排除。提交后通过 `git archive` 导出已提交的build.py/src/assets/pages到新空目录，重新release构建与本地dist逐文件一致。它是干净Git构建输入验证，不使用worktree。仅交付 `feat/billing-accounts`，不合并main、不部署生产；推送后远端SHA由交付回复核验。
+
 返工规则：Django测试客户端的流式响应必须消费 `streaming_content`，不能直接 `response.close()` 触发测试事务中的连接关闭；计费GET的会话检查只能查询，不能为方便展示产生数据库写入。相关反例已纳入测试。
 
 ## 价格页视觉修正 · 2026-10-04
