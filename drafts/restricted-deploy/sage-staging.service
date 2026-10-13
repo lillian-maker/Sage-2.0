@@ -1,0 +1,33 @@
+# 草案：本轮未安装或启动。没有 [Install]，不设为开机自启。
+[Unit]
+Description=Sage restricted staging application
+Requires=postgresql.service
+After=postgresql.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=exec
+User=sage
+Group=sage
+WorkingDirectory=/opt/sage/current
+EnvironmentFile=/etc/sage/staging.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/opt/sage/venv/bin/python manage.py check --deploy --fail-level ERROR
+ExecStartPre=/opt/sage/venv/bin/python manage.py migrate --check --noinput
+ExecStart=/opt/sage/venv/bin/gunicorn --config /opt/sage/current/deploy/gunicorn.conf.py backend.wsgi:application
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=45
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/sage/avatars
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+StandardOutput=journal
+StandardError=journal

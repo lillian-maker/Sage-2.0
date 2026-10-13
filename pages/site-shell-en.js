@@ -3,6 +3,13 @@
  const isHome=document.body.classList.contains('v1'), en=document.documentElement.lang==='en';
  const pageURL=name=>(isHome?'pages/':'')+name+(en?'-en':'')+'.html';
  const text=(zh,english)=>en?english:zh;
+ window.sagePasswordError=value=>{
+  if(typeof value!=='string'||!value)return text('请输入密码.','Enter a password.');
+  if(/[^\x21-\x7e]/.test(value))return /\s/.test(value)?text('密码不能包含空格, 制表符或换行.','Passwords cannot contain spaces, tabs or line breaks.'):text('密码仅支持英文字母, 数字和英文标点, 不支持中文或 emoji.','Use English letters, digits and ASCII punctuation only; no Chinese characters or emoji.');
+  if(value.length<8||value.length>16)return text('密码须为8–16位, 不会截断输入.','Passwords must be 8–16 characters. Your input is not truncated.');
+  const missing=[[/[A-Z]/,text('大写字母','uppercase letters')],[/[a-z]/,text('小写字母','lowercase letters')],[/[0-9]/,text('数字','digits')],[/[^A-Za-z0-9]/,text('符号','symbols')]].filter(([pattern])=>!pattern.test(value)).map(([,label])=>label);
+  return missing.length?text('密码须同时包含大写字母, 小写字母, 数字和符号；缺少: '+missing.join(', ')+'.','Include uppercase letters, lowercase letters, digits and symbols; missing: '+missing.join(', ')+'.'):'';
+ };
  function accountMenu(session){
   if(!session.authenticated||!session.user?.id)return;
   document.querySelectorAll('[data-account-entry],.cp-account,.trial-account').forEach(link=>{
@@ -24,11 +31,20 @@
      location.reload();
     }catch(_){status.hidden=false;status.textContent=text('退出未能确认, 请重试.','Sign-out could not be confirmed. Try again.');logout.disabled=false;}
    });
-   panel.append(settings,logout,status);menu.append(summary,panel);link.replaceWith(menu);
+   panel.append(settings,logout,status);menu.append(summary,panel);link.replaceWith(menu);wireAccountHover(menu);
   });
  }
  window.addEventListener('sage:session',event=>accountMenu(event.detail));
  if(window.sageSession)accountMenu(window.sageSession);
+ function wireAccountHover(menu){
+  if(menu.dataset.hoverReady)return;menu.dataset.hoverReady='true';
+  const summary=menu.querySelector('summary');summary.setAttribute('aria-expanded',String(menu.open));
+  summary.addEventListener('click',event=>{if(event.pointerType==='mouse'){event.preventDefault();menu.open=true;}});
+  menu.addEventListener('toggle',()=>summary.setAttribute('aria-expanded',String(menu.open)));
+  menu.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse')menu.open=true;});
+  menu.addEventListener('pointerleave',event=>{if(event.pointerType==='mouse'&&!menu.querySelector('.sage-account-panel,.account-dropdown')?.contains(document.activeElement))menu.open=false;});
+  menu.addEventListener('focusout',event=>{if(event.relatedTarget&&!menu.contains(event.relatedTarget))menu.open=false;});
+ }
  document.addEventListener('click',event=>document.querySelectorAll('.sage-account-menu[open],.nav-account[open]').forEach(menu=>{if(!menu.contains(event.target))menu.open=false;}));
  document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.sage-account-menu[open],.nav-account[open]').forEach(menu=>{menu.open=false;menu.querySelector('summary').focus();});});
  if(isHome){
@@ -85,6 +101,11 @@
  const homeConsultation=document.querySelector('#r-contact-form');if(homeConsultation)wireConsultation(homeConsultation);
  document.querySelectorAll('#hero-actions a[href*="download"]').forEach(link=>{link.setAttribute('aria-disabled','true');link.addEventListener('click',event=>event.preventDefault());});
  function alignNavigation(){
+  document.querySelectorAll('.sage-account-menu,.nav-account').forEach(wireAccountHover);
+  document.querySelectorAll('.cp-nav,.r-nav,.billing-nav').forEach(header=>{
+   const links=header.querySelector('.cp-links,#r-menu');if(!links||links.querySelector('.mobile-download'))return;
+   const download=document.createElement('a');download.className='mobile-download';download.href=pageURL('download');download.textContent=text('Download','Download');links.append(download);
+  });
   document.querySelectorAll('.cp-menu,#r-menu-toggle').forEach(button=>{if(button.dataset.iconReady)return;button.dataset.iconReady='true';button.setAttribute('aria-label',document.documentElement.lang==='en'?'Open navigation menu':'Open navigation menu');button.innerHTML='<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>';});
   document.querySelectorAll('.cp-tools,.r-tools,.nav-actions').forEach(tools=>{const language=tools.closest('header')?.querySelector('.sage-language');if(language&&tools.firstElementChild!==language)tools.prepend(language);});
  }
@@ -96,7 +117,6 @@
   trialAccount.href='auth'+(en?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);
   fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(8000)}).then(async response=>{if(!response.ok||!response.headers.get('content-type')?.includes('application/json'))throw Error('ACCOUNT_SERVICE_UNAVAILABLE');const session=await response.json();if(typeof session.authenticated!=='boolean'||(session.authenticated&&!session.user?.id))throw Error('INVALID_SESSION');trialAccount.textContent=session.authenticated?(session.user.display_name||session.user.masked_identifier||(en?'My account':'My account')):(en?'Sign in':'Log in');window.dispatchEvent(new CustomEvent('sage:session',{detail:session}));if(session.authenticated)trialAccount.href='profile'+(en?'-en':'')+'.html';}).catch(()=>{trialAccount.textContent=en?'Sign in':'Log in';trialAccount.title=en?'Sign in with email or phone':'Sign in with email or phone verification';});
  }
- document.querySelectorAll('.mobile-download,.r-tools a.r-button.small[href="download-en.html"]').forEach(link=>{link.textContent='Contact sales';link.href='../index-en.html#contact';});
  function close(){document.querySelector('#r-menu')?.classList.remove('open');document.querySelector('#r-menu-toggle')?.setAttribute('aria-expanded','false');}
  document.addEventListener('click',e=>{const menu=document.querySelector('#r-menu'),toggle=document.querySelector('#r-menu-toggle');if(!menu||!toggle)return;if(e.target.closest('#r-menu-toggle')){const open=!menu.classList.contains('open');menu.classList.toggle('open',open);toggle.setAttribute('aria-expanded',String(open));}else if(e.target.closest('#r-menu a')||!e.target.closest('.r-nav,.billing-nav'))close();});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('#r-menu')?.classList.contains('open')){close();document.querySelector('#r-menu-toggle').focus();}});

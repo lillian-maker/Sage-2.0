@@ -1,5 +1,87 @@
 # Billing visual QA
 
+## 2026-10-13：代码同步核验入口
+
+本次按用户授权核实当前代码后同步GitHub开发分支；本轮构建/浏览器验证及实际范围见`docs/BILLING_DEVELOPMENT.md`顶部。以下旧批次的测试数字和“未提交/未部署”保持历史事实，不用来替代本轮证据。真实供应商、正式协议、支付和执行端不因本地UI或代码入库而验收完成。
+
+## 2026-10-11：分步认证与整站回归
+
+沿用用户确认的Sage Logo、Arial/PingFang SC/Microsoft YaHei、浅蓝主按钮与白卡/银灰背景。认证卡440px、32px内边距、16px圆角，Logo48px、标题28px、输入至少44px；移动单列，姓名仍按可用宽度排版。注册资料/密码/CAPTCHA/六格验证码与登录/恢复/Google确认及绑定分步展示；注册完成直接首页，不保留完成卡。协议未预勾；邀请码可空、非空必须真实校验，无用户奖励。没有仿制Google凭据页或浏览器保存弹窗。
+
+当前源码新鲜浏览器fixture证据：`tmp/auth-implementation/task-5-final-email-ui.log`176认证布局、24删除、8资料、6用量及3个网络/恢复反例，0页面错误；`task-5-final-google-ui.log`64布局、16显隐、6恢复及4恢复失败分支、2语言Google-only资料；`task-5-final-phone-ui.log`64布局和2语言资料。覆盖中英、320/390/768/1440px及100%/200%文字；实际打开en320/200%及zh1440截图核对，修复英语小屏换行、CSRF重新获取和已确认重置后的读取失败状态。原生生成/保存/再次选择仍需受控设备实测，不能用DOM断言冒充。
+
+`task-5-final-release.log`记录90批、12视口组合及26站内入口，地球/轮播实际计时中文2998ms、英文3001ms，暂停与恢复通过；首页星空/地球与50员工紧凑目录不重设计。`task-5-final-content-ui.log`实际渲染中英全部40篇文章、非法地址、搜索、50员工与6阶段/3屏宽通过。账单账户页主标题仅改正确h1语义、维持20px及原画面；共享导航/菜单/未知订单结果与越权零写断言保留，版本化资源须实际被测试截获，不能只按无查询串旧路径mock。
+
+两次当前源码副本release产物150公开文件/17,157,753字节逐文件名称、大小与SHA一致；这是工作区可复建，不是已提交版本或公网发布。上述UI是响应fixture；最终冻结源码隔离PG550项/182.372秒/OK、0跳过，另含真实本地Chrome→Django→PG、迁移往返及独立备份恢复，证据`tmp/auth-implementation/final-postgres-recovery-r2.log`。实际业务函数/HTTP/SQL已测，真实Google/CAPTCHA/邮件/SMS、生产反代及实际密码管理器未验收。没有新的已确认P0/P1/P2视觉缺陷，不等于七阶段正式上线已完成。
+
+## 2026-10-10：新密码规则与单框重置
+
+本增量只改认证页及个人设置重置弹窗，不重设计官网。沿用Sage浅蓝按钮、底色、细边框及现有字号；单个新密码框内提供“显示/隐藏”，可访问名称为“显示密码/隐藏密码”。规则在框下持续显示，不仅在placeholder中；失败在字段旁明确呈现，移动端规则正常换行，弹窗可滚动，未新增确认密码。最终实际打开`tmp/account-settings-ui/reset-zh-320.png`检查，显隐在输入框内、规则与三项操作未横向溢出；中英320/768/1113/1440px个人设置8组及删除弹窗24组保留。
+
+浏览器fixture：`PLAYWRIGHT_MODULE=<已配置Playwright路径> node tests/website-account-ui.cjs`，结果见`tmp/auth-password-policy-ui.log`：24组删除、8组个人设置、6组用量、2种语言密码流程、0页面错误。认证页和个人设置均仅一个`new-password`字段；长度、四类、非法字符、17位不截断、不发无效请求、显隐、无效验证码、成功后不自动登录和安全返回通过。`node tests/website-account-contract.cjs`覆盖全部ASCII空白/控制字符、末尾换行、Unicode空白及32类英文标点，两处调用同一校验。
+
+回归经验：HTML单行输入框会在应用处理前规范化部分换行，浏览器测试不能把Playwright输入值未经核验当成DOM原值；先记录浏览器实际值，再断言应用未改写。17位、空格、Unicode等值仍逐字断言，不删掉非法输入及零请求断言。服务端独立拒绝全部空白，纯函数末尾换行反例避免JavaScript正则`$`在尾部换行前匹配造成误放行。测试不代表实际密码管理器生成/保存弹窗或真实邮件送达已通过。
+
+整站：`SAGE_URL=http://127.0.0.1:8951 PLAYWRIGHT_MODULE=<已配置Playwright路径> node tests/release-audit.cjs`，`tmp/auth-password-policy-release.log`记录中英6视口共12组、90批场景/头像、12个站内地址、实时轮播暂停/恢复通过。首页地球和原目录未修改。后端新鲜隔离PostgreSQL382项／116.357秒／OK、0跳过，含真实HTTP浏览器＋内存邮箱；迁移及备份恢复通过。release构建、JS语法、Django check及diff检查通过。没有真实CAPTCHA/Google/短信/发信、公开API、commit或deploy；完整注册登录仍在开发中。
+
+## 2026-10-10：用量／账单截图参考版与紧凑个人设置
+
+### 比较目标与证据
+
+- source visual truth：用户附件`/Users/ll/Downloads/screencapture-qoder-account-usage-2026-10-10-17_38_07.png`（2912×3558 px）及`/Users/ll/Downloads/screencapture-qoder-account-plan-2026-10-10-17_39_04.png`（2912×1656 px）。@2x分别缩至1456×1779及1456×828，源图本人标识仅在对比副本遮盖，不修改附件。
+- implementation：只读fixture `http://127.0.0.1:8943/pages/profile.html#usage` 与`/pages/billing.html`；viewport1456×828 CSS px、deviceScaleFactor=1，最终整页截图`tmp/account-settings-ui/usage-reference-width.png`1456×1891、`bills-reference-width.png`1456×1188。源／实现同宽、同一倍密度，整页高度没有强行拉伸匹配。
+- state：中文、登录演示账号、关闭下拉；用量源为零额度／零记录，实现为用户已确认的非零示例／默认7天／两条记录；账单均无订单，源为Qoder体验版，实现为API无有效订阅。动态数字、免费产品定义与品牌不同不是像素偏差；内容层级／控件与Sage规范是比较对象。真实任务与扣费仍关闭。
+- full-view同画布：`compare-usage-reference-full.png`、`compare-bills-reference-full.png`。focused同画布：`compare-usage-reference-resources.png`／`records.png`、`compare-bills-reference-cards.png`／`orders.png`，均位于`tmp/account-settings-ui/`；已实际打开并逐项比较。
+- 响应式补充：中英320/768/1440px用量6组、账单100%／200%文字12组；个人设置8组。最终`usage-zh-320.png`已目视检查导航在顶端，日期刻度不重叠；热力图／记录表仅局部水平滚动，不扩大整页。
+
+### Findings与修复历史
+
+1. [P2，已修复] 个人设置旧72px头像、16px选项与大页头不符合用户最新紧凑要求。移除重复h1及说明，头像48px、正文14px、分区20px；最终`profile-reference-width.png`及8组响应式与字号断言通过。本条覆盖下方同日旧版40px页头／72px头像规范。
+2. [P2，已修复] 首次320px账单横向溢出：关闭态账户菜单仍参与溢出计算，表格辅助标题绝对定位缺少本地容器。关闭菜单display:none、菜单右边缘约束、表格滚动容器position:relative；同路径12组账单含200%文字复测通过，未用整页overflow:hidden遮盖。
+3. [P2，已修复] hover后鼠标点击反向关闭菜单，Escape后的焦点可能阻止鼠标离开关闭。鼠标点击维持展开、仅浮层内部焦点保留，键盘／触屏仍可切换。双语mouse／touch4组及全站release回归通过。
+4. [P2，已修复] 年度热力图首月后月份文字继承浅色方格fillStyle而难读；每周标签恢复文字色。最后并排整页中12个月标签清楚，无新增装饰图片替代数据图表。
+5. [P2，已修复] 移动消耗图5个日期刻度挤在320px；按实际绘图宽度减少刻度。最终320px图首尾日期分离，桌面5刻度保持。前一张full-page截图在smooth scroll途中捕获固定导航属证据状态错误，截图以behavior:instant复位后重新生成，不修改产品导航位置。
+6. [P2，已修复] release图片检查发现未选文件的隐藏头像预览img空src；选有效图片才插入、取消时移除并撤销blob。原全站图片断言保持，首页release及头像取消上传回归通过。
+
+### 五类必检表面与预期差异
+
+- 字体：沿用Sage Arial／PingFang SC／Microsoft YaHei；正文／导航14px、辅助13px、账户分区20px/600、卡片16px/500。个人设置不再使用营销页h1尺度，表格和操作文字清楚，窄屏不挤压为全页横向滚动。
+- 布局：保留参考的侧栏＋资源／热力图／筛选／趋势／记录及订阅／账单管理／订单顺序，使用Sage88px导航、12px卡片、至少44px点击区。卡片和导航更高、源图绿色促销条删去、账单新增当前页筛选范围／刷新，所以不声称像素复刻或整页等高。
+- 颜色：采用Sage#202b38／#526171、#AEC8E2主按钮、浅蓝选中态及#E4E9EF细边框，不复制Qoder绿色。个人设置白色平面与账单轻浅卡片属于不同信息密度下同套色板。
+- 资产：沿用Sage真实logo资源与已有官方SVG图标族，无仿绘Qoder标志或植物／人物插画。图表是基于当前视图数据绘制的canvas，含可访问摘要和明细表；不是截图贴图。默认头像沿用已批准字母头像规则。
+- 文案：复用参考标题与记录字段，移除Qoder促销、客户端声明和未确认报价；示例数据明确不扣费，API无订阅不伪装为体验版付费记录；原账务能力藏于折叠入口而非删除。
+
+### 交互、验证与剩余边界
+
+日期预设／合法范围、非法范围错误、资源类型、已使用／已获得、模型／云资源、刷新、分页与零结果已实测；账单空／有订单、当前页商品／类型筛选、原详情及API错误fixture通过。语言／账户hover、点击、键盘Escape与触屏通过；顶部下载全部替换，正文咨询保留。账户fixture24组删除弹窗＋8组资料＋6组用量＋双语密码，0页面错误；账单686次GET、0写请求、0页面错误；双语首页12种视口组合及地球／场景／图片release回归通过。release构建、静态合同、内容审计及JS语法通过。
+
+没有剩余可执行P0/P1/P2视觉缺陷。没有源图展开筛选状态，不宣称Qoder下拉行为逐像素核验；实现为现有可维护原生控件，已测试。没有本轮后端改动或重新执行PG测试，没有真实邮件／支付／任务调用，没有commit、push或deploy。前端fixture通过不代表公网真实账号链路已经验收。
+
+final result: passed
+
+## 2026-10-10：个人设置第3版落地与原官网导航
+
+- source visual truth：`/Users/ll/.codex/generated_images/01a0f045-6bf7-7ef0-9811-b61b446bb0f3/exec-3f06c9bc-0555-4f4d-8503-4551b47d3f14.png`，用户已确认第3版与右对齐，并明确将图中“返回官网”替换为原官网导航。
+- implementation：`http://127.0.0.1:8943/pages/profile.html`，只读loopback视觉fixture；完整功能写入另有隔离Django HTTP测试，不将演示状态当生产状态。
+- viewport：1113×1413 CSS px、deviceScaleFactor=1；源图1113×1413 px，实现full-page截图1113×1517 px。相同宽度，未缩放，整页高度差来自真实删除门禁说明及可用控件间距。1440px桌面与320/768px响应式另验。
+- state：已登录演示用户、默认字母头像、两条设备、其他设备hover注销、通知已开启、高级设置展开。源图删除按钮可用，实现按既有正式门禁禁用并显示原因；这是保留业务规则的预期差异。设备客户端／时间是fixture动态数据，不要求照抄设计图的虚构值。
+- full-view comparison：`tmp/account-settings-ui/compare-complete.png`，源图与最新实现放在同一画布，非分别观看后凭记忆比较。实现证据`profile-zh-1113.png`与`profile-zh-1440.png`。
+- focused comparisons：`compare-complete-controls.png`（头像、名称、邮箱右对齐）、`compare-complete-devices.png`（表格、注销浮层与分页）、`compare-complete-advanced.png`（通知、删除及重置）。均以源图／实现并排输入查看。
+
+比较历史及修复：
+
+1. 第一轮`compare-full.png`／`compare-details.png`：[P2] 侧栏、分区与辅助文字偏小，层级弱于批准图；标题改为40px/600、分区24px/600、侧栏16px、行正文16px、辅助14px，复用官网字体回退与色板，不修改营销页大标题规范。
+2. 第二轮`compare-recheck-full.png`：[P2] 320px导航账户名换行，且hover注销浮层与分页靠近；保留原导航断点，纠正个人设置工具区的flex-wrap覆盖，限制账户名省略，不删导航内容；局部表格底部留白52→74px。头像区多余空隙38→16px。明确复现并修复Escape在focus-within下仍显示菜单的问题。
+3. 最终`compare-complete*.png`与`profile-zh-320.png`：再次并排视觉检查，导航保持单行，注销浮层与分页分离，右侧控件共享同一边缘，未发现待修P0/P1/P2。原官网1180px折叠断点使1113px显示菜单而非源图横向导航；1440px完整导航实测居中，这是用户“放原来的导航”的明确优先项，不为模拟图另建断点。
+
+五类必检表面：字体复用官网Arial／PingFang SC／Microsoft YaHei回退，标题与分区增强层级，正文不截断；白底、细分隔、右对齐与分区间距保留，窄屏只允许设备表局部滚动；配色复用#202b38、#526171、#396397、#aec8e2及浅色背景，危险状态有明确文字；品牌为现有favicon，编辑／复制／省略号／折叠图标为Bootstrap Icons官方SVG，非手绘替代，字母头像为批准的账号默认状态；复制、设备注销、删除及重置文案一致，保留余额不自动清零及服务未开放提示。源图细微蓝色纹理不作为新增背景图片，优先官网既有组件与token；该差异属于统一规范的预期结果。
+
+交互与验证：中英文320/768/1113/1440px8组整页与重置弹窗，24组删除弹窗100%／200%文字，头像上传／移除、名称保存、通知持久化、分页／批量注销、hover／键盘Escape、密码错误／不一致／无效验证码／成功、安全返回地址全部fixture通过，0页面错误。整页无横向溢出，320px头部工具区高度不超过48px，1440px导航中心误差<1px，资料值区右边缘误差<1px。日志`tmp/account-settings-ui.log`。独立真实HTTP与PG回归377项通过、0跳过，证据`tmp/account-settings-postgres-recheck.log`；邮件为内存后端，不真实发送。
+
+P3后续：源图部分图标与实际官方图标笔画略异，采用统一可维护的官网图标族；不新增另一套资源。未验证真实SES送达或公网运行，不代表生产已经就绪。没有commit、push、deploy。
+
+final result: passed
+
 ## 2026-10-06：最终导航与咨询交互收口
 
 本地浏览器实测：首页地球WebGL正常；咨询入口滚动到接近导航下方的咨询板块，nav-light=true；页脚宽度等于视口，无整页横向溢出。AI团队、企业服务、价格、文档四页咨询弹窗均居中，字段为 company/phone/email/goal，Escape关闭；390px企业咨询按钮打开弹窗，宽度约356px、无横向溢出。关闭重置字段并恢复焦点。

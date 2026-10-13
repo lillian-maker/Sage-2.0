@@ -799,12 +799,15 @@ def _reservation_dict(reservation):
 
 @transaction.atomic
 def record_task_cost(account, reservation_id, *, source, event_key, resource, usage,
-                     retry_index, outcome, cost_amount, currency, occurred_at, evidence_hash):
+                     retry_index, outcome, cost_amount, currency, occurred_at, evidence_hash,
+                     billing_category=None):
     """Trusted final per-operation telemetry, not a rate conversion or debit.
 
     Source/event keys must identify one operation (including retry attempts),
     not cumulative snapshots. Late facts may arrive after task settlement.
     Corrections need a separate reviewed workflow; replay cannot rewrite costs.
+    The trusted executor classifies task usage versus Sage-caused extra work;
+    omitted classification stays unknown, never an implicit customer charge.
     """
     from .models import TaskCostEvent
     account = _lock_account(account)
@@ -816,6 +819,7 @@ def record_task_cost(account, reservation_id, *, source, event_key, resource, us
         set(usage) - {'input_tokens','output_tokens','cached_input_tokens','api_calls'} or
         type(retry_index) is not int or not 0 <= retry_index <= 2147483647 or
         outcome not in ('succeeded','failed','cancelled') or
+        billing_category not in (None,'task_usage','sage_fault') or
         not isinstance(evidence_hash,str) or not re.fullmatch(r'[a-f0-9]{64}',evidence_hash)):
         raise ValueError('INVALID_COST_EVENT')
     normalized_usage = {key:_text(_quantity(value)) for key,value in usage.items()}
@@ -830,6 +834,9 @@ def record_task_cost(account, reservation_id, *, source, event_key, resource, us
     payload = {'version':1,'resource':resource,'usage':normalized_usage,'retry_index':retry_index,
         'outcome':outcome,'cost_amount':amount,'currency':currency,
         'occurred_at':occurred_at.astimezone(datetime_timezone.utc).isoformat(),'evidence_hash':evidence_hash}
+    # Omission preserves historical fingerprints and replay compatibility.
+    if billing_category is not None:
+        payload['billing_category'] = billing_category
     digest = hashlib.sha256(json.dumps([str(reservation.pk),payload],sort_keys=True,separators=(',',':')).encode()).hexdigest()
     existing = TaskCostEvent.objects.filter(account=account,source=source,event_key=event_key).first()
     if existing:
@@ -883,13 +890,25 @@ def complete_task_cost(account, event_id, *, source, request_key, cost_amount,
 
 @transaction.atomic
 def task_cost_summary(account, reservation_id):
-    """Internal audit read; never sum different currencies or infer Credits."""
+    """Internal audit read; classifications are not rates or Credits debits."""
     account = _lock_account(account)
+    return task_cost_observation(account, reservation_id)
+
+
+def task_cost_observation(account, reservation_id):
+    """Current internal costs without a transaction or locks, not an as-of snapshot."""
     reservation = _get(Reservation.objects, account=account, pk=reservation_id)
     costs, unknown, count = {}, 0, 0
+    breakdown = {key:{'event_count':0,'unknown_cost_events':0,'costs':{}}
+                 for key in ('task_usage','sage_fault','unclassified')}
     from .models import TaskCostCompletion
     completions = {row.event_id:row for row in TaskCostCompletion.objects.filter(account=account,event__reservation=reservation)}
     for event in reservation.cost_events.order_by('created_at','id'):
+        category = event.payload.get('billing_category','unclassified')
+        if not isinstance(category,str) or category not in breakdown:
+            raise ValueError('INVALID_COST_EVENT')
+        bucket = breakdown[category]
+        bucket['event_count'] += 1
         count += 1
         amount, currency = event.payload['cost_amount'], event.payload['currency']
         if amount is None and event.pk in completions:
@@ -897,10 +916,15 @@ def task_cost_summary(account, reservation_id):
             amount, currency = completion.cost_amount, completion.currency
         if amount is None:
             unknown += 1
+            bucket['unknown_cost_events'] += 1
         else:
             costs[currency] = costs.get(currency,Fraction(0)) + _quantity(amount)
+            bucket['costs'][currency] = bucket['costs'].get(currency,Fraction(0)) + _quantity(amount)
+    for bucket in breakdown.values():
+        bucket['costs'] = {key:_text(value) for key,value in sorted(bucket['costs'].items())}
     return {'event_count':count,'unknown_cost_events':unknown,
-            'costs':{key:_text(value) for key,value in sorted(costs.items())}}
+            'costs':{key:_text(value) for key,value in sorted(costs.items())},
+            'billing_breakdown':breakdown}
 
 
 @transaction.atomic

@@ -9,12 +9,13 @@ from django.db.models import Q
 from django.utils import timezone
 
 from backend.models import BillingAccount
+from backend.commerce.billing import task_cost_observation
 from backend.commerce.models import (BillingIssue, CreditFreeze, CreditRefund, Order,
     PaymentAttempt, PaymentAttemptEvent, PaymentFact)
 
 
 class Command(BaseCommand):
-    help = 'Read account-scoped billing facts: a UTC [start,end) report or one order/transaction/internal refund lookup. No write or channel call.'
+    help = 'Read account-scoped billing facts: a UTC [start,end) report or one order/transaction/internal refund/task lookup. No write or channel call.'
 
     def add_arguments(self, parser):
         parser.add_argument('--account', required=True, type=uuid.UUID)
@@ -25,9 +26,10 @@ class Command(BaseCommand):
         lookup.add_argument('--order', help='Lookup an internal Order UUID within --account.')
         lookup.add_argument('--transaction-reference', help='Lookup an exact stored channel transaction reference; ambiguous matches are rejected.')
         lookup.add_argument('--refund', help='Lookup an internal CreditRefund UUID, not a PSP refund reference.')
+        lookup.add_argument('--task', help='Observe current internal costs for a Reservation UUID within --account; not Credits charges.')
 
     def handle(self, *args, **options):
-        selectors = [key for key in ('order', 'transaction_reference', 'refund')
+        selectors = [key for key in ('order', 'transaction_reference', 'refund', 'task')
                      if options.get(key) is not None]
         if len(selectors) > 1 or (selectors and (
                 any(options.get(key) is not None for key in ('start','end')) or options['include_age'])):
@@ -143,6 +145,19 @@ class Command(BaseCommand):
 
     def lookup(self, account_id, selector, reference):
         """Only explicit fields from existing facts; never call payment/fulfillment helpers."""
+        if selector == 'task':
+            try:
+                reservation_id = uuid.UUID(str(reference))
+            except ValueError as exc:
+                raise CommandError('INVALID_LOOKUP_REFERENCE') from exc
+            try:
+                summary = task_cost_observation(account_id, reservation_id)
+            except ValueError as exc:
+                if str(exc) == 'NOT_FOUND':
+                    raise CommandError('LOOKUP_NOT_FOUND') from exc
+                raise CommandError('INVALID_COST_EVENT') from exc
+            return {'account_id': str(account_id), 'reservation_id': str(reservation_id),
+                'scope': 'current_internal_task_cost_observation_not_credits_charge', **summary}
         if selector == 'transaction_reference':
             if (not isinstance(reference, str) or not reference.strip() or len(reference) > 128
                     or any(ord(char) < 32 or ord(char) == 127 for char in reference)):

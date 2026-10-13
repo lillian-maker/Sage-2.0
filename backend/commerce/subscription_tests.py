@@ -19,6 +19,325 @@ from .subscriptions import (activate_subscription, append_paid_period, grant_due
                             cancel_subscription, confirm_cancellation, list_subscriptions)
 
 
+class MemberRemovalTests(TransactionTestCase):
+    """Offboarding is immediate access revocation, not global account deletion."""
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from backend.models import BillingAccount
+        self.owner = get_user_model().objects.create_user(username='removal-owner')
+        self.employee = get_user_model().objects.create_user(username='removal-employee')
+        self.account = BillingAccount.objects.create(kind='business', name='Removal fixture')
+        self.owner_member = Membership.objects.create(account=self.account,user=self.owner,role='owner')
+        self.employee_member = Membership.objects.create(account=self.account,user=self.employee,role='billing_admin')
+        self.other = BillingAccount.objects.create(kind='business', name='Other fixture')
+        self.other_member = Membership.objects.create(account=self.other,user=self.employee,role='owner')
+        self.personal = BillingAccount.objects.create(kind='personal',name='Personal fixture',personal_owner=self.employee)
+        Membership.objects.create(account=self.personal,user=self.employee,role='owner')
+
+    def remove(self, **changes):
+        from .subscriptions import remove_member
+        values = dict(account=self.account,actor=self.owner,membership_id=self.employee_member.pk,request_key='removal-fixture')
+        values.update(changes)
+        return remove_member(**values)
+
+    def login_client(self, user, account=None, **options):
+        client = Client(**options)
+        client.force_login(user)
+        session = client.session
+        session['active_account_id'] = str((account or self.account).pk)
+        session.save()
+        return client
+
+    def test_removal_is_idempotent_and_preserves_other_memberships_and_user(self):
+        from backend.models import MemberRemoval
+        result = self.remove()
+        self.assertEqual(result,self.remove())
+        self.employee_member.refresh_from_db()
+        self.employee.refresh_from_db()
+        self.other_member.refresh_from_db()
+        self.assertFalse(self.employee_member.is_active)
+        self.assertTrue(self.employee.is_active)
+        self.assertTrue(self.other_member.is_active)
+        self.assertEqual(MemberRemoval.objects.count(),1)
+        with self.assertRaisesRegex(ValueError,'IDEMPOTENCY_CONFLICT'):
+            self.remove(membership_id=self.owner_member.pk)
+        with self.assertRaisesRegex(ValueError,'MEMBER_ALREADY_REMOVED'):
+            self.remove(request_key='another-request')
+
+    def test_owner_only_self_owner_cross_account_and_invalid_key_denied(self):
+        for changes, code in (({'actor':self.employee},'FORBIDDEN'),
+                ({'membership_id':self.owner_member.pk},'OWNER_REMOVAL_FORBIDDEN'),
+                ({'membership_id':self.other_member.pk},'NOT_FOUND'),
+                ({'request_key':''},'INVALID_IDEMPOTENCY_KEY')):
+            with self.subTest(changes=changes), self.assertRaisesRegex(ValueError,code):
+                self.remove(**changes)
+        self.employee_member.refresh_from_db()
+        self.assertTrue(self.employee_member.is_active)
+
+    def test_owner_cannot_remove_another_owner_and_audit_failure_rolls_back(self):
+        from backend.models import MemberRemoval
+        self.employee_member.role = 'owner'
+        self.employee_member.save(update_fields=['role'])
+        with self.assertRaisesRegex(ValueError,'OWNER_REMOVAL_FORBIDDEN'):
+            self.remove()
+        self.employee_member.role = 'member'
+        self.employee_member.save(update_fields=['role'])
+        with patch('backend.models.MemberRemoval.objects.create',side_effect=RuntimeError('fixture audit failure')):
+            with self.assertRaisesRegex(RuntimeError,'fixture audit failure'):
+                self.remove()
+        self.employee_member.refresh_from_db()
+        self.assertTrue(self.employee_member.is_active)
+        self.assertFalse(MemberRemoval.objects.exists())
+
+    def test_removal_audit_cannot_be_changed_or_deleted(self):
+        from backend.models import MemberRemoval
+        record = MemberRemoval.objects.get(pk=self.remove()['removal_id'])
+        record.handoff_pending = True
+        with self.assertRaisesRegex(ValueError,'IMMUTABLE_MEMBER_REMOVAL'):
+            record.save()
+        with self.assertRaisesRegex(ValueError,'IMMUTABLE_MEMBER_REMOVAL'):
+            record.delete()
+        with self.assertRaisesRegex(ValueError,'IMMUTABLE_MEMBER_REMOVAL'):
+            MemberRemoval.objects.filter(pk=record.pk).update(handoff_pending=True)
+        with self.assertRaisesRegex(ValueError,'IMMUTABLE_MEMBER_REMOVAL'):
+            MemberRemoval.objects.filter(pk=record.pk).delete()
+        with self.assertRaisesRegex(ValueError,'IMMUTABLE_MEMBER_REMOVAL'):
+            MemberRemoval.objects.bulk_update([record],['handoff_pending'])
+        record.refresh_from_db()
+        self.assertFalse(record.handoff_pending)
+
+    def test_reserved_tasks_do_not_delay_removal_or_mutate_company_assets(self):
+        from .models import Reservation
+        from backend.models import MemberRemoval
+        now = timezone.now()
+        reservation = Reservation.objects.create(account=self.account,task_key='handoff-fixture',
+            membership=self.employee_member,shared_period_start=now,shared_period_end=now+timedelta(days=1),quantity='2')
+        result = self.remove()
+        self.assertTrue(result['handoff_pending'])
+        self.assertFalse(result['executor_connected'])
+        record = MemberRemoval.objects.get(pk=result['removal_id'])
+        self.assertEqual(record.pending_reservation_ids,[str(reservation.pk)])
+        reservation.refresh_from_db()
+        self.assertEqual((reservation.account_id,reservation.membership_id,reservation.state),
+            (self.account.pk,self.employee_member.pk,'reserved'))
+
+    def test_api_strict_payload_csrf_account_and_removed_session(self):
+        client = self.login_client(self.owner)
+        endpoint = '/api/billing/organization/members/remove'
+        data = {'membership_id':self.employee_member.pk,'request_key':'api-fixture','confirm':True}
+        self.assertEqual(client.post(endpoint,json.dumps(data),content_type='application/json').status_code,409)
+        for bad in ({**data,'confirm':False},{**data,'extra':True},{**data,'membership_id':True}):
+            self.assertEqual(client.post(endpoint,json.dumps(bad),content_type='application/json',
+                HTTP_X_BILLING_ACCOUNT=str(self.account.pk)).status_code,422)
+        strict = self.login_client(self.owner,enforce_csrf_checks=True)
+        self.assertEqual(strict.post(endpoint,json.dumps(data),content_type='application/json',
+            HTTP_X_BILLING_ACCOUNT=str(self.account.pk)).status_code,403)
+        employee = self.login_client(self.employee)
+        response = client.post(endpoint,json.dumps(data),content_type='application/json',
+            HTTP_X_BILLING_ACCOUNT=str(self.account.pk))
+        self.assertEqual(response.status_code,200,response.content)
+        for path in ('billing/account','billing/organization','billing/my-usage','billing/subscriptions','billing/orders'):
+            self.assertEqual(employee.get('/api/'+path).status_code,403,path)
+        inquiry = {'company':'Fixture','seats':2,'requirements':'Fixture','contact_email':'fixture@example.invalid'}
+        self.assertEqual(employee.post('/api/billing/purchase-inquiries',json.dumps(inquiry),
+            content_type='application/json',HTTP_X_BILLING_ACCOUNT=str(self.account.pk)).status_code,403)
+        self.assertEqual(employee.post('/api/billing/accounts/select',json.dumps({'account_id':str(self.other.pk)}),
+            content_type='application/json',HTTP_X_BILLING_ACCOUNT=str(self.account.pk)).status_code,200)
+        self.assertEqual(employee.get('/api/billing/account').status_code,200)
+
+    def test_organization_owner_capability_and_history(self):
+        owner = self.login_client(self.owner)
+        admin = self.login_client(self.employee)
+        self.assertTrue(owner.get('/api/billing/organization').json()['capabilities']['member_removal'])
+        self.assertFalse(admin.get('/api/billing/organization').json()['capabilities']['member_removal'])
+        self.remove()
+        data = owner.get('/api/billing/organization').json()
+        removed = next(row for row in data['members'] if row['id'] == self.employee_member.pk)
+        self.assertFalse(removed['can_remove'])
+        self.assertIsNotNone(removed['removed_at'])
+        history = owner.get('/api/billing/organization-history').json()
+        self.assertEqual(history['items'][0]['type'],'member_removal')
+
+    def test_financial_write_waiting_for_account_lock_rechecks_removed_member(self):
+        if connection.vendor != 'postgresql':
+            self.skipTest('Actual row-lock waiting requires PostgreSQL.')
+        import uuid
+        from threading import Event
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.db import transaction
+        from django.test import RequestFactory
+        from backend.account import register_session
+        from backend.models import BillingAccount, PurchaseInquiry
+        from backend.views import api
+        client = self.login_client(self.employee)
+        request = RequestFactory().post('/api/billing/purchase-inquiries',json.dumps({
+            'company':'Fixture','seats':2,'requirements':'Fixture','contact_email':'fixture@example.invalid'}),
+            content_type='application/json',HTTP_X_BILLING_ACCOUNT=str(self.account.pk))
+        request.user = self.employee
+        request.session = SessionStore(session_key=client.session.session_key)
+        request.session.load()
+        request.request_id = uuid.uuid4()
+        register_session(request)
+        waiting = Event()
+        def write():
+            close_old_connections()
+            def signal(execute,sql,params,many,context):
+                if 'FOR UPDATE' in sql and 'backend_billingaccount' in sql:
+                    waiting.set()
+                return execute(sql,params,many,context)
+            try:
+                with connection.execute_wrapper(signal):
+                    return api(request,'billing/purchase-inquiries').status_code
+            finally:
+                close_old_connections()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with transaction.atomic():
+                BillingAccount.objects.select_for_update().get(pk=self.account.pk)
+                future = pool.submit(write)
+                self.assertTrue(waiting.wait(timeout=5),'Write must lock company before authorizing member.')
+                self.remove()
+            self.assertEqual(future.result(timeout=10),403)
+        self.assertFalse(PurchaseInquiry.objects.exists())
+
+    def test_cached_account_after_completed_switch_rejects_old_write(self):
+        import uuid
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.test import RequestFactory
+        from backend.account import register_session
+        from backend.models import PurchaseInquiry
+        from backend.views import api
+        client = self.login_client(self.employee)
+        request = RequestFactory().post('/api/billing/purchase-inquiries',json.dumps({
+            'company':'Fixture','seats':2,'requirements':'Fixture','contact_email':'fixture@example.invalid'}),
+            content_type='application/json',HTTP_X_BILLING_ACCOUNT=str(self.account.pk))
+        request.user = self.employee
+        request.session = SessionStore(session_key=client.session.session_key)
+        self.assertEqual(request.session.get('active_account_id'),str(self.account.pk))
+        request.request_id = uuid.uuid4()
+        register_session(request)
+        switched = client.post('/api/billing/accounts/select',json.dumps({'account_id':str(self.other.pk)}),
+            content_type='application/json')
+        self.assertEqual(switched.status_code,200)
+        self.assertEqual(client.session.get('active_account_id'),str(self.other.pk))
+        response = api(request,'billing/purchase-inquiries')
+        self.assertEqual(response.status_code,409)
+        self.assertEqual(json.loads(response.content)['error']['code'],'ACCOUNT_CHANGED')
+        self.assertFalse(PurchaseInquiry.objects.exists())
+
+    def test_account_switch_holds_transaction_through_session_save(self):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        client = self.login_client(self.employee)
+        process_response = SessionMiddleware.process_response
+        def save(middleware,request,response):
+            self.assertTrue(connection.in_atomic_block,'Account selection must commit with its session save.')
+            self.assertEqual(request.session.load()['active_account_id'],str(self.account.pk))
+            result = process_response(middleware,request,response)
+            self.assertEqual(request.session.load()['active_account_id'],str(self.other.pk))
+            return result
+        with patch.object(SessionMiddleware,'process_response',save):
+            response = client.post('/api/billing/accounts/select',json.dumps({'account_id':str(self.other.pk)}),
+                content_type='application/json')
+        self.assertEqual(response.status_code,200)
+        self.assertTrue(response.cookies)
+        self.assertEqual(client.session.get('active_account_id'),str(self.other.pk))
+        response = client.post('/api/billing/purchase-inquiries',json.dumps({
+            'company':'Fixture','seats':2,'requirements':'Fixture','contact_email':'fixture@example.invalid'}),
+            content_type='application/json',HTTP_X_BILLING_ACCOUNT=str(self.other.pk))
+        self.assertEqual(response.status_code,201)
+
+    def test_account_switch_session_save_failure_rolls_back(self):
+        from django.db import DatabaseError
+        from django.contrib.sessions.backends.db import SessionStore
+        from backend.models import AccountSession
+        client = self.login_client(self.employee,raise_request_exception=False)
+        with patch.object(SessionStore,'save',side_effect=DatabaseError('fixture session storage failure')):
+            response = client.post('/api/billing/accounts/select',json.dumps({'account_id':str(self.other.pk)}),
+                content_type='application/json')
+        self.assertGreaterEqual(response.status_code,500)
+        self.assertEqual(client.session.get('active_account_id'),str(self.account.pk))
+        self.assertFalse(AccountSession.objects.exists())
+
+    def test_account_switch_saved_session_rolls_back_on_server_error(self):
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from backend.models import AccountSession
+        client = self.login_client(self.employee)
+        process_response = SessionMiddleware.process_response
+        def fail_after_save(middleware,request,response):
+            result = process_response(middleware,request,response)
+            self.assertEqual(request.session.load()['active_account_id'],str(self.other.pk))
+            result.status_code = 500
+            return result
+        with patch.object(SessionMiddleware,'process_response',fail_after_save):
+            response = client.post('/api/billing/accounts/select',json.dumps({'account_id':str(self.other.pk)}),
+                content_type='application/json')
+        self.assertEqual(response.status_code,500)
+        self.assertEqual(client.session.get('active_account_id'),str(self.account.pk))
+        self.assertFalse(AccountSession.objects.exists())
+
+    def test_cached_write_waits_for_account_switch_session_save(self):
+        if connection.vendor != 'postgresql':
+            self.skipTest('Actual row-lock waiting requires PostgreSQL.')
+        import uuid
+        from threading import Event
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.contrib.sessions.middleware import SessionMiddleware
+        from django.test import RequestFactory
+        from backend.account import register_session
+        from backend.models import PurchaseInquiry
+        from backend.views import api
+        client = self.login_client(self.employee)
+        request = RequestFactory().post('/api/billing/purchase-inquiries',json.dumps({
+            'company':'Fixture','seats':2,'requirements':'Fixture','contact_email':'fixture@example.invalid'}),
+            content_type='application/json',HTTP_X_BILLING_ACCOUNT=str(self.account.pk))
+        request.user = self.employee
+        request.session = SessionStore(session_key=client.session.session_key)
+        self.assertEqual(request.session.get('active_account_id'),str(self.account.pk))
+        request.request_id = uuid.uuid4()
+        register_session(request)
+        saving, release, waiting = Event(), Event(), Event()
+        process_response = SessionMiddleware.process_response
+        def pause_save(middleware,select_request,response):
+            saving.set()
+            if not release.wait(timeout=5):
+                raise AssertionError('Account selection session save was not released.')
+            return process_response(middleware,select_request,response)
+        def select():
+            close_old_connections()
+            try:
+                return client.post('/api/billing/accounts/select',json.dumps({'account_id':str(self.other.pk)}),
+                    content_type='application/json').status_code
+            finally:
+                close_old_connections()
+        def write():
+            close_old_connections()
+            def signal(execute,sql,params,many,context):
+                if 'FOR UPDATE' in sql and 'backend_accountsession' in sql:
+                    waiting.set()
+                return execute(sql,params,many,context)
+            try:
+                with connection.execute_wrapper(signal):
+                    response = api(request,'billing/purchase-inquiries')
+                    return response.status_code,json.loads(response.content)
+            finally:
+                close_old_connections()
+        with patch.object(SessionMiddleware,'process_response',pause_save), ThreadPoolExecutor(max_workers=2) as pool:
+            selection = pool.submit(select)
+            try:
+                self.assertTrue(saving.wait(timeout=5),'Selection must reach its session save.')
+                mutation = pool.submit(write)
+                self.assertTrue(waiting.wait(timeout=5),'Write must attempt the shared session-row lock.')
+                with self.assertRaises(TimeoutError):
+                    mutation.result(timeout=0.2)
+            finally:
+                release.set()
+            self.assertEqual(selection.result(timeout=10),200)
+            status,data = mutation.result(timeout=10)
+        self.assertEqual(status,409)
+        self.assertEqual(data['error']['code'],'ACCOUNT_CHANGED')
+        self.assertEqual(client.session.get('active_account_id'),str(self.other.pk))
+        self.assertFalse(PurchaseInquiry.objects.exists())
+
+
 @override_settings(BILLING_SALES_ENABLED=True, BILLING_RENEWAL_CHARGING_ENABLED=True,
                    BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)
 class RenewalIntentTests(TransactionTestCase):

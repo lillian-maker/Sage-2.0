@@ -343,6 +343,13 @@ class DeploymentConfigurationTests(TestCase):
                    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class AccountTests(TestCase):
     def setUp(self):
+        from backend.authentication_tests import AUTH_FIXTURE
+        fixture = override_settings(**AUTH_FIXTURE)
+        fixture.enable()
+        self.addCleanup(fixture.disable)
+        supplier = patch('backend.authentication.CommonClient.call_json', return_value={'Response':{'CaptchaCode':1}})
+        supplier.start()
+        self.addCleanup(supplier.stop)
         self.client = Client(enforce_csrf_checks=True)
         self.session()
 
@@ -356,12 +363,22 @@ class AccountTests(TestCase):
 
     def post(self, path, data, client=None):
         client = client or self.client
+        if path == '/api/auth/verify' and set(data) == {'challenge_id','code'}:
+            from backend.models import AuthFlow
+            flow = AuthFlow.objects.filter(challenge_id=data['challenge_id']).first()
+            path = '/api/auth/register/verify'
+            data = dict(data, flow_id=str(flow.pk) if flow else str(uuid.uuid4()), invitation_code='')
         return client.post(path, json.dumps(data), content_type='application/json',
                            HTTP_X_CSRFTOKEN=client.csrf_token,
                            HTTP_X_BILLING_ACCOUNT=client.session.get('active_account_id', '') or '')
 
     def challenge(self, identifier='owner@example.invalid', client=None):
-        response = self.post('/api/auth/challenges', {'method': 'email', 'identifier': identifier}, client)
+        result = self.post('/api/auth/register/start', {'first_name':'Fixture', 'last_name':'',
+            'identifier':identifier, 'password':'Silver!864', 'agreement_acceptance':'NONPRODUCTION-FIXTURE-ONLY',
+            'invitation_code':''}, client)
+        self.assertEqual(result.status_code,201,result.content)
+        response = self.post('/api/auth/captcha', {'flow_id':result.json()['flow_id'],
+            'ticket':uuid.uuid4().hex, 'randstr':'fixture'}, client)
         self.assertEqual(response.status_code, 201, response.content)
         code = re.search(r'\b\d{6}\b', mail.outbox[-1].body).group()
         self.assertNotIn(code, response.content.decode())
@@ -369,11 +386,19 @@ class AccountTests(TestCase):
 
     def sign_in(self, identifier='owner@example.invalid', client=None):
         client = client or self.client
-        challenge, code = self.challenge(identifier, client)
-        response = self.post('/api/auth/verify', {'challenge_id': challenge, 'code': code}, client)
-        self.assertEqual(response.status_code, 200, response.content)
-        client.csrf_token = response.json()['csrf_token']
-        return response.json()
+        identity = LoginIdentity.objects.filter(method='email', identifier=identifier).first()
+        if identity:
+            user = identity.user
+        else:
+            user = get_user_model().objects.create_user(username=uuid.uuid4().hex, password='Fixture!864')
+            LoginIdentity.objects.create(user=user, method='email', identifier=identifier)
+            account = BillingAccount.objects.create(kind='personal', name='个人账户', personal_owner=user)
+            Membership.objects.create(account=account, user=user, role='owner')
+        # Billing/account fixtures do not exercise authentication by signing up.
+        client.force_login(user)
+        self.session(client)
+        client.get('/api/account/sessions')
+        return self.session(client)
 
     def purchase_product(self):
         from backend.commerce.models import ProductVersion
@@ -391,6 +416,7 @@ class AccountTests(TestCase):
         self.assertTrue(data['authenticated'])
         self.assertEqual(len(data['accounts']), 1)
         self.assertEqual(BillingAccount.objects.count(), 1)
+
         summary = self.client.get('/api/billing/account')
         self.assertEqual(summary.status_code, 200)
         self.assertEqual(summary.json()['credits']['available'], '0')
@@ -782,18 +808,21 @@ class AccountTests(TestCase):
         self.assertEqual(self.post('/api/auth/verify', {'challenge_id': challenge, 'code': code}).status_code, 422)
 
     def test_resend_throttled_and_delivery_off_does_not_store_identifier(self):
-        self.challenge()
-        response = self.post('/api/auth/challenges', {'method': 'email', 'identifier': 'owner@example.invalid'})
+        challenge, _ = self.challenge()
+        from backend.models import AuthFlow
+        response = self.post('/api/auth/resend', {'flow_id':str(AuthFlow.objects.get(challenge_id=challenge).pk)})
         self.assertEqual(response.status_code, 429)
         with override_settings(AUTH_EMAIL_ENABLED=False):
-            response = self.post('/api/auth/challenges', {'method': 'email', 'identifier': 'off@example.invalid'})
+            response = self.post('/api/auth/register/start', {'first_name':'Fixture','last_name':'',
+                'identifier':'off@example.invalid','password':'Silver!864',
+                'agreement_acceptance':'NONPRODUCTION-FIXTURE-ONLY','invitation_code':''})
             self.assertEqual(response.status_code, 503)
         self.assertFalse(LoginChallenge.objects.filter(identifier='off@example.invalid').exists())
 
     def test_phone_not_advertised_until_real_delivery_is_selected(self):
         self.assertFalse(self.session()['capabilities']['phone_login'])
         response = self.post('/api/auth/challenges', {'method': 'phone', 'identifier': '+8613800000000'})
-        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.status_code, 403)
 
     def test_membership_is_checked_on_every_request(self):
         data = self.sign_in()
@@ -977,8 +1006,12 @@ class AccountTests(TestCase):
 
     def test_delivery_failure_does_not_create_valid_code_or_user(self):
         from unittest.mock import patch
-        with patch('backend.views.send_mail', side_effect=OSError('fixture delivery failure')):
-            result = self.post('/api/auth/challenges', {'method': 'email', 'identifier': 'fail@example.invalid'})
+        start = self.post('/api/auth/register/start', {'first_name':'Fixture','last_name':'',
+            'identifier':'fail@example.invalid','password':'Silver!864',
+            'agreement_acceptance':'NONPRODUCTION-FIXTURE-ONLY','invitation_code':''})
+        with patch('backend.authentication.send_mail', side_effect=OSError('fixture delivery failure')):
+            result = self.post('/api/auth/captcha', {'flow_id':start.json()['flow_id'],
+                'ticket':uuid.uuid4().hex,'randstr':'fixture'})
         self.assertEqual(result.status_code, 503)
         self.assertFalse(LoginChallenge.objects.get(identifier='fail@example.invalid').delivered)
         self.assertFalse(LoginIdentity.objects.exists())
@@ -994,65 +1027,786 @@ class AccountTests(TestCase):
         self.assertEqual(LoginIdentity.objects.count(), 1)
 
 
+@override_settings(AUTH_EMAIL_ENABLED=True, AUTH_EMAIL_TRANSPORT='smtp', EMAIL_HOST='fixture.invalid',
+                   DEFAULT_FROM_EMAIL='no-reply@example.invalid', AUTH_RESEND_SECONDS=0,
+                   EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class PasswordAuthenticationTests(TestCase):
+    """Actual HTTP/DB/password hashing with in-memory delivery, not real email."""
+    password = 'Violet!431'
+
+    def setUp(self):
+        from backend.authentication_tests import AUTH_FIXTURE
+        fixture = override_settings(**{key:value for key,value in AUTH_FIXTURE.items()
+            if key not in ('AUTH_EMAIL_ENABLED','AUTH_EMAIL_TRANSPORT','EMAIL_HOST','DEFAULT_FROM_EMAIL','EMAIL_BACKEND')})
+        fixture.enable()
+        self.addCleanup(fixture.disable)
+        supplier = patch('backend.authentication.CommonClient.call_json', return_value={'Response':{'CaptchaCode':1}})
+        supplier.start()
+        self.addCleanup(supplier.stop)
+        self.flows = {}
+        self.user = get_user_model().objects.create_user(username='password-fixture')
+        self.identifier = 'password-fixture@example.invalid'
+        LoginIdentity.objects.create(user=self.user, method='email', identifier=self.identifier)
+        self.client = Client(enforce_csrf_checks=True)
+        self.session(self.client)
+
+    def session(self, client):
+        result = client.get('/api/auth/session').json()
+        client.csrf_token = result['csrf_token']
+        return result
+
+    def test_zero_cooldown_uses_fresh_time_after_waiting_for_throttle_lock(self):
+        from unittest.mock import Mock
+        from backend.views import throttle
+        before = timezone.now()
+        after = before + timedelta(milliseconds=2)
+        row = Mock(pk='fixture', window_at=before, last_at=before + timedelta(milliseconds=1), count=1)
+        locked = Mock()
+        locked.get.return_value = row
+        with patch('backend.views.timezone.now', side_effect=(before, after)), \
+             patch('backend.views.AuthThrottle.objects.get_or_create', return_value=(row, False)), \
+             patch('backend.views.AuthThrottle.objects.select_for_update', return_value=locked):
+            self.assertTrue(throttle('fixture', 20, cooldown=0))
+        self.assertEqual(row.count, 2)
+        self.assertEqual(row.last_at, after)
+        row.save.assert_called_once()
+
+    def test_real_cooldown_remains_restricted_after_throttle_lock_wait(self):
+        from unittest.mock import Mock
+        from backend.views import throttle
+        before = timezone.now()
+        after = before + timedelta(milliseconds=2)
+        row = Mock(pk='fixture', window_at=before, last_at=before + timedelta(milliseconds=1), count=1)
+        locked = Mock()
+        locked.get.return_value = row
+        with patch('backend.views.timezone.now', side_effect=(before, after)), \
+             patch('backend.views.AuthThrottle.objects.get_or_create', return_value=(row, False)), \
+             patch('backend.views.AuthThrottle.objects.select_for_update', return_value=locked):
+            self.assertFalse(throttle('fixture', 20, cooldown=60))
+        self.assertEqual(row.count, 1)
+        row.save.assert_not_called()
+
+    def post(self, path, data, client=None):
+        client = client or self.client
+        def raw(route, body):
+            return client.post('/api/auth/' + route,json.dumps(body),content_type='application/json',HTTP_X_CSRFTOKEN=client.csrf_token)
+        if path == 'password-challenges' and set(data) == {'identifier'}:
+            result = raw('recovery/start',data)
+            if result.status_code != 201:
+                return result
+            result = raw('captcha',{'flow_id':result.json()['flow_id'],'ticket':uuid.uuid4().hex,'randstr':'fixture'})
+            if result.status_code == 201:
+                self.flows[result.json()['challenge_id']] = result.json()['flow_id']
+            return result
+        if path == 'password-reset' and set(data) == {'challenge_id','code','password'} and data['challenge_id'] in self.flows:
+            flow = self.flows[data['challenge_id']]
+            # The new contract permits password validation only on its own endpoint.
+            # Calling it early exercises format validation, then actual stage binding.
+            format_result = raw('recovery/complete',{'flow_id':flow,'password':data['password']})
+            if format_result.json().get('error',{}).get('code') == 'INVALID_PASSWORD':
+                return format_result
+            result = raw('recovery/verify',{'flow_id':flow,'challenge_id':data['challenge_id'],'code':data['code']})
+            if result.status_code != 200:
+                return result
+            return raw('recovery/complete',{'flow_id':flow,'password':data['password']})
+        result = raw(path,data)
+        if path == 'password-login' and result.status_code == 201:
+            self.assertFalse(client.get('/api/auth/session').json()['authenticated'])
+            return raw('captcha',{'flow_id':result.json()['flow_id'],'ticket':uuid.uuid4().hex,'randstr':'fixture'})
+        return result
+
+    def challenge(self, identifier=None, client=None):
+        response = self.post('password-challenges', {'identifier': identifier or self.identifier}, client)
+        self.assertEqual(response.status_code, 201, response.content)
+        code = re.search(r'\b\d{6}\b', mail.outbox[-1].body).group()
+        return response.json()['challenge_id'], code
+
+    def reset(self, challenge, code, password=None, client=None):
+        password = password or self.password
+        return self.post('password-reset', {'challenge_id': challenge, 'code': code,
+            'password': password}, client)
+
+    def test_otp_account_can_set_password_then_sign_in_without_new_identity(self):
+        self.assertFalse(self.user.has_usable_password())
+        challenge, code = self.challenge()
+        self.assertEqual(self.reset(challenge, code).json(), {'status': 'password_reset'})
+        self.assertFalse(self.session(self.client)['authenticated'])
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(self.password))
+        self.assertTrue(self.user.password.startswith('pbkdf2_sha256$'))
+        self.assertNotIn(self.password, self.user.password)
+        self.assertEqual(self.user.email, '')
+        result = self.post('password-login', {'identifier': self.identifier, 'password': self.password})
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.json()['user']['id'], str(self.user.pk))
+        self.assertEqual(LoginIdentity.objects.count(), 1)
+        self.assertEqual(get_user_model().objects.count(), 1)
+
+    def test_reset_revokes_all_registered_and_unregistered_sessions_and_old_password(self):
+        from backend.models import AccountSession
+        from django.contrib.sessions.models import Session
+        self.user.set_password('Previous password fixture phrase!')
+        self.user.save(update_fields=['password'])
+        browsers = [Client(), Client(), Client()]
+        for browser in browsers:
+            browser.force_login(self.user)
+        for browser in browsers[:2]:
+            browser.get('/api/account/sessions')
+        challenge, code = self.challenge()
+        self.assertEqual(self.reset(challenge, code).status_code, 200)
+        self.assertFalse(AccountSession.objects.filter(user=self.user, revoked_at__isnull=True).exists())
+        keys = [browser.session.session_key for browser in browsers[:2]]
+        self.assertFalse(Session.objects.filter(pk__in=keys).exists())
+        for browser in browsers:
+            self.assertEqual(browser.get('/api/account/profile').status_code, 401)
+        self.session(self.client)
+        old = self.post('password-login', {'identifier': self.identifier,
+            'password': 'Previous password fixture phrase!'})
+        self.assertEqual(old.status_code, 401)
+        self.assertEqual(old.json()['error']['code'], 'INVALID_CREDENTIALS')
+
+    def test_unknown_unset_wrong_and_disabled_passwords_have_identical_response(self):
+        responses = []
+        for identifier in ('missing@example.invalid', self.identifier):
+            responses.append(self.post('password-login', {'identifier': identifier, 'password': self.password}))
+        self.user.set_password(self.password)
+        self.user.save(update_fields=['password'])
+        responses.append(self.post('password-login', {'identifier': self.identifier, 'password': 'wrong phrase'}))
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+        responses.append(self.post('password-login', {'identifier': self.identifier, 'password': self.password}))
+        self.assertEqual([x.status_code for x in responses], [401] * 4)
+        self.assertEqual({x.json()['error']['code'] for x in responses}, {'INVALID_CREDENTIALS'})
+        self.assertEqual({x.json()['error']['message'] for x in responses}, {'邮箱或密码不正确。'})
+
+    def test_unknown_and_disabled_reset_do_not_create_or_mutate_account(self):
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+        for identifier in ('missing@example.invalid', self.identifier):
+            challenge, code = self.challenge(identifier)
+            self.assertIsNone(LoginChallenge.objects.get(pk=challenge).password_user_id)
+            self.assertEqual(self.reset(challenge, code).status_code, 422)
+            self.assertIn('Password reset code', mail.outbox[-1].subject)
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.has_usable_password())
+
+    def test_unknown_challenge_cannot_reset_later_registered_identity(self):
+        identifier = 'later-registered@example.invalid'
+        challenge, code = self.challenge(identifier)
+        later = get_user_model().objects.create_user(username='later-registration')
+        LoginIdentity.objects.create(user=later, method='email', identifier=identifier)
+        self.assertEqual(self.reset(challenge, code).status_code, 422)
+        later.refresh_from_db()
+        self.assertFalse(later.has_usable_password())
+
+    def test_login_and_reset_codes_are_not_interchangeable(self):
+        reset_challenge, reset_code = self.challenge()
+        self.assertEqual(self.post('verify', {'challenge_id': reset_challenge, 'code': reset_code}).status_code, 403)
+        response = self.post('challenges', {'method': 'email', 'identifier': self.identifier})
+        self.assertEqual(response.status_code,403)
+        LoginChallenge.objects.filter(pk=reset_challenge).update(purpose='login')
+        self.assertEqual(self.reset(reset_challenge, reset_code).status_code,422)
+        LoginChallenge.objects.filter(pk=reset_challenge).update(purpose='password_reset')
+        self.assertEqual(self.reset(reset_challenge, reset_code).status_code, 200)
+
+    def test_reset_is_bound_to_requesting_browser_and_one_use(self):
+        challenge, code = self.challenge()
+        stranger = Client(enforce_csrf_checks=True)
+        self.session(stranger)
+        self.assertEqual(self.reset(challenge, code, client=stranger).status_code, 422)
+        self.assertEqual(LoginChallenge.objects.get(pk=challenge).attempts, 0)
+        self.assertEqual(self.reset(challenge, code).status_code, 200)
+        self.session(self.client)
+        self.assertEqual(self.reset(challenge, code).status_code, 422)
+
+    def test_wrong_attempts_commit_and_lock_out_correct_code(self):
+        challenge, code = self.challenge()
+        wrong = '000000' if code != '000000' else '111111'
+        for _ in range(5):
+            self.assertEqual(self.reset(challenge, wrong).status_code, 422)
+        self.assertEqual(LoginChallenge.objects.get(pk=challenge).attempts, 5)
+        self.assertEqual(self.reset(challenge, code).status_code, 422)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.has_usable_password())
+
+    def test_expiry_resend_and_success_invalidate_old_challenges(self):
+        first, code = self.challenge()
+        LoginChallenge.objects.filter(pk=first).update(expires_at=timezone.now() - timedelta(seconds=1))
+        self.assertEqual(self.reset(first, code).status_code, 422)
+        previous, previous_code = self.challenge()
+        current, current_code = self.challenge()
+        self.assertEqual(self.reset(previous, previous_code).status_code, 422)
+        other = Client(enforce_csrf_checks=True)
+        self.session(other)
+        other_challenge, other_code = self.challenge(client=other)
+        self.assertEqual(self.reset(current, current_code).status_code, 200)
+        self.assertEqual(self.reset(other_challenge, other_code, client=other).status_code, 422)
+
+    def test_invalid_new_passwords_do_not_change_or_consume_credentials(self):
+        challenge, code = self.challenge()
+        for password in ('Aa9!pqr', 'Aa9!pqrstuvwxyz012', 'aa9!pqrs', 'AA9!PQRS',
+                         'Aa!!pqrs', 'Aa99pqrs', 'Aa9!p qr', 'Aa9!p\tqr',
+                         'Aa9!p\nqr', 'Aa9!p\rqr', 'Aa9!p\u00a0qr', 'Aa9!p\x00qr',
+                         'Aa9!p\x7fqr', 'Aa9!中文qr', 'Aa9!😀pqr', 12345, None):
+            with self.subTest(password_type=type(password).__name__):
+                response = self.post('password-reset', {'challenge_id': challenge, 'code': code,
+                    'password': password})
+                self.assertEqual(response.status_code, 422)
+                self.assertEqual(response.json()['error']['code'], 'INVALID_PASSWORD')
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.has_usable_password())
+        self.assertIsNone(LoginChallenge.objects.get(pk=challenge).consumed_at)
+        self.assertEqual(LoginChallenge.objects.get(pk=challenge).attempts, 0)
+
+    def test_single_password_accepts_eight_and_sixteen_characters(self):
+        for password in ('Aa9!pqrs', 'Az4!pqrsUV8@abcd'):
+            challenge, code = self.challenge()
+            self.assertEqual(self.reset(challenge, code, password).status_code, 200)
+            self.user.refresh_from_db()
+            self.assertTrue(self.user.check_password(password))
+            self.assertFalse(self.session(self.client)['authenticated'])
+
+    def test_all_visible_ascii_punctuation_is_allowed_without_rewriting(self):
+        import string
+        from backend.views import validate_new_password
+        for symbol in string.punctuation:
+            validate_new_password('Aa9' + symbol + 'pqrs')
+        password = 'Az4!"\\pq'
+        challenge, code = self.challenge()
+        self.assertEqual(self.reset(challenge, code, password).status_code, 200)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(password))
+
+    def test_missing_character_categories_have_explicit_feedback(self):
+        from django.core.exceptions import ValidationError
+        from backend.views import validate_new_password
+        for password, missing in (('aa9!pqrs', '大写字母'), ('AA9!PQRS', '小写字母'),
+                                  ('Aa!!pqrs', '数字'), ('Aa99pqrs', '符号')):
+            with self.assertRaises(ValidationError) as caught:
+                validate_new_password(password)
+            self.assertIn(missing, caught.exception.messages[0])
+
+    def test_common_and_user_similar_password_checks_remain_after_format_validation(self):
+        from django.contrib.auth.password_validation import CommonPasswordValidator
+        common = next(value.capitalize() for value in CommonPasswordValidator().passwords
+            if 8 <= len(value) <= 16 and re.search('[a-z]', value) and
+            re.search('[0-9]', value) and re.search('[^a-z0-9]', value) and value.isascii())
+        challenge, code = self.challenge()
+        response = self.reset(challenge, code, common)
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()['error']['code'], 'INVALID_PASSWORD')
+        self.user.first_name = 'Violet431'
+        self.user.save(update_fields=['first_name'])
+        self.assertEqual(self.reset(challenge, code, 'Violet431!').status_code, 422)
+        from backend.models import AuthFlow
+        self.assertIsNotNone(LoginChallenge.objects.get(pk=challenge).consumed_at)
+        self.assertIsNone(AuthFlow.objects.get(pk=self.flows[challenge]).consumed_at)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.has_usable_password())
+
+    def test_historical_spaces_unicode_and_long_passwords_still_sign_in_unchanged(self):
+        for password in ('  合作伙伴共同验证产品方案与交付成果  ',
+                         'Sage historical fixture phrase 42!', 'A' * 128):
+            self.user.set_password(password)
+            self.user.save(update_fields=['password'])
+            self.assertEqual(self.post('password-login', {'identifier': self.identifier,
+                'password': password}).status_code, 200)
+            self.client.logout()
+            self.session(self.client)
+        self.assertEqual(LoginIdentity.objects.count(), 1)
+        self.assertEqual(get_user_model().objects.count(), 1)
+
+    def test_obsolete_confirmation_field_is_rejected_as_unexpected_input(self):
+        challenge, code = self.challenge()
+        response = self.post('password-reset', {'challenge_id': challenge, 'code': code,
+            'password': self.password, 'password_confirmation': self.password})
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()['error']['code'], 'INVALID_REQUEST')
+
+    def test_reset_delivery_configuration_and_failure_are_not_false_success(self):
+        with override_settings(AUTH_EMAIL_ENABLED=False):
+            self.assertFalse(self.session(self.client)['capabilities']['password_reset'])
+            self.assertEqual(self.post('password-challenges', {'identifier': self.identifier}).status_code, 503)
+        self.assertFalse(LoginChallenge.objects.exists())
+        with patch('backend.authentication.send_mail', side_effect=OSError('fixture')):
+            response = self.post('password-challenges', {'identifier': self.identifier})
+        self.assertEqual(response.status_code, 503)
+        self.assertFalse(LoginChallenge.objects.get().delivered)
+
+    def test_password_login_stays_available_without_email_delivery(self):
+        self.user.set_password(self.password)
+        self.user.save(update_fields=['password'])
+        with override_settings(AUTH_EMAIL_ENABLED=False):
+            self.assertTrue(self.session(self.client)['capabilities']['password_login'])
+            self.assertEqual(self.post('password-login', {'identifier': self.identifier,
+                'password': self.password}).status_code, 200)
+
+    @override_settings(AUTH_IDENTIFIER_LIMIT=1)
+    def test_login_and_reset_share_identity_rate_limit(self):
+        self.assertEqual(self.post('password-login', {'identifier': self.identifier, 'password': self.password}).status_code, 401)
+        self.assertEqual(self.post('password-challenges', {'identifier': self.identifier}).status_code, 429)
+        self.assertFalse(LoginChallenge.objects.exists())
+
+    @override_settings(AUTH_IP_LIMIT=1)
+    def test_password_ip_limit_is_persistent_across_identifiers(self):
+        self.assertEqual(self.post('password-login', {'identifier': self.identifier, 'password': self.password}).status_code, 401)
+        self.assertEqual(self.post('password-login', {'identifier': 'other@example.invalid',
+            'password': self.password}).status_code, 429)
+
+    def test_csrf_methods_and_exact_request_fields_remain_enforced(self):
+        for route, body in (
+            ('password-login', {'identifier': self.identifier, 'password': self.password}),
+            ('password-challenges', {'identifier': self.identifier}),
+            ('password-reset', {'challenge_id': str(uuid.uuid4()), 'code': '123456',
+                'password': self.password})):
+            self.assertEqual(self.client.post('/api/auth/' + route, json.dumps(body),
+                content_type='application/json').status_code, 403)
+            self.assertEqual(self.client.get('/api/auth/' + route).status_code, 405)
+            self.assertEqual(self.post(route, {**body, 'extra': True}).status_code, 422)
+
+
 @skipUnlessDBFeature('has_select_for_update')
 @override_settings(AUTH_EMAIL_ENABLED=True, EMAIL_HOST='fixture.invalid',
                    DEFAULT_FROM_EMAIL='no-reply@example.invalid', AUTH_RESEND_SECONDS=0,
                    EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class AccountConcurrencyTests(TransactionTestCase):
-    def test_verification_locks_identity_before_challenge(self):
-        from django.db import connection
+    def setUp(self):
+        from backend.authentication_tests import AUTH_FIXTURE
+        fixture = override_settings(**AUTH_FIXTURE, AUTH_RESEND_SECONDS=0)
+        fixture.enable()
+        self.addCleanup(fixture.disable)
+    def registration_start_fixture(self, identifier):
         client = Client(enforce_csrf_checks=True)
         token = client.get('/api/auth/session').json()['csrf_token']
-        result = client.post('/api/auth/challenges', json.dumps({
-            'method': 'email', 'identifier': 'lock-order@example.invalid'}),
+        result = client.post('/api/auth/register/start', json.dumps({
+            'first_name':'Fixture','last_name':'','identifier':identifier,'password':'Silver!864',
+            'agreement_acceptance':'NONPRODUCTION-FIXTURE-ONLY','invitation_code':''}),
             content_type='application/json', HTTP_X_CSRFTOKEN=token)
-        code = re.search(r'\b\d{6}\b', mail.outbox[-1].body).group()
-        locks = []
+        self.assertEqual(result.status_code,201,result.content)
+        return client,token,result.json()['flow_id']
 
+    def registration_fixture(self,identifier):
+        client,token,flow_id = self.registration_start_fixture(identifier)
+        with patch('backend.authentication.CommonClient.call_json',return_value={'Response':{'CaptchaCode':1}}):
+            result = client.post('/api/auth/captcha',json.dumps({'flow_id':flow_id,
+                'ticket':uuid.uuid4().hex,'randstr':'fixture'}),content_type='application/json',HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(result.status_code,201,result.content)
+        code = re.search(r'\b\d{6}\b',mail.outbox[-1].body).group()
+        return client, token, {'flow_id':result.json()['flow_id'],'challenge_id':result.json()['challenge_id'],
+            'code':code,'invitation_code':''}
+
+    def test_verification_locks_identity_before_challenge(self):
+        from django.db import connection
+        client, token, body = self.registration_fixture('lock-order@example.invalid')
+        locks = []
         def record(execute, sql, params, many, context):
             if 'FOR UPDATE' in sql:
                 locks.append(sql)
             return execute(sql, params, many, context)
-
         with connection.execute_wrapper(record):
-            response = client.post('/api/auth/verify', json.dumps({
-                'challenge_id': result.json()['challenge_id'], 'code': code}),
-                content_type='application/json', HTTP_X_CSRFTOKEN=token)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('backend_auththrottle', locks[0])
-        self.assertIn('backend_loginchallenge', locks[1])
+            response = client.post('/api/auth/register/verify',json.dumps(body),
+                content_type='application/json',HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code,200,response.content)
+        self.assertIn('backend_auththrottle',locks[0])
+        self.assertIn('backend_auththrottle',locks[1])
+        self.assertIn('backend_auththrottle',locks[2])
+        self.assertIn('backend_authflow',locks[3])
+        self.assertIn('backend_loginchallenge',locks[4])
+        self.assertIn('backend_auththrottle',locks[5])
+        self.assertIn('backend_authflow',locks[8])
+        self.assertIn('backend_loginchallenge',locks[9])
+
+    def test_r1_start_and_captcha_wait_for_ip_before_identity(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections,connection,transaction
+        from backend.models import AuthThrottle
+        from backend.views import digest
+        identifier = 'ip-lock-order@example.invalid'
+        original,token,flow_id = self.registration_start_fixture(identifier)
+        other = Client(enforce_csrf_checks=True)
+        other_token = other.get('/api/auth/session').json()['csrf_token']
+        ip_key,identity_key = digest('auth-ip:127.0.0.1'),digest('identity:email:'+identifier)
+        waiting = [Event(),Event()]
+        def submit(index):
+            close_old_connections()
+            def signal(execute,sql,params,many,context):
+                if 'FOR UPDATE' in sql and 'backend_auththrottle' in sql and ip_key in params:
+                    waiting[index].set()
+                return execute(sql,params,many,context)
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET lock_timeout = '5s'")
+                with connection.execute_wrapper(signal):
+                    if index == 0:
+                        return original.post('/api/auth/captcha',json.dumps({'flow_id':flow_id,
+                            'ticket':uuid.uuid4().hex,'randstr':'fixture'}),content_type='application/json',
+                            HTTP_X_CSRFTOKEN=token).status_code
+                    return other.post('/api/auth/register/start',json.dumps({'first_name':'Fixture',
+                        'last_name':'','identifier':identifier,'password':'Silver!864',
+                        'agreement_acceptance':'NONPRODUCTION-FIXTURE-ONLY','invitation_code':''}),
+                        content_type='application/json',HTTP_X_CSRFTOKEN=other_token).status_code
+            finally:
+                close_old_connections()
+        with patch('backend.authentication.CommonClient.call_json',return_value={'Response':{'CaptchaCode':1}}):
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                with transaction.atomic():
+                    AuthThrottle.objects.select_for_update().get(pk=ip_key)
+                    futures = [pool.submit(submit,index) for index in (0,1)]
+                    self.assertTrue(all(event.wait(5) for event in waiting))
+                    # Neither waiter may hold identity while waiting for IP.
+                    AuthThrottle.objects.select_for_update(nowait=True).get(pk=identity_key)
+                self.assertEqual([future.result(timeout=10) for future in futures],[201,201])
+
+    def test_r1_supplier_claim_is_committed_and_cancel_wins_during_provider_wait(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections
+        from backend.models import AuthFlow,AuthThrottle
+        from backend.views import digest
+        original,token,flow_id = self.registration_start_fixture('supplier-race@example.invalid')
+        cancel = Client(enforce_csrf_checks=True)
+        cancel.cookies = original.cookies.copy()
+        entered,release = Event(),Event()
+        ticket = uuid.uuid4().hex
+        def supplier(*args,**kwargs):
+            entered.set()
+            if not release.wait(5):
+                raise AssertionError('Supplier fixture was not released.')
+            return {'Response':{'CaptchaCode':1}}
+        def submit():
+            close_old_connections()
+            try:
+                return original.post('/api/auth/captcha',json.dumps({'flow_id':flow_id,'ticket':ticket,
+                    'randstr':'fixture'}),content_type='application/json',HTTP_X_CSRFTOKEN=token).status_code
+            finally:
+                close_old_connections()
+        with patch('backend.authentication.CommonClient.call_json',side_effect=supplier):
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(submit)
+                try:
+                    self.assertTrue(entered.wait(5))
+                    self.assertEqual(AuthFlow.objects.get(pk=flow_id).attempts,1)
+                    self.assertTrue(AuthThrottle.objects.filter(pk=digest('captcha-ticket:'+ticket)).exists())
+                    response = cancel.post('/api/auth/cancel',json.dumps({'flow_id':flow_id}),
+                        content_type='application/json',HTTP_X_CSRFTOKEN=token)
+                    self.assertEqual(response.status_code,200,response.content)
+                finally:
+                    release.set()
+                self.assertEqual(future.result(timeout=10),422)
+        self.assertFalse(LoginChallenge.objects.exists())
+        self.assertFalse(get_user_model().objects.exists())
+
+    @override_settings(INVITATION_CODES_READY=True)
+    def test_r1_invitation_row_wait_cannot_extend_registration_deadline(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections,connection,transaction
+        from backend.models import AuthFlow,InvitationCode,RegistrationAttribution
+        client,token,body = self.registration_fixture('invitation-deadline@example.invalid')
+        InvitationCode.objects.create(code='VALID123',blogger='Fixture')
+        body['invitation_code'] = 'VALID123'
+        flow = AuthFlow.objects.get(pk=body['flow_id'])
+        waiting = Event()
+        normal_now = timezone.now()
+        def submit():
+            close_old_connections()
+            def signal(execute,sql,params,many,context):
+                if 'FOR UPDATE' in sql and 'backend_invitationcode' in sql:
+                    waiting.set()
+                return execute(sql,params,many,context)
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET lock_timeout = '5s'")
+                with connection.execute_wrapper(signal):
+                    return client.post('/api/auth/register/verify',json.dumps(body),
+                        content_type='application/json',HTTP_X_CSRFTOKEN=token).status_code
+            finally:
+                close_old_connections()
+        with patch('backend.authentication.timezone.now',return_value=normal_now) as now:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                with transaction.atomic():
+                    InvitationCode.objects.select_for_update().get(pk='VALID123')
+                    future = pool.submit(submit)
+                    self.assertTrue(waiting.wait(5))
+                    now.return_value = flow.expires_at+timedelta(seconds=1)
+                self.assertEqual(future.result(timeout=10),422)
+        self.assertFalse(get_user_model().objects.exists())
+        self.assertFalse(BillingAccount.objects.exists())
+        self.assertFalse(RegistrationAttribution.objects.exists())
+        self.assertEqual(LoginChallenge.objects.get(pk=body['challenge_id']).attempts,1)
+
+    def test_r2_cleanup_and_restart_interleaving_cannot_deadlock(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections,connection,DatabaseError
+        from backend.authentication import cleanup_auth_data
+        from backend.models import AuthFlow
+        client,token,body = self.registration_fixture('cleanup-lock-order@example.invalid')
+        expired = timezone.now()-timedelta(seconds=1)
+        AuthFlow.objects.filter(pk=body['flow_id']).update(expires_at=expired)
+        LoginChallenge.objects.filter(pk=body['challenge_id']).update(expires_at=expired)
+        flow_held,release_cleanup,restart_waiting = Event(),Event(),Event()
+        def cleanup():
+            close_old_connections()
+            def pause(execute,sql,params,many,context):
+                result = execute(sql,params,many,context)
+                if sql.startswith('UPDATE "backend_authflow"'):
+                    flow_held.set()
+                    if not release_cleanup.wait(5):
+                        raise AssertionError('Cleanup fixture was not released.')
+                return result
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET lock_timeout = '2s'")
+                with connection.execute_wrapper(pause):
+                    return cleanup_auth_data(apply=True)
+            except DatabaseError:
+                return 'database_error'
+            finally:
+                close_old_connections()
+        def restart():
+            close_old_connections()
+            def signal(execute,sql,params,many,context):
+                if ('FROM "backend_authflow"' in sql and 'FOR UPDATE' in sql) or sql.startswith('UPDATE "backend_authflow"'):
+                    restart_waiting.set()
+                return execute(sql,params,many,context)
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET lock_timeout = '2s'")
+                with connection.execute_wrapper(signal):
+                    return client.post('/api/auth/register/start',json.dumps({'first_name':'Fixture',
+                        'last_name':'','identifier':'cleanup-lock-order@example.invalid','password':'Silver!864',
+                        'agreement_acceptance':'NONPRODUCTION-FIXTURE-ONLY','invitation_code':''}),
+                        content_type='application/json',HTTP_X_CSRFTOKEN=token).status_code
+            finally:
+                close_old_connections()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            cleaning = pool.submit(cleanup)
+            try:
+                self.assertTrue(flow_held.wait(5))
+                restarting = pool.submit(restart)
+                self.assertTrue(restart_waiting.wait(5))
+            finally:
+                release_cleanup.set()
+            self.assertEqual(cleaning.result(timeout=10),{'flows':1,'challenges':1})
+            self.assertEqual(restarting.result(timeout=10),201)
+        old = AuthFlow.objects.get(pk=body['flow_id'])
+        self.assertEqual(old.identifier,'')
+        self.assertIsNotNone(old.consumed_at)
+
+    def test_r2_cleanup_skips_busy_flow_and_its_challenge_then_retries(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from django.db import close_old_connections,connection,transaction
+        from backend.authentication import cleanup_auth_data
+        from backend.models import AuthFlow
+        _,_,body = self.registration_fixture('busy-cleanup@example.invalid')
+        expired = timezone.now()-timedelta(seconds=1)
+        AuthFlow.objects.filter(pk=body['flow_id']).update(expires_at=expired)
+        LoginChallenge.objects.filter(pk=body['challenge_id']).update(expires_at=expired)
+        self.assertEqual(cleanup_auth_data(),{'flows':1,'challenges':1})
+        def cleanup():
+            close_old_connections()
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("SET lock_timeout = '2s'")
+                return cleanup_auth_data(apply=True)
+            finally:
+                close_old_connections()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with transaction.atomic():
+                AuthFlow.objects.select_for_update().get(pk=body['flow_id'])
+                # OTP itself is free, but belongs to the deliberately skipped Flow.
+                self.assertEqual(pool.submit(cleanup).result(timeout=5),{'flows':0,'challenges':0})
+                self.assertTrue(LoginChallenge.objects.get(pk=body['challenge_id']).code_digest)
+            self.assertEqual(pool.submit(cleanup).result(timeout=5),{'flows':1,'challenges':1})
+        self.assertEqual(cleanup_auth_data(apply=True),{'flows':0,'challenges':0})
+
+    def settings_password_fixture(self):
+        user,identifier,client,_,_ = self.password_fixture()
+        client.force_login(user)
+        token = client.get('/api/auth/session').json()['csrf_token']
+        client.get('/api/account/sessions')
+        response = client.post('/api/auth/password-challenges',json.dumps({'identifier':identifier}),
+            content_type='application/json',HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code,201,response.content)
+        return user,client,token,{'challenge_id':response.json()['challenge_id'],
+            'code':re.search(r'\b\d{6}\b',mail.outbox[-1].body).group(),'password':'Canyon!42'}
+
+    def test_r2_settings_attempt_commits_before_business_failure_across_connections(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections,DatabaseError
+        user,client,token,body = self.settings_password_fixture()
+        old_hash = user.password
+        entered,release = Event(),Event()
+        def fail_audit(*args,**kwargs):
+            entered.set()
+            if not release.wait(5):
+                raise AssertionError('Audit fixture was not released.')
+            raise DatabaseError('fixture')
+        def reset():
+            close_old_connections()
+            try:
+                return client.post('/api/auth/password-reset',json.dumps(body),
+                    content_type='application/json',HTTP_X_CSRFTOKEN=token).status_code
+            finally:
+                close_old_connections()
+        with patch('backend.authentication.AuditEvent.objects.create',side_effect=fail_audit):
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(reset)
+                try:
+                    self.assertTrue(entered.wait(5))
+                    self.assertEqual(LoginChallenge.objects.get(pk=body['challenge_id']).attempts,1)
+                finally:
+                    release.set()
+                self.assertEqual(future.result(timeout=10),503)
+        user.refresh_from_db()
+        self.assertEqual(user.password,old_hash)
+        self.assertIsNone(LoginChallenge.objects.get(pk=body['challenge_id']).consumed_at)
+
+    def test_r2_settings_consumed_between_claim_and_business_is_rejected(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections,connections
+        user,client,token,body = self.settings_password_fixture()
+        old_hash = user.password
+        committed,release = Event(),Event()
+        def reset():
+            close_old_connections()
+            database = connections['default']
+            commit = database.commit
+            def pause_commit():
+                commit()
+                if not committed.is_set():
+                    committed.set()
+                    if not release.wait(5):
+                        raise AssertionError('Claim fixture was not released.')
+            try:
+                with patch.object(database,'commit',side_effect=pause_commit):
+                    return client.post('/api/auth/password-reset',json.dumps(body),
+                        content_type='application/json',HTTP_X_CSRFTOKEN=token).status_code
+            finally:
+                close_old_connections()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(reset)
+            try:
+                self.assertTrue(committed.wait(5))
+                self.assertEqual(LoginChallenge.objects.get(pk=body['challenge_id']).attempts,1)
+                LoginChallenge.objects.filter(pk=body['challenge_id']).update(consumed_at=timezone.now())
+            finally:
+                release.set()
+            self.assertEqual(future.result(timeout=10),422)
+        user.refresh_from_db()
+        self.assertEqual(user.password,old_hash)
 
     def test_two_verified_challenges_create_one_identity_account(self):
         from concurrent.futures import ThreadPoolExecutor
         from threading import Barrier
         from django.db import close_old_connections
-        clients, submissions = [], []
-        for _ in range(2):
-            client = Client(enforce_csrf_checks=True)
-            token = client.get('/api/auth/session').json()['csrf_token']
-            result = client.post('/api/auth/challenges', json.dumps({
-                'method': 'email', 'identifier': 'concurrent@example.invalid'}),
-                content_type='application/json', HTTP_X_CSRFTOKEN=token)
-            self.assertEqual(result.status_code, 201)
-            code = re.search(r'\b\d{6}\b', mail.outbox[-1].body).group()
-            clients.append((client, token))
-            submissions.append({'challenge_id': result.json()['challenge_id'], 'code': code})
+        fixtures = [self.registration_fixture('concurrent@example.invalid') for _ in range(2)]
         barrier = Barrier(2)
-
         def verify(index):
             close_old_connections()
             try:
                 barrier.wait(timeout=5)
-                client, token = clients[index]
-                response = client.post('/api/auth/verify', json.dumps(submissions[index]),
-                                       content_type='application/json', HTTP_X_CSRFTOKEN=token)
+                client, token, body = fixtures[index]
+                response = client.post('/api/auth/register/verify',json.dumps(body),
+                    content_type='application/json',HTTP_X_CSRFTOKEN=token)
+                return response.status_code, response.json()
+            finally:
+                close_old_connections()
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(verify,[0,1]))
+        self.assertEqual(sorted(item[0] for item in results),[200,422],results)
+        self.assertEqual(LoginIdentity.objects.count(),1)
+        self.assertEqual(BillingAccount.objects.count(),1)
+        self.assertEqual(get_user_model().objects.count(),1)
+
+    def password_fixture(self):
+        user = get_user_model().objects.create_user(username='password-concurrency-fixture',
+            password='Previous concurrency password phrase!')
+        identifier = 'password-concurrency@example.invalid'
+        LoginIdentity.objects.create(user=user, method='email', identifier=identifier)
+        account = BillingAccount.objects.create(kind='personal', personal_owner=user, name='Fixture')
+        Membership.objects.create(user=user, account=account, role='owner')
+        client = Client(enforce_csrf_checks=True)
+        token = client.get('/api/auth/session').json()['csrf_token']
+        response = client.post('/api/auth/recovery/start', json.dumps({'identifier': identifier}),
+            content_type='application/json', HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code, 201)
+        flow_id = response.json()['flow_id']
+        with patch('backend.authentication.CommonClient.call_json',return_value={'Response':{'CaptchaCode':1}}):
+            response = client.post('/api/auth/captcha',json.dumps({'flow_id':flow_id,
+                'ticket':uuid.uuid4().hex,'randstr':'fixture'}),content_type='application/json',HTTP_X_CSRFTOKEN=token)
+        code = re.search(r'\b\d{6}\b', mail.outbox[-1].body).group()
+        response = client.post('/api/auth/recovery/verify',json.dumps({'flow_id':flow_id,
+            'challenge_id':response.json()['challenge_id'],'code':code}),content_type='application/json',HTTP_X_CSRFTOKEN=token)
+        self.assertEqual(response.status_code,200,response.content)
+        return user, identifier, client, token, {'flow_id':flow_id,'password':'Canyon!42'}
+
+    def test_concurrent_password_resets_consume_code_once(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+        from django.db import close_old_connections
+        user, _, original, token, body = self.password_fixture()
+        clients = [Client(enforce_csrf_checks=True), Client(enforce_csrf_checks=True)]
+        for client in clients:
+            client.cookies = original.cookies.copy()
+        barrier = Barrier(2)
+
+        def reset(index):
+            close_old_connections()
+            try:
+                barrier.wait(timeout=5)
+                response = clients[index].post('/api/auth/recovery/complete', json.dumps(body),
+                    content_type='application/json', HTTP_X_CSRFTOKEN=token)
                 return response.status_code, response.json()
             finally:
                 close_old_connections()
 
         with ThreadPoolExecutor(max_workers=2) as pool:
-            results = list(pool.map(verify, [0, 1]))
-        self.assertEqual([item[0] for item in results], [200, 200])
-        self.assertEqual(results[0][1]['user']['id'], results[1][1]['user']['id'])
-        self.assertEqual(LoginIdentity.objects.count(), 1)
-        self.assertEqual(BillingAccount.objects.count(), 1)
+            statuses = list(pool.map(reset, [0, 1]))
+        self.assertEqual(sorted(status for status, _ in statuses), [200, 422], statuses)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password(body['password']))
+        from backend.models import AuditEvent
+        self.assertEqual(AuditEvent.objects.filter(actor=user, action='auth.password_reset').count(), 1)
+
+    def test_deletion_committing_before_waiting_reset_cannot_restore_credentials(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Event
+        from django.db import close_old_connections, connection, transaction
+        from backend.account import _lock_deletion_user, _erase_account
+        from backend.models import AccountDeletionRequest
+        user, _, client, token, body = self.password_fixture()
+        attempted = Event()
+
+        def reset():
+            close_old_connections()
+            def signal(execute, sql, params, many, context):
+                if 'FOR UPDATE' in sql and ('auth_user' in sql or 'backend_billingaccount' in sql):
+                    attempted.set()
+                return execute(sql, params, many, context)
+            try:
+                with connection.execute_wrapper(signal):
+                    return client.post('/api/auth/recovery/complete', json.dumps(body),
+                        content_type='application/json', HTTP_X_CSRFTOKEN=token).status_code
+            finally:
+                close_old_connections()
+
+        now = timezone.now()
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with transaction.atomic():
+                locked = _lock_deletion_user(user)
+                future = pool.submit(reset)
+                self.assertTrue(attempted.wait(5), 'Reset must wait for deletion account/user locks.')
+                row = AccountDeletionRequest.objects.create(user=user, policy_version='fixture',
+                    first_response_due_at=now, completion_due_at=now, retain_until=now)
+                _erase_account(locked, row)
+            self.assertEqual(future.result(timeout=10), 422)
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+        self.assertFalse(user.has_usable_password())
+        self.assertFalse(LoginIdentity.objects.filter(user=user).exists())

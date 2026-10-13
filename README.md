@@ -2,6 +2,12 @@
 
 独立中英文官网，并承接 WorldPilot 数字员工设计素材；不替代已有 Sage 仓库。
 
+## 本次代码同步核验 · 2026-10-13
+
+用户已授权核实后提交并推送现有`feat/billing-accounts`分支；不合并`main`、不部署、不开放网站。当前实现、最新验证及未完成事项以[`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md)顶部本次记录为准，下方“未提交”和测试数量保留为各历史批次事实。真实认证、正式协议、支付与场景执行分别验收，不能由GitHub提交推定完成。
+
+仓库范围为代码、根目录构建产物、测试、开发记录及明确标记的配置/协议草稿；不含密钥、环境文件、数据库、媒体、日志、`tmp/`或`dist/`。原支付PRD、支付开发计划和覆盖审查保存在独立Sage资料目录，未纳入本次代码同步；本仓库不是完整产品资料库。需部署时从确定的提交重新构建和验收，不使用本机可能陈旧的`dist/`。
+
 ## 数字员工设计素材
 
 完整素材保存在 [`digital-employees/`](digital-employees/README.md)，包含 102 位数字员工的深浅色头像、原始生成图、七种 WebP 尺寸、提示词、岗位数据、资源清单和展示组件。通过 `digital-employees/WorldPilot_Youth_Avatars.html` 预览。原始文件名和设计来源保持不变，不改写历史身份或岗位定义；新增 50 人的业务域与岗位配置状态以素材包说明为准。
@@ -10,7 +16,9 @@
 
 ## 开发与构建
 
-基于当前官网进行前后端开发前，先阅读 [`docs/WEBSITE_IMPLEMENTATION_AUDIT.md`](docs/WEBSITE_IMPLEMENTATION_AUDIT.md)。该文档区分GitHub main、本地未提交实现和静态分享能力；D01–D17为用户已确认范围，W00–W09为待开发任务、依赖与验收清单。真实支付/录屏及同伴负责的场景执行器不在本期开发范围，正式部署另行授权。
+2026-10-11当前接续：邮箱分步认证、Google三个账号分支、+86手机链及私有头像故障恢复已本地实现并独立审查；最终隔离PG550项/182.372秒/0跳过，真实本地HTTP浏览器链、迁移及完整恢复通过，准确边界见 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 顶部当日实测记录。营销页面原地球/员工紧凑目录及中英规范保留。所有生产/真实供应商门禁仍分项验收；七阶段详细步骤与统一材料/商业决策清单在同文档，不因下方旧“尚未开发”或旧分享URL推定当前状态。现有未提交基线保留，不自动commit/push/deploy。
+
+基于当前官网进行前后端开发前，先阅读 [`docs/WEBSITE_IMPLEMENTATION_AUDIT.md`](docs/WEBSITE_IMPLEMENTATION_AUDIT.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 的“各阶段详细执行顺序”及“执行中统一材料登记”。当前目标是七阶段完整商业上线；早期 W00–W09 和排除真实支付／录屏／场景执行器的说明仅为历史阶段范围。官网 D01–D17 已确认决策与支付 TODO 中尚未批准的 D02–D16 提案不是同一组，不得据此自动启用收费或推定商业规则获批。正式部署与真实供应商操作另行授权。
 
 涉及 AI 团队、企业服务、文档页面前，先阅读 [`docs/WEBSITE_PAGE_DESIGN.md`](docs/WEBSITE_PAGE_DESIGN.md) 的当前实现、[`docs/ENTERPRISE_AI_RESEARCH.md`](docs/ENTERPRISE_AI_RESEARCH.md) 及 [`design-qa.md`](design-qa.md) 最新条目。英文三页及40篇文档现已同步，岗位展示和服务方案仍不等于生产执行能力。分享站未公开后端API，下方旧独立预览记录不是当前验收。源码在 `src/pages/`，通过构建生成正式页面，不直接修改生成文件。
 
@@ -28,6 +36,10 @@ python3 -m http.server 8896 --bind 127.0.0.1
 中文入口 `index.html`，英文入口 `index-en.html`。`src/` 是可维护源码，`pages/` 和首页由构建生成，`dist/` 是发布目录。修改源码后重新构建，不直接编辑生成页面。
 
 ## 发布边界
+
+2026-10-10个人设置与密码接续：当前规范及证据以`docs/BILLING_DEVELOPMENT.md`、`docs/WEBSITE_IMPLEMENTATION_AUDIT.md`和`design-qa.md`最新条目为准。原官网导航与右侧资料布局、默认开启的未设置通知偏好、密码登录／原邮箱验证重置及全部会话撤销已本地实现和验证；真实邮箱送达、生产迁移与发布未完成。本地只读演示不代表真实账号服务已公开，历史默认通知关闭的说明已被最新规则覆盖。
+
+2026-10-09个人注销与企业停权接续：先读`docs/WEBSITE_IMPLEMENTATION_AUDIT.md`及`docs/BILLING_DEVELOPMENT.md`本日记录。两项功能独立；真实注销默认关闭，保留政策、邮件送达及人工处理运营准备未完成。下方旧状态和测试数量为历史记录，不代表本轮验证或生产开放。
 
 2026-10-06官网与账户接续状态先读 `docs/WEBSITE_IMPLEMENTATION_AUDIT.md` 与 `docs/BILLING_DEVELOPMENT.md` 顶部：个人资料、头像、会话撤销、通知偏好、咨询接收和腾讯云邮箱/短信代码已增量实现；真实发信、账号实际删除、真实任务与生产部署仍受门禁限制。后面的旧日期和测试数字为历史阶段记录，不代表本轮验证或公网能力。
 
@@ -66,3 +78,13 @@ SAGE_URL=http://127.0.0.1:8896 node tests/release-audit.cjs
 如 Playwright 安装在其他位置，设置 `PLAYWRIGHT_MODULE`。测试覆盖中英首页45批头像、六种视口尺寸、标题与地球不重叠及导航页面。
 
 维护前阅读本文件，保留中英文功能边界一致性；扩充词典时同步检查动态交互，不把内部状态键当作展示文案翻译。
+
+## 全量商业上线接续 · 2026-10-10
+
+后续上线、认证、支付或部署任务必须先读 `docs/BILLING_DEVELOPMENT.md` 末尾“全量商业上线计划与阶段1接续”及 `docs/WEBSITE_IMPLEMENTATION_AUDIT.md` 末尾同日总范围补充，再读各模块最新记录。用户已确认七阶段总计划：基线与安全 → 认证/邮箱/受限部署 → 真实支付与两个场景 → 订阅与企业管理 → 售后财务运营 → 手机号与上线素材 → 最终验收。真实支付为P0；下方阶段顺序不表示自动删减范围。上文“真实支付/录屏/执行器不在本期”仅指早期官网开发阶段，不是最终商业上线排除项。
+
+本次只追加文档，保留现有未提交代码与历史记录。阶段1本地复建和静态/计价检查通过，未commit/push/deploy。腾讯云只读核实实例在上海五区、TencentOS Server 4、16核/64GiB、500GiB系统盘；绑定安全组IPv4 `0.0.0.0/0 → ALL → 允许`，安全组层面的公网隔离尚未完成。主机监听、防火墙、其他资源关联范围及免密管理通道仍未实测；没有修改规则。限制SSH或公网之前必须先验证管理与回退通道，不能把仅保留80/443当作尚未开放网站的访问隔离。
+
+## 公网受控内测接续 · 2026-10-13
+
+用户已确认停止付费Tailscale方向，改走公网受控内测；后续访问通道/上线任务必须先读 [`drafts/restricted-deploy/public-controlled-preview-plan-20261013.md`](drafts/restricted-deploy/public-controlled-preview-plan-20261013.md) 及 `docs/BILLING_DEVELOPMENT.md` 最新记录。本次仅写计划，没有放行、部署或改DNS。用户已澄清域名仅实名或SSL通过，不能当ICP通过；上海域名网站开放须先核实备案/接入。建议准确来源/32的443加HTTPS入口口令，不开放SSH/数据库/内部端口，不把共享代理IP当设备身份。仅改变七阶段计划中的访问方案，真实支付、两个真实场景及最终商业验收仍独立保留。历史全允许、安全组未隔离等文字是先前快照，不能当当前云端状态；执行前重新只读核实。

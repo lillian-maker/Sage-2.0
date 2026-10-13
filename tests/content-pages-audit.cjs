@@ -138,6 +138,8 @@ for(const name of ['team','enterprise','pricing','docs','trial','auth']){
 }
 assert.ok(read('src/pages/content-pages.css').includes('grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)'));
 assert.ok(read('src/visual-draft.css').includes('grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)'));
-assert.ok(read('src/pages/auth.js').includes('首次验证成功后创建账户，已有账户直接登录。'));
+// The approved stepped registration requires a password; anonymous OTP-only
+// creation is obsolete. Reuse the stricter current API/password/storage audit.
+require('./website-account-contract.cjs');
 assert.ok(!read('src/pages/auth.js').includes('class="back-link auth-back"'));
 console.log(JSON.stringify({scope:'static source/build contracts; not browser or production',pages:7,sharedRoutes:sharedRoutes.length,portraits:50,domains:8,scenes:9,stages,articles:slugs.length,result:'passed'},null,2));

@@ -1,10 +1,11 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>登录 · Sage</title><link rel="stylesheet" href="billing.css?v=747fc0f5c789"><script src="auth.js?v=3c5f55c91d80" defer></script><link rel="stylesheet" href="content-pages.css?v=10f07fb19f64"><script src="site-shell.js?v=d7d771dfb6d7" defer></script></head><body data-auth-page><div id="auth-root"><p class="loading" role="status">正在连接账户服务…</p></div><noscript>请启用 JavaScript。未验证身份前不会开通账户。</noscript><style>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>登录 · Sage</title><link rel="stylesheet" href="auth.css?v=e91d2c9f160f"><script src="auth.js?v=916dc87cd1bf" defer></script><link rel="stylesheet" href="content-pages.css?v=dfb6f3f6f91a"><script src="site-shell.js?v=0c5460bfc23b" defer></script></head><body data-auth-page><div id="auth-root"><p class="loading" role="status">正在连接账户服务…</p></div><noscript>请启用 JavaScript。未验证身份前不会开通账户。</noscript><style>
 .sage-language{position:relative;display:inline-flex;flex-shrink:0;color:inherit}
 .sage-language .sage-language-toggle{width:44px;height:44px;padding:10px;display:grid;place-items:center;border:1px solid transparent;border-radius:8px;background:transparent;color:inherit;cursor:pointer;touch-action:manipulation}
 .sage-language-toggle svg{width:24px;height:24px;display:block}
 .sage-language .sage-language-toggle:hover,.sage-language .sage-language-toggle[aria-expanded="true"]{background:rgba(145,150,158,.15)}
 .sage-language .sage-language-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:1000;width:184px;max-width:calc(100vw - 32px);padding:6px;margin:0;border:1px solid #e4e9ef;border-radius:10px;background:#fff;color:#202b38;box-shadow:0 8px 28px #14243a14,0 2px 6px #14243a08;list-style:none;text-align:left}
 .sage-language-menu[hidden]{display:none}
+.sage-language-menu::before{content:'';position:absolute;left:0;right:0;top:-9px;height:9px}
 .sage-language .sage-language-menu a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:44px;padding:10px 12px;border:0;border-radius:6px;font:400 14px/1.5 Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#526171;text-decoration:none;white-space:nowrap;letter-spacing:0}
 .sage-language .sage-language-menu a:hover{background:#f4f7fb;color:#202b38}
 .sage-language .sage-language-menu a[aria-current="true"]{background:#edf3f9;color:#396397;font-weight:500}
@@ -31,7 +32,10 @@
  document.addEventListener('sage:location-updated',syncLinks);
  window.addEventListener('popstate',syncLinks);
  function close(restore=false){menu.hidden=true;button.setAttribute('aria-expanded','false');if(restore)button.focus();}
- button.addEventListener('click',()=>{syncLinks();const open=menu.hidden;menu.hidden=!open;button.setAttribute('aria-expanded',String(open));});
+ function open(){syncLinks();menu.hidden=false;button.setAttribute('aria-expanded','true');}
+ root.addEventListener('pointerenter',event=>{if(event.pointerType==='mouse')open();});
+ root.addEventListener('pointerleave',event=>{if(event.pointerType==='mouse'&&!menu.contains(document.activeElement))close();});
+ button.addEventListener('click',event=>{if(event.pointerType==='mouse'){open();return;}if(menu.hidden)open();else close();});
  button.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();event.stopPropagation();menu.hidden=false;button.setAttribute('aria-expanded','true');links[0].focus();}});
  root.addEventListener('keydown',event=>{
    if(event.key==='Escape'){event.preventDefault();close(true);}
@@ -39,6 +43,7 @@
    if(i>=0&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();links[(i+(event.key==='ArrowDown'?1:links.length-1))%links.length].focus();}
  });
  document.addEventListener('click',event=>{if(!root.contains(event.target))close();});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented&&!menu.hidden){event.preventDefault();close(true);}});
  root.addEventListener('focusout',event=>{if(event.relatedTarget&&!root.contains(event.relatedTarget))close();});
  }
  initialize();

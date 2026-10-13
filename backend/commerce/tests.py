@@ -388,6 +388,109 @@ class CommerceTests(TransactionTestCase):
         self.assertEqual(credits_summary(self.account)['consumed'],'0')
         self.assertEqual(credits_summary(self.account)['reserved'],'5')
 
+    def test_task_cost_legacy_events_remain_unclassified(self):
+        from .billing import record_task_cost, task_cost_summary
+        from .models import TaskCostEvent
+        self.grant()
+        task = reserve_credits(self.account,'cost-legacy','5')
+        values = dict(source='fixture-model',event_key='legacy',resource='fixture-resource',
+            usage={'input_tokens':'12'},retry_index=0,outcome='succeeded',cost_amount='0.1',
+            currency='CNY',occurred_at=self.now,evidence_hash='a'*64)
+        event = record_task_cost(self.account,task['id'],**values)
+        row = TaskCostEvent.objects.get(pk=event['id'])
+        before = (row.payload.copy(),row.request_hash,credits_summary(self.account))
+        summary = task_cost_summary(self.account,task['id'])
+        self.assertIn('billing_breakdown',summary)
+        self.assertEqual(summary['billing_breakdown'],{
+            'task_usage':{'event_count':0,'unknown_cost_events':0,'costs':{}},
+            'sage_fault':{'event_count':0,'unknown_cost_events':0,'costs':{}},
+            'unclassified':{'event_count':1,'unknown_cost_events':0,'costs':{'CNY':'0.1'}}})
+        self.assertNotIn('billing_category',row.payload)
+        self.assertEqual(event,record_task_cost(self.account,task['id'],**values))
+        row.refresh_from_db()
+        self.assertEqual((row.payload,row.request_hash,credits_summary(self.account)),before)
+
+    def test_task_cost_breakdown_separates_usage_and_sage_fault_without_debits(self):
+        from django.test.utils import CaptureQueriesContext
+        from .billing import record_task_cost, task_cost_summary
+        self.grant()
+        task = reserve_credits(self.account,'cost-breakdown','5')
+        before = (credits_summary(self.account),CreditEntry.objects.count())
+        values = dict(source='fixture-model',resource='fixture-resource',usage={'api_calls':'1'},
+            retry_index=1,occurred_at=self.now,evidence_hash='a'*64)
+        for key,category,cost,currency,outcome in (
+                ('cancel','task_usage','0.1','CNY','cancelled'),
+                ('partial','task_usage','0.2','CNY','failed'),
+                ('foreign','task_usage','2','USD','succeeded'),
+                ('fault','sage_fault','0.4','CNY','failed'),
+                ('unknown','sage_fault',None,None,'succeeded')):
+            record_task_cost(self.account,task['id'],event_key=key,billing_category=category,
+                cost_amount=cost,currency=currency,outcome=outcome,**values)
+        with CaptureQueriesContext(connection) as queries:
+            summary = task_cost_summary(self.account,task['id'])
+        self.assertEqual(summary,{'event_count':5,'unknown_cost_events':1,
+            'costs':{'CNY':'0.7','USD':'2'},'billing_breakdown':{
+                'task_usage':{'event_count':3,'unknown_cost_events':0,'costs':{'CNY':'0.3','USD':'2'}},
+                'sage_fault':{'event_count':2,'unknown_cost_events':1,'costs':{'CNY':'0.4'}},
+                'unclassified':{'event_count':0,'unknown_cost_events':0,'costs':{}}}})
+        self.assertFalse(any(q['sql'].lstrip().upper().startswith(('INSERT','UPDATE','DELETE')) for q in queries))
+        self.assertEqual((credits_summary(self.account),CreditEntry.objects.count()),before)
+
+    def test_task_cost_billing_category_rejects_invalid_values_and_replay_changes(self):
+        from .billing import record_task_cost
+        from .models import TaskCostEvent
+        self.grant()
+        task = reserve_credits(self.account,'cost-category','5')
+        values = dict(source='fixture-model',event_key='call',resource='fixture-resource',usage={'input_tokens':'1'},
+            retry_index=0,outcome='failed',cost_amount=None,currency=None,occurred_at=self.now,evidence_hash='a'*64)
+        for category in ('','unclassified','billable',True,[],{}):
+            with self.subTest(category=category), self.assertRaisesRegex(ValueError,'INVALID_COST_EVENT'):
+                record_task_cost(self.account,task['id'],billing_category=category,**values)
+        self.assertEqual(TaskCostEvent.objects.count(),0)
+        event = record_task_cost(self.account,task['id'],billing_category='sage_fault',**values)
+        self.assertEqual(event,record_task_cost(self.account,task['id'],billing_category='sage_fault',**values))
+        for category in ('task_usage',None):
+            with self.assertRaisesRegex(ValueError,'IDEMPOTENCY_CONFLICT'):
+                record_task_cost(self.account,task['id'],billing_category=category,**values)
+        with self.assertRaisesRegex(ValueError,'NOT_FOUND'):
+            record_task_cost(self.other,task['id'],billing_category='task_usage',**values)
+        self.assertEqual(TaskCostEvent.objects.count(),1)
+
+    def test_task_cost_completion_retains_billing_category_after_settlement(self):
+        from .billing import record_task_cost, complete_task_cost, task_cost_summary
+        from .models import TaskCostEvent
+        self.grant()
+        task = reserve_credits(self.account,'cost-classified-completion','5')
+        settle_credits(self.account,task['id'],'2')
+        before = (credits_summary(self.account),CreditEntry.objects.count())
+        event = record_task_cost(self.account,task['id'],source='fixture-model',event_key='call',
+            resource='fixture-resource',usage={'input_tokens':'1'},retry_index=1,outcome='failed',
+            cost_amount=None,currency=None,occurred_at=self.now,evidence_hash='a'*64,billing_category='sage_fault')
+        complete_task_cost(self.account,event['id'],source='fixture-model',request_key='receipt',
+            cost_amount='0.123456789012345678901',currency='CNY',occurred_at=self.now,evidence_hash='b'*64)
+        summary = task_cost_summary(self.account,task['id'])
+        self.assertEqual(summary['billing_breakdown']['sage_fault'],{'event_count':1,'unknown_cost_events':0,
+            'costs':{'CNY':'0.123456789012345678901'}})
+        self.assertEqual(summary['billing_breakdown']['task_usage']['costs'],{})
+        self.assertEqual(TaskCostEvent.objects.get(pk=event['id']).payload['billing_category'],'sage_fault')
+        self.assertEqual((credits_summary(self.account),CreditEntry.objects.count()),before)
+
+    def test_task_cost_summary_rejects_corrupt_billing_category(self):
+        from .billing import record_task_cost, task_cost_summary
+        from .models import TaskCostEvent
+        self.grant()
+        task = reserve_credits(self.account,'cost-corrupt-category','5')
+        event = record_task_cost(self.account,task['id'],source='fixture-model',event_key='call',
+            resource='fixture-resource',usage={'input_tokens':'1'},retry_index=0,outcome='succeeded',
+            cost_amount='0.1',currency='CNY',occurred_at=self.now,evidence_hash='a'*64)
+        row = TaskCostEvent.objects.get(pk=event['id'])
+        for category in ('unknown',None,True,[],{}):
+            # Simulate storage corruption; normal model writes are immutable.
+            TaskCostEvent.objects.filter(pk=row.pk).update(payload={**row.payload,'billing_category':category})
+            with self.subTest(category=category), self.assertRaisesRegex(ValueError,'INVALID_COST_EVENT'):
+                task_cost_summary(self.account,task['id'])
+        self.assertEqual(credits_summary(self.account)['consumed'],'0')
+
     def test_task_cost_unknown_and_late_retry_remain_separate_from_user_charge(self):
         from .billing import record_task_cost, task_cost_summary
         self.grant()
@@ -618,7 +721,11 @@ class CommerceTests(TransactionTestCase):
         self.assertEqual(TaskCostEvent.objects.count(),3)
         self.assertEqual(TaskCostCompletion.objects.count(),1)
         self.assertEqual(task_cost_summary(self.account,task['id']),{'event_count':3,'unknown_cost_events':0,
-            'costs':{'CNY':'0.100000000000000000000000000001','USD':'2'}})
+            'costs':{'CNY':'0.100000000000000000000000000001','USD':'2'},'billing_breakdown':{
+                'task_usage':{'event_count':0,'unknown_cost_events':0,'costs':{}},
+                'sage_fault':{'event_count':0,'unknown_cost_events':0,'costs':{}},
+                'unclassified':{'event_count':3,'unknown_cost_events':0,
+                    'costs':{'CNY':'0.100000000000000000000000000001','USD':'2'}}}})
 
     def test_task_cost_completion_rejects_conflicts_known_cost_and_cross_account(self):
         from .billing import record_task_cost, complete_task_cost, task_cost_summary
@@ -1058,6 +1165,95 @@ class BillingFactsTests(TransactionTestCase):
         call_command('report_billing_facts', stdout=output, **options)
         return json.loads(output.getvalue())
 
+    def cost_task(self):
+        grant_credits(self.account, 'purchased', 'facts-cost', '10', timezone.now()+timedelta(days=2))
+        return reserve_credits(self.account, 'facts-task', '5')['id']
+
+    def test_task_lookup_observes_exact_categories_completions_without_exposing_events(self):
+        from .billing import record_task_cost, complete_task_cost
+        task = self.cost_task()
+        values = dict(source='private-provider', resource='private-resource',
+            usage={'input_tokens':'1'}, retry_index=0, outcome='failed',
+            occurred_at=self.start, evidence_hash='a'*64)
+        for key, category, amount, currency in (
+            ('usage-a','task_usage','0.1','CNY'), ('usage-b','task_usage','0.2','CNY'),
+            ('foreign','task_usage','2','USD'), ('unknown','task_usage',None,None),
+            ('legacy',None,'0.000000000000000000000001','CNY'),
+            ('completion','sage_fault',None,None)):
+            event = record_task_cost(self.account, task, event_key=key, billing_category=category,
+                cost_amount=amount, currency=currency, **values)
+        complete_task_cost(self.account, event['id'], source='private-provider', request_key='private-receipt',
+            cost_amount='0.123456789012345678901', currency='USD',
+            occurred_at=self.start, evidence_hash='b'*64)
+        result = self.report(task=task, start=None, end=None)
+        self.assertEqual(result, {'account_id':str(self.account.pk), 'reservation_id':task,
+            'scope':'current_internal_task_cost_observation_not_credits_charge',
+            'event_count':6, 'unknown_cost_events':1,
+            'costs':{'CNY':'0.300000000000000000000001','USD':'2.123456789012345678901'},
+            'billing_breakdown':{
+                'task_usage':{'event_count':4,'unknown_cost_events':1,'costs':{'CNY':'0.3','USD':'2'}},
+                'sage_fault':{'event_count':1,'unknown_cost_events':0,'costs':{'USD':'0.123456789012345678901'}},
+                'unclassified':{'event_count':1,'unknown_cost_events':0,'costs':{'CNY':'0.000000000000000000000001'}}}})
+
+    def test_task_lookup_repeated_reads_are_select_only_and_do_not_change_credits(self):
+        from django.test.utils import CaptureQueriesContext
+        task = self.cost_task()
+        before = (credits_summary(self.account), list(CreditEntry.objects.values()),
+                  list(Reservation.objects.values()))
+        with CaptureQueriesContext(connection) as queries:
+            first = self.report(task=task, start=None, end=None)
+            second = self.report(task=task, start=None, end=None)
+        self.assertEqual(first, second)
+        self.assertEqual(first['event_count'], 0)
+        self.assertEqual(first['unknown_cost_events'], 0)
+        self.assertEqual(first['costs'], {})
+        self.assertEqual(set(first['billing_breakdown']), {'task_usage','sage_fault','unclassified'})
+        self.assertTrue(queries.captured_queries)
+        for query in queries.captured_queries:
+            self.assertRegex(query['sql'].strip(), r'^SELECT\b')
+            self.assertNotRegex(query['sql'], r'(?i)\bFOR\s+(?:UPDATE|SHARE|NO\s+KEY|KEY\s+SHARE)\b')
+        self.assertEqual((credits_summary(self.account), list(CreditEntry.objects.values()),
+                         list(Reservation.objects.values())), before)
+
+    def test_task_lookup_rejects_missing_or_cross_account_tasks_and_invalid_ids(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        from uuid import uuid4
+        task = self.cost_task()
+        for options, message in (
+            ({'task':str(uuid4())}, 'LOOKUP_NOT_FOUND'),
+            ({'task':task,'account':str(self.other.pk)}, 'LOOKUP_NOT_FOUND'),
+            ({'task':'invalid'}, 'INVALID_LOOKUP_REFERENCE'),
+            ({'task':task,'account':str(uuid4())}, 'ACCOUNT_NOT_FOUND'),
+            ({'task':task,'account':'invalid'}, 'invalid UUID')):
+            with self.subTest(options=options), self.assertRaisesRegex(CommandError, message):
+                self.report(start=None, end=None, **options)
+        with self.assertRaises(CommandError):
+            call_command('report_billing_facts', task=task)
+
+    def test_task_lookup_rejects_conflicting_selectors_and_window_options(self):
+        from django.core.management.base import CommandError
+        task = self.cost_task()
+        for changes in ({'order':task}, {'refund':task}, {'transaction_reference':'private'},
+                        {'start':self.start.isoformat()}, {'end':self.end.isoformat()},
+                        {'include_age':True}):
+            with self.subTest(changes=changes), self.assertRaisesRegex(CommandError, 'INVALID_LOOKUP_MODE'):
+                self.report(**{'task':task,'start':None,'end':None,**changes})
+
+    def test_task_lookup_rejects_corrupt_categories_as_command_errors(self):
+        from django.core.management.base import CommandError
+        from .billing import record_task_cost
+        from .models import TaskCostEvent
+        task = self.cost_task()
+        event = record_task_cost(self.account, task, source='fixture', event_key='corrupt', resource='fixture',
+            usage={'api_calls':'1'}, retry_index=0, outcome='succeeded', cost_amount=None,
+            currency=None, occurred_at=self.start, evidence_hash='a'*64)
+        row = TaskCostEvent.objects.get(pk=event['id'])
+        for category in ('invalid', None, True, [], {}):
+            TaskCostEvent.objects.filter(pk=row.pk).update(payload={**row.payload,'billing_category':category})
+            with self.subTest(category=category), self.assertRaisesRegex(CommandError, 'INVALID_COST_EVENT'):
+                self.report(task=task, start=None, end=None)
+
     def test_empty_account_has_explicit_scope_and_no_invented_rates(self):
         result = self.report()
         self.assertEqual(result['account_id'], str(self.account.pk))
@@ -1372,9 +1568,32 @@ class CommerceConcurrencyTests(TransactionTestCase):
         happened = timezone.now()
         results = self.parallel(lambda: record_task_cost(self.account,task['id'],source='fixture-model',event_key='same',
             resource='fixture-resource',usage={'input_tokens':'100'},retry_index=0,outcome='succeeded',
-            cost_amount='0.1',currency='CNY',occurred_at=happened,evidence_hash='a'*64))
+            cost_amount='0.1',currency='CNY',occurred_at=happened,evidence_hash='a'*64,billing_category='sage_fault'))
         self.assertEqual(results[0]['id'],results[1]['id'])
         self.assertEqual(task_cost_summary(self.account,task['id'])['costs'],{'CNY':'0.1'})
+        self.assertEqual(task_cost_summary(self.account,task['id'])['billing_breakdown']['sage_fault'],
+            {'event_count':1,'unknown_cost_events':0,'costs':{'CNY':'0.1'}})
+        self.assertEqual(credits_summary(self.account)['consumed'],'0')
+
+    def test_parallel_conflicting_task_cost_categories_cannot_both_win(self):
+        from .billing import record_task_cost, task_cost_summary
+        from .models import TaskCostEvent
+        grant_credits(self.account,'purchased','source','10',timezone.now()+timedelta(days=1))
+        task = reserve_credits(self.account,'cost-category-race','5')
+        happened = timezone.now()
+        categories = iter(('task_usage','sage_fault'))
+        results = self.parallel(lambda: record_task_cost(self.account,task['id'],source='fixture-model',event_key='same',
+            resource='fixture-resource',usage={'input_tokens':'100'},retry_index=0,outcome='succeeded',
+            cost_amount='0.1',currency='CNY',occurred_at=happened,evidence_hash='a'*64,
+            billing_category=next(categories)))
+        self.assertEqual(sum(isinstance(result,dict) for result in results),1)
+        self.assertIn('IDEMPOTENCY_CONFLICT',results)
+        self.assertEqual(TaskCostEvent.objects.count(),1)
+        winner = TaskCostEvent.objects.get().payload['billing_category']
+        summary = task_cost_summary(self.account,task['id'])
+        self.assertEqual(summary['costs'],{'CNY':'0.1'})
+        self.assertEqual(summary['billing_breakdown'][winner]['costs'],{'CNY':'0.1'})
+        self.assertEqual(summary['event_count'],1)
         self.assertEqual(credits_summary(self.account)['consumed'],'0')
 
     def test_parallel_task_cost_completion_replay_creates_one_receipt(self):
@@ -1391,7 +1610,10 @@ class CommerceConcurrencyTests(TransactionTestCase):
         self.assertEqual(results[0]['id'],results[1]['id'])
         self.assertEqual(TaskCostCompletion.objects.count(),1)
         self.assertEqual(task_cost_summary(self.account,task['id']),
-            {'event_count':1,'unknown_cost_events':0,'costs':{'CNY':'0.1'}})
+            {'event_count':1,'unknown_cost_events':0,'costs':{'CNY':'0.1'},'billing_breakdown':{
+                'task_usage':{'event_count':0,'unknown_cost_events':0,'costs':{}},
+                'sage_fault':{'event_count':0,'unknown_cost_events':0,'costs':{}},
+                'unclassified':{'event_count':1,'unknown_cost_events':0,'costs':{'CNY':'0.1'}}}})
         self.assertEqual(credits_summary(self.account)['consumed'],'0')
 
     def test_parallel_conflicting_task_cost_completions_cannot_both_win(self):

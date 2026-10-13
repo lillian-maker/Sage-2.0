@@ -2,6 +2,25 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const read = name => fs.readFileSync(new URL('../' + name, 'file://' + __filename), 'utf8');
 const shell = read('src/pages/site-shell.js');
+assert.ok(shell.includes("menu.addEventListener('pointerenter'"), 'Account menus open on mouse hover');
+assert.ok(!shell.includes("link.textContent='咨询和演示'"), 'Shared shell must not rewrite download links into consultation');
+const language=read('src/language-switch.html');
+assert.ok(language.includes("root.addEventListener('pointerenter'"), 'Language menu opens on mouse hover');
+assert.ok(language.includes("event.pointerType==='mouse'"), 'Touch interaction keeps the click alternative');
+assert.ok(language.includes("event.key==='Escape'"), 'Language menu supports keyboard dismissal');
+assert.ok(!read('src/pages/content-pages.css').includes('summary::after'), 'Account name has no dropdown arrow');
+assert.ok(read('src/pages/content-pages.css').includes('.nav-account:not([open])>.account-dropdown{display:none}'), 'Closed account dropdown must not retain overflow geometry');
+assert.ok(read('src/pages/content-pages.css').includes('.nav-account .account-dropdown{right:0;max-width:calc(100vw - 32px)}'), 'Account dropdown stays within the narrow viewport');
+for(const name of ['index.template.html','pages/profile.html','pages/trial.html']){
+ const header=read('src/'+name).match(/<header\b[\s\S]*?<\/header>/)[0];
+ assert.ok(header.includes('download.html'), `${name}: navigation links to download`);
+ assert.ok(!header.includes('咨询和演示'), `${name}: consultation stays out of the top navigation`);
+}
+for(const name of ['billing']){
+ const header=read('src/pages/'+name+'.js').match(/<header\b[\s\S]*?<\/header>/)[0];
+ assert.ok(header.includes("page('download')"), `${name}: bilingual download route`);
+ assert.ok(!header.includes('咨询和演示'), `${name}: navigation download replaces consultation`);
+}
 assert.ok(shell.includes("fetch('/api/consultations'"), 'Shared consultation must persist through the API');
 assert.ok(shell.includes("'Idempotency-Key'"), 'Unknown submit outcomes must retain the same request identity');
 assert.ok(shell.includes("receipt_id"), 'Do not display success without a saved receipt');
@@ -11,5 +30,41 @@ for (const route of ['/api/account/profile','/api/account/sessions','/api/accoun
 assert.ok(profile.includes('示例数据 · 不产生实际扣费'));
 assert.ok(profile.includes("navigator.clipboard.writeText"));
 assert.ok(profile.includes("other_sessions:true"));
-assert.ok(!profile.includes("fetch('/api/account/delete'"), 'Deletion must remain gated until retention policy is approved');
+for (const route of ['/api/account/deletion-eligibility','/api/account/deletion-challenges','/api/account/delete']) assert.ok(profile.includes(route), route);
+assert.ok(profile.includes('policy_version'), 'Deletion must submit the reviewed policy version');
+assert.ok(profile.includes('available'), 'Deletion UI must honor server availability');
+const profilePage=read('src/pages/profile.html');
+assert.ok(!profilePage.includes('返回官网'), 'Personal settings keeps the original site navigation');
+for(const link of ['team.html','enterprise.html','pricing.html','docs.html'])assert.ok(profilePage.includes(link),link);
+assert.ok(profile.includes("toggle.setAttribute('role','switch')"));
+const auth=read('src/pages/auth.js');
+const policyBody=shell.match(/window\.sagePasswordError=value=>\{([\s\S]*?)\n \};/);
+assert.ok(policyBody,'Auth and profile share one new-password policy');
+const policy=require('node:vm').runInNewContext('(value=>{'+policyBody[1]+'})',{text:(zh)=>zh});
+for(const value of ['Aa9!pqr','Aa9!pqrstuvwxyz012','aa9!pqrs','AA9!PQRS','Aa!!pqrs','Aa99pqrs','Aa9!中文qr','Aa9!😀pqr',null,42])assert.ok(policy(value),'Reject invalid new passwords');
+for(const code of [...Array(33).keys(),127])assert.ok(policy('Aa9!pqrs'+String.fromCharCode(code)),'Reject every ASCII control/space, including trailing LF');
+for(const value of ['Aa9!pqrs\u00a0','Aa9!pqrs\ufeff','Aa9!pqrs\u200b'])assert.ok(policy(value),'Reject non-ASCII whitespace and invisible characters');
+for(let code=33;code<=126;code++)if(!/[A-Za-z0-9]/.test(String.fromCharCode(code)))assert.equal(policy('Aa9'+String.fromCharCode(code)+'pqrs'),'');
+assert.equal(policy('Aa9!pqrs'),'');assert.equal(policy('Az4!pqrsUV8@abcd'),'');
+for(const source of [auth,profile]){assert.ok(source.includes('window.sagePasswordError'));assert.ok(!source.includes('password_confirmation'));assert.ok(!source.includes('确认新密码'));}
+for(const route of ['/api/auth/register/start','/api/auth/register/verify','/api/auth/password-login','/api/auth/captcha','/api/auth/recovery/start','/api/auth/recovery/verify','/api/auth/recovery/complete','/api/auth/resend','/api/auth/cancel'])assert.ok(auth.includes(route),route);
+for(const route of ['/api/auth/challenges','/api/auth/verify','/api/auth/password-challenges','/api/auth/password-reset'])assert.ok(!auth.includes("'"+route+"'"),'Anonymous auth does not call '+route);
+for(const route of ['/api/auth/password-challenges','/api/auth/password-reset'])assert.ok(profile.includes(route),'Existing authenticated settings keeps '+route);
+assert.ok(auth.includes('class="auth-heading"')&&!auth.includes('class="billing-nav"'),'Isolated approved auth heading has no marketing navigation');
+assert.ok(read('src/pages/auth.html').includes('auth.css'),'Auth uses its own approved card styling');
+assert.ok(auth.includes('registration_terms_url')&&auth.includes('registration_privacy_url'),'Actual legal URLs gate registration');
+assert.ok(!auth.includes("page('docs')"),'Product docs are not legal text');
+assert.ok(!auth.includes('localStorage')&&!auth.includes('sessionStorage'),'No application credential storage');
+assert.ok(auth.includes('https://turing.captcha.qcloud.com/TJCaptcha.js')&&auth.includes("startsWith('trerror_')"),'Official lazy CAPTCHA loader rejects fallback tickets');
+assert.ok(auth.includes('aria-describedby="auth-captcha-notice"')&&auth.includes('https://rule.tencent.com/rule/202402210001'),'CAPTCHA button describes the provider notice and official privacy rules before loading');
+assert.ok(auth.includes('one-time-code')&&auth.includes('new-password')&&auth.includes('current-password')&&auth.includes('autocomplete="username"'),'Native password-manager semantics');
+assert.ok(!auth.includes('maxlength="16"'),'Generated or pasted passwords cannot be silently truncated');
+assert.ok(auth.includes('form.requestSubmit()')&&auth.includes('if(busy||submit.disabled)return'),'Six-digit auto-submit keeps the request guard');
+assert.ok(auth.includes('safeReturn'), 'Password sign-in must retain the same-origin redirect allowlist');
+const redirectBody=auth.slice(auth.indexOf('  function safeReturn('),auth.indexOf('  const destination='));
+const redirect=require('node:vm').runInNewContext('(value=>{'+redirectBody+'return safeReturn(value);})',{
+ location:{href:'http://127.0.0.1/pages/auth.html',origin:'http://127.0.0.1'},home:'../index.html',en:false,page:name=>name+'.html',URL});
+for(const value of ['https://outside.invalid','//outside.invalid','javascript:alert(1)','/pages/profile.html\\outside','/pages/profile.html\n','/pages/%5cprofile.html','/pages/unknown.html','/api/auth/session'])assert.equal(redirect(value),'../index.html','Reject unsafe or unapproved return');
+assert.equal(redirect('/pages/profile.html#usage'),'/pages/profile.html#usage');
+assert.equal(redirect('trial'),'/pages/trial.html');
 console.log('Website account source contracts passed');

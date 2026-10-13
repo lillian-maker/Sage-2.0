@@ -12,14 +12,15 @@ const subscriptionId = '44444444-4444-4444-8444-444444444444';
 const lifecycleQuoteId = '77777777-7777-4777-8777-777777777777';
 const makeSubscription = () => ({id:subscriptionId,plan_code:'pro',billing_cycle:'annual',status:'active',period_start:'2026-01-31T01:00:00+08:00',period_end:'2027-01-31T01:00:00+08:00',next_credit_grant_at:'2026-10-31T01:00:00+08:00',prepaid_through:'2028-01-31T01:00:00+08:00',auto_renew:true,cancellation_state:'none',can_cancel:true,capabilities:{cancel:true,upgrade:false,payment_method:false}});
 const accounts = [{id:one,kind:'personal',name:'Fixture personal',role:'owner'},{id:two,kind:'business',name:'Fixture business',role:'billing_admin'}];
-const makeSession = (authenticated = true, active = one) => ({authenticated,user:authenticated ? {id:'fixture-user',display_name:'Fixture user',masked_identifier:'f***@example.test'} : null,accounts:authenticated ? accounts : [],active_account_id:authenticated ? active : null,csrf_token:'fixture-only-csrf',capabilities:{email_login:true,phone_login:true,procurement:true}});
+const makeSession = (authenticated = true, active = one) => ({authenticated,user:authenticated ? {id:'fixture-user',display_name:'Fixture user',masked_identifier:'f***@example.test'} : null,accounts:authenticated ? accounts : [],active_account_id:authenticated ? active : null,csrf_token:'fixture-only-csrf',capabilities:{email_login:false,phone_login:false,password_login:true,password_reset:false,email_registration:false,captcha:true,captcha_app_id:'123',google_login:false,google_registration:false,registration_terms_version:null,registration_terms_url:null,registration_privacy_url:null,procurement:true}});
 const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id),subscription:null,credits:{available:id === one ? '0.00' : '27.25',reserved:'0.00',frozen:'0.00',consumed:'0.00',expired:'0.00',refunded:'0.00',batches:[]},orders:[],invoice_requests:[],payment_methods:[],capabilities:{subscription:false,invoices:false,payment_methods:false}});
 (async () => {
   const browser = await chromium.launch({channel:'chrome'});
   const page = await browser.newPage(); page.setDefaultTimeout(7000);
   const errors = [], writes = [], checks = [], apiRequests = [];
   page.on('pageerror', error => errors.push(error.message));
-  let state = makeSession(), accountFails = false, logoutFails = false, wrongAccount = false, oldAccountDelay = false, withOrder = false, verifyFails = false, changedAccount = false, expiredPurchase = false, oldAccountUnauthorized = false, orderPhase = 'pending_payment';
+  let state = makeSession(), sessionFails = false, accountFails = false, logoutFails = false, wrongAccount = false, oldAccountDelay = false, withOrder = false, loginFails = false, captchaFails = false, changedAccount = false, expiredPurchase = false, oldAccountUnauthorized = false, orderPhase = 'pending_payment';
+  let loginFlow = null, loginFlowId = 0;
   let inquiries = [];
   let delayedInquiry = null, releaseInquiry = null, inquiryPostUnknown = false;
   let subscriptionsEnabled = true, subscriptions = [makeSubscription()], subscriptionsFail = false, cancelFail = false, delaySubscriptions = false;
@@ -33,11 +34,18 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
   let trialRecord = {eligibility:'available',attempt:null}, trialFails = false, trialReads = 0, delayedTrial = null;
   let heldSelection = null, heldLogout = null, heldAccount = null, sessionReads = 0;
   const cancelPath = `/api/billing/subscriptions/${subscriptionId}/cancel`;
-  await page.route('**/billing.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.js'),'utf8')}));
-  await page.route('**/billing.css',route=>route.fulfill({contentType:'text/css',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.css'),'utf8')}));
+  const sourceAssetHits = {};
+  for (const name of ['billing.js','billing.css','auth.js','auth.css','experience.css']) {
+    sourceAssetHits[name] = 0;
+    await page.route(new RegExp(`/${name.replace('.', '\\.')}(?:\\?.*)?$`),route=>{
+      sourceAssetHits[name]++;
+      return route.fulfill({contentType:name.endsWith('.js')?'text/javascript':'text/css',body:fs.readFileSync(path.join(__dirname,'../src/pages',name),'utf8')});
+    });
+  }
   await page.route(/\/experience(?:-en)?\.js(?:\?.*)?$/,route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/experience.js'),'utf8')}));
-  await page.route('**/experience.css',route=>route.fulfill({contentType:'text/css',body:fs.readFileSync(path.join(__dirname,'../src/pages/experience.css'),'utf8')}));
-  await page.route('**/auth.js',route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/auth.js'),'utf8')}));
+  await page.route(/\/site-shell(?:-en)?\.js(?:\?.*)?$/,route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/site-shell.js'),'utf8')}));
+  await page.route('**/pages/icons/*',route=>{const name=path.basename(new URL(route.request().url()).pathname);return route.fulfill({contentType:name.endsWith('.png')?'image/png':'image/svg+xml',body:fs.readFileSync(path.join(__dirname,'../src/pages/icons',name))});});
+  await page.route('https://turing.captcha.qcloud.com/TJCaptcha.js',route=>route.fulfill({contentType:'text/javascript',body:'window.TencentCaptcha=class{constructor(app,callback){if(app!=="123")throw Error("Fixture app mismatch");this.callback=callback}show(){this.callback({ret:0,ticket:crypto.randomUUID(),randstr:"supplier-fixture"})}destroy(){}};'}));
   await page.route('**/api/**', async route => {
     const request = route.request(), path = new URL(request.url()).pathname, post = request.method() === 'POST';
     apiRequests.push({path,method:request.method()});
@@ -47,7 +55,7 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       assert.equal(request.headers()['x-csrftoken'], state.csrf_token, `Current CSRF header for ${path}`);
     }
     if (path === '/api/billing/catalog' || path === '/api/billing/quotes') return route.fallback();
-    if (path === '/api/auth/session') { sessionReads++; return json(state); }
+    if (path === '/api/auth/session') { sessionReads++; return sessionFails ? json({error:{code:'SERVICE_UNAVAILABLE'}},503) : json(state); }
     if (path === '/api/billing/purchase-catalog') return json({account_id:state.active_account_id,currency:'CNY',items:[]});
     if (path === `/api/billing/purchase-quotes/${lifecycleQuoteId}`) return json({id:lifecycleQuoteId,account_id:state.active_account_id,currency:'CNY',amount_minor:19900,
       expires_at:'2099-01-01T00:00:00Z',can_order:false,order_id:null,unavailable_reason:'CONFIG_INCOMPLETE',
@@ -61,11 +69,22 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       if (delayedTrial) { const held = delayedTrial; delayedTrial = null; held.started(); await held.promise; }
       return json(data,status);
     }
-    if (path === '/api/auth/challenges') return json({challenge_id:'fixture-challenge',expires_in:300,resend_after:60});
-    if (path === '/api/auth/verify') {
-      if (verifyFails) return json({error:{code:'INVALID_CODE',message:'fixture rejection'}},400);
+    if (path === '/api/auth/password-login') {
+      assert.equal(post,true);assert.equal(state.authenticated,false);
+      assert.deepEqual(Object.keys(request.postDataJSON()).sort(),['identifier','password']);
+      if (loginFails) return json({error:{code:'INVALID_CREDENTIALS'}},401);
+      loginFlow={flow_id:'fixture-login-'+(++loginFlowId),purpose:'login',stage:'captcha',expires_in:300,captcha_app_id:state.capabilities.captcha_app_id};
+      return json(loginFlow,201);
+    }
+    if (path === '/api/auth/captcha') {
+      assert.equal(post,true);assert.equal(state.authenticated,false);
+      const payload=request.postDataJSON();assert.deepEqual(Object.keys(payload).sort(),['flow_id','randstr','ticket']);
+      assert.equal(payload.flow_id,loginFlow.flow_id);assert.equal(typeof payload.ticket,'string');assert.ok(payload.ticket);assert.equal(payload.randstr,'supplier-fixture');
+      if (captchaFails) return json({error:{code:'CAPTCHA_REJECTED'}},422);
+      loginFlow=null;
       state = makeSession(); return json(state);
     }
+    if (path === '/api/auth/challenges' || path === '/api/auth/verify') throw Error('Closed anonymous OTP endpoint must not be called');
     if (path === '/api/auth/logout') {
       const failed = logoutFails;
       if (!failed) state = makeSession(false);
@@ -180,28 +199,36 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
   // be mistaken for a session reload after changing the fixture server state.
   const visit = path => { const url = new URL(`${base}/pages/${path}`); url.searchParams.set('ui-audit',String(++visitId)); return page.goto(url.href); };
   const textContains = async (selector,text) => { await page.waitForFunction(({selector,text}) => document.querySelector(selector)?.textContent.includes(text), {selector,text}); };
+  const authReady = () => page.waitForFunction(()=>{const button=document.querySelector('#auth-verify');return button&&!button.disabled;});
+  const loginDetails = async () => { await authReady();await page.locator('#auth-contact').fill('fixture@example.test');await page.locator('#auth-verify').click();await page.locator('#auth-password').waitFor({state:'visible'}); };
+  const loginPassword = async () => { await page.locator('#auth-password').fill('Fixture!431');await page.locator('#auth-verify').click(); };
   try {
-    state = makeSession(false); state.capabilities.email_login = false; state.capabilities.phone_login = false;
+    state = makeSession(false); state.capabilities.password_login = false;
     await visit('auth.html?return=https%3A%2F%2Fevil.example');
     await textContains('#auth-feedback','暂不可用');
-    assert.ok(await page.locator('.auth-page').evaluate(el => el.getBoundingClientRect().width <= 550), 'Desktop auth form must remain a readable narrow column');
+    assert.equal(await page.locator('.auth-card').evaluate(el => Math.round(el.getBoundingClientRect().width)),440,'Desktop auth card remains a readable narrow column');
     assert.equal(await page.locator('#auth-contact').isDisabled(),true);
-    assert.equal(await page.locator('#request-code').isDisabled(),true);
-    assert.ok((await page.locator('.auth-back').getAttribute('href')).endsWith('billing.html'));
-    assert.equal(writes.length,0); checks.push('Unavailable verification blocks contact entry/send; external return rejected');
+    assert.equal(await page.locator('#auth-verify').isDisabled(),true);
+    assert.ok((await page.locator('.auth-heading a').getAttribute('href')).endsWith('index.html'));
+    assert.equal(writes.length,0); checks.push('Unavailable password login blocks contact entry/submit; auth card and genuine home link remain usable');
+    sessionFails=true;await page.reload();await textContains('#auth-feedback','无法连接');
+    assert.equal(await page.locator('#auth-verify').isDisabled(),true);assert.equal(await page.locator('#auth-retry').isVisible(),true);assert.equal(writes.length,0);
+    sessionFails=false;state=makeSession(false);await page.locator('#auth-retry').click();await authReady();
+    assert.equal(await page.locator('#auth-retry').isVisible(),false);checks.push('Unknown auth session disables login without pretending anonymous readiness; explicit read reconnect restores readiness with no write');
     state = makeSession(false);
     await visit('auth.html?return=billing.html%23credits');
-    await page.locator('#auth-contact').fill('not-an-email'); await page.locator('#request-code').click();
+    await authReady();await page.locator('#auth-contact').fill('not-an-email'); await page.locator('#auth-verify').click();
     assert.equal(await page.locator('#auth-contact').getAttribute('aria-invalid'),'true'); assert.equal(writes.length,0);
-    await page.locator('#auth-contact').fill('fixture@example.test'); await page.locator('#request-code').click();
-    await textContains('#auth-feedback','已发送'); assert.equal(await page.locator('#request-code').isDisabled(),true);
-    assert.equal(await page.locator('#auth-code').evaluate(el => el === document.activeElement),true);
-    verifyFails = true; await page.locator('#auth-code').fill('123456'); await page.locator('#auth-verify').click();
-    await textContains('#auth-feedback','尚未登录'); assert.ok(page.url().includes('auth.html'));
-    verifyFails = false; await page.locator('#auth-code').fill('123456'); await page.locator('#auth-verify').click();
+    await loginDetails();assert.equal(await page.locator('#auth-password').evaluate(el=>el===document.activeElement),true);
+    loginFails=true;await loginPassword();await textContains('#auth-feedback','邮箱或密码不正确');assert.equal(state.authenticated,false);assert.ok(page.url().includes('auth.html'));
+    loginFails=false;await loginPassword();await page.locator('#auth-captcha').waitFor({state:'visible'});await authReady();assert.equal(state.authenticated,false,'Password acceptance alone cannot grant a session');
+    captchaFails=true;await page.locator('#auth-captcha').click();await textContains('#auth-feedback','人机验证未通过');assert.equal(state.authenticated,false);assert.ok(page.url().includes('auth.html'));
+    captchaFails=false;await page.locator('#auth-captcha').click();
     await page.waitForURL('**/billing.html#credits'); await textContains('.account-metrics','0.00');
     assert.deepEqual(await page.evaluate(() => ({local:localStorage.length,session:sessionStorage.length})),{local:0,session:0});
-    checks.push('Validation, CSRF, cooldown, failed OTP and verified return; no browser credential/balance storage');
+    checks.push('Validation, CSRF, rejected password/CAPTCHA and verified billing return; no browser credential/balance storage; OTP/cooldown remain in website-account-ui');
+    assert.equal(await page.locator('.account-dropdown a').count(),1);assert.equal(await page.locator('.account-dropdown a').getAttribute('href'),'profile.html');assert.equal(await page.locator('.account-dropdown button').count(),1);assert.equal(await page.locator('.account-dropdown #account-logout').count(),1);assert.equal(await page.locator('.account-dropdown select').count(),0);assert.equal(await page.locator('#billing-account-context #billing-account-select').count(),1);
+    checks.push('Healthy navigation menu contains only personal settings/sign out; billing account choice is separate');
     accountFails = true; await page.reload(); await textContains('#account-live','未知');
     assert.equal(await page.locator('.account-metrics').count(),0);
     accountFails = false; await page.locator('#account-read-retry').click(); await textContains('.account-metrics','0.00');
@@ -209,13 +236,13 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     wrongAccount = true; await page.reload(); await textContains('#account-live','未知'); assert.equal(await page.locator('.account-metrics').count(),0); wrongAccount = false;
     checks.push('Wrong-account response rejected');
     oldAccountDelay = true; state = makeSession(); await page.reload();
-    await page.locator('.nav-account summary').click(); await page.locator('#billing-account-select').selectOption(two);
+    await page.locator('#billing-account-context #billing-account-select').selectOption(two);
     await textContains('.account-metrics','27.25'); await page.waitForTimeout(650);
     assert.ok((await page.locator('#account-live').innerText()).includes('Fixture business'));
     assert.ok(!(await page.locator('#account-live').innerText()).includes('Fixture personal'));
     checks.push('Delayed old-account response cannot repopulate after switching');
     oldAccountDelay = true; oldAccountUnauthorized = true; state = makeSession(); await page.reload();
-    await page.locator('.nav-account summary').click(); await page.locator('#billing-account-select').selectOption(two);
+    await page.locator('#billing-account-context #billing-account-select').selectOption(two);
     await textContains('.account-metrics','27.25'); await page.waitForTimeout(650);
     assert.ok((await page.locator('#account-live').innerText()).includes('Fixture business'));
     assert.equal(await page.locator('#session-alert').count(),0);
@@ -326,10 +353,9 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     assert.equal(await page.locator('.nav-account summary span').textContent(),'f***@example.test'); accounts[0].name = originalName;
     checks.push('English localizes the known default account name and uses masked identity without inventing a user name');
     state = makeSession(false); await visit('auth-en.html?return=billing.html%3Fcycle%3Dmonthly%23credits');
-    await page.locator('#auth-contact').fill('fixture@example.test'); await page.locator('#request-code').click();
-    await textContains('#auth-feedback','Code sent'); await page.locator('#auth-code').fill('123456'); await page.locator('#auth-verify').click();
+    await loginDetails();await loginPassword();await page.locator('#auth-captcha').waitFor({state:'visible'});await authReady();await page.locator('#auth-captcha').click();
     await page.waitForURL(url => url.pathname.endsWith('/billing-en.html') && url.searchParams.get('cycle') === 'monthly' && url.hash === '#credits');
-    await textContains('.account-metrics','0.00'); checks.push('English verification localizes a Chinese return route and retains query/hash');
+    await textContains('.account-metrics','0.00'); checks.push('English password/CAPTCHA login localizes a Chinese return route and retains query/hash');
     state = makeSession(); await visit('billing.html#subscription'); await textContains('.subscription-card','按年计费');
     assert.equal(await page.locator('.subscription-card').evaluate(el => getComputedStyle(el).borderRadius),'18px');
     const beforeCancel = writes.filter(path => path === cancelPath).length;
@@ -393,7 +419,7 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     subscriptions = [makeSubscription()]; delaySubscriptions = true;
     const delayedRead = page.waitForRequest(request => new URL(request.url()).pathname === '/api/billing/subscriptions');
     await visit('billing.html#subscription'); await delayedRead;
-    await page.locator('.nav-account summary').click(); await page.locator('#billing-account-select').selectOption(two);
+    await page.locator('#billing-account-context #billing-account-select').selectOption(two);
     await textContains('#account-live','尚无订阅'); await page.waitForTimeout(650);
     assert.equal(await page.locator('.subscription-card').count(),0);
     checks.push('Old-account subscription response cannot reveal an old subscription after switching');
@@ -593,6 +619,20 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       state = makeSession();
       await page.locator('#refresh-trial').click();
       await textContains('#saved-trial',lang ? 'one free trial available' : '一次免费体验资格');
+      trialRecord = {eligibility:'consumed',attempt:null};
+      await page.locator('#refresh-trial').click();
+      await textContains('#saved-trial',lang ? 'free trial has already been used' : '免费体验已使用');
+      assert.equal(await page.locator('#saved-trial button, #saved-trial a, .trial-report').count(),0);
+      assert.equal(await page.locator('#start-trial').isDisabled(),true);
+      await page.setViewportSize({width:320,height:900});
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth+1),true);
+      await page.screenshot({path:path.resolve(__dirname,`../tmp/billing-design-qa/trial-consumed-320${lang}.png`),fullPage:true});
+      trialRecord = {eligibility:'consumed'};
+      await page.locator('#refresh-trial').click();
+      await textContains('#saved-trial',lang ? 'unknown' : '未知');
+      trialRecord = {eligibility:'locked',attempt:null};
+      await page.locator('#refresh-trial').click();
+      await textContains('#saved-trial',lang ? 'unknown' : '未知');
       trialRecord = {eligibility:'locked',attempt:{scenario:'voc',input_value:'<img src=x onerror=alert(1)>',task_state:'running',report:null}};
       await page.locator('#refresh-trial').click();
       await textContains('#saved-trial',lang ? 'in progress' : '处理中');
@@ -623,7 +663,7 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       assert.equal(await page.locator('#start-trial').isDisabled(),true);
     }
     assert.equal(writes.length,beforeTrial);
-    checks.push('Trial recovery is authenticated, bilingual, read-only, HTML-safe and downloads the stored report without creating a task');
+    checks.push('Trial recovery is authenticated, bilingual, read-only and HTML-safe; a consumed entitlement without a retained task is shown accurately, malformed locked records fail closed, and only stored reports can be downloaded');
     for (const lang of ['', '-en']) {
       state = makeSession(false);
       await visit(`trial${lang}.html?mission=shopify&example=shopify&result=obsolete&step=obsolete#trial-example`);
@@ -641,11 +681,10 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       await page.locator('#saved-trial a').click();
       const requested = new URL(page.url()).searchParams.get('return');
       assert.equal(requested,expected.pathname+expected.search+expected.hash);
-      await textContains('#auth-feedback',lang ? 'request a code' : '获取验证码');
+      await authReady();assert.equal(await page.locator('#auth-retry').isVisible(),false);
       // A fixture-authenticated continuation exercises the existing safeReturn
       // allowlist without adding any verification or trial writes.
-      state = makeSession(); await page.locator('#auth-retry').click();
-      await page.locator('#auth-signed-in a').click();
+      state = makeSession(); await page.reload();
       await page.waitForURL(url=>url.pathname===expected.pathname && url.search===expected.search && url.hash===expected.hash);
       await textContains('#saved-trial',lang ? 'one free trial available' : '一次免费体验资格');
       assert.equal(await page.locator('[data-scene="voc"]').getAttribute('aria-pressed'),'true');
@@ -663,11 +702,10 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       state = makeSession();
       for (const unsafe of ['https://example.invalid/','//example.invalid/','javascript:alert(1)','\\example.invalid','../not-a-page.html','trial.html\nhttps://example.invalid/']) {
         await visit(`auth${lang}.html?return=${encodeURIComponent(unsafe)}`);
-        await page.locator('#auth-signed-in a').waitFor();
-        assert.ok((await page.locator('#auth-signed-in a').getAttribute('href')).endsWith(`billing${lang}.html`));
+        await page.waitForURL(url=>url.pathname===`/index${lang}.html`);
+        assert.equal(new URL(page.url()).origin,new URL(base).origin);
       }
       await visit(`auth${lang}.html?return=${encodeURIComponent('trial.html?mission=shopify&example=shopify#trial-example')}`);
-      await page.locator('#auth-signed-in a').click();
       await page.waitForURL(url=>url.pathname.endsWith(`trial${lang}.html`) && url.searchParams.get('mission')==='shopify' && url.hash==='#trial-example');
       assert.equal(await page.locator('#trial-example').isVisible(),true);
     }
@@ -754,8 +792,7 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
       for(const status of [200,401]) {
         state=makeSession();await visit(viewPath(name,lang));await readyView(name);
         const before=writes.length,held=holdSessionOperation('select',status);
-        await page.locator('.nav-account summary').click();
-        await page.locator('#billing-account-select').selectOption(two);await held.waiting;
+        await page.locator('#billing-account-context #billing-account-select').selectOption(two);await held.waiting;
         await hideBilling();state=makeSession();await restoreBilling();
         await page.locator('#billing-account-select').waitFor({state:'attached'});
         assert.equal(await page.locator('#billing-account-select').isDisabled(),false,'Restoring a pending selection must reset busy state');
@@ -842,7 +879,8 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     assert.ok(lifecycleWrites.every(endpoint=>['/api/auth/logout','/api/billing/accounts/select'].includes(endpoint)));
     checks.push('A late 401 from the same account but previous session epoch cannot clear the restored session; lifecycle coverage adds zero financial writes');
     assert.deepEqual(errors,[]);
-    assert.ok(writes.every(path => ['/api/auth/challenges','/api/auth/verify','/api/auth/logout','/api/billing/accounts/select','/api/billing/purchase-inquiries','/api/billing/quotes',cancelPath].includes(path)));
-    console.log(JSON.stringify({layer:'UI response fixtures; synthetic page lifecycle, no real verification delivery or payments',checks,fixtureWrites:writes.length,lifecycleAccountWrites:lifecycleWrites.length,lifecycleFinancialWrites:lifecycleWrites.filter(endpoint=>!['/api/auth/logout','/api/billing/accounts/select'].includes(endpoint)).length,pageErrors:errors.length},null,2));
+    assert.ok(writes.every(path => ['/api/auth/password-login','/api/auth/captcha','/api/auth/logout','/api/billing/accounts/select','/api/billing/purchase-inquiries','/api/billing/quotes',cancelPath].includes(path)));
+    for (const name of ['billing.js','billing.css','auth.js','auth.css']) assert.ok(sourceAssetHits[name]>0,`Versioned source asset must be intercepted: ${name}`);
+    console.log(JSON.stringify({layer:'UI response fixtures; synthetic page lifecycle, no real verification delivery or payments',checks,fixtureWrites:writes.length,lifecycleAccountWrites:lifecycleWrites.length,lifecycleFinancialWrites:lifecycleWrites.filter(endpoint=>!['/api/auth/logout','/api/billing/accounts/select'].includes(endpoint)).length,sourceAssetHits,pageErrors:errors.length},null,2));
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

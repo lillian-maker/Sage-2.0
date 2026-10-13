@@ -117,7 +117,7 @@
     article.append(title);
     const note = document.createElement('p');
     note.className = 'trial-report-note';
-    note.textContent = t('以下按原报告字段展示, 不补写结论；JSON 下载保留完整原始内容.', 'The fields below preserve the saved report without adding conclusions. The JSON download contains the complete original content.');
+    note.textContent = t('以下按原报告字段展示, 不补写结论；JSON Download保留完整原始内容.', 'The fields below preserve the saved report without adding conclusions. The JSON download contains the complete original content.');
     article.append(note);
     let nodes = 0;
     function content(value, depth) {
@@ -201,6 +201,10 @@
         completed: t('报告已保存, 本次Try Sage已完成.', 'Your report is saved and your free trial is complete.')
       };
       if (!attempt) {
+        if (data.eligibility === 'consumed' && attempt === null) {
+          target.textContent = t('你的Try Sage已使用, 当前账号没有可查看的体验报告.', 'Your free trial has already been used. No trial report is available for this account.');
+          return;
+        }
         if (data.eligibility !== 'available') throw new Error('INVALID_TRIAL_RESPONSE');
         target.textContent = t('你仍有一次Try Sage资格.分析服务开放后, 可选择一个Scenarios开始.', 'You have one free trial available. Choose a scenario when the analysis service opens.');
         return;
@@ -218,7 +222,7 @@
       if (attempt.task_state === 'completed') {
         const download = document.createElement('button');
         download.type = 'button'; download.className = 'xp-text-button';
-        download.textContent = t('下载已存报告（JSON）', 'Download saved report (JSON)');
+        download.textContent = t('Download已存报告（JSON）', 'Download saved report (JSON)');
         download.addEventListener('click', () => {
           if (version !== trialReadVersion) return;
           clearReportDownload();

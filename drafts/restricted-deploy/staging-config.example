@@ -1,0 +1,24 @@
+# 无凭据配置样例，不是可直接启动的真实配置文件。
+# 后续单独获准后由管理员安全提供 SAGE_SECRET_KEY（至少50字符）。
+# 不设置演示/默认密钥；缺失时 Django 启动必须失败。
+# 安装目标 /etc/sage/staging.env，应 root:root 0600，由 systemd 读取。
+SAGE_ENV=production
+SAGE_ALLOWED_HOSTS=sagegogo.com
+SAGE_DB_NAME=sage_staging
+SAGE_DB_USER=sage
+SAGE_DB_HOST=/var/run/postgresql
+SAGE_DB_PORT=5432
+SAGE_DB_PASSWORD=
+SAGE_TRUSTED_PROXY_IPS=127.0.0.1
+SAGE_MEDIA_ROOT=/var/lib/sage/avatars
+SAGE_AVATAR_LOCAL_FLOCK_VERIFIED=0
+SAGE_AUTH_EMAIL_ENABLED=0
+SAGE_AUTH_PHONE_ENABLED=0
+SAGE_AUTH_GOOGLE_ENABLED=0
+SAGE_AUTH_REGISTRATION_ENABLED=0
+SAGE_AUTH_CAPTCHA_ENABLED=0
+SAGE_AUTH_REGISTRATION_TERMS_READY=0
+SAGE_GOOGLE_BRAND_READY=0
+SAGE_INVITATION_CODES_READY=0
+SAGE_ACCOUNT_DELETION_ENABLED=0
+# 支付、续费派发、Credits购买由现有 settings.py 保持关闭，无环境变量绕过。

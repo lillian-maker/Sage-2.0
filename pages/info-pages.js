@@ -25,7 +25,7 @@
         {name:'体验', amount:0, audience:'先判断一份成果是否有用。', points:['VOC 与 Shopify 有限范围示例','查看完整示例成果','无需先注册'], action:'免费体验', trial:true},
         {name:'基础', amount:20, audience:'围绕单个经营任务持续推进。', points:['候选：单任务分析与追问','候选：成果保存与找回','候选：任务关联积分明细'], action:'查看方案'},
         {name:'专业', amount:60, audience:'把多个经营问题连成工作流。', points:['候选：多场景衔接','候选：证据与成果版本','候选：更大的计算范围'], action:'查看方案', highlight:true},
-        {name:'高级', amount:200, audience:'让更复杂的经营工作有序展开。', points:['候选：更高任务并发','候选：持续经营分析','候选：更细的使用治理'], action:'查看方案'}
+        {name:'高级', amount:200, audience:'让更复杂的业务任务有序展开。', points:['候选：更高任务并发','候选：持续经营分析','候选：更细的使用治理'], action:'查看方案'}
       ],
       business: [
         {name:'团队', amount:40, audience:'围绕共同目标，组织人类成员与 AI 岗位。', points:['候选：组织工作空间','候选：成员权限与协作','候选：共享计算预算与审计'], action:'讨论团队方案'},

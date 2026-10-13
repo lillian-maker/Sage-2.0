@@ -17,6 +17,7 @@ codeInput.catch(() => {}); // The awaited promise still rejects; avoid an orphan
 (async () => {
   const browser = await chromium.launch({channel: 'chrome'});
   const context = await browser.newContext({viewport: {width: 1440, height: 1000}});
+  await context.route('https://turing.captcha.qcloud.com/TJCaptcha.js',route=>route.fulfill({contentType:'text/javascript',body:'window.TencentCaptcha=class{constructor(app,callback){if(app!=="123")throw Error("Supplier fixture app mismatch");this.callback=callback}show(){this.callback({ret:0,ticket:crypto.randomUUID(),randstr:"supplier-fixture"})}destroy(){}};'}));
   const page = await context.newPage();
   page.setDefaultTimeout(10000);
   const pageErrors = [], writes = [];
@@ -28,21 +29,34 @@ codeInput.catch(() => {}); // The awaited promise still rejects; avoid an orphan
     ({selector, text}) => document.querySelector(selector)?.textContent.includes(text), {selector, text});
   const responseAt = path => page.waitForResponse(response => new URL(response.url()).pathname === path && response.request().method() === 'POST');
   try {
-    await page.goto(new URL('/pages/auth.html?return=billing.html%23credits', base).href);
+    await page.goto(new URL('/pages/auth.html?mode=register&return=billing.html%23credits', base).href);
+    await page.waitForFunction(()=>!document.querySelector('#auth-verify').disabled);
+    await page.locator('#auth-first-name').fill('Browser');
     await page.locator('#auth-contact').fill('browser-smoke@example.test');
-    const challengeResponse = responseAt('/api/auth/challenges');
-    await page.locator('#request-code').click();
+    await page.locator('#auth-agreement').check();
+    await page.locator('#auth-verify').click();
+    await page.locator('#auth-password').fill('Violet!431');
+    const starting=responseAt('/api/auth/register/start');
+    await page.locator('#auth-verify').click();
+    assert.equal((await starting).status(),201);
+    await page.locator('#auth-captcha').waitFor({state:'visible'});
+    await page.waitForFunction(()=>!document.querySelector('#auth-captcha').disabled);
+    assert.equal((await context.request.get(new URL('/api/account/profile',base).href)).status(),401,'No account before CAPTCHA/OTP');
+    const challengeResponse = responseAt('/api/auth/captcha');
+    await page.locator('#auth-captcha').click();
     assert.equal((await challengeResponse).status(), 201, 'Real challenge request must succeed');
     await textContains('#auth-feedback', '已发送');
     process.stdout.write('code requested\n');
     let code = await codeInput;
     assert.ok(/^[0-9]{6}$/.test(code), 'Expected the in-memory generated verification code');
-    await page.locator('#auth-code').fill(code);
+    await page.locator('[data-code-index="0"]').waitFor();
+    await page.waitForFunction(()=>!document.querySelector('#auth-verify').disabled);
+    const verificationResponse = responseAt('/api/auth/register/verify');
+    await page.locator('[data-code-index="0"]').fill(code);
     code = undefined;
-    const verificationResponse = responseAt('/api/auth/verify');
-    await page.locator('#auth-verify').click();
     assert.equal((await verificationResponse).status(), 200, 'Real verification must succeed');
-    await page.waitForURL('**/billing.html#credits');
+    await page.waitForURL('**/index.html');
+    await page.goto(new URL('/pages/billing.html#credits',base).href);
     await page.locator('.account-metrics').waitFor();
     assert.deepEqual(await page.locator('.account-metrics dd').allTextContents(), ['0', '0', '0', '0', '0', '0']);
     await textContains('#account-live', '还没有额度批次');
@@ -59,7 +73,7 @@ codeInput.catch(() => {}); // The awaited promise still rejects; avoid an orphan
       const product = await ready;
       assert.match(product,/^[0-9a-f-]{36}$/);
       await page.goto(new URL('/pages/pricing.html',base).href);
-      await page.locator(`[data-purchase-product="${product}"]`).waitFor();
+      try{await page.locator(`[data-purchase-product="${product}"]`).waitFor();}catch(_){const response=await context.request.get(new URL('/api/billing/purchase-catalog',base).href);throw Error('Purchase product did not render: '+response.status());}
       await page.locator(`[data-purchase-product="${product}"]`).click();
       const preparing = responseAt('/api/billing/purchase-quotes');
       await page.locator('#purchase-prepare').click();
@@ -144,7 +158,7 @@ codeInput.catch(() => {}); // The awaited promise still rejects; avoid an orphan
     assert.equal(await page.locator('.account-metrics').count(), 0);
     assert.equal(await page.locator('#procurement-records').count(), 0);
     assert.equal(await page.locator('#account-logout').count(), 0);
-    assert.deepEqual(writes, ['/api/auth/challenges', '/api/auth/verify', ...(process.env.SAGE_BROWSER_PURCHASE_FIXTURE === '1' ? ['/api/billing/purchase-quotes','/api/billing/orders'] : []), ...(cancelPath ? [cancelPath] : []), '/api/billing/purchase-inquiries', '/api/auth/logout']);
+    assert.deepEqual(writes, ['/api/auth/register/start', '/api/auth/captcha', '/api/auth/register/verify', ...(process.env.SAGE_BROWSER_PURCHASE_FIXTURE === '1' ? ['/api/billing/purchase-quotes','/api/billing/orders'] : []), ...(cancelPath ? [cancelPath] : []), '/api/billing/purchase-inquiries', '/api/auth/logout']);
     assert.deepEqual(pageErrors, []);
   } finally {
     input.close();

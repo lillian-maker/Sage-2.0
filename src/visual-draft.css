@@ -1,6 +1,6 @@
 /* Review only: midnight / porcelain / original silver. */
 body.v1[data-theme=dark]{background:#fff}
-body.v1[data-theme=dark] .nav.nav-light{background:rgba(255,255,255,.97);color:#202b38;border-bottom:1px solid #e4e9ef;--ink:#202b38;--muted:#526171}
+body.v1[data-theme=dark] .nav.nav-light{background:rgba(255,255,255,.97);color:#202b38;border-bottom:1px solid #e4e9ef;--ink:#202b38;--muted:#526171;--accent:#396397}
 .v1 .nav.nav-light :is(.brand,.nav-links a,.nav-tools>a:not(.btn),.text-btn,.menu-toggle){color:#202b38}
 body.v1[data-theme=dark] .nav.nav-light .brand svg{color:#202b38}
 .v1:has(.nav.nav-light) .mobile-nav{background:#fff;color:#202b38}

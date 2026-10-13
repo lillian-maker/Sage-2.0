@@ -11,6 +11,7 @@ from hashlib import sha256
 from pathlib import Path
 
 COPY = r"""
+下载	Download
 Sage · 你的出海 AI 团队	Sage · Your AI Team for Global Commerce
 Sage，53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	Sage brings 53 digital employees into one business organization. Evidence-backed decisions. Human-authorized execution.
 洞察 · 决策 · 执行	Insight · Decisions · Execution
@@ -66,7 +67,7 @@ Agent 治理	Agent governance
 FDE 落地	FDE deployment
 场景选择 → 组织与数据 → 权限 → 验收	Workflow → Organization and data → Permissions → Acceptance
 问题界定 → 受控试点 → 联合验收 → 持续运行	Scope → Controlled pilot → Joint acceptance → Ongoing operation
-下一件经营工作，<br>一起开始。	Your next business challenge.<br>Start with Sage.
+下一项业务挑战，<br>一起开始。	Your next business challenge.<br>Start with Sage.
 聊聊你的业务	Tell us about your business
 公司 / 品牌	Company / brand
 访客手机号	Phone number
@@ -508,7 +509,7 @@ Shopify 店铺诊断	Shopify store diagnosis
 返回产品	Back to product
 下载 Sage。	Download Sage
 下载 Sage	Download Sage
-把经营工作放在手边。也可以直接从网页体验开始。	Keep your business work close at hand. Or start with the web preview.
+把业务分析放在手边。也可以直接从网页体验开始。	Keep your business work close at hand. Or start with the web preview.
 桌面客户端	Desktop app
 尚未发布	Not released
 安装包和平台支持信息待提供。正式发布前，不提供有效下载入口。	Installers and platform support details are not yet available. Downloads will open after the official release.
@@ -680,7 +681,7 @@ VOC 与 Shopify 有限范围示例	Limited-scope VOC and Shopify examples
 候选：多场景衔接	Proposed: connected workflows
 候选：证据与成果版本	Proposed: evidence and deliverable versions
 候选：更大的计算范围	Proposed: broader compute scope
-让更复杂的经营工作有序展开。	Manage more complex business work.
+让更复杂的业务任务有序展开。	Manage more complex business work.
 候选：更高任务并发	Proposed: higher task concurrency
 候选：持续经营分析	Proposed: ongoing business analysis
 候选：更细的使用治理	Proposed: finer-grained usage governance
@@ -944,7 +945,7 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 专项实施与定制	Dedicated implementation and customization
 基于你的业务需求、数据、知识与场景，	Based on your needs, data, knowledge and scenarios,
 按范围交付，稳步推进。	delivered within agreed scope, step by step.
-一起定义你的第一项经营工作	Define your first business task together
+一起定义你的第一项业务任务	Define your first business task together
 让企业数据、业务知识与 AI 能力，真正服务于你的团队与业务。	Put company data, business knowledge and AI capabilities to work for your team.
 文档目录	Documentation contents
 搜索文档	Search documentation
@@ -967,6 +968,8 @@ AI 团队	AI team
 企业服务	Enterprise services
 文档	Docs
 主导航	Main navigation
+个人设置导航	Personal settings navigation
+正在读取账户资料…	Loading account data…
 菜单	Menu
 跳至内容	Skip to content
 Sage 首页	Sage home
@@ -1065,7 +1068,7 @@ def build_localized_pages(root):
             js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
             items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
             nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
-            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img src="../assets/favicon.svg" alt="" width="29" height="29">Sage</a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="enterprise.html#contact">咨询和演示</a></div></header>'
+            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img src="../assets/favicon.svg" alt="" width="29" height="29">Sage</a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="download.html">下载</a></div></header>'
             footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div><p>具体开放能力以产品内说明为准</p></footer>'
             document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
             (destination / path.name).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
@@ -1103,7 +1106,7 @@ def build_localized_pages(root):
         if '<!doctype' not in html.lower():
             styles = ''.join(f'<link rel="stylesheet" href="{name}.css">' for name in ['redesign','pages','catalog','team-page','info-pages'])
             nav = '<nav id="r-menu" class="r-links" aria-label="主导航"><a href="../index.html#product">产品</a><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav>'
-            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img src="../assets/favicon.svg" width="29" height="29" alt="">Sage</a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="../index.html#contact">咨询和演示</a></div></header>'
+            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img src="../assets/favicon.svg" width="29" height="29" alt="">Sage</a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="download.html">下载</a></div></header>'
             footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p><small>本地产品预览 · 认证、支付与真实任务尚未接入</small></footer>'
             js = ''.join(f'<script src="{name}.js" defer></script>' for name in scripts.get(path.stem,[]) + ['site-shell'])
             layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'

@@ -4,3 +4,4 @@ gunicorn>=23,<24
 Pillow>=12,<13
 tencentcloud-sdk-python-ses>=3.0,<4
 tencentcloud-sdk-python-sms>=3.0,<4
+google-auth[requests]>=2,<3

@@ -13,6 +13,42 @@ from tencentcloud.ses.v20201002.ses_client import SesClient
 
 @sensitive_variables()
 def send_login_code(identifier, code):
+    return _send_code(identifier, code, settings.SES_TEMPLATE_ID,
+                      'Sage 登录验证码 / Sign-in code')
+
+
+@sensitive_variables()
+def send_password_code(identifier, code):
+    return _send_code(identifier, code, settings.AUTH_PASSWORD_SES_TEMPLATE_ID,
+                      'Sage 密码重置验证码 / Password reset code')
+
+
+@sensitive_variables()
+def send_registration_code(identifier, code):
+    return _send_code(identifier, code, settings.AUTH_REGISTRATION_SES_TEMPLATE_ID,
+                      'Sage 注册验证码 / Registration code')
+
+
+@sensitive_variables()
+def send_google_bind_code(identifier, code):
+    return _send_code(identifier, code, settings.AUTH_GOOGLE_BIND_SES_TEMPLATE_ID,
+                      'Sage Google 绑定验证码 / Google connection code')
+
+
+@sensitive_variables()
+def send_password_changed(identifier):
+    return _send_code(identifier, None, settings.AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID,
+                      'Sage 密码已变更 / Password changed')
+
+
+@sensitive_variables()
+def send_deletion_code(identifier, code):
+    return _send_code(identifier, code, settings.ACCOUNT_DELETION_SES_TEMPLATE_ID,
+                      'Sage 账号注销验证码 / Account closure code')
+
+
+@sensitive_variables()
+def _send_code(identifier, code, template_id, subject):
     http = HttpProfile()
     http.endpoint = 'ses.tencentcloudapi.com'
     http.reqTimeout = 10
@@ -22,9 +58,9 @@ def send_login_code(identifier, code):
     request = SendEmailRequest()
     request.from_json_string(json.dumps({
         'FromEmailAddress': settings.DEFAULT_FROM_EMAIL, 'Destination': [identifier],
-        'Subject': 'Sage 登录验证码 / Sign-in code', 'TriggerType': 1,
-        'Template': {'TemplateID': int(settings.SES_TEMPLATE_ID),
-                     'TemplateData': json.dumps({'code': code})}}))
+        'Subject': subject, 'TriggerType': 1,
+        'Template': {'TemplateID': int(template_id),
+                     'TemplateData': json.dumps({} if code is None else {'code': code})}}))
     try:
         result = client.SendEmail(request)
     except TencentCloudSDKException:

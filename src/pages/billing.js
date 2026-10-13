@@ -25,7 +25,7 @@
   const boundary = t('订阅服务暂未开放购买。你可以查看方案；开通后将明确展示权益和费用。','Subscriptions are not yet available to purchase. Explore the plans now; full benefits and charges will be shown before purchases open.');
   let session = null, sessionState = 'loading', sessionBusy = false, accountVersion = 0, sessionVersion = 0;
   let sessionNotice = '', logoutToken = null, logoutPending = false, logoutUserId = null;
-  let purchaseRefresh = null, purchaseCatalog = null;
+  let purchaseRefresh = null, purchaseCatalog = null, closeMemberDialog = null;
   let pricingSubscriptions = null, pricingSubscriptionState = 'idle', pricingReadVersion = 0;
   const accountUnavailable = t('账户服务暂时无法连接，当前数据未知。请重新连接；不会把无法读取的余额当作 0。','Account services cannot be reached. Your data is unknown. Reconnect; unavailable balances are never shown as zero.');
   const authURL = () => `${page('auth')}?${new URLSearchParams({return:location.pathname + location.search + location.hash})}`;
@@ -84,6 +84,7 @@
     finally { if (version === sessionVersion) refreshSessionView(); }
   }
   function refreshSessionView() {
+    closeMemberDialog?.();
     renderAccountChrome();
     if (view === 'account' && catalog) account();
     if (view === 'checkout' && purchaseRefresh) purchaseRefresh();
@@ -112,7 +113,7 @@
     }
     document.querySelector('#billing-account-context')?.remove();
     if(session?.authenticated){
-      const context=document.createElement('section');context.id='billing-account-context';context.className='account-context';context.setAttribute('aria-label',t('计费账户','Billing account'));context.innerHTML=identity.replace(/<button[^>]+id="account-logout"[\s\S]*?<\/button>/,'');document.querySelector('#main').prepend(context);
+      const context=document.createElement('section');context.id='billing-account-context';context.className='account-context';context.setAttribute('aria-label',t('计费账户','Billing account'));context.innerHTML=identity.replace(/<button[^>]+id="account-logout"[\s\S]*?<\/button>/,'');(document.querySelector('.billing-center-sidebar') || document.querySelector('#main')).prepend(context);
       identity=`<a href="${page('profile')}">${t('个人设置','Personal settings')}</a><button type="button" id="account-logout" ${sessionBusy?'disabled':''}>${t('退出登录','Sign out')}</button>`;
     }
     menu.innerHTML = `${identity}<p class="field-error" id="session-notice" role="status">${escape(sessionNotice)}</p>${logoutPending ? `<button type="button" class="text-link" id="logout-retry" ${sessionBusy || sessionState === 'loading' ? 'disabled' : ''}>${t('重试退出登录','Retry sign-out')}</button>` : ''}`;
@@ -193,7 +194,7 @@
   function shell(content) {
     const other = `${view === 'account' ? 'billing' : view}${en ? '' : '-en'}.html${location.search}${location.hash}`;
     const back = initial.get('return') === 'trial' ? `<a class="back-link task-return" href="${page('trial')}">${icon('arrow-left')}${t('返回体验','Back to trial')}</a>` : '';
-    root.innerHTML = `<a class="skip" href="#main">${t('跳至内容','Skip to content')}</a><header class="billing-nav"><a class="billing-brand" href="../${page('index')}"><img src="../assets/favicon.svg" width="29" height="29" alt="">Sage</a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="${t('打开导航菜单','Open navigation menu')}">☰</button><nav id="r-menu" aria-label="${t('主导航','Main navigation')}"><a href="../${page('index')}#product">${t('产品','Product')}</a><a href="${page('team')}">${t('AI 团队','AI team')}</a><a href="${page('enterprise')}">${t('企业服务','Enterprise')}</a><a href="${page('pricing')}" ${view === 'pricing' ? 'aria-current="page"' : ''}>${t('价格','Pricing')}</a><a href="${page('docs')}">${t('文档','Docs')}</a></nav><div class="nav-actions"><a href="${escape(other)}" lang="${en ? 'zh-CN' : 'en'}">${en ? '中文' : 'English'}</a><a class="nav-login" href="${escape(authURL())}">${t('登录','Sign in')}</a><details class="nav-account" hidden><summary>${icon('person')}<span>${t('账户','Account')}</span></summary><div class="account-dropdown"><p>${t('账户服务暂未开放，当前无法登录。','Account services are not yet available. Sign-in is unavailable.')}</p><a href="${page('billing')}">${t('订阅与账单','Billing')}</a><a href="${page('billing')}#credits">${t('加购 Sage Credits','Buy Sage Credits')}</a><a href="${page('billing')}#payment-methods">${t('支付方式','Payment methods')}</a></div></details><a class="button primary" href="${page('enterprise')}#contact">${t('咨询和演示','Contact sales')}</a></div></header><main id="main" class="page ${view}-page">${back}${content}</main><footer class="footer"><span>Sage · ${t('你的出海 AI 团队','Your AI team for global commerce')}</span><span>${t('深圳主体 · 人民币计价 · Sage Credits','Shenzhen company · CNY pricing · Sage Credits')}</span></footer>`;
+    root.innerHTML = `<a class="skip" href="#main">${t('跳至内容','Skip to content')}</a><header class="billing-nav"><a class="billing-brand" href="../${page('index')}"><img src="../assets/favicon.svg" width="29" height="29" alt="">Sage</a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="${t('打开导航菜单','Open navigation menu')}">☰</button><nav id="r-menu" aria-label="${t('主导航','Main navigation')}"><a href="../${page('index')}#product">${t('产品','Product')}</a><a href="${page('team')}">${t('AI 团队','AI team')}</a><a href="${page('enterprise')}">${t('企业服务','Enterprise')}</a><a href="${page('pricing')}" ${view === 'pricing' ? 'aria-current="page"' : ''}>${t('价格','Pricing')}</a><a href="${page('docs')}">${t('文档','Docs')}</a></nav><div class="nav-actions"><a href="${escape(other)}" lang="${en ? 'zh-CN' : 'en'}">${en ? '中文' : 'English'}</a><a class="nav-login" href="${escape(authURL())}">${t('登录','Sign in')}</a><details class="nav-account" hidden><summary>${icon('person')}<span>${t('账户','Account')}</span></summary><div class="account-dropdown"><p>${t('账户服务暂未开放，当前无法登录。','Account services are not yet available. Sign-in is unavailable.')}</p><a href="${page('billing')}">${t('订阅与账单','Billing')}</a><a href="${page('billing')}#credits">${t('加购 Sage Credits','Buy Sage Credits')}</a><a href="${page('billing')}#payment-methods">${t('支付方式','Payment methods')}</a></div></details><a class="button primary" href="${page('download')}">${t('下载','Download')}</a></div></header><main id="main" class="page ${view}-page">${back}${content}</main><footer class="footer"><span>Sage · ${t('你的出海 AI 团队','Your AI team for global commerce')}</span><span>${t('深圳主体 · 人民币计价 · Sage Credits','Shenzhen company · CNY pricing · Sage Credits')}</span></footer>`;
     renderAccountChrome();
   }
   function faqs() {
@@ -216,8 +217,8 @@
     const descriptions = {
       trial:t('先了解 Sage 如何处理一个经营问题。','Explore how Sage approaches a business question.'),
       pro:t('个人日常经营分析的起点。','A starting point for everyday business analysis.'),
-      pro_plus:t('适合更频繁的个人经营工作。','For more frequent individual business work.'),
-      ultra:t('面向高频、深入的个人经营工作。','For intensive individual business work.'),
+      pro_plus:t('适合更频繁的个人业务分析。','For more frequent individual business work.'),
+      ultra:t('面向高频、深入的个人业务分析。','For intensive individual business work.'),
       teams:t('席位内含额度独立，加购额度共享。','Included credits per seat; purchased credits shared.'),
       enterprise:t('席位与 Sage Credits 分开采购。','Purchase seats and Sage Credits separately.')
     };
@@ -487,11 +488,11 @@
   }
 
   function account() {
-    const sections = {subscription:t('订阅管理','Subscription'),credits:'Sage Credits',orders:t('订单记录','Orders'),notifications:t('账务通知','Billing updates'),invoices:t('发票','Invoices'),'payment-methods':t('支付方式','Payment methods'),organization:t('企业管理','Business settings'),procurement:t('企业采购','Enterprise purchasing')};
+    const sections = {overview:t('我的账单','My bills'),subscription:t('订阅管理','Subscription'),credits:'Sage Credits',orders:t('订单记录','Orders'),notifications:t('账务通知','Billing updates'),invoices:t('发票','Invoices'),'payment-methods':t('支付方式','Payment methods'),organization:t('企业管理','Business settings'),procurement:t('企业采购','Enterprise purchasing')};
     sections['credits-ledger'] = t('额度流水','Credits history');
     if (activeAccount()?.kind === 'business') sections['organization-history'] = t('企业变更记录','Business change history');
     if (activeAccount()?.kind === 'business') sections['my-usage'] = t('我的使用限制','My usage limits');
-    const requested = location.hash.slice(1), selected = Object.hasOwn(sections, requested) ? requested : 'subscription';
+    const requested = location.hash.slice(1), selected = Object.hasOwn(sections, requested) ? requested : 'overview';
     const icons = {subscription:'calendar3',credits:'wallet2',orders:'receipt',notifications:'info-circle',invoices:'building','payment-methods':'credit-card',organization:'person',procurement:'building'};
     icons['my-usage'] = 'person';
     icons['credits-ledger'] = 'receipt';
@@ -503,15 +504,15 @@
       notifications:t('这里保留服务端确认的账务事件，不代表订单的最新状态。请进入对应订单或订阅管理核对后续结果。邮件、短信与扣款前提醒尚未接入。','This is a record of server-confirmed billing events, not an order’s latest status. Check the order or subscription for later results. Email, SMS and pre-charge reminders are not yet connected.'),
       invoices:t('从实付订单申请发票，财务审核开票后发送至指定邮箱。手机号登录也可填写独立收票邮箱。开票服务尚未接入。','Invoices are requested from paid orders, reviewed by finance and sent to a designated email, independently of phone sign-in. Invoice requests are not yet available.'),
       'payment-methods':t('订阅与企业自动充值分别授权。更换方式不重复收取当期费用；移除前先停止新扣款并查明在途交易。绑定、更换和移除暂不可用。','Renewal and business auto top-up have separate authorizations. Changing a method does not recharge the current term. Removal stops new charges and resolves in-flight payments first. Linking, changing and removal are not yet available.'),
-      organization:t('企业 2 个真人席位起购。Teams 每席内含额度独立，加购额度共享；Enterprise 另购共享额度。成员共享池月上限由管理员设置。成员管理与席位变更尚未接入。','Business plans start at 2 human seats. Teams includes separate seat credits and shared purchased credits; Enterprise purchases shared credits separately. Admins set monthly member caps. Member and seat management are not yet available.'),
+      organization:t('企业 2 个真人席位起购。Teams 每席内含额度独立，加购额度共享；Enterprise 另购共享额度。企业所有者可移除成员并立即撤销企业访问权限，不删除个人账号及企业共有成果；席位分配与共享上限修改尚未开放。','Business plans start at 2 human seats. Teams includes separate seat credits and shared purchased credits; Enterprise purchases shared credits separately. Owners can immediately revoke a member’s business access without deleting their personal account or shared business work. Seat assignment and shared-limit changes are not available.'),
       procurement:t('深圳主体签约与收款；合同明确席位、Sage Credits、服务范围、含税金额和服务期。申请不是订单，也不自动续费；财务确认实际到账后才开通，汇款回单不等于付款确认。','The Shenzhen company contracts and collects payment. Contracts define seats, Sage Credits, scope, tax-inclusive charges and term. An inquiry is not an order and does not renew automatically. Access follows verified bank receipt, not a transfer document alone.')
     };
     const version = ++accountVersion;
     policies['my-usage'] = t('仅展示你在当前企业的席位与共享池使用限制，不展示其他成员或企业资金。共享上限不占用席位内含额度；如需调整，请联系企业管理员。','Only your seat and shared-pool usage limits in this business are shown, not other members or business funds. Shared caps do not reduce included seat credits. Contact your administrator for changes.');
     policies['credits-ledger'] = t('这里展示实际记录的额度动作，不是当前余额或人民币账单。预占不代表消耗，释放预占不代表退款；到期余额请在 Sage Credits 查看。','These are recorded credit movements, not current balances or a currency bill. Reservations are not consumption and releases are not refunds. Check Sage Credits for expiring balances.');
     policies['organization-history'] = t('只读展示已记录的席位分配和成员共享上限变更，不代表当前配置。操作人标识已脱敏；缺失的历史版本显示未知，不视为不限制。此处不会修改成员、席位或额度。','This is a read-only record of seat assignments and member shared-limit changes, not the current configuration. Actor identifiers are masked. Missing historical versions are unknown, not unlimited. This page does not change members, seats or Credits.');
-    document.title = t('订阅与账单 · Sage','Billing · Sage');
-    shell(`<header class="page-heading"><span class="eyebrow">SAGE / BILLING</span><h1>${t('订阅与账单','Subscription and billing')}</h1><p>${t('管理方案、用量、支付方式与付款记录','Manage plans, usage, payment methods and payment records.')}</p></header><div class="account-layout"><nav class="account-menu" aria-label="${t('账单导航','Billing navigation')}">${Object.entries(sections).map(([key,label]) => `<a href="#${key}" ${selected === key ? 'aria-current="page"' : ''}>${icon(icons[key])}${label}</a>`).join('')}</nav><section class="panel" aria-labelledby="account-section-title"><h2 id="account-section-title">${sections[selected]}</h2><div id="account-live" aria-live="polite"></div><div class="policy-block"><h3>${t('使用与办理说明','How it works')}</h3><p>${policies[selected]}</p>${selected === 'procurement' ? `<a class="button" href="${page('enterprise')}#contact">${t('查看企业服务与采购说明','View enterprise services and procurement')}</a>` : ''}</div>${selected === 'credits' ? `<section id="credit-packs" aria-live="polite"></section>` : ''}</section></div><p class="notice">${boundary}</p>`);
+    document.title = t('我的账单 · Sage','My bills · Sage');
+    shell(`<div class="account-layout billing-center"><aside class="billing-center-sidebar"><nav class="account-menu" aria-label="${t('个人设置导航','Personal settings navigation')}"><a href="${page('profile')}">${icon('person')}${t('个人信息','Personal information')}</a><a href="${page('profile')}#usage">${icon('bar-chart')}${t('用量明细','Usage details')}</a><a href="${page('billing')}" aria-current="page">${icon('receipt')}${t('我的账单','My bills')}</a></nav><details class="billing-management" ${selected !== 'overview' ? 'open' : ''}><summary>${t('账务管理','Billing management')}</summary><nav class="account-menu" aria-label="${t('账务管理导航','Billing management navigation')}">${Object.entries(sections).filter(([key]) => key !== 'overview').map(([key,label]) => `<a href="#${key}" ${selected === key ? 'aria-current="page"' : ''}>${icon(icons[key])}${label}</a>`).join('')}</nav></details></aside><section class="panel billing-center-content" aria-labelledby="account-section-title"><h1 id="account-section-title">${sections[selected]}</h1><div id="account-live" aria-live="polite"></div>${selected !== 'overview' ? `<div class="policy-block"><h3>${t('使用与办理说明','How it works')}</h3><p>${policies[selected]}</p>${selected === 'procurement' ? `<a class="button" href="${page('enterprise')}#contact">${t('查看企业服务与采购说明','View enterprise services and procurement')}</a>` : ''}</div>` : ''}${selected === 'credits' ? `<section id="credit-packs" aria-live="polite"></section>` : ''}</section></div>`);
     const target = document.querySelector('#account-live');
     if (!session?.authenticated || sessionBusy || !activeAccount()) {
       const reason = sessionBusy || sessionState === 'loading' ? t('正在确认账户，请稍候…','Confirming your account…') : sessionState === 'signed-out' ? t('登录后查看当前账户的数据。','Sign in to view your account data.') : accountUnavailable;
@@ -565,7 +566,26 @@
       if (data.account?.id !== expectedAccount || typeof data.account.name !== 'string' || !['personal','business'].includes(data.account.kind) || !data.credits || !Array.isArray(data.orders)) throw new Error('INVALID_ACCOUNT');
       const prefix = `<p class="account-context">${escape(accountName(data.account))} · ${data.account.kind === 'personal' ? t('个人账户','Personal account') : t('企业账户','Business account')}</p>`;
       let content;
-      if (selected === 'credits') {
+      if (selected === 'overview') {
+        target.innerHTML = `<section class="billing-overview-card" aria-labelledby="billing-plan-title"><div id="billing-plan-summary"><h3 id="billing-plan-title">${t('当前订阅','Current plan')}</h3><p>${t('正在读取订阅…','Loading subscriptions…')}</p></div><div class="billing-plan-upgrade">${icon('lock')}<p>${t('查看适合你的订阅计划与 Sage Credits。','Explore subscription plans and Sage Credits for your needs.')}</p><a class="button primary" href="${page('pricing')}">${t('升级','Upgrade')}</a></div></section><section class="billing-overview-card billing-manage-card"><div><h3>${t('管理账单信息','Manage billing information')}</h3><p>${t('管理你的订阅、付款方式与账单信息。','Manage your subscriptions, payment methods and billing information.')}</p></div><a class="button primary" href="#subscription">${t('管理订阅','Manage subscription')}</a></section><section class="billing-overview-card billing-orders-card"><div id="billing-overview-orders"></div></section>`;
+        const summary = target.querySelector('#billing-plan-summary');
+        const readPlan = async () => {
+          summary.innerHTML = `<h3 id="billing-plan-title">${t('当前订阅','Current plan')}</h3><p>${t('正在读取订阅…','Loading subscriptions…')}</p>`;
+          try {
+            const subscriptions = await api('/api/billing/subscriptions');
+            if (!current()) return;
+            if (!Array.isArray(subscriptions.items) || !subscriptions.items.every(validSubscription)) throw new Error('INVALID_SUBSCRIPTIONS');
+            const items = subscriptions.items.filter(item => item.status !== 'expired');
+            summary.innerHTML = items.length ? items.map(item => `<div class="billing-plan-item"><h3 ${item === items[0] ? 'id="billing-plan-title"' : ''}>${escape(({pro:'Pro',pro_plus:'Pro+',ultra:'Ultra',teams:'Teams',enterprise:'Enterprise'})[item.plan_code] || item.plan_code)}</h3><p>${item.billing_cycle === 'annual' ? t('按年订阅','Annual subscription') : t('按月订阅','Monthly subscription')} · ${item.status === 'scheduled' ? t('待生效','Scheduled') : statusLabel(item.status)}</p><p>${t('金额以订单记录为准','See orders for the confirmed amount')}</p></div>`).join('') : `<h3 id="billing-plan-title">${t('未订阅','No subscription')}</h3><p>${t('当前账户没有生效或待生效的付费订阅。','This account has no active or scheduled paid subscription.')}</p><a class="text-link" href="${page('trial')}">${t('免费体验','Free trial')}</a>`;
+          } catch (error) {
+            if (!current()) return;
+            summary.innerHTML = `<h3 id="billing-plan-title">${t('当前订阅','Current plan')}</h3><p class="error" role="status">${requestError(error,t('订阅读取失败，当前方案未知。','Subscriptions could not be loaded. Your current plan is unknown.'))}</p><button type="button" class="text-link" data-plan-retry>${t('重新读取','Retry')}</button>`;
+            summary.querySelector('[data-plan-retry]').onclick = readPlan;
+          }
+        };
+        await Promise.all([readPlan(),renderOrders(target.querySelector('#billing-overview-orders'), '', current, expectedAccount, version, 0, true)]);
+        return;
+      } else if (selected === 'credits') {
         const balances = [['available',t('可用','Available')],['reserved',t('任务预占','Reserved')],['frozen',t('退款冻结','Frozen')],['consumed',t('已消耗','Consumed')],['expired',t('已过期','Expired')],['refunded',t('已退款核销','Refunded credits')]];
         for (const [key] of balances) if (typeof data.credits[key] !== 'string' || !/^\d+(\.\d+)?$/.test(data.credits[key])) throw new Error('INVALID_BALANCE');
         if (!Array.isArray(data.credits.batches)) throw new Error('INVALID_BALANCE');
@@ -695,20 +715,22 @@
           (data.items.length && data.total < offset+data.items.length)) throw new Error('INVALID_ORGANIZATION_HISTORY');
       const ids = new Set();
       for (const item of data.items) {
-        if (!item || !['seat_assignment','shared_limit'].includes(item.type) ||
-            typeof item.id !== 'string' || !(item.type === 'seat_assignment' ? /^seat:[1-9]\d*$/.test(item.id) : /^limit:[1-9]\d*$/.test(item.id)) || ids.has(item.id) ||
+        if (!item || !['seat_assignment','shared_limit','member_removal'].includes(item.type) ||
+            typeof item.id !== 'string' || !(item.type === 'seat_assignment' ? /^seat:[1-9]\d*$/.test(item.id) : item.type === 'member_removal' ? /^removal:[1-9]\d*$/.test(item.id) : /^limit:[1-9]\d*$/.test(item.id)) || ids.has(item.id) ||
             typeof item.created_at !== 'string' || !Number.isFinite(Date.parse(item.created_at)) ||
-            typeof item.actor_masked_identifier !== 'string' || !positive(item.version)) throw new Error('INVALID_ORGANIZATION_CHANGE');
+            typeof item.actor_masked_identifier !== 'string' || (item.type !== 'member_removal' && !positive(item.version))) throw new Error('INVALID_ORGANIZATION_CHANGE');
         if (item.type === 'seat_assignment') {
           if (typeof item.seat_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.seat_id) ||
               !positive(item.seat_position) || !Number.isSafeInteger(item.before_version) || item.before_version < 0 || item.version !== item.before_version+1 ||
               [item.before_membership_id,item.after_membership_id].some(value=>value !== null && !positive(value))) throw new Error('INVALID_SEAT_CHANGE');
-        } else if (!positive(item.membership_id) || !quantity(item.quantity) || typeof item.previous_known !== 'boolean' ||
+        } else if(item.type === 'member_removal') {if(!positive(item.membership_id)||typeof item.handoff_pending!=='boolean'||!Number.isSafeInteger(item.pending_task_count)||item.pending_task_count<0||item.executor_connected!==false)throw Error('INVALID_REMOVAL_HISTORY');}
+        else if (!positive(item.membership_id) || !quantity(item.quantity) || typeof item.previous_known !== 'boolean' ||
                    !quantity(item.previous_quantity) || (!item.previous_known && item.previous_quantity !== null)) throw new Error('INVALID_SHARED_LIMIT_CHANGE');
         ids.add(item.id);
       }
       target.innerHTML = `<h3 class="records-title" id="organization-history-title" tabindex="-1">${t('席位与共享上限历史','Seat and shared-limit history')}</h3>` +
         (data.items.length ? `<ul class="record-list">${data.items.map(item=>{
+          if(item.type==='member_removal')return `<li class="billing-notification" data-organization-change="${escape(item.id)}"><div><strong>${t('成员','Member')} #${item.membership_id} · ${t('企业权限已撤销','Business access revoked')}</strong><p>${item.handoff_pending?t('工作交接待处理；真实任务执行器尚未接通。','Work handoff pending; no live task executor is connected.'):t('个人账号与企业共有成果保留。','Personal account and shared business work retained.')}</p><small>${dateLabel(item.created_at)}</small><p>${t('操作人','Changed by')}：${escape(item.actor_masked_identifier||unknown())}</p></div></li>`;
           const seat = item.type === 'seat_assignment';
           const title = seat ? `${t('席位','Seat')} ${item.seat_position} · ${t('分配变更','Assignment change')}` : `${t('成员','Member')} #${item.membership_id} · ${t('共享上限变更','Shared limit change')}`;
           const previous = seat ? member(item.before_membership_id) : item.previous_known ? limit(item.previous_quantity) : unknown();
@@ -800,7 +822,7 @@
     }
   }
 
-  async function renderOrders(target, prefix, current, accountId, version, offset = 0) {
+  async function renderOrders(target, prefix, current, accountId, version, offset = 0, overview = false) {
     const request = Symbol(); target.ordersRequest = request;
     const latest = () => current() && target.ordersRequest === request;
     target.innerHTML = prefix + emptyText(t('正在读取订单…','Loading orders…'));
@@ -818,10 +840,25 @@
             !Number.isFinite(Date.parse(item.created_at))) throw new Error('INVALID_ORDERS');
         ids.add(item.id);
       }
-      target.innerHTML = prefix + `<h3 class="records-title" id="orders-list-title" tabindex="-1">${t('付款与订单记录','Payments and orders')}</h3>` + (data.items.length ? `<ul class="record-list">${data.items.map(order => `<li><span>${escape(order.plan_code || t('订单','Order'))}</span><strong>${money(order.amount_minor, true)}</strong><span>${statusLabel(order.status)}</span><small>${dateLabel(order.created_at)}</small><button class="text-link" data-order="${escape(order.id)}">${t('查看详情','View details')}</button></li>`).join('')}</ul>` : emptyText(offset ? t('此页没有订单记录，请返回上一页。','There are no orders on this page. Return to the previous page.') : t('当前账户还没有订单。','This account has no orders.'))) + `<div class="organization-pagination">${offset ? `<button class="text-link" data-orders-prev>${t('上一页','Previous')}</button>` : ''}${data.next_offset !== null ? `<button class="text-link" data-orders-next>${t('下一页','Next')}</button>` : ''}<button class="text-link" data-orders-refresh>${t('刷新订单','Refresh orders')}</button></div><div id="order-detail" tabindex="-1"></div>`;
+      const kind = order => ['subscription','credits'].includes(order.snapshot?.kind) ? order.snapshot.kind : 'unknown';
+      const kindLabel = value => ({subscription:t('订阅','Subscription'),credits:t('资源包','Credit pack'),unknown:unknown()})[value];
+      const products = [...new Set(data.items.map(order => order.plan_code || ''))].filter(Boolean);
+      const kinds = [...new Set(data.items.map(kind))];
+      const table = `<div class="billing-orders-table-wrap"><table class="billing-orders-table"><thead><tr><th scope="col">${t('日期','Date')}</th><th scope="col">${t('金额','Amount')}</th><th scope="col">${t('状态','Status')}</th><th scope="col"><label>${t('商品','Product')}<select data-order-product aria-label="${t('筛选当前页商品','Filter products on this page')}"><option value="">${t('全部','All')}</option>${products.map(value => `<option value="${escape(value)}">${escape(value)}</option>`).join('')}</select></label></th><th scope="col"><label>${t('订单类型','Order type')}<select data-order-kind aria-label="${t('筛选当前页订单类型','Filter order types on this page')}"><option value="">${t('全部','All')}</option>${kinds.map(value => `<option value="${value}">${kindLabel(value)}</option>`).join('')}</select></label></th><th scope="col"><span class="sr-only">${t('操作','Actions')}</span></th></tr></thead><tbody></tbody></table></div><p class="billing-filter-scope">${t('筛选范围：当前页订单','Filters apply to orders on the current page')}</p>`;
+      target.innerHTML = prefix + `<h3 class="records-title" id="orders-list-title" tabindex="-1">${overview ? t('订单','Orders') : t('付款与订单记录','Payments and orders')}</h3>` + (overview ? table : data.items.length ? `<ul class="record-list">${data.items.map(order => `<li><span>${escape(order.plan_code || t('订单','Order'))}</span><strong>${money(order.amount_minor, true)}</strong><span>${statusLabel(order.status)}</span><small>${dateLabel(order.created_at)}</small><button class="text-link" data-order="${escape(order.id)}">${t('查看详情','View details')}</button></li>`).join('')}</ul>` : emptyText(offset ? t('此页没有订单记录，请返回上一页。','There are no orders on this page. Return to the previous page.') : t('当前账户还没有订单。','This account has no orders.'))) + `<div class="organization-pagination">${offset ? `<button class="text-link" data-orders-prev>${t('上一页','Previous')}</button>` : ''}${data.next_offset !== null ? `<button class="text-link" data-orders-next>${t('下一页','Next')}</button>` : ''}<button class="text-link" data-orders-refresh>${t('刷新订单','Refresh orders')}</button></div><div id="order-detail" tabindex="-1"></div>`;
+      if (overview) {
+        const rows = () => {
+          const product = target.querySelector('[data-order-product]').value, type = target.querySelector('[data-order-kind]').value;
+          const items = data.items.filter(order => (!product || order.plan_code === product) && (!type || kind(order) === type));
+          target.querySelector('tbody').innerHTML = items.length ? items.map(order => `<tr><td>${dateLabel(order.created_at)}</td><td>${money(order.amount_minor,true)}</td><td>${statusLabel(order.status)}</td><td>${escape(order.plan_code || unknown())}</td><td>${kindLabel(kind(order))}</td><td><button type="button" class="text-link" data-order="${escape(order.id)}">${t('查看详情','View details')}</button></td></tr>`).join('') : `<tr><td colspan="6" class="billing-orders-empty">${data.items.length ? t('没有符合筛选条件的订单。','No orders match these filters.') : t('未找到账单。','No bills found.')}</td></tr>`;
+          for (const button of target.querySelectorAll('[data-order]')) button.onclick = () => loadOrder(button.dataset.order,accountId,version);
+        };
+        target.querySelectorAll('select').forEach(select => select.onchange = rows);
+        rows();
+      }
       const navigate = async next => {
         if (!latest()) return;
-        await renderOrders(target, prefix, current, accountId, version, next);
+        await renderOrders(target, prefix, current, accountId, version, next, overview);
         if (current()) target.querySelector('#orders-list-title')?.focus();
       };
       target.querySelector('[data-orders-prev]')?.addEventListener('click', () => navigate(Math.max(0,offset-50)));
@@ -835,7 +872,7 @@
     } catch (error) {
       if (!latest()) return;
       target.innerHTML = prefix + `<p class="error" role="status">${requestError(error,t('订单记录读取失败，当前状态未知。请重新查询，不要重复付款。','Orders could not be loaded. Their status is unknown. Retry the read; do not pay again.'))}</p><button class="button" data-orders-retry>${t('重新读取订单','Retry orders')}</button>`;
-      target.querySelector('[data-orders-retry]').addEventListener('click', () => renderOrders(target,prefix,current,accountId,version,offset));
+      target.querySelector('[data-orders-retry]').addEventListener('click', () => renderOrders(target,prefix,current,accountId,version,offset,overview));
     }
   }
 
@@ -854,6 +891,29 @@
       const quantity = value => value === null ? '—' : `${escape(value)} Sage Credits`;
       const roles = {owner:t('所有者','Owner'),billing_admin:t('账务管理员','Billing admin'),member:t('成员','Member')};
       target.innerHTML = prefix + `<h3 class="records-title">${t('成员与席位','Members and seats')}</h3><dl class="account-metrics"><div><dt>${t('购买席位','Purchased seats')}</dt><dd>${data.seat_count}</dd></div><div><dt>${t('已分配','Assigned')}</dt><dd>${data.assigned_seats}</dd></div><div><dt>${t('成员总数','Total members')}</dt><dd>${data.total_members}</dd></div></dl><p class="account-context">${data.subscription_active ? `${t('当前额度周期','Current credit period')}：${dateLabel(data.period_start)} – ${dateLabel(data.period_end)}` : t('当前没有生效中的订阅，本期共享用量暂不计算；“—”不表示零。','There is no active subscription. Current-period shared usage is unavailable; “—” does not mean zero.')}</p><p class="account-context">${t('当前为只读视图。席位分配与上限修改尚未开放，不会在此产生变更。','This view is read-only. Seat assignments and limit changes are not available here.')}</p>${data.members.length ? `<ul class="record-list organization-members">${data.members.map(item => `<li><strong>${escape(item.masked_identifier || `${t('成员','Member')} #${item.id}`)}</strong><span>${escape(roles[item.role] || unknown())} · ${item.active ? t('有效成员','Active member') : t('已停用','Inactive')}</span><span>${item.seat_position === null ? t('未分配席位','No seat assigned') : `${t('席位','Seat')} ${escape(item.seat_position)}`}</span><small>${t('共享上限','Shared limit')}：${item.shared_limit === null ? t('不限制','Unlimited') : item.shared_limit === '0' ? t('禁止使用共享池','Shared pool disabled') : quantity(item.shared_limit)}</small><small>${t('共享已用','Shared used')}：${quantity(item.shared_used)} · ${t('共享预占','Shared reserved')}：${quantity(item.shared_reserved)}</small></li>`).join('')}</ul>` : emptyText(t('此页没有成员记录。','There are no members on this page.'))}<div class="organization-pagination">${offset > 0 ? `<button class="text-link" data-org-offset="${Math.max(0,offset-50)}">${t('上一页','Previous')}</button>` : ''}${data.next_offset !== null && Number.isInteger(data.next_offset) ? `<button class="text-link" data-org-offset="${data.next_offset}">${t('下一页','Next')}</button>` : ''}<a class="text-link" href="#credits">${t('查看 Sage Credits 批次','View Sage Credits batches')}</a></div>`;
+      const policy=target.querySelectorAll('.account-context')[1];
+      if(policy)policy.textContent=t('企业所有者可移除成员并立即撤销企业访问权限；个人账号和企业共有成果保留。席位分配与额度上限修改尚未开放。','Owners can remove members and immediately revoke business access. Personal accounts and shared business work are retained. Seat assignment and limit changes are not available.');
+      for(const [index,item] of data.members.entries()){
+        if(data.capabilities?.member_removal===true&&item.can_remove===true&&item.active&&item.role!=='owner'){
+          const action=document.createElement('button');action.type='button';action.className='button';action.textContent=t('移除成员','Remove member');action.addEventListener('click',()=>removeMember(item,action));target.querySelectorAll('.organization-members>li')[index].append(action);
+        }
+      }
+      function removeMember(item,trigger){
+        const dialog=document.createElement('dialog');dialog.className='member-removal-dialog';dialog.setAttribute('aria-labelledby','member-removal-title');
+        dialog.innerHTML=`<h2 id="member-removal-title">${t('移除企业成员','Remove business member')}</h2><p><strong>${escape(item.masked_identifier)}</strong></p><p>${t('确认后立即撤销此成员的企业访问权限。个人账号、其他企业身份及本企业共有成果不会删除。','Confirmation immediately revokes this member’s business access. Their personal account, other memberships and shared business work are not deleted.')}</p><p>${t('席位和额度按实际记录处理。运行中工作交接将留下待办记录；真实任务执行器尚未接通，不表示任务已完成交接。','Seats and Credits follow recorded state. Active work receives a pending handoff record. The task executor is not connected; this does not confirm completed task handoff.')}</p><label><input type="checkbox" data-remove-consent> ${t('我确认立即撤销该成员的企业权限，并保留其个人账号与企业共有成果。','I confirm immediate business-access revocation while preserving their personal account and shared business work.')}</label><p data-remove-feedback role="status"></p><div class="member-removal-actions"><button type="button" class="button" data-remove-cancel>${t('取消','Cancel')}</button><button type="button" class="button primary" data-remove-confirm disabled>${t('确认移除','Confirm removal')}</button></div>`;
+        const consent=dialog.querySelector('[data-remove-consent]'),confirm=dialog.querySelector('[data-remove-confirm]'),cancel=dialog.querySelector('[data-remove-cancel]'),feedback=dialog.querySelector('[data-remove-feedback]');
+        const key=crypto.randomUUID(),previousOverflow=document.body.style.overflow;let busy=false,closed=false;
+        function close(){if(closed)return;closed=true;dialog.close();dialog.remove();if(closeMemberDialog===close){document.body.style.overflow=previousOverflow;closeMemberDialog=null;}if(trigger.isConnected)trigger.focus();}closeMemberDialog=close;
+        consent.addEventListener('change',()=>confirm.disabled=!consent.checked||busy);cancel.addEventListener('click',close);
+        dialog.addEventListener('cancel',event=>{event.preventDefault();if(!busy)close();});dialog.addEventListener('click',event=>{if(event.target===dialog&&!busy){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)close();}});
+        confirm.addEventListener('click',async()=>{
+          if(busy||!consent.checked)return;if(!current()||session?.active_account_id!==accountId){close();return;}busy=true;confirm.disabled=true;cancel.disabled=true;consent.disabled=true;
+          try{const result=await api('/api/billing/organization/members/remove',{membership_id:item.id,request_key:key,confirm:true},session.csrf_token,{'X-Billing-Account':accountId});if(!current()){close();return;}if(result.removed!==true||result.membership_id!==item.id||typeof result.removal_id!=='string'||result.executor_connected!==false||typeof result.handoff_pending!=='boolean')throw Error('INVALID_REMOVAL');
+            close();await renderOrganization(target,prefix,current,accountId,offset);if(current()){const note=document.createElement('p');note.setAttribute('role','status');note.className='account-context';note.textContent=result.handoff_pending?t('成员企业权限已撤销。工作交接已记录为待处理，未连接真实任务执行器。','Business access revoked. Work handoff is recorded as pending; no live executor is connected.'):t('成员企业权限已撤销，个人账号与企业共有成果保留。','Business access revoked. Personal account and shared business work retained.');target.prepend(note);note.tabIndex=-1;note.focus();}
+          }catch(error){if(!current()){close();return;}feedback.textContent=requestError(error,t('移除结果未能确认。请刷新成员状态，或使用本弹窗重试；不要假定停权已完成。','Removal could not be confirmed. Refresh member status or retry in this dialog; do not assume access has been revoked.'));}
+          finally{busy=false;if(dialog.isConnected){confirm.disabled=!consent.checked;cancel.disabled=false;consent.disabled=false;}}
+        });document.body.append(dialog);document.body.style.overflow='hidden';dialog.showModal();cancel.focus();
+      }
       for (const button of target.querySelectorAll('[data-org-offset]')) button.addEventListener('click', () => renderOrganization(target,prefix,current,accountId,Number(button.dataset.orgOffset)));
     } catch (error) {
       if (!current() || target.organizationRequest !== request) return;
@@ -1251,8 +1311,9 @@
       } else if (view === 'checkout') await checkout(); else account();
     } catch (_) { fail(t('方案信息暂时无法加载。请重新加载，或返回首页。','Plan information could not be loaded. Retry or return to the homepage.')); }
   }
-  window.addEventListener('hashchange', () => { if (view === 'account' && catalog) { account(); const heading = document.querySelector('#account-section-title'); heading.setAttribute('tabindex', '-1'); heading.focus(); } });
+  window.addEventListener('hashchange', () => {closeMemberDialog?.(); if (view === 'account' && catalog) { account(); const heading = document.querySelector('#account-section-title'); heading.setAttribute('tabindex', '-1'); heading.focus(); } });
   window.addEventListener('pagehide', () => {
+    closeMemberDialog?.();
     sessionVersion++; accountVersion++; session = null; sessionBusy = false; logoutToken = null; sessionState = 'loading';
     sessionNotice = logoutPending ? t('本页账户数据已清除，但服务端退出尚未确认。','Account data is cleared from this page, but server sign-out is not confirmed.') : '';
     refreshSessionView();

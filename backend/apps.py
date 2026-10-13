@@ -23,17 +23,18 @@ def deployment_configuration(app_configs, **kwargs):
         except ValidationError:
             valid_sender = False
         if settings.AUTH_EMAIL_TRANSPORT == 'ses':
-            from .views import email_ready
-            if not email_ready():
-                errors.append(Error('Enabled SES requires region, credentials, template and valid sender.',
+            from .views import email_transport_ready
+            # Purpose templates retain their own runtime and launch gates.
+            if not email_transport_ready():
+                errors.append(Error('Enabled SES transport requires region, credentials and valid sender.',
                                     id='sage.E004'))
         elif (settings.AUTH_EMAIL_TRANSPORT != 'smtp' or not settings.EMAIL_HOST or not valid_sender or
                 settings.EMAIL_BACKEND != 'django.core.mail.backends.smtp.EmailBackend' or
                 not settings.EMAIL_USE_TLS or not 1 <= settings.EMAIL_PORT <= 65535):
-            errors.append(Error('Enabled email sign-in requires SMTP, STARTTLS and a valid sender.',
+            errors.append(Error('Enabled email delivery requires SMTP, STARTTLS and a valid sender.',
                                 id='sage.E004'))
     else:
-        errors.append(Warning('Email sign-in is disabled; account activation is not ready.', id='sage.W001'))
+        errors.append(Warning('Email delivery is disabled; email verification is not ready.', id='sage.W001'))
     if settings.AUTH_PHONE_ENABLED:
         from .sms import phone_ready
         if not phone_ready():

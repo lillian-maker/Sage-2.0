@@ -42,6 +42,7 @@ TEMPLATES = [{'BACKEND': 'django.template.backends.django.DjangoTemplates', 'APP
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'tmp' / 'admin-static'
 MEDIA_ROOT = Path(os.environ.get('SAGE_MEDIA_ROOT', str(BASE_DIR / 'tmp' / 'avatars')))
+AVATAR_LOCAL_FLOCK_VERIFIED = os.environ.get('SAGE_AVATAR_LOCAL_FLOCK_VERIFIED') == '1'
 ROOT_URLCONF = 'backend.urls'
 WSGI_APPLICATION = 'backend.wsgi.application'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -78,10 +79,41 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8192
-AUTH_PASSWORD_VALIDATORS = []  # No password sign-in or password creation endpoint.
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 15}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
 
 # A missing delivery configuration must never fall back to a displayed/logged OTP.
 AUTH_EMAIL_ENABLED = os.environ.get('SAGE_AUTH_EMAIL_ENABLED') == '1'
+ACCOUNT_DELETION_ENABLED = os.environ.get('SAGE_ACCOUNT_DELETION_ENABLED') == '1'
+ACCOUNT_DELETION_POLICY_VERSION = os.environ.get('SAGE_ACCOUNT_DELETION_POLICY_VERSION', '')
+ACCOUNT_DELETION_POLICY_REVIEWED_AT = os.environ.get('SAGE_ACCOUNT_DELETION_POLICY_REVIEWED_AT', '')
+ACCOUNT_DELETION_RETENTION_DAYS = int(os.environ.get('SAGE_ACCOUNT_DELETION_RETENTION_DAYS', '0'))
+ACCOUNT_DELETION_MARKER_RETENTION_DAYS = int(os.environ.get('SAGE_ACCOUNT_DELETION_MARKER_RETENTION_DAYS', '0'))
+ACCOUNT_DELETION_MARKER_KEY = os.environ.get('SAGE_ACCOUNT_DELETION_MARKER_KEY', '')
+ACCOUNT_DELETION_SES_TEMPLATE_ID = os.environ.get('SAGE_ACCOUNT_DELETION_SES_TEMPLATE_ID', '')
+AUTH_PASSWORD_SES_TEMPLATE_ID = os.environ.get('SAGE_AUTH_PASSWORD_SES_TEMPLATE_ID', '')
+AUTH_REGISTRATION_SES_TEMPLATE_ID = os.environ.get('SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID', '')
+AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID = os.environ.get('SAGE_AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID', '')
+AUTH_GOOGLE_BIND_SES_TEMPLATE_ID = os.environ.get('SAGE_AUTH_GOOGLE_BIND_SES_TEMPLATE_ID', '')
+AUTH_GOOGLE_ENABLED = os.environ.get('SAGE_AUTH_GOOGLE_ENABLED') == '1'
+GOOGLE_CLIENT_ID = os.environ.get('SAGE_GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('SAGE_GOOGLE_CLIENT_SECRET', '')
+GOOGLE_REDIRECT_URI = os.environ.get('SAGE_GOOGLE_REDIRECT_URI', '')
+GOOGLE_BRAND_READY = os.environ.get('SAGE_GOOGLE_BRAND_READY') == '1'
+AUTH_REGISTRATION_ENABLED = os.environ.get('SAGE_AUTH_REGISTRATION_ENABLED') == '1'
+AUTH_REGISTRATION_TERMS_VERSION = os.environ.get('SAGE_AUTH_REGISTRATION_TERMS_VERSION', '')
+AUTH_REGISTRATION_TERMS_URL = os.environ.get('SAGE_AUTH_REGISTRATION_TERMS_URL', '')
+AUTH_REGISTRATION_PRIVACY_URL = os.environ.get('SAGE_AUTH_REGISTRATION_PRIVACY_URL', '')
+AUTH_REGISTRATION_TERMS_READY = os.environ.get('SAGE_AUTH_REGISTRATION_TERMS_READY') == '1'
+AUTH_CAPTCHA_ENABLED = os.environ.get('SAGE_AUTH_CAPTCHA_ENABLED') == '1'
+CAPTCHA_SECRET_ID = os.environ.get('SAGE_CAPTCHA_SECRET_ID', '')
+CAPTCHA_SECRET_KEY = os.environ.get('SAGE_CAPTCHA_SECRET_KEY', '')
+CAPTCHA_APP_ID = os.environ.get('SAGE_CAPTCHA_APP_ID', '')
+CAPTCHA_APP_SECRET_KEY = os.environ.get('SAGE_CAPTCHA_APP_SECRET_KEY', '')
 AUTH_EMAIL_TRANSPORT = os.environ.get('SAGE_AUTH_EMAIL_TRANSPORT', 'smtp')
 SES_SECRET_ID = os.environ.get('SAGE_SES_SECRET_ID', '')
 SES_SECRET_KEY = os.environ.get('SAGE_SES_SECRET_KEY', '')
@@ -96,6 +128,12 @@ SMS_REGION = os.environ.get('SAGE_SMS_REGION', '')
 SMS_SDK_APP_ID = os.environ.get('SAGE_SMS_SDK_APP_ID', '')
 SMS_SIGN = os.environ.get('SAGE_SMS_SIGN', '')
 SMS_TEMPLATE_ID = os.environ.get('SAGE_SMS_TEMPLATE_ID', '')
+SMS_REGISTRATION_TEMPLATE_ID = os.environ.get('SAGE_SMS_REGISTRATION_TEMPLATE_ID', '')
+SMS_REGISTRATION_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_REGISTRATION_TEMPLATE_APPROVED') == '1'
+SMS_PASSWORD_TEMPLATE_ID = os.environ.get('SAGE_SMS_PASSWORD_TEMPLATE_ID', '')
+SMS_PASSWORD_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_PASSWORD_TEMPLATE_APPROVED') == '1'
+SMS_PASSWORD_CHANGED_TEMPLATE_ID = os.environ.get('SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_ID', '')
+SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED') == '1'
 # Only exact configured proxy peers may supply a single, overwritten client-IP header.
 TRUSTED_PROXY_IPS = tuple(filter(None, os.environ.get('SAGE_TRUSTED_PROXY_IPS', '').split(',')))
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -112,6 +150,7 @@ AUTH_RESEND_SECONDS = 60
 AUTH_IDENTIFIER_LIMIT = 5
 AUTH_IP_LIMIT = 20
 AUTH_WINDOW_SECONDS = 900
+INVITATION_CODES_READY = os.environ.get('SAGE_INVITATION_CODES_READY') == '1'
 
 # The shipping process must separately approve real channel adapters and products.
 BILLING_SALES_ENABLED = False
@@ -126,5 +165,9 @@ BILLING_TERMS_DOCUMENTS = {}
 # D10 eligibility must be confirmed before exposing paid Credits purchases.
 BILLING_CREDITS_PURCHASE_ENABLED = False
 LOGGING = {'version': 1, 'disable_existing_loggers': False,
+           'filters': {'oauth_query': {'()': 'backend.http.OAuthQueryFilter'}},
            'handlers': {'console': {'class': 'logging.StreamHandler'}},
-           'loggers': {'sage': {'handlers': ['console'], 'level': 'INFO', 'propagate': False}}}
+           'loggers': {'sage': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+               'django.server': {'filters': ['oauth_query']},
+               'django.request': {'filters': ['oauth_query']},
+               'gunicorn.access': {'filters': ['oauth_query']}}}

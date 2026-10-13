@@ -433,15 +433,19 @@ def finish_payment_method_removal(account, method_id, *, evidence_hash):
 
 
 @transaction.atomic
-def organization_summary(account, *, offset=0, viewer=None):
+def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
     """Admin roster or authenticated viewer's own limits; never returns funds."""
     from fractions import Fraction
-    from backend.models import Membership
+    from backend.models import Membership, MemberRemoval
     from .models import PaidSeat, CreditEntry
     from .billing import _text
     account = _lock_account(account)
     if account.kind != 'business':
         raise ValueError('FORBIDDEN')
+    can_remove = False
+    if admin_actor is not None:
+        _authorize_purchase(account,admin_actor)
+        can_remove = Membership.objects.filter(account=account,user=admin_actor,role='owner',is_active=True).exists()
     if type(offset) is not int or offset < 0:
         raise ValueError('INVALID_REQUEST')
     if viewer is not None and offset:
@@ -465,7 +469,10 @@ def organization_summary(account, *, offset=0, viewer=None):
             raise ValueError('FORBIDDEN')
     total = members.count()
     items = []
-    for member in members[offset:offset+50]:
+    page_members = list(members[offset:offset+50])
+    removals = {row.membership_id:row for row in MemberRemoval.objects.filter(account=account,
+        membership_id__in=[member.pk for member in page_members])}
+    for member in page_members:
         seat = seats.filter(membership=member).first()
         limit = member.shared_limit_changes.order_by('-version').first()
         used,reserved = Fraction(0),Fraction(0)
@@ -479,7 +486,10 @@ def organization_summary(account, *, offset=0, viewer=None):
                     reserved += _quantity(entry.quantity)
         items.append({'id':member.pk,'user_id':member.user_id,'role':member.role,'active':member.is_active,
             'seat_position':seat.position if seat else None,'shared_limit':limit.quantity if limit else None,
-            'shared_used':_text(used) if start else None,'shared_reserved':_text(reserved) if start else None})
+            'shared_used':_text(used) if start else None,'shared_reserved':_text(reserved) if start else None,
+            'can_remove':bool(can_remove and member.is_active and member.role != 'owner' and member.user_id != admin_actor.pk),
+            'removed_at':removals[member.pk].created_at.isoformat() if member.pk in removals else None,
+            'handoff_pending':removals[member.pk].handoff_pending if member.pk in removals else False})
     if viewer is not None:
         return {'account_id':str(account.pk),'member':items[0],
             'subscription_active':bool(period),'period_start':start.isoformat() if start else None,
@@ -488,13 +498,52 @@ def organization_summary(account, *, offset=0, viewer=None):
         'next_offset':offset+50 if offset+50<total else None,'seat_count':seats.count(),
         'assigned_seats':seats.filter(membership__isnull=False).count(),'subscription_active':bool(period),
         'period_start':start.isoformat() if start else None,'period_end':end.isoformat() if end else None,
-        'can_edit':False}
+        'can_edit':False,'capabilities':{'member_removal':can_remove},'executor_connected':False}
+
+
+def _member_removal_dict(record):
+    return {'removal_id':str(record.pk),'membership_id':record.membership_id,'removed':True,
+        'handoff_pending':record.handoff_pending,'executor_connected':False}
+
+
+@transaction.atomic
+def remove_member(account, actor, membership_id, *, request_key, request_id=None):
+    """Revoke one company membership; preserve seats, tasks and other accounts."""
+    from backend.models import Membership, MemberRemoval
+    from .models import Reservation
+    account = _lock_account(account)
+    if (account.kind != 'business' or not actor or not actor.is_active or
+            not Membership.objects.filter(account=account,user=actor,role='owner',is_active=True,
+                user__is_active=True).exists()):
+        raise ValueError('FORBIDDEN')
+    if not isinstance(request_key,str) or not re.fullmatch(r'[A-Za-z0-9._:-]{1,64}',request_key):
+        raise ValueError('INVALID_IDEMPOTENCY_KEY')
+    if type(membership_id) is not int or membership_id < 1:
+        raise ValueError('INVALID_REQUEST')
+    existing = MemberRemoval.objects.filter(account=account,request_key=request_key).first()
+    if existing:
+        if existing.membership_id != membership_id or existing.actor_id != actor.pk:
+            raise ValueError('IDEMPOTENCY_CONFLICT')
+        return _member_removal_dict(existing)
+    target = _get(Membership.objects.select_for_update(),account=account,pk=membership_id)
+    if target.user_id == actor.pk or target.role == 'owner':
+        raise ValueError('OWNER_REMOVAL_FORBIDDEN')
+    if not target.is_active:
+        raise ValueError('MEMBER_ALREADY_REMOVED')
+    reservations = [str(pk) for pk in Reservation.objects.filter(account=account,membership=target,
+        state='reserved').order_by('id').values_list('id',flat=True)]
+    target.is_active = False
+    target.save(update_fields=['is_active'])
+    record = MemberRemoval.objects.create(account=account,membership=target,actor=actor,request_key=request_key,
+        pending_reservation_ids=reservations,handoff_pending=bool(reservations))
+    AuditEvent.objects.create(account=account,actor=actor,action='membership.removed',request_id=request_id or uuid.uuid4())
+    return _member_removal_dict(record)
 
 
 def organization_history(account, *, offset=0):
     """Read existing audit versions; HTTP applies the existing financial role gate."""
     from django.db.models import F, Value
-    from backend.models import LoginIdentity, Membership
+    from backend.models import LoginIdentity, Membership, MemberRemoval
     from .models import SeatChange, SharedLimitChange
     if account.kind != 'business':
         raise ValueError('FORBIDDEN')
@@ -502,16 +551,21 @@ def organization_history(account, *, offset=0):
         raise ValueError('INVALID_REQUEST')
     seats = SeatChange.objects.filter(seat__subscription__account=account)
     limits = SharedLimitChange.objects.filter(membership__account=account)
+    removals = MemberRemoval.objects.filter(account=account)
     keys = seats.annotate(history_type=Value('seat_assignment'),event_id=F('id')).values(
         'history_type','event_id','created_at').union(limits.annotate(
             history_type=Value('shared_limit'),event_id=F('id')).values(
-                'history_type','event_id','created_at'),all=True)
+                'history_type','event_id','created_at'),removals.annotate(
+                    history_type=Value('member_removal'),event_id=F('id')).values(
+                        'history_type','event_id','created_at'),all=True)
     page = list(keys.order_by('-created_at','-history_type','-event_id')[offset:offset+51])
     seat_rows = {row.pk:row for row in seats.filter(pk__in=[item['event_id'] for item in page[:50]
         if item['history_type'] == 'seat_assignment']).select_related('seat')}
     limit_rows = {row.pk:row for row in limits.filter(pk__in=[item['event_id'] for item in page[:50]
         if item['history_type'] == 'shared_limit'])}
-    rows = list(seat_rows.values()) + list(limit_rows.values())
+    removal_rows = {row.pk:row for row in removals.filter(pk__in=[item['event_id'] for item in page[:50]
+        if item['history_type'] == 'member_removal'])}
+    rows = list(seat_rows.values()) + list(limit_rows.values()) + list(removal_rows.values())
     actor_ids = list(Membership.objects.filter(account=account,
         user_id__in=[row.actor_id for row in rows]).values_list('user_id',flat=True))
     actor_labels = {}
@@ -532,6 +586,13 @@ def organization_history(account, *, offset=0):
     previous = {(row.membership_id,row.version):row.quantity for row in limits.filter(previous_query)}
     items = []
     for key in page[:50]:
+        if key['history_type'] == 'member_removal':
+            row = removal_rows[key['event_id']]
+            items.append({'id':f'removal:{row.pk}','type':'member_removal','created_at':row.created_at.isoformat(),
+                'actor_masked_identifier':actor_labels.get(row.actor_id,''),'membership_id':row.membership_id,
+                'handoff_pending':row.handoff_pending,'pending_task_count':len(row.pending_reservation_ids),
+                'executor_connected':False})
+            continue
         seat_change = key['history_type'] == 'seat_assignment'
         row = (seat_rows if seat_change else limit_rows)[key['event_id']]
         item = {'id':f'{"seat" if seat_change else "limit"}:{row.pk}',

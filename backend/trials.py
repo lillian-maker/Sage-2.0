@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from .commerce.billing import _get, _identifier
+from .account import trial_identity_blocked
 from .models import TrialAttempt, TrialEvent
 
 
@@ -60,6 +61,8 @@ def _current(user):
 def _result(user, attempt=None):
     active = _current(user)
     eligibility = 'consumed' if active and active.task_state == 'completed' else 'locked' if active else 'available'
+    if not active and trial_identity_blocked(user):
+        eligibility = 'consumed'
     attempt = attempt or active
     return {'eligibility': eligibility, 'attempt': None if not attempt else {
         'id': str(attempt.pk), 'scenario': attempt.scenario, 'input_value': attempt.input_value,
@@ -91,6 +94,8 @@ def start_trial(user, scenario, value, request_key):
         if active.scenario != scenario or active.input_key != key:
             raise ValueError('TRIAL_ORIGINAL_TASK_REQUIRED')
         return _result(user, active)
+    if trial_identity_blocked(user):
+        raise ValueError('TRIAL_ALREADY_USED')
     attempt = TrialAttempt.objects.create(user=user, scenario=scenario, input_value=value,
         input_key=key, request_key=request_key)
     return _result(user, attempt)

@@ -11,6 +11,7 @@ import selectors
 import shutil
 import subprocess
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -23,8 +24,10 @@ from .commerce.billing import create_quote, create_order, record_confirmed_payme
 from .commerce.subscriptions import activate_subscription
 from .commerce.tests import FIXTURE_CHANNELS
 from .models import AuditEvent, BillingAccount, LoginChallenge, LoginIdentity, PurchaseInquiry
+from .authentication_tests import AUTH_FIXTURE
 
 
+@override_settings(**AUTH_FIXTURE)
 @override_settings(
     LOCAL=True,
     AUTH_EMAIL_ENABLED=True,
@@ -55,6 +58,9 @@ class AccountBrowserTests(LiveServerTestCase):
 
     def _run_browser(self, subscription_fixture=False, purchase_fixture=False):
         self.assertEqual(settings.ENVIRONMENT, "test", "Use SAGE_ENV=test for this isolated browser suite.")
+        supplier=patch('backend.authentication.CommonClient.call_json',return_value={'Response':{'CaptchaCode':1}})
+        network=supplier.start()
+        self.addCleanup(supplier.stop)
         self.assertTrue((settings.BASE_DIR / "dist/pages/auth.js").is_file(), "Run the release build first.")
         module = os.environ.get("PLAYWRIGHT_MODULE")
         self.assertTrue(module and os.path.isdir(module), "PLAYWRIGHT_MODULE must point to the existing installation.")
@@ -134,7 +140,9 @@ class AccountBrowserTests(LiveServerTestCase):
         self.assertEqual(inquiry.company, "Sage browser integration fixture")
         self.assertEqual(inquiry.seats, 2)
         self.assertEqual(inquiry.status, "received")
-        self.assertEqual(AuditEvent.objects.filter(action="auth.verified").count(), 1)
+        self.assertEqual(AuditEvent.objects.filter(action="auth.registered").count(), 1)
+        self.assertEqual(network.call_count,1)
+        self.assertTrue(identity.user.check_password('Violet!431'))
         self.assertEqual(AuditEvent.objects.filter(action="procurement.received").count(), 1)
         self.assertEqual((Order.objects.count(), PaymentFact.objects.count(), CreditBatch.objects.count()),
                          (1, 1, 1) if subscription_fixture else (1, 0, 0) if purchase_fixture else (0, 0, 0))

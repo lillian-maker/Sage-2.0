@@ -23,6 +23,8 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
     page.setDefaultTimeout(7000);
     const errors = [], requests = [];
     let review = true, attempt = null, malformed = false, listMode = 'single', releaseList = null;
+    let paymentFixture = false;
+    let overviewFixtures = false, planReadFails = false, planItems = [];
     let notificationMode = 'normal', releaseNotification = null;
     let refundAssessment = null, heldRefund = null, activeAccount = accountId;
     const notificationTypes = ['payment_received','cancellation_processing','cancellation_confirmed','credit_refund_reserved','credit_refund_refunded','credit_refund_released','unknown',
@@ -38,8 +40,10 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
       id:`33333333-3333-4333-8333-${String(index+1).padStart(12,'0')}`}));
     page.on('pageerror', error => errors.push(error.message));
     // Exercise current source without writing or rebuilding generated artifacts.
-    await page.route('**/billing.js', route => route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.js'),'utf8')}));
-    await page.route('**/billing.css', route => route.fulfill({contentType:'text/css',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.css'),'utf8')}));
+    await page.route(/\/billing\.js(?:\?.*)?$/, route => route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.js'),'utf8')}));
+    await page.route(/\/billing\.css(?:\?.*)?$/, route => route.fulfill({contentType:'text/css',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.css'),'utf8')}));
+    await page.route(/\/content-pages\.css(?:\?.*)?$/, route => route.fulfill({contentType:'text/css',body:fs.readFileSync(path.join(__dirname,'../src/pages/content-pages.css'),'utf8')}));
+    await page.route(/\/site-shell\.js(?:\?.*)?$/, route => route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/site-shell.js'),'utf8')}));
     await page.route('**/api/**', async route => {
       const request = route.request(), endpoint = new URL(request.url()).pathname;
       requests.push([endpoint,request.method()]);
@@ -48,6 +52,7 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
       if (endpoint === '/api/billing/catalog') return json(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/pages/billing-catalog.json'),'utf8')));
       if (endpoint === '/api/auth/session') return json({authenticated:true,user:{id:'fixture-user',display_name:'Fixture user'},accounts:[account,{...account,id:otherAccountId,name:'Fixture other'}],active_account_id:activeAccount,csrf_token:'fixture-only-csrf'});
       if (endpoint === '/api/billing/account') return json({account:activeAccount===accountId?account:{...account,id:otherAccountId,name:'Fixture other'},credits:{available:'10'},orders:activeAccount===accountId?[order]:[],capabilities:{}});
+      if (endpoint === '/api/billing/subscriptions') return planReadFails ? route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'UNAVAILABLE'}})}) : json({items:planItems});
       if (endpoint === '/api/billing/notifications') {
         const offset=Number(new URL(request.url()).searchParams.get('offset')||0);
         if(notificationMode==='delayed') await new Promise(resolve=>{releaseNotification=resolve;});
@@ -62,12 +67,20 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
         const offset=Number(new URL(request.url()).searchParams.get('offset')||0);
         if (listMode==='delayed') await new Promise(resolve=>{releaseList=resolve;});
         if (listMode==='failed') return route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'UNAVAILABLE'}})});
+        let items=listMode==='empty'?[]:listMode==='single'?[order]:history.slice(offset,offset+50);
+        if(overviewFixtures)items=items.map((item,index)=>({...item,plan_code:index%2?'fixture_pack':'pro',snapshot:{kind:index%2?'credits':'subscription'}}));
         return json({account_id:listMode==='wrong'?'22222222-2222-4222-8222-222222222222':accountId,
-          items:listMode==='single'?[order]:history.slice(offset,offset+50),next_offset:listMode==='single'||offset===50?null:50});
+          items,next_offset:listMode==='single'||listMode==='empty'||offset===50?null:50});
       }
       if (endpoint.startsWith('/api/billing/orders/') && activeAccount!==accountId) return route.fulfill({status:404,contentType:'application/json',body:JSON.stringify({error:{code:'NOT_FOUND'}})});
       if (history.some(item=>endpoint===`/api/billing/orders/${item.id}`)) return json({order:history.find(item=>endpoint.endsWith(item.id)),delivery:{status:'completed'},payments:[],refunds:[],payment_attempt:null});
-      if (endpoint === `/api/billing/orders/${orderId}`) return json({order,delivery:{status:'completed'},payment_attempt:attempt,refunds:[],payments:[{status:'accepted'},...(review ? [{status:'duplicate_payment_review'}] : [])],needs_review:review,review_reasons:review ? [malformed ? '<img src=x onerror=alert(1)>' : 'duplicate_payment_review'] : []});
+      if (endpoint === `/api/billing/orders/${orderId}`) {
+        const unconfirmed = paymentFixture && ['pending','unknown'].includes(attempt?.status);
+        return json({order:unconfirmed ? {...order,status:'pending_payment'} : order,
+          delivery:{status:unconfirmed ? 'not_started' : 'completed'},payment_attempt:attempt,refunds:[],
+          payments:unconfirmed ? [] : [{status:'accepted'},...(review ? [{status:'duplicate_payment_review'}] : [])],
+          needs_review:review,review_reasons:review ? [malformed ? '<img src=x onerror=alert(1)>' : 'duplicate_payment_review'] : []});
+      }
       if (endpoint.endsWith('/refund-assessment')) {
         const value=structuredClone(refundAssessment||{order_id:orderId,account_id:accountId,can_submit:false,currency:'CNY',status:'unavailable',reason:'payment_review_required'});
         if (heldRefund) { const held=heldRefund; heldRefund=null; held.started(); await held.promise; }
@@ -76,6 +89,70 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
       throw new Error(`Unexpected read: ${endpoint}`);
     });
     let count = 0;
+    let overviewLayouts = 0;
+    const overviewDirectory=path.join(__dirname,'../tmp/billing-overview');
+    fs.mkdirSync(overviewDirectory,{recursive:true});
+    overviewFixtures=true;listMode='paged';
+    for(const language of ['', '-en']) {
+      for(const width of [320,768,1440]) for(const scale of [1,2]) {
+        await page.setViewportSize({width,height:1100});
+        await page.goto(`${base}/pages/billing${language}.html`);
+        await page.locator('[data-order]').first().waitFor();
+        assert.equal(await page.locator('#account-section-title').innerText(),language?'My bills':'我的账单');
+        assert.equal(await page.locator('.billing-center-sidebar>nav a').count(),3);
+        assert.equal(await page.locator('.billing-orders-table th').count(),6);
+        for(const selector of ['#billing-account-select','[data-order-product]','[data-order-kind]']){
+          const style=await page.locator(selector).evaluate(node=>{const css=getComputedStyle(node);return {minHeight:css.minHeight,radius:css.borderRadius,border:css.borderTopColor,padding:css.paddingTop,color:css.color};});
+          assert.deepEqual(style,{minHeight:'44px',radius:'8px',border:'rgb(215, 226, 237)',padding:'8px',color:'rgb(32, 43, 56)'},selector);
+        }
+        assert.equal(await page.locator('[data-order]').count(),50);
+        assert.match(await page.locator('#billing-plan-summary').innerText(),language?/No subscription/:/未订阅/);
+        assert.equal(await page.locator('.billing-manage-card a').getAttribute('href'),'#subscription');
+        if(width===320&&scale===1){
+          assert.equal(await page.locator('.account-dropdown').evaluate(node=>getComputedStyle(node).display),'none');
+          await page.locator('.nav-account summary').focus();await page.locator('.nav-account summary').press('Enter');
+          const menuBounds=await page.locator('.account-dropdown').evaluate(node=>({left:node.getBoundingClientRect().left,right:node.getBoundingClientRect().right,width:innerWidth,visible:getComputedStyle(node).display!=='none'}));
+          assert.equal(menuBounds.visible,true);assert.ok(menuBounds.left>=0&&menuBounds.right<=menuBounds.width+1,JSON.stringify(menuBounds));
+          assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'Open account menu must fit 320px');
+          await page.locator('.nav-account summary').press('Escape');
+          assert.equal(await page.locator('.account-dropdown').evaluate(node=>getComputedStyle(node).display),'none');
+        }
+        await page.locator('[data-order-product]').selectOption('fixture_pack');
+        assert.equal(await page.locator('[data-order]').count(),25);
+        await page.locator('[data-order-kind]').selectOption('subscription');
+        assert.equal(await page.locator('[data-order]').count(),0);
+        assert.match(await page.locator('tbody').innerText(),language?/No orders match/:/没有符合筛选/);
+        await page.locator('[data-order-product]').selectOption('');
+        await page.locator('[data-order-kind]').selectOption('');
+        await page.locator('[data-orders-next]').click();
+        await page.waitForFunction(()=>document.querySelectorAll('[data-order]').length===1);
+        await page.locator('[data-orders-prev]').click();
+        await page.waitForFunction(()=>document.querySelectorAll('[data-order]').length===50);
+        if(scale===2)await page.locator('main, main *').evaluateAll(nodes=>{const sizes=nodes.map(node=>parseFloat(getComputedStyle(node).fontSize));nodes.forEach((node,index)=>node.style.fontSize=`${sizes[index]*2}px`);});
+        await page.screenshot({path:path.join(overviewDirectory,`${language||'zh'}-${width}-${scale*100}.png`),fullPage:true});
+        const layout=await page.evaluate(()=>({fits:document.documentElement.scrollWidth<=innerWidth+1,overflow:[...document.querySelectorAll('body *')].filter(node=>{const box=node.getBoundingClientRect();return box.right>innerWidth+1&&!node.closest('.billing-orders-table-wrap')&&!node.closest('#r-menu');}).map(node=>({tag:node.tagName,class:node.className,right:node.getBoundingClientRect().right,position:getComputedStyle(node).position})).slice(0,10)}));
+        assert.equal(layout.fits,true,`Bills ${language||'zh'} ${width} ${scale*100}% ${JSON.stringify(layout.overflow)}`);
+        overviewLayouts++;
+      }
+      listMode='empty';await page.goto(`${base}/pages/billing${language}.html`);await page.reload();
+      await page.locator('.billing-orders-empty').waitFor();
+      assert.match(await page.locator('.billing-orders-empty').innerText(),language?/No bills found/:/未找到账单/);
+      assert.equal(await page.locator('[data-orders-next]').count(),0);
+      await page.screenshot({path:path.join(overviewDirectory,`${language||'zh'}-1440-empty.png`),fullPage:true});
+      planReadFails=true;await page.reload();await page.locator('[data-plan-retry]').waitFor();
+      assert.match(await page.locator('#billing-plan-summary').innerText(),language?/unknown/:/未知/);
+      planReadFails=false;await page.locator('[data-plan-retry]').click();
+      await page.waitForFunction(()=>!document.querySelector('[data-plan-retry]'));
+      const plan={id:'44444444-4444-4444-8444-444444444444',plan_code:'pro',billing_cycle:'monthly',status:'active',period_start:'2026-01-01T00:00:00Z',period_end:'2099-01-01T00:00:00Z',next_credit_grant_at:null,prepaid_through:'2099-01-01T00:00:00Z',auto_renew:false,cancellation_state:'none',can_cancel:false,capabilities:{cancel:false}};
+      planItems=[plan,{...plan,id:'55555555-5555-4555-8555-555555555555',status:'scheduled',plan_code:'pro_plus'},{...plan,id:'66666666-6666-4666-8666-666666666666',status:'expired'}];
+      await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.billing-plan-item').length===2);
+      assert.match(await page.locator('#billing-plan-summary').innerText(),language?/Scheduled/:/待生效/);
+      assert.match(await page.locator('#billing-plan-summary').innerText(),language?/confirmed amount/:/金额以订单记录为准/);
+      assert.equal(await page.locator('#billing-plan-summary .money').count(),0,'A catalogue price must not impersonate a confirmed subscription amount');
+      planItems=[];
+      listMode='paged';
+    }
+    overviewFixtures=false;listMode='single';
     for (const language of ['', '-en']) {
       for (const width of [320,1440]) {
         await page.setViewportSize({width,height:1100});
@@ -99,6 +176,33 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
         }
       }
     }
+    paymentFixture=true;review=false;malformed=false;
+    for (const language of ['', '-en']) for (const width of [320,1440]) for (const state of ['pending','unknown']) {
+      await page.setViewportSize({width,height:1100});
+      attempt={status:state,needs_reconciliation:false};
+      await page.goto(`${base}/pages/billing${language}.html#orders`);
+      await page.locator('[data-order]').click();
+      await page.locator('[data-refund-refresh]').waitFor();
+      assert.match(await page.locator('#order-detail').innerText(),language ? /Do not pay again/ : /请勿重复付款/);
+      assert.match(await page.locator('#order-detail').innerText(),language ? /Refresh only checks its status/ : /刷新只查询状态/);
+      assert.match(await page.locator('#order-detail').innerText(),new RegExp(orderId));
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
+      for (const confirmed of [false,true]) {
+        if (confirmed) attempt={status:'succeeded',needs_reconciliation:false};
+        const before=requests.length;
+        await page.locator('#order-status-refresh').click();
+        await page.locator('[data-refund-refresh]').waitFor();
+        assert.deepEqual(requests.slice(before),[
+          [`/api/billing/orders/${orderId}`,'GET'],
+          [`/api/billing/orders/${orderId}/refund-assessment`,'GET']
+        ],'Status refresh queries only the original order and its refund assessment; never creates or charges');
+        assert.match(await page.locator('#order-detail').innerText(),new RegExp(orderId));
+        assert.match(await page.locator('#order-detail').innerText(),confirmed ? (language ? /Payment confirmed/ : /支付已确认/) : (language ? /Do not pay again/ : /请勿重复付款/));
+        if (confirmed) assert.match(await page.locator('#order-detail').innerText(),language ? /Completed/ : /已完成/);
+      }
+      count++;
+    }
+    paymentFixture=false;
     review = true; malformed = true;
     await page.goto(`${base}/pages/billing.html#orders`);
     await page.locator('[data-order]').click();
@@ -331,6 +435,6 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
     assert.equal(await page.locator('[data-annual-month-count]').count(),0);
     count++;
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({groups:count+1,notification_layouts:8,notification_text_200_percent:2,annual_layouts:8,annual_text_200_percent:8,annual_invalid_responses:invalidAnnual.length*2,page_errors:errors.length,requests:requests.length,write_requests:requests.filter(([,method])=>method !== 'GET').length}));
+    console.log(JSON.stringify({groups:count+1,overview_layouts:overviewLayouts,notification_layouts:8,notification_text_200_percent:2,annual_layouts:8,annual_text_200_percent:8,annual_invalid_responses:invalidAnnual.length*2,page_errors:errors.length,requests:requests.length,write_requests:requests.filter(([,method])=>method !== 'GET').length}));
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode=1; });

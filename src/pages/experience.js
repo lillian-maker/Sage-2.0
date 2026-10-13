@@ -201,6 +201,10 @@
         completed: t('报告已保存，本次免费体验已完成。', 'Your report is saved and your free trial is complete.')
       };
       if (!attempt) {
+        if (data.eligibility === 'consumed' && attempt === null) {
+          target.textContent = t('你的免费体验已使用，当前账号没有可查看的体验报告。', 'Your free trial has already been used. No trial report is available for this account.');
+          return;
+        }
         if (data.eligibility !== 'available') throw new Error('INVALID_TRIAL_RESPONSE');
         target.textContent = t('你仍有一次免费体验资格。分析服务开放后，可选择一个场景开始。', 'You have one free trial available. Choose a scenario when the analysis service opens.');
         return;

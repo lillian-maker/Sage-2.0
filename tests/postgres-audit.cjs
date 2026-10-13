@@ -13,8 +13,8 @@ const env = {...process.env, POSTGRES_PASSWORD: password, SAGE_ENV: 'test',
   SAGE_DB_HOST: '127.0.0.1'};
 let started = false;
 
-function run(command, args, print = true) {
-  const result = spawnSync(command, args, {cwd: root, env, encoding: 'utf8', timeout: 180000});
+function run(command, args, print = true, timeout = 180000) {
+  const result = spawnSync(command, args, {cwd: root, env, encoding: 'utf8', timeout});
   if (print) process.stdout.write((result.stdout || '') + (result.stderr || ''));
   if (result.error || result.status !== 0) {
     // Hidden stdout can contain a dump or identifiers; retain stderr for diagnosis.
@@ -74,6 +74,7 @@ print(hashlib.sha256(json.dumps(data,sort_keys=True).encode()).hexdigest())
 `).split('\n').at(-1);
   shell(`
 from datetime import timedelta
+import secrets
 from django.test import override_settings
 from django.utils import timezone
 from backend.models import Membership
@@ -102,6 +103,37 @@ with override_settings(BILLING_SALES_ENABLED=True,BILLING_APPROVED_CHANNELS=FIXT
     from backend.commerce.models import CreditBatch
     freeze_credits(account,CreditBatch.objects.get(account=account).pk,'backup-freeze','1')
     reserve_credits(account,'backup-pending-task','2')
+from backend.models import InvitationCode, RegistrationAttribution
+from backend.invitations import create_registered_user
+with override_settings(INVITATION_CODES_READY=True):
+    InvitationCode.objects.create(code='BACKUP01',blogger='isolated-backup-blogger')
+    invited = create_registered_user(invitation_code='backup01',username='isolated-backup-invited',
+        password=secrets.token_hex(5)+'Aa!1')
+    InvitationCode.objects.filter(pk='BACKUP01').update(is_active=False)
+    assert RegistrationAttribution.objects.filter(user=invited,invitation_code_id='BACKUP01').count() == 1
+from django.contrib.auth.hashers import make_password
+from backend.models import AccountProfile, AuthFlow, LoginChallenge, LoginIdentity
+original = LoginIdentity.objects.create(user=invited,method='email',identifier='isolated-backup-original@example.invalid')
+LoginIdentity.objects.create(user=invited,method='google',identifier='isolated-backup-google-sub',provider_email='isolated-backup-original@example.invalid')
+LoginIdentity.objects.create(user=invited,method='phone',identifier='+8613800138000')
+AccountProfile.objects.create(user=invited,agreement_version='NONPRODUCTION-BACKUP-FIXTURE',agreement_accepted_at=now)
+challenge = LoginChallenge.objects.create(purpose='registration',method='phone',identifier='+8613800138000',
+    code_digest=secrets.token_hex(32),session_digest=secrets.token_hex(32),expires_at=now+timedelta(minutes=5),
+    delivered=True,attempts=1,consumed_at=now)
+AuthFlow.objects.create(purpose='registration',method='phone',stage='code',identifier=challenge.identifier,
+    session_digest=challenge.session_digest,challenge=challenge,user=invited,
+    agreement_version='NONPRODUCTION-BACKUP-FIXTURE',agreement_accepted_at=now,
+    expires_at=challenge.expires_at,consumed_at=now)
+AuthFlow.objects.create(purpose='google',stage='bind_confirm',identifier=original.identifier,user=invited,
+    original_identity=original,password_hash=invited.password,google_sub='isolated-backup-unbound-sub',google_intent='login',
+    session_digest=secrets.token_hex(32),
+    expires_at=now+timedelta(minutes=5),return_to='/pages/billing.html')
+AuthFlow.objects.create(purpose='google',stage='oauth',identifier='',google_intent='register',
+    session_digest=secrets.token_hex(32),google_state_digest=secrets.token_hex(32),google_nonce_digest=secrets.token_hex(32),
+    expires_at=now+timedelta(minutes=5),return_to='/index-en.html',language='en')
+AuthFlow.objects.create(purpose='registration',method='email',identifier='isolated-backup-pending@example.invalid',
+    session_digest=secrets.token_hex(32),password_hash=make_password(secrets.token_hex(5)+'Aa!1'),
+    agreement_version='NONPRODUCTION-BACKUP-FIXTURE',agreement_accepted_at=now,expires_at=now+timedelta(minutes=5))
 `);
   const sourceData = fingerprint();
   const schema = database => run('docker', ['exec', name,
@@ -119,6 +151,29 @@ with override_settings(BILLING_SALES_ENABLED=True,BILLING_APPROVED_CHANNELS=FIXT
   env.SAGE_DB_NAME = 'sage_restore';
   try {
     assert.equal(fingerprint(), sourceData, 'Restored rows and sequence states must match');
+    shell("from backend.models import InvitationCode, RegistrationAttribution; assert not InvitationCode.objects.get(pk='BACKUP01').is_active; assert RegistrationAttribution.objects.filter(invitation_code_id='BACKUP01').count() == 1");
+    shell(`
+from backend.models import AccountProfile, AuthFlow, LoginChallenge, LoginIdentity
+profile = AccountProfile.objects.get(agreement_version='NONPRODUCTION-BACKUP-FIXTURE')
+assert profile.agreement_accepted_at is not None
+identity = LoginIdentity.objects.get(user=profile.user,method='google')
+assert identity.identifier == 'isolated-backup-google-sub'
+assert LoginIdentity.objects.filter(user=profile.user,method='email',identifier=identity.provider_email).exists()
+closed = AuthFlow.objects.get(purpose='registration',method='phone')
+assert closed.consumed_at is not None and closed.stage == 'code'
+assert LoginIdentity.objects.filter(user=closed.user,method='phone',identifier=closed.identifier).exists()
+assert closed.challenge.method == 'phone' and closed.challenge.consumed_at == closed.consumed_at
+assert closed.challenge.delivered and closed.challenge.attempts == 1
+binding = AuthFlow.objects.get(purpose='google',stage='bind_confirm')
+assert binding.original_identity.user_id == profile.user_id and binding.user_id == profile.user_id
+assert binding.google_nonce_digest == '' and binding.google_state_digest is None
+assert binding.password_hash == profile.user.password
+oauth = AuthFlow.objects.get(purpose='google',stage='oauth')
+assert oauth.google_nonce_digest and oauth.google_state_digest and oauth.user_id is None
+assert oauth.original_identity_id is None and oauth.google_intent == 'register' and oauth.language == 'en'
+pending = AuthFlow.objects.get(identifier='isolated-backup-pending@example.invalid')
+assert pending.method == 'email' and pending.password_hash and pending.consumed_at is None
+`);
     const restoredSchema = normalizedSchema(schema('sage_restore'));
     if (restoredSchema !== sourceSchema) {
       const sourceLines = sourceSchema.split('\n'), restoredLines = restoredSchema.split('\n');
@@ -135,6 +190,10 @@ with override_settings(BILLING_SALES_ENABLED=True,BILLING_APPROVED_CHANNELS=FIXT
     assert.notEqual(fingerprint(), sourceData, 'A corrupt restored order must fail the comparison');
     shell("from backend.commerce.models import Order; Order.objects.filter(idempotency_key='backup-paid').update(status='fulfilled')");
     assert.equal(fingerprint(), sourceData, 'Negative control must restore the original fixture');
+    shell("from backend.models import AuthFlow; AuthFlow.objects.filter(purpose='registration',method='phone').update(method='email')");
+    assert.notEqual(fingerprint(), sourceData, 'A corrupt restored auth method must fail the comparison');
+    shell("from backend.models import AuthFlow; AuthFlow.objects.filter(purpose='registration',identifier='+8613800138000').update(method='phone')");
+    assert.equal(fingerprint(), sourceData, 'Auth negative control must restore the original fixture');
     const beforeReplay = fingerprint();
     shell(`
 from django.test import override_settings
@@ -185,9 +244,10 @@ with override_settings(BILLING_SALES_ENABLED=True,BILLING_APPROVED_CHANNELS=FIXT
     run(python, ['manage.py', 'migrate', 'backend', 'zero', '--noinput']);
     run(python, ['manage.py', 'migrate', '--noinput']);
     run(python, ['manage.py', 'makemigrations', '--check', '--dry-run']);
-    const suites = ['backend.tests', 'backend.commerce.tests', 'backend.commerce.subscription_tests', 'backend.commerce.attempt_tests', 'backend.trial_tests', 'backend.email_tests', 'backend.account_tests', 'backend.consultation_tests', 'backend.sms_tests', 'backend.billing_session_tests'];
+    const suites = ['backend.authentication_tests', 'backend.google_auth_tests', 'backend.tests', 'backend.commerce.tests', 'backend.commerce.subscription_tests', 'backend.commerce.attempt_tests', 'backend.trial_tests', 'backend.email_tests', 'backend.account_tests', 'backend.account_deletion_tests', 'backend.consultation_tests', 'backend.sms_tests', 'backend.billing_session_tests', 'backend.invitation_tests'];
     if (process.env.PLAYWRIGHT_MODULE) suites.push('backend.browser_tests', 'backend.website_browser_tests');
-    run(python, ['manage.py', 'test', ...suites, '--verbosity', '2']);
+    // The full suite with real browsers exceeded 180s; keep other commands bounded.
+    run(python, ['manage.py', 'test', ...suites, '--verbosity', '2'], true, 600000);
     recoveryAudit();
     console.log('PostgreSQL migration round-trip and integration tests passed. No production data touched.');
   } catch (error) {

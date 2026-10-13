@@ -7,16 +7,55 @@ from threading import Barrier
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.db import close_old_connections, connection
-from django.test import SimpleTestCase, TransactionTestCase
+from django.test import SimpleTestCase, TransactionTestCase, override_settings
+from django.utils import timezone
+from datetime import timedelta
 
-from backend.models import BillingAccount, LoginIdentity, Membership, TrialAttempt, TrialEvent
+from backend.models import BillingAccount, LoginIdentity, Membership, TrialAttempt, TrialEvent, TrialIdentityMarker
 from backend.trials import (
     read_trial, record_trial_event, start_trial, update_trial, validate_trial_input,
 )
 
 
 REPORT = {"title": "Explicit test fixture", "sections": [{"finding": "Fixture only"}]}
+
+
+@override_settings(ACCOUNT_DELETION_MARKER_KEY='isolated-trial-marker-fixture-' * 3)
+class ClosedAccountTrialTests(TransactionTestCase):
+    def setUp(self):
+        from backend.account import trial_identifier_digest
+        self.user = get_user_model().objects.create_user(username='replacement-fixture')
+        LoginIdentity.objects.create(user=self.user, method='email', identifier='replacement@example.test')
+        self.marker = TrialIdentityMarker.objects.create(method='email',
+            identifier_digest=trial_identifier_digest('email', 'replacement@example.test'),
+            key_fingerprint=hashlib.sha256(settings.ACCOUNT_DELETION_MARKER_KEY.encode()).hexdigest(),
+            expires_at=timezone.now() + timedelta(days=1))
+
+    def test_re_registered_identity_cannot_repeat_trial(self):
+        self.assertEqual(read_trial(self.user), {'eligibility': 'consumed', 'attempt': None})
+        with self.assertRaisesRegex(ValueError, 'TRIAL_ALREADY_USED'):
+            start_trial(self.user, 'voc', 'Fixture brand', 'fixture-repeat')
+        self.assertFalse(TrialAttempt.objects.filter(user=self.user).exists())
+
+    def test_expired_marker_does_not_block_trial(self):
+        self.marker.expires_at = timezone.now() - timedelta(seconds=1)
+        self.marker.save(update_fields=['expires_at'])
+        self.assertEqual(read_trial(self.user)['eligibility'], 'available')
+        self.assertEqual(start_trial(self.user, 'voc', 'Fixture brand', 'fixture-expired')['eligibility'], 'locked')
+
+    def test_other_identity_not_blocked(self):
+        other = get_user_model().objects.create_user(username='different-fixture')
+        LoginIdentity.objects.create(user=other, method='email', identifier='different@example.test')
+        self.assertEqual(read_trial(other)['eligibility'], 'available')
+
+    def test_missing_marker_key_returns_explicit_unavailable(self):
+        self.client.force_login(self.user)
+        with override_settings(ACCOUNT_DELETION_MARKER_KEY=''):
+            response = self.client.get('/api/trial')
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()['error']['code'], 'RETENTION_POLICY_PENDING')
 
 
 def digest(report):

@@ -1,6 +1,6 @@
 """Read-only billing preflight API. No authentication or money movement yet.
 
-Run locally with: python3 backend/billing.py --port 8900
+Run locally with: python3 -m backend.billing --port 8900
 The standard-library WSGI server is for local development, not production.
 """
 import argparse

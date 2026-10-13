@@ -70,6 +70,61 @@ class SmsTransportTests(SimpleTestCase):
                 send_login_code('+8613800000000', '12345x')
             client.assert_not_called()
 
+    def test_region_appid_and_template_format_require_real_config(self):
+        for changed in ({'SMS_REGION':'invalid'},{'SMS_SDK_APP_ID':'abc'},{'SMS_TEMPLATE_ID':'0'}):
+            with self.subTest(changed=changed),override_settings(**changed):self.assertFalse(phone_ready())
+
+    @override_settings(SMS_REGISTRATION_TEMPLATE_ID='124',SMS_REGISTRATION_TEMPLATE_APPROVED=True,
+        SMS_PASSWORD_TEMPLATE_ID='125',SMS_PASSWORD_TEMPLATE_APPROVED=True,
+        SMS_PASSWORD_CHANGED_TEMPLATE_ID='126',SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED=True)
+    def test_api_access_regions_do_not_authorize_sms_product_region(self):
+        from .sms import send_code
+        for region in ('ap-shanghai','ap-hongkong','ap-singapore','ap-chengdu','ap-chongqing',
+                'ap-jakarta','ap-bangkok','ap-seoul','ap-tokyo','na-ashburn','na-siliconvalley'):
+            for purpose in ('login','registration','password_reset','password_changed'):
+                with self.subTest(region=region,purpose=purpose),override_settings(SMS_REGION=region),patch('tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+                    self.assertFalse(phone_ready('+8613800000000',purpose))
+                    with self.assertRaisesMessage(OSError,'SMS_CHANNEL_UNAVAILABLE'):
+                        send_code('+8613800000000',None if purpose=='password_changed' else '123456',purpose=purpose)
+                    client.assert_not_called()
+
+    @override_settings(SMS_REGISTRATION_TEMPLATE_ID='124',SMS_REGISTRATION_TEMPLATE_APPROVED=True,
+        SMS_PASSWORD_TEMPLATE_ID='125',SMS_PASSWORD_TEMPLATE_APPROVED=True,
+        SMS_PASSWORD_CHANGED_TEMPLATE_ID='126',SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED=True)
+    def test_all_three_product_regions_accept_each_approved_purpose(self):
+        from .sms import send_code
+        with patch('tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+            client.return_value.SendSms.return_value=Mock(SendStatusSet=[Mock(Code='Ok',SerialNo='fixture',PhoneNumber='+8613800000000')])
+            for region in ('ap-beijing','ap-guangzhou','ap-nanjing'):
+                for purpose in ('login','registration','password_reset','password_changed'):
+                    with self.subTest(region=region,purpose=purpose),override_settings(SMS_REGION=region):
+                        self.assertTrue(phone_ready('+8613800000000',purpose))
+                        self.assertEqual(send_code('+8613800000000',None if purpose=='password_changed' else '123456',purpose=purpose),1)
+                        self.assertEqual(client.call_args.args[1],region)
+            self.assertEqual(client.return_value.SendSms.call_count,12)
+
+    @override_settings(SMS_REGISTRATION_TEMPLATE_ID='124',SMS_REGISTRATION_TEMPLATE_APPROVED=True,
+        SMS_PASSWORD_TEMPLATE_ID='125',SMS_PASSWORD_TEMPLATE_APPROVED=True,
+        SMS_PASSWORD_CHANGED_TEMPLATE_ID='126',SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED=True)
+    def test_each_purpose_selects_approved_template_and_exact_network_receipt(self):
+        from .sms import send_code
+        from tencentcloud.sms.v20210111.models import SendSmsResponse
+        def receipt(client,request):
+            self.assertEqual(request.PhoneNumberSet,['+8613800000000'])
+            self.assertEqual(request.TemplateParamSet,[] if request.TemplateId=='126' else ['123456','5'])
+            result=SendSmsResponse();result.from_json_string(json.dumps({'SendStatusSet':[
+                {'Code':'Ok','SerialNo':'fixture','PhoneNumber':'+8613800000000'}]}));return result
+        with patch('tencentcloud.sms.v20210111.sms_client.SmsClient.SendSms',autospec=True,side_effect=receipt) as network:
+            for purpose,template in (('registration','124'),('password_reset','125'),('password_changed','126')):
+                self.assertTrue(phone_ready('+8613800000000',purpose))
+                self.assertFalse(phone_ready('+12025550100',purpose))
+                self.assertEqual(send_code('+8613800000000',None if purpose=='password_changed' else '123456',purpose=purpose),1)
+                self.assertEqual(network.call_args.args[1].TemplateId,template)
+            for result in (None,Mock(SendStatusSet=None),Mock(SendStatusSet=[Mock(Code='Ok',SerialNo=1,PhoneNumber='+8613800000000')]),
+                    Mock(SendStatusSet=[Mock(),Mock()])):
+                network.side_effect=None;network.return_value=result
+                self.assertEqual(send_code('+8613800000000','123456',purpose='registration'),0)
+
 
 @override_settings(AUTH_PHONE_ENABLED=True, SMS_TEMPLATE_APPROVED=True,
     SMS_SECRET_ID='fixture-id', SMS_SECRET_KEY='fixture-key', SMS_REGION='ap-guangzhou',
@@ -82,25 +137,25 @@ class PhoneLoginTests(TestCase):
     def post(self, path, data):
         return self.client.post('/api/auth/' + path, json.dumps(data), content_type='application/json')
 
-    def test_approved_phone_verifies_once_and_creates_separate_identity(self):
+    def test_approved_phone_cannot_bypass_password_and_captcha(self):
         with patch('backend.sms.send_login_code', return_value=1) as send:
             response = self.post('challenges', {'method': 'phone', 'identifier': '+8613800000000'})
-        self.assertEqual(response.status_code, 201)
-        code = send.call_args.args[1]
-        data = {'challenge_id': response.json()['challenge_id'], 'code': code}
-        self.assertEqual(self.post('verify', data).status_code, 200)
-        self.assertEqual(LoginIdentity.objects.filter(method='phone').count(), 1)
-        self.assertFalse(LoginIdentity.objects.filter(method='email').exists())
-        self.assertEqual(self.post('verify', data).status_code, 422)
+        self.assertEqual(response.status_code, 403)
+        send.assert_not_called()
+        self.assertEqual(response.json()['error']['code'],'AUTH_FLOW_REQUIRED')
+        self.assertFalse(LoginIdentity.objects.exists())
+        self.assertFalse(LoginChallenge.objects.exists())
+        self.assertFalse(self.client.get('/api/auth/session').json()['authenticated'])
 
-    def test_failed_delivery_never_produces_verifiable_challenge(self):
-        with patch('backend.sms.send_login_code', side_effect=OSError('SMS_DELIVERY_FAILED')):
+    def test_legacy_phone_challenge_never_reaches_supplier(self):
+        with patch('backend.sms.send_login_code', side_effect=OSError('SMS_DELIVERY_FAILED')) as send:
             response = self.post('challenges', {'method': 'phone', 'identifier': '+8613800000000'})
-        self.assertEqual(response.status_code, 503)
-        self.assertFalse(LoginChallenge.objects.get().delivered)
+        self.assertEqual(response.status_code, 403)
+        send.assert_not_called()
+        self.assertFalse(LoginChallenge.objects.exists())
 
     def test_unapproved_country_is_rejected_before_delivery(self):
         with patch('backend.sms.send_login_code') as send:
-            self.assertEqual(self.post('challenges', {'method': 'phone', 'identifier': '+12025550100'}).status_code, 503)
+            self.assertEqual(self.post('challenges', {'method': 'phone', 'identifier': '+12025550100'}).status_code, 403)
         send.assert_not_called()
         self.assertFalse(LoginChallenge.objects.exists())

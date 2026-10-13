@@ -10,7 +10,9 @@ import uuid
 from datetime import timedelta
 
 from django.conf import settings
-from django.contrib.auth import get_user_model, login, logout
+from django.contrib.auth import get_user_model, logout
+from django.contrib.auth.password_validation import (MinimumLengthValidator,
+    get_default_password_validators, validate_password)
 from django.core.exceptions import RequestDataTooBig, ValidationError
 from django.core.mail import send_mail
 from django.core.validators import validate_email
@@ -29,6 +31,7 @@ from .models import (AuditEvent, AuthThrottle, BillingAccount, LoginChallenge,
                      LoginIdentity, Membership, PurchaseInquiry)
 
 logger = logging.getLogger('sage')
+_DEFAULT_EMAIL_TEMPLATE = object()
 
 
 def health(request, *, readiness=False):
@@ -60,7 +63,7 @@ def digest(value):
 
 
 @sensitive_variables()
-def payload(request, fields):
+def payload(request, fields, optional=()):
     if request.content_type != 'application/json':
         raise ValueError('JSON_REQUIRED')
     try:
@@ -70,12 +73,12 @@ def payload(request, fields):
         data = json.loads(raw)
     except (ValueError, UnicodeDecodeError, RequestDataTooBig, RecursionError) as exc:
         raise ValueError('INVALID_JSON') from exc
-    if not isinstance(data, dict) or set(data) != set(fields):
+    if not isinstance(data, dict) or not set(fields) <= set(data) or set(data)-set(fields)-set(optional):
         raise ValueError('INVALID_REQUEST')
     return data
 
 
-def email_ready():
+def email_transport_ready():
     if not settings.AUTH_EMAIL_ENABLED:
         return False
     try:
@@ -84,9 +87,20 @@ def email_ready():
         return False
     if settings.AUTH_EMAIL_TRANSPORT == 'ses':
         return bool(settings.SES_SECRET_ID and settings.SES_SECRET_KEY and
-                    settings.SES_REGION in ('ap-hongkong', 'ap-guangzhou') and
-                    str(settings.SES_TEMPLATE_ID).isdigit() and int(settings.SES_TEMPLATE_ID) > 0)
+                    settings.SES_REGION in ('ap-hongkong', 'ap-guangzhou'))
     return bool(settings.AUTH_EMAIL_TRANSPORT == 'smtp' and settings.EMAIL_HOST)
+
+
+def email_ready(template_id=_DEFAULT_EMAIL_TEMPLATE):
+    if not email_transport_ready():
+        return False
+    if settings.AUTH_EMAIL_TRANSPORT != 'ses':
+        return True
+    template = str(settings.SES_TEMPLATE_ID if template_id is _DEFAULT_EMAIL_TEMPLATE else template_id)
+    try:
+        return bool(template.isascii() and template.isdigit() and int(template) > 0)
+    except ValueError:
+        return False
 
 
 def normalized_identifier(method, identifier):
@@ -106,6 +120,24 @@ def normalized_identifier(method, identifier):
     raise ValueError('INVALID_IDENTIFIER')
 
 
+def password_identifier(data):
+    """New website phone flows are mainland-only; legacy normalizer stays unchanged."""
+    method = data.get('method','email')
+    if method not in ('email','phone'):
+        raise ValueError('INVALID_IDENTIFIER')
+    identifier = data['identifier']
+    if method == 'phone':
+        if not isinstance(identifier,str) or not re.fullmatch(r'\+861[0-9]{10}',identifier):
+            raise ValueError('INVALID_IDENTIFIER')
+        return method,identifier
+    return method,normalized_identifier(method,identifier)
+
+
+def password_reset_ready():
+    # Password mail must never accidentally use an approved sign-in template.
+    return email_ready(settings.AUTH_PASSWORD_SES_TEMPLATE_ID)
+
+
 def membership(request, financial=False):
     if not request.user.is_authenticated:
         return None
@@ -117,10 +149,27 @@ def membership(request, financial=False):
 
 
 def session_data(request):
-    from .sms import phone_ready
+    from .authentication import captcha_ready, registration_ready, registration_terms_ready, recovery_ready
+    from .google_auth import ready as google_ready
+    original_email = request.user.is_authenticated and LoginIdentity.objects.filter(user=request.user,method='email').exists()
+    original_phone = request.user.is_authenticated and LoginIdentity.objects.filter(user=request.user,method='phone').exists()
+    google_managed = request.user.is_authenticated and not original_email and not original_phone and LoginIdentity.objects.filter(user=request.user,method='google').exists()
     data = {'authenticated': request.user.is_authenticated, 'user': None, 'accounts': [],
             'active_account_id': None, 'csrf_token': get_token(request),
-            'capabilities': {'email_login': email_ready(), 'phone_login': phone_ready(), 'procurement': True}}
+            'capabilities': {'email_login': False, 'phone_login': False,
+                'password_login': captcha_ready(), 'password_reset': captcha_ready() and password_reset_ready() and (not request.user.is_authenticated or original_email),
+                'password_managed_by_google': bool(google_managed),
+                'email_registration': registration_ready(), 'captcha': captcha_ready(),
+                'phone_registration': registration_ready('phone'),
+                'phone_password_login': bool(settings.AUTH_PHONE_ENABLED and captcha_ready()),
+                'phone_password_reset': bool(captcha_ready() and recovery_ready('phone') and (not request.user.is_authenticated or original_phone)),
+                'google_login': google_ready(),
+                'google_registration': google_ready() and registration_terms_ready(),
+                'captcha_app_id': str(settings.CAPTCHA_APP_ID) if captcha_ready() else None,
+                'registration_terms_version': settings.AUTH_REGISTRATION_TERMS_VERSION if registration_terms_ready() else None,
+                'registration_terms_url': settings.AUTH_REGISTRATION_TERMS_URL if registration_terms_ready() else None,
+                'registration_privacy_url': settings.AUTH_REGISTRATION_PRIVACY_URL if registration_terms_ready() else None,
+                'procurement': True}}
     if not request.session.get('login_binding'):
         request.session['login_binding'] = secrets.token_urlsafe(32)
     if request.user.is_authenticated:
@@ -130,6 +179,10 @@ def session_data(request):
             if identity.method == 'email':
                 local, domain = identity.identifier.rsplit('@', 1)
                 masked = local[:1] + '***@' + domain
+            elif identity.method == 'google':
+                if identity.provider_email:
+                    local,domain = identity.provider_email.rsplit('@',1)
+                    masked = local[:1]+'***@'+domain
             else:
                 masked = identity.identifier[:3] + '****' + identity.identifier[-4:]
         data['user'] = {'id': str(request.user.pk), 'display_name': request.user.first_name,
@@ -156,6 +209,7 @@ def throttle(key, limit, cooldown=0):
     row, _ = AuthThrottle.objects.get_or_create(key=digest(key), defaults={
         'window_at': now, 'last_at': now-timedelta(days=1), 'count': 0})
     row = AuthThrottle.objects.select_for_update().get(pk=row.pk)
+    now = timezone.now()  # Lock waits can outlast another request's timestamp.
     if (now-row.window_at).total_seconds() >= settings.AUTH_WINDOW_SECONDS:
         row.window_at, row.count = now, 0
     if row.count >= limit or (now-row.last_at).total_seconds() < cooldown:
@@ -167,103 +221,168 @@ def throttle(key, limit, cooldown=0):
 
 
 @sensitive_variables()
-def challenge(request):
-    data = payload(request, ('method', 'identifier'))
-    method = data['method']
-    if method not in ('email', 'phone'):
-        raise ValueError('INVALID_REQUEST')
-    from .sms import phone_ready
-    if (method == 'email' and not email_ready()) or (method == 'phone' and not phone_ready()):
-        return error(request, 'CHANNEL_UNAVAILABLE', 503, '该验证方式暂未接通，请稍后再试。')
-    identifier = normalized_identifier(method, data['identifier'])
-    if method == 'phone' and not phone_ready(identifier):
-        return error(request, 'CHANNEL_UNAVAILABLE', 503, '该国家或地区的手机号验证尚未开放。')
+def password_challenge(request):
+    data = payload(request, ('identifier',), optional=('method',))
+    if not request.user.is_authenticated:
+        return error(request, 'AUTH_REQUIRED', 403)
+    method,identifier = password_identifier(data)
+    from .authentication import recovery_ready
+    if not recovery_ready(method):
+        return error(request, 'CHANNEL_UNAVAILABLE', 503)
+    if not LoginIdentity.objects.filter(user=request.user, method=method, identifier=identifier).exists():
+        return error(request, 'FORBIDDEN', 403)
     binding = request.session.get('login_binding')
     if not binding:
-        return error(request, 'SESSION_REQUIRED', 403, '请刷新登录页面后再试。')
-    code = f'{secrets.randbelow(1000000):06d}'
-    now = timezone.now()
-    challenge_id = uuid.uuid4()
+        return error(request, 'SESSION_REQUIRED', 403, '请刷新页面后再试。')
+    code, now, challenge_id = f'{secrets.randbelow(1000000):06d}', timezone.now(), uuid.uuid4()
     with transaction.atomic():
-        if not throttle('auth-ip:' + client_ip(request), settings.AUTH_IP_LIMIT):
+        from .authentication import _binding_lock,_identity_locks
+        from .account import _lock_deletion_user,session_is_active
+        _binding_lock(request)
+        _identity_locks(request,identifier,method=method)
+        if not throttle('password-reset-ip:' + client_ip(request), settings.AUTH_IP_LIMIT) or not throttle(
+                'identity:'+method+':' + identifier, settings.AUTH_IDENTIFIER_LIMIT, settings.AUTH_RESEND_SECONDS):
             return error(request, 'RATE_LIMITED', 429, '请求较频繁，请稍后重试。')
-        if not throttle('identity:' + method + ':' + identifier, settings.AUTH_IDENTIFIER_LIMIT,
-                        settings.AUTH_RESEND_SECONDS):
-            return error(request, 'RATE_LIMITED', 429, '请求较频繁，请稍后重试。')
-        LoginChallenge.objects.filter(method=method, identifier=identifier,
-                                      session_digest=digest(binding), consumed_at__isnull=True).update(consumed_at=now)
-        record = LoginChallenge.objects.create(id=challenge_id, method=method, identifier=identifier,
+        identity = LoginIdentity.objects.filter(method=method, identifier=identifier, user__is_active=True).first()
+        try:
+            user = _lock_deletion_user(request.user)
+        except ValueError as exc:
+            if str(exc) != 'AUTH_REQUIRED':
+                raise
+            return error(request,'FORBIDDEN',403)
+        if not identity or identity.user_id != user.pk or not session_is_active(request):
+            return error(request,'FORBIDDEN',403)
+        LoginChallenge.objects.filter(purpose='password_reset', method=method, identifier=identifier,
+            session_digest=digest(binding), consumed_at__isnull=True).update(consumed_at=now)
+        record = LoginChallenge.objects.create(id=challenge_id, purpose='password_reset', method=method,
+            password_user_id=identity.user_id if identity else None, identifier=identifier,
             code_digest=digest(str(challenge_id) + ':' + code), session_digest=digest(binding),
-            expires_at=now+timedelta(seconds=settings.AUTH_CODE_TTL_SECONDS))
+            expires_at=now + timedelta(seconds=settings.AUTH_CODE_TTL_SECONDS))
     try:
         if method == 'phone':
-            from .sms import send_login_code
-            sent = send_login_code(identifier, code)
+            from .sms import send_code
+            sent = send_code(identifier,code,purpose='password_reset')
         elif settings.AUTH_EMAIL_TRANSPORT == 'ses':
-            from .email import send_login_code
-            sent = send_login_code(identifier, code)
+            from .email import send_password_code
+            sent = send_password_code(identifier, code)
         else:
-            sent = send_mail('Sage 登录验证码 / Sign-in code',
-                         f'你的 Sage 验证码 / Your Sage code: {code}\n5 分钟内有效，请勿分享。\n'
-                         'Valid for 5 minutes. Do not share this code.',
-                         settings.DEFAULT_FROM_EMAIL, [identifier], fail_silently=False)
+            # Identical delivery and public response for existing, unknown or disabled accounts.
+            sent = send_mail('Sage 密码重置验证码 / Password reset code',
+                f'密码重置验证码 / Password reset code: {code}\n5 分钟内有效，请勿分享。\n'
+                '如果此邮箱对应可用的 Sage 账号，可在发起页面设置新密码；否则请先注册。\n'
+                'Use this code on the requesting page only if this email has an active Sage account.',
+                settings.DEFAULT_FROM_EMAIL, [identifier], fail_silently=False)
     except (smtplib.SMTPException, OSError):
-        # Never log mail addresses, provider response bodies, credentials or codes.
-        logger.warning('auth_delivery_failed request_id=%s', request.request_id)
+        logger.warning('password_delivery_failed request_id=%s', request.request_id)
         return error(request, 'DELIVERY_FAILED', 503, '验证码发送未成功，请稍后重试。')
     if sent != 1:
         return error(request, 'DELIVERY_FAILED', 503, '验证码发送未成功，请稍后重试。')
-    LoginChallenge.objects.filter(pk=record.pk).update(delivered=True)
-    return JsonResponse({'challenge_id': str(record.pk), 'expires_in': settings.AUTH_CODE_TTL_SECONDS,
+    with transaction.atomic():
+        current,user = _locked_password_challenge(request,record.pk,{
+            'identifier':identifier,'method':method,'password_user_id':record.password_user_id},require_delivered=False)
+        current.delivered=True
+        current.save(update_fields=['delivered'])
+        if current.expires_at <= timezone.now():
+            raise ValueError('INVALID_CODE')
+        remaining=max(0,int((current.expires_at-timezone.now()).total_seconds()))
+    return JsonResponse({'challenge_id': str(record.pk), 'expires_in': remaining,
                          'resend_after': settings.AUTH_RESEND_SECONDS}, status=201)
 
 
 @sensitive_variables()
-def verify(request):
-    data = payload(request, ('challenge_id', 'code'))
+def validate_new_password(password, user=None):
+    """Website credential creation policy; never apply it to historical sign-in."""
+    if not isinstance(password, str) or not password:
+        raise ValidationError('请输入密码。')
+    if not re.fullmatch(r'[\x21-\x7e]+', password):
+        if re.search(r'\s', password):
+            raise ValidationError('密码不能包含空格、制表符或换行。')
+        raise ValidationError('密码仅支持英文字母、数字和英文标点，不支持中文或 emoji。')
+    if not 8 <= len(password) <= 16:
+        raise ValidationError('密码须为8–16位，不会截断输入。')
+    missing = [label for pattern, label in ((r'[A-Z]', '大写字母'), (r'[a-z]', '小写字母'),
+        (r'[0-9]', '数字'), (r'[^A-Za-z0-9]', '符号')) if not re.search(pattern, password)]
+    if missing:
+        raise ValidationError('密码须同时包含大写字母、小写字母、数字和符号；缺少：' + '、'.join(missing) + '。')
+    if user is not None:
+        # The website's approved 8–16 boundary replaces only the length validator.
+        # Keep configured common/user-aware checks and the stronger admin policy.
+        validators = [validator for validator in get_default_password_validators()
+                      if not isinstance(validator, MinimumLengthValidator)]
+        validate_password(password, user, password_validators=validators)
+
+
+@sensitive_variables()
+def _locked_password_challenge(request,challenge_id,hint,*,require_delivered=True):
+    from .authentication import _binding_lock,_identity_locks
+    from .account import _lock_deletion_user,session_is_active
+    from .models import AuthFlow
+    binding = _binding_lock(request)
+    method=hint['method']
+    if method not in ('email','phone'):
+        raise ValueError('INVALID_CODE')
+    _identity_locks(request,hint['identifier'],method=method)
+    target = get_user_model().objects.filter(pk=hint['password_user_id']).first()
+    if target is None or target.pk != request.user.pk:
+        raise ValueError('INVALID_CODE')
+    try:
+        user = _lock_deletion_user(target)
+    except ValueError:
+        raise ValueError('INVALID_CODE') from None
+    # The password helper invalidates all identity flows after this OTP check.
+    from django.db.models import Q
+    list(AuthFlow.objects.select_for_update().filter(Q(user=user)|Q(method=method,identifier=hint['identifier'])).order_by('pk'))
+    item = LoginChallenge.objects.select_for_update(of=('self',)).filter(pk=challenge_id,
+        purpose='password_reset',authflow__isnull=True).first()
+    if (item is None or (require_delivered and not item.delivered) or item.consumed_at or item.expires_at <= timezone.now() or
+            item.method != method or item.identifier != hint['identifier'] or
+            item.password_user_id != user.pk or not constant_time_compare(item.session_digest,binding) or
+            not session_is_active(request) or not LoginIdentity.objects.filter(user=user,
+                method=method,identifier=item.identifier).exists()):
+        raise ValueError('INVALID_CODE')
+    return item,user
+
+
+@sensitive_variables()
+def password_reset(request):
+    data = payload(request, ('challenge_id', 'code', 'password'))
+    if not request.user.is_authenticated:
+        return error(request, 'AUTH_REQUIRED', 403)
     try:
         challenge_id = uuid.UUID(data['challenge_id'])
     except (TypeError, ValueError, AttributeError) as exc:
         raise ValueError('INVALID_CODE') from exc
     if not isinstance(data['code'], str) or not re.fullmatch(r'\d{6}', data['code']):
         raise ValueError('INVALID_CODE')
-    hint = LoginChallenge.objects.filter(pk=challenge_id).values('method', 'identifier').first()
+    try:
+        validate_new_password(data['password'])
+    except ValidationError as exc:
+        return error(request, 'INVALID_PASSWORD', 422, exc.messages[0])
+    hint = LoginChallenge.objects.filter(pk=challenge_id, purpose='password_reset',authflow__isnull=True).values(
+        'identifier', 'method', 'password_user_id').first()
     if not hint:
-        return error(request, 'INVALID_CODE', 422, '验证码无效或已过期，请重新获取。')
+        raise ValueError('INVALID_CODE')
     with transaction.atomic():
-        # Same lock order as resend: identity throttle -> challenge. Re-read all
-        # challenge state after locking, and check expiry against the current time.
-        AuthThrottle.objects.select_for_update().get(key=digest(
-            'identity:' + hint['method'] + ':' + hint['identifier']))
-        item = LoginChallenge.objects.select_for_update().filter(pk=challenge_id).first()
-        now = timezone.now()
-        if (item is None or not item.delivered or item.consumed_at or item.expires_at <= now or
-                item.attempts >= settings.AUTH_CODE_MAX_ATTEMPTS or
-                not constant_time_compare(item.session_digest, digest(request.session.get('login_binding', '')))):
-            return error(request, 'INVALID_CODE', 422, '验证码无效或已过期，请重新获取。')
+        item,user = _locked_password_challenge(request,challenge_id,hint)
+        if item.attempts >= settings.AUTH_CODE_MAX_ATTEMPTS:
+            raise ValueError('INVALID_CODE')
         item.attempts += 1
         item.save(update_fields=['attempts'])
         if not constant_time_compare(item.code_digest, digest(str(item.id) + ':' + data['code'])):
             return error(request, 'INVALID_CODE', 422, '验证码无效或已过期，请重新获取。')
-        # The identity lock also serializes concurrent registrations in different browsers.
-        identity = LoginIdentity.objects.select_related('user').filter(
-            method=item.method, identifier=item.identifier).first()
-        if identity:
-            user = identity.user
-            if not user.is_active:
-                return error(request, 'ACCOUNT_DISABLED', 403, '账户暂不可用，请联系支持。')
-        else:
-            user = get_user_model().objects.create_user(username=uuid.uuid4().hex)
-            LoginIdentity.objects.create(user=user, method=item.method, identifier=item.identifier)
-            account = BillingAccount.objects.create(kind='personal', name='个人账户', personal_owner=user)
-            Membership.objects.create(account=account, user=user, role='owner')
-        item.consumed_at = now
-        item.save(update_fields=['consumed_at'])
-        AuditEvent.objects.create(actor=user, action='auth.verified', request_id=request.request_id)
-    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-    from .account import register_session
-    register_session(request)
-    return JsonResponse(session_data(request))
+    # Persist the attempt before re-locking exact state for business work.
+    with transaction.atomic():
+        item,user = _locked_password_challenge(request,challenge_id,hint)
+        if not constant_time_compare(item.code_digest,digest(str(item.pk)+':'+data['code'])):
+            raise ValueError('INVALID_CODE')
+        # Apply user-aware Django validators only after ownership proof (no enumeration via validator output).
+        try:
+            from .authentication import change_password
+            change_password(request,user,item.identifier,data['password'],expires_at=item.expires_at,method=item.method)
+        except ValidationError:
+            return error(request, 'INVALID_PASSWORD', 422, '密码过于常见或与个人信息相似，请更换后重试。')
+    logout(request)
+    return JsonResponse({'status': 'password_reset'})
 
 
 def inquiry_dict(item):
@@ -321,6 +440,15 @@ def api(request, path):
             with transaction.atomic():
                 register_session(request)
                 _lock_current(request)
+                # Offboarding and financial mutations serialize on the same
+                # account before checking membership, including procurement.
+                selected = request.session.get('active_account_id')
+                if selected and path != 'billing/accounts/select':
+                    # A request can cache its session before a concurrent
+                    # selection commits. Never authorize a write from that cache.
+                    if request.session.load().get('active_account_id') != selected:
+                        return error(request,'ACCOUNT_CHANGED',409,'当前计费账户已改变，请刷新确认后重新操作。')
+                    BillingAccount.objects.select_for_update().filter(pk=selected).first()
                 return _api_request(request, path)
         except DatabaseError:
             logger.error('api_database_unavailable request_id=%s', request.request_id)
@@ -338,10 +466,21 @@ def _api_request(request, path):
     routes = {
         'auth/session': ('GET',), 'auth/challenges': ('POST',), 'auth/verify': ('POST',),
         'auth/logout': ('POST',), 'billing/accounts/select': ('POST',),
+        'auth/password-login': ('POST',), 'auth/password-challenges': ('POST',), 'auth/password-reset': ('POST',),
+        'auth/invitation-check': ('POST',),
+        'auth/register/start': ('POST',), 'auth/register/verify': ('POST',),
+        'auth/captcha': ('POST',), 'auth/recovery/start': ('POST',),
+        'auth/recovery/verify': ('POST',), 'auth/recovery/complete': ('POST',),
+        'auth/resend': ('POST',), 'auth/cancel': ('POST',),
+        'auth/google/start': ('POST',), 'auth/google/callback': ('GET',),
+        'auth/google/resume': ('POST',), 'auth/google/register': ('POST',),
+        'auth/google/bind-password': ('POST',), 'auth/google/bind-code/start': ('POST',),
+        'auth/google/bind-code/verify': ('POST',), 'auth/google/bind': ('POST',),
         'consultations': ('POST',),
         'billing/account': ('GET',), 'billing/catalog': ('GET',),
         'billing/orders': ('GET', 'POST'), 'billing/purchase-inquiries': ('GET', 'POST'),
         'billing/subscriptions': ('GET',), 'billing/organization': ('GET',),
+        'billing/organization/members/remove': ('POST',),
         'billing/payment-methods': ('GET',), 'billing/notifications': ('GET',),
         'billing/credits/transactions': ('GET',), 'billing/organization-history': ('GET',),
         'billing/automatic-topup': ('GET',),
@@ -363,17 +502,44 @@ def _api_request(request, path):
         return result
     try:
         from .account import dispatch, session_is_active, revoke_current_session
+        if request.method == 'POST' and path.startswith('auth/') and request.GET:
+            raise ValueError('INVALID_REQUEST')
         if request.user.is_authenticated and not session_is_active(request):
             logout(request)
         if path == 'consultations':
             from .consultations import submit
             return submit(request)
+        if path == 'auth/invitation-check':
+            from .invitations import check_request
+            return check_request(request)
         if path == 'auth/session':
             return JsonResponse(session_data(request))
-        if path == 'auth/challenges':
-            return challenge(request)
-        if path == 'auth/verify':
-            return verify(request)
+        if path.startswith('auth/google/') and path in routes:
+            from . import google_auth
+            return {'auth/google/start':google_auth.start,'auth/google/callback':google_auth.callback,
+                'auth/google/resume':google_auth.resume,'auth/google/register':google_auth.register,
+                'auth/google/bind-password':google_auth.bind_password,
+                'auth/google/bind-code/start':google_auth.bind_code_start,
+                'auth/google/bind-code/verify':google_auth.bind_code_verify,
+                'auth/google/bind':google_auth.bind}[path](request)
+        if path in ('auth/challenges', 'auth/verify'):
+            payload(request, ('method', 'identifier') if path == 'auth/challenges' else ('challenge_id', 'code'))
+            return error(request, 'AUTH_FLOW_REQUIRED', 403, '请使用注册、密码登录或找回密码流程。')
+        from . import authentication
+        if path in ('auth/register/start', 'auth/password-login', 'auth/recovery/start'):
+            return authentication.start(request, {'auth/register/start':'registration',
+                'auth/password-login':'login', 'auth/recovery/start':'recovery'}[path])
+        if path in ('auth/register/verify', 'auth/recovery/verify'):
+            return authentication.verify(request, 'registration' if path == 'auth/register/verify' else 'recovery')
+        if path in ('auth/captcha', 'auth/resend', 'auth/cancel', 'auth/recovery/complete'):
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            return {'auth/captcha':authentication.captcha, 'auth/resend':authentication.resend,
+                'auth/cancel':authentication.cancel, 'auth/recovery/complete':authentication.complete}[path](request)
+        if path == 'auth/password-challenges':
+            return password_challenge(request)
+        if path == 'auth/password-reset':
+            return password_reset(request)
         if path == 'auth/logout':
             payload(request, ())
             revoke_current_session(request)
@@ -420,6 +586,14 @@ def _api_request(request, path):
             return inquiries(request, member)
         from .commerce import billing as commerce
         from .commerce import subscriptions
+        if path == 'billing/organization/members/remove':
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            data = payload(request, ('membership_id', 'request_key', 'confirm'))
+            if data['confirm'] is not True or type(data['membership_id']) is not int or data['membership_id'] < 1:
+                raise ValueError('INVALID_REQUEST')
+            return JsonResponse(subscriptions.remove_member(member.account,request.user,
+                data['membership_id'],request_key=data['request_key'],request_id=request.request_id))
         if path == 'billing/purchase-catalog':
             if request.GET:
                 raise ValueError('INVALID_REQUEST')
@@ -463,7 +637,7 @@ def _api_request(request, path):
             raw_offset = request.GET.get('offset','0')
             if not re.fullmatch(r'\d{1,9}',raw_offset):
                 raise ValueError('INVALID_REQUEST')
-            result = subscriptions.organization_summary(member.account,offset=int(raw_offset))
+            result = subscriptions.organization_summary(member.account,offset=int(raw_offset),admin_actor=request.user)
             identities = {item.user_id:item for item in LoginIdentity.objects.filter(
                 user_id__in=[item['user_id'] for item in result['members']]).order_by('-id')}
             for item in result['members']:
@@ -473,6 +647,10 @@ def _api_request(request, path):
                     if identity.method == 'email':
                         local,domain = identity.identifier.rsplit('@',1)
                         item['masked_identifier'] = local[:1]+'***@'+domain
+                    elif identity.method == 'google':
+                        if identity.provider_email:
+                            local,domain = identity.provider_email.rsplit('@',1)
+                            item['masked_identifier'] = local[:1]+'***@'+domain
                     else:
                         item['masked_identifier'] = identity.identifier[:3]+'****'+identity.identifier[-4:]
             return JsonResponse(result)
@@ -535,20 +713,32 @@ def _api_request(request, path):
             return error(request, 'FEATURE_UNAVAILABLE', 503, '该功能尚未开放，不会产生扣款或变更。')
         return error(request, 'NOT_FOUND', 404)
     except DatabaseError:
+        if (path in ('auth/captcha','auth/register/verify') or path in ('auth/google/register','auth/google/bind')) and request.user.is_authenticated:
+            logout(request)
         logger.error('api_database_unavailable request_id=%s', request.request_id)
         return error(request, 'DATABASE_UNAVAILABLE', 503)
     except ValueError as exc:
+        if (path in ('auth/captcha','auth/register/verify') or path in ('auth/google/register','auth/google/bind')) and request.user.is_authenticated:
+            logout(request)
         code = str(exc)
         permitted = {'INVALID_REQUEST', 'INVALID_IDENTIFIER', 'INVALID_CODE', 'INVALID_JSON',
                      'INVALID_BODY_SIZE', 'JSON_REQUIRED', 'CATALOG_INVALID', 'CONFIG_INCOMPLETE',
                      'NOT_FOUND', 'INVALID_IDEMPOTENCY_KEY', 'IDEMPOTENCY_CONFLICT',
                      'QUOTE_EXPIRED', 'QUOTE_NOT_FOUND', 'INVALID_AGREEMENT', 'FORBIDDEN',
-                     'INVALID_PAYLOAD', 'TERMS_MISMATCH', 'QUOTE_ALREADY_ORDERED'}
-        permitted.update(('INVALID_SEATS', 'TERMS_UNAVAILABLE'))
+                     'INVALID_PAYLOAD', 'TERMS_MISMATCH', 'QUOTE_ALREADY_ORDERED', 'RETENTION_POLICY_PENDING'}
+        permitted.update(('INVALID_SEATS', 'TERMS_UNAVAILABLE', 'MEMBER_ALREADY_REMOVED', 'OWNER_REMOVAL_FORBIDDEN'))
+        permitted.add('INVALID_PASSWORD')
+        permitted.add('INVALID_FLOW')
+        if code in ('GOOGLE_CONFLICT','GOOGLE_REJECTED'):
+            return error(request,code,409 if code=='GOOGLE_CONFLICT' else 422)
+        if code == 'INVALID_INVITATION_CODE':
+            return error(request, code, 422, '无效邀请码，请检查')
+        if code == 'INVITATION_CODES_UNAVAILABLE':
+            return error(request, code, 503, '邀请码校验服务暂未就绪，请稍后重试。')
         if code not in permitted:
             logger.error('unexpected_validation request_id=%s', request.request_id)
             return error(request, 'REQUEST_FAILED', 500)
-        status = 409 if code in ('IDEMPOTENCY_CONFLICT', 'QUOTE_ALREADY_ORDERED') else 503 if code in ('CONFIG_INCOMPLETE', 'CATALOG_INVALID', 'TERMS_UNAVAILABLE') else (
+        status = 409 if code in ('IDEMPOTENCY_CONFLICT', 'QUOTE_ALREADY_ORDERED', 'MEMBER_ALREADY_REMOVED', 'OWNER_REMOVAL_FORBIDDEN') else 503 if code in ('CONFIG_INCOMPLETE', 'CATALOG_INVALID', 'TERMS_UNAVAILABLE', 'RETENTION_POLICY_PENDING') else (
             404 if code == 'NOT_FOUND' else 403 if code == 'FORBIDDEN' else 422)
         return error(request, code, status)
 

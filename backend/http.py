@@ -1,7 +1,25 @@
 import uuid
 import ipaddress
+import logging
+import re
 from django.conf import settings
+from django.db import DatabaseError, transaction
 from django.http import JsonResponse
+
+
+class OAuthQueryFilter(logging.Filter):
+    """Django runserver request lines include the one-time callback query."""
+    def filter(self, record):
+        def redact(value):
+            return re.sub(r'/api/auth/google/callback\?[^\s"\']*',
+                '/api/auth/google/callback',value) if isinstance(value,str) else value
+        record.msg = redact(record.msg)
+        if isinstance(record.args,dict):
+            for key,value in list(record.args.items()):
+                record.args[key] = '' if key=='q' and '/api/auth/google/callback' in str(record.args.get('r','')) else redact(value)
+        elif isinstance(record.args,tuple):
+            record.args = tuple(redact(value) for value in record.args)
+        return True
 
 
 def client_ip(request):
@@ -31,7 +49,26 @@ class RequestContextMiddleware:
 
     def __call__(self, request):
         request.request_id = uuid.uuid4()
-        response = self.get_response(request)
+        if request.method == 'POST' and request.path == '/api/billing/accounts/select':
+            # This middleware surrounds SessionMiddleware. Keep the view's
+            # session-row lock until the normal session/cookie save completes.
+            try:
+                with transaction.atomic():
+                    response = self.get_response(request)
+                    if response.status_code >= 500:
+                        transaction.set_rollback(True)
+            except DatabaseError:
+                logging.getLogger('sage').error('account_selection_database_unavailable request_id=%s',request.request_id)
+                response = error(request,'DATABASE_UNAVAILABLE',503)
+        else:
+            response = self.get_response(request)
+        if request.path == '/api/auth/google/callback':
+            # META is the WSGI environ used later by Gunicorn's r/q atoms.
+            request.META['QUERY_STRING'] = ''
+            for key in ('RAW_URI','REQUEST_URI'):
+                if key in request.META:
+                    request.META[key] = request.path
+            response['Referrer-Policy'] = 'no-referrer'
         response['X-Request-ID'] = str(request.request_id)
         response['X-Frame-Options'] = 'DENY'
         if request.path.startswith('/api/'):
