@@ -2,6 +2,10 @@
 
 独立中英文官网，并承接 WorldPilot 数字员工设计素材；不替代已有 Sage 仓库。
 
+## Docker 部署与验收接续 · 2026-10-15
+
+后续容器适配、服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 本轮记录。已只读确认目标是上海 CVM、当前没有 Docker，旧 Sage 通过主机服务和回环 HTTPS 运行；新增独立 Compose 范围、引擎安装、独立数据和访问放行需按计划确认。原七阶段商业上线目标保留；本地验证、云端回环、受控公网和真实商业功能分别验收，不因方案入库而视为已部署或开放。
+
 ## 本次代码同步核验 · 2026-10-13
 
 用户已授权核实后提交并推送现有`feat/billing-accounts`分支；不合并`main`、不部署、不开放网站。当前实现、最新验证及未完成事项以[`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md)顶部本次记录为准，下方“未提交”和测试数量保留为各历史批次事实。真实认证、正式协议、支付与场景执行分别验收，不能由GitHub提交推定完成。
