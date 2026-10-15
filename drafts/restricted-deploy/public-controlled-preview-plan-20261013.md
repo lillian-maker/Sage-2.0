@@ -1,11 +1,13 @@
 ---
 title: Sage 公网受控内测执行计划
 date: 2026-10-13
-status: 方向已确认；执行计划待审；未修改云端或产品代码
+status: 历史主机部署草案；当前以2026-10-15独立Docker方案为准，ICP备案未完成
 scope: 指定 Mac 的公网 HTTPS 内测；不是全网开放或正式商业上线
 ---
 
 # Sage 公网受控内测 Implementation Plan
+
+> 2026-10-15接续：本文件的systemd/旧库部署架构已由[独立Docker执行方案](docker-deployment-acceptance-plan-20261015.md)替代，不按下方历史Architecture变更旧Sage。新三容器回环验收及入口安全轮换已通过；用户确认ICP备案未完成，最新备案办理清单见当前方案Task6。公网仍关闭，后续放行另批确认。
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. 本项目不创建 worktree、不自动 commit/push；每个批次按下方权限边界执行，不把计划当作全部外部操作的授权。
 

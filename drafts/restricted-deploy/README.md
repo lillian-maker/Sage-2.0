@@ -2,7 +2,7 @@
 
 ## 独立Docker执行入口 · 2026-10-15
 
-用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5的新库50项迁移、三容器、运行权限、真实回环HTTPS、重启/DB故障及独立卷恢复均通过。终端控件回显敏感输入后，入口口令仍须由用户安全轮换并复验；公网继续关闭，另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
+用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5的新库50项迁移、三容器、运行权限、真实回环HTTPS、重启/DB故障、独立卷恢复及入口安全轮换均通过。轮换后新TAT复验旧服务正常、仅回环9443、迁移50/Session1及其余51张业务表零行。用户确认备案尚未完成，下一步先读执行方案Task6的备案办理清单；公网继续关闭，另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
 
 根Dockerfile复用原静态构建、版本锁和collectstatic；`app`与`web`目标分别生成应用及只读站点镜像，基镜像固定官方digest。Compose的长期服务是`db`、`app`、`web`；`migrate`是tools profile的一次性任务，使用迁移身份，长期app不获得迁移口令。应用UID10001、网关101、PG999；应用和PG无宿主端口，网关仅映射`127.0.0.1:9443`。默认真实认证、发送、注销和交易关闭，头像verified=0；预约和OAuth回调在预览网关拒绝，Basic入口认证始终开启。
 
