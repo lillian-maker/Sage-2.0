@@ -26,7 +26,13 @@
 
 **敏感输入回显及接续门禁：**HTTPS脚本只在内存中消费口令，不主动打印或持久保存明文，但终端网页控件自动回显了敏感输入，工具全量回读也包含该输入；不能用脚本摘要中的进程行为布尔项宣称整个UI未泄露。已清除残留输入、停止全量AX回显，不保存含敏感输入的截图、不复述或写入该值。入口口令须由用户经可信且不会向代理回显的终端轮换；getpass只控制服务端TTY，不能证明网页控件安全，不在原路径盲目重输。轮换及新口令Basic复验完成前，Task5仍保留收尾项、公网继续关闭。未修改旧数据、DNS/安全组或启用真实认证/支付/任务；公网浏览器、完整头像、OAuth启用后日志、异机/PITR和商业链仍分别验收。长期操作规则：用户输入凭据后不得直接全量回显终端AX；先交接安全输入路径，只核脱敏元数据，工具自动输出也计入项目敏感数据边界。
 
-轮换脚本/opt/sage-docker-preview/rotate-preview-entry.py已校验SHA256 b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8，root/0700，仅准备、尚未执行。它先核HTTPS/恢复通过及完整版本锚点，用户输入两次不同的新入口口令，仅原子替换preview_htpasswd、保留旧文件受限回滚副本；只重建web以更新只读文件绑定，正确/无/错Basic通过CA回环复验，不调用Session入口、不动其他六文件。已在实例详情页实际打开“登录→VNC登录”，停于login提示；VNC需要已有服务器root密码，用户自行查找系统生成的初始密码，代理不查看含密码的消息、不重置密码或重启主机。官方[VNC指南](https://cloud.tencent.com/document/product/213/35701)说明了前提与步骤；新窗口不是已登录证明。用户输入期间不读取该页，完成后由用户关闭页再只核服务器脱敏摘要。安全输入交接必须指明具体窗口及前提，不能把选择“可信终端”视为已经建立通道。
+轮换脚本/opt/sage-docker-preview/rotate-preview-entry.py已校验SHA256 b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8，root/0700；首次用户执行及失败核查见下方记录。它先核HTTPS/恢复通过及完整版本锚点，用户两次输入同一个、与旧值不同的新入口口令，仅原子替换preview_htpasswd、保留旧文件受限回滚副本；只重建web以更新只读文件绑定，正确/无/错Basic通过CA回环复验，不调用Session入口、不动其他六文件。已在实例详情页实际打开“登录→VNC登录”，停于login提示；VNC需要已有服务器root密码，用户自行查找系统生成的初始密码，代理不查看含密码的消息、不重置密码或重启主机。官方[VNC指南](https://cloud.tencent.com/document/product/213/35701)说明了前提与步骤；新窗口不是已登录证明。用户输入期间不读取该页，完成后由用户关闭页再只核服务器脱敏摘要。安全输入交接必须指明具体窗口及前提，不能把选择“可信终端”视为已经建立通道。
+
+**交接纠正：TAT与网站口令分开。**用户确认忘记服务器root密码，之前的preview entry password/Confirm preview entry password只是网站入口口令；不得把它用于Linux登录。VNC绕行增加了不必要的root密码依赖，已停止。首次交接前，TAT「6 Sage-BoBo-TAT」检查geteuid=0、三容器healthy、轮换脚本摘要准确且尚未启动；无须重置root或重启主机。已收起本任务用完的2–5号TAT会话并关闭未使用VNC，保留原1号与当前6号。当前交接隔离代理观察：用户自行运行轮换脚本并输入新口令，期间代理不读取/截图/操作浏览器；完成后先关闭整个OrcaTerm浏览器标签页，再从新TAT连接仅核脱敏摘要。该方式不证明网页控件不保存输入，只消除本次代理读取旧输入控件的路径；不能从此前AX回读泄露推断腾讯云已将口令写入服务日志。用户确认完成及新连接复验前，轮换仍待完成、公网仍关闭。不新增本地登录工具、云API权限、SSH允许或服务器凭据变更。
+
+**首次轮换被重复口令门禁拒绝（把握高）：**用户报告failed并确认关闭整个OrcaTerm标签页后，代理先核旧页已关闭、当前OrcaTerm页数为0，再新建TAT「2 Sage-BoBo-TAT」；未回读旧输入页面。服务器summary.json显示stage=new-password-differs-from-current、AssertionError、new_file_installed=false、old_hash_backup_retained=false；同一时间窗的两次GET /health/ready状态准确为401、200，证明本次提交口令仍被当前入口接受，不能用作新口令。代理只输出时间和状态码，不读取认证值；当前无凭据请求401/TLS verify=0，三容器healthy，旧8443为200/TLS verify=0，pending/backup均不存在、入口文件UID101/mode0400/115字节。失败是重复口令保护生效，未修改脚本或放宽检查。
+
+已将首次私有证据目录原子改名为/opt/sage-docker-preview/entry-rotation-20261015-attempt1-failed，保留原summary.json并新增仅含脱敏判断的diagnostic-summary.json；原输出目录重新空缺，不覆盖失败证据。脚本SHA仍为b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8，尚未再次执行。下一次仍由用户亲自运行同一脚本，输入一个与之前完全不同的16–256字符口令；代理继续停止浏览器观察，直到用户关闭整个标签页并确认。禁止因失败直接重跑已有证据目录、清空证据或接受重复口令。轮换及新连接CA复验仍待完成，公网保持关闭。
 
 ### Task 5 已批准：离线候选入库与凭据交接 · 2026-10-15
 
