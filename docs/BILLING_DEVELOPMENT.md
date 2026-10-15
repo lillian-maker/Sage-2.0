@@ -8,6 +8,18 @@
 
 ## 一、先看 TODO：接下来做什么
 
+### Task 5 已批准：离线候选入库与凭据交接 · 2026-10-15
+
+用户已批准具体Task5：应用源cfb411f21edc787f7dab1e75c6d3251287d001ed、部署配置cf36ee3912c32f636733173d7434b7defc47c0d0、外层包SHA256 df3c4ff9949fc47971b5f0d61e3b8d6d475741709daad6375d7b58c904741728，独立新库/网络/卷、50项预期迁移、新卷恢复、仅127.0.0.1:9443，以及现有TLS文件给新网关UID101的受限副本。凭据初始化由用户在交接终端执行；公网、DNS/安全组、旧数据迁移与真实供应商仍不在本批内。下方“下一批待确认”是上一批收尾状态，以本节更新。
+
+本批新TAT预检实际通过：旧13个进程、8443 ready=200/TLS verify=0、引擎版本/禁用自启与原部署版本正常；原容器/卷均0，目标目录原先不存在，10.231.216.0/24与当时主机/Docker/VPC网段无冲突。基线在服务器/root/sage-docker-task5-20261015-zyw6ckgy/。已创建/opt/sage-docker-preview下8个root私有目录；没有修改旧/opt/sage。外层包250,357,760字节，经OrcaTerm当前实例文件管理器传到incoming，服务器再次核外包SHA、6项白名单成员和内层5项文件摘要，再导入三镜像；app/web/PG内容ID及linux/amd64平台与候选一致，旧HTTPS复验通过，验收记录在新目录acceptance/artifact-verification.json。不得把导入镜像当应用已启动。
+
+**初始化日志保护：**同一PG16.15 amd64镜像的合成失败反例确认，默认log_min_error_statement=ERROR时，展开口令的CREATE ROLE失败SQL会进入服务日志；psql默认输出本身不含口令。已实际验证一次性db-bootstrap只带PGOPTIONS会话参数（log_min_error_statement=panic、log_statement=none、log_duration=off、log_min_duration_statement=-1），失败ERROR与ON_ERROR_STOP仍保留，合成口令不进入日志。成功初始化后先停止/移除该一次性容器，再按原Compose启动同卷常驻db；合成验证确认角色保留、常驻会话日志恢复默认ERROR且不继承PGOPTIONS。不改已批准离线包、不全局关闭日志；云端初始化前检查同样条件，异常保留现场停止。证据脚本/result/summary在tmp/docker-implementation-20261015/bootstrap-log-probe/；这是本地合成证明，尚不是云端新库验收。官方依据：[PGOPTIONS](https://www.postgresql.org/docs/16/libpq-envars.html)、[失败语句日志与默认值](https://www.postgresql.org/docs/16/runtime-config-logging.html#GUC-LOG-MIN-ERROR-STATEMENT)。
+
+已准备root专用initialize-credentials.py，源码SHA256 9161a94f02b2f3452beb9e7d4b6be5f777e7a0d0ad50f3ac0d41118e34b3378e；它要求交互TTY、getpass两次确认新入口口令，随机生成应用/DB值并只写授权文件，拒绝覆盖已有凭据。入口用户名preview，口令不进入argv/聊天/日志；用户亲自执行前不生成这些凭据。TLS受限副本已创建，101:101/0400，旧文件权限、大小及修改时间未变，没有向旧文件写入；只校验元数据，不读取/打印私钥正文或记录其摘要。
+
+交接前实测组合Compose config通过；新网关镜像以101:101/只读/无网络/无capabilities单次挂载，TLS文件可读且不可写；新应用镜像以10001:10001原生运行确认x86_64、Python3.12.15、Django5.2.17。两次临时探针已移除，容器/卷仍0、旧13进程一致、旧HTTPS200/verify0。服务器acceptance/pre-credentials-summary.json与本地tmp/docker-implementation-20261015/task5-precredentials.jpg记录此交接快照。用户在OrcaTerm「5 Sage-BoBo-TAT」亲自执行初始化后，再核文件权限并进行真实新库身份/迁移计划、初始化、恢复及完整回环验收；本节不声称凭据或数据库已完成。
+
 ### 云引擎保护验收与离线候选 · 2026-10-15
 
 **授权与实际结论（把握高）：**用户单独批准在ins-5ag0h225安装并启动Moby29.7.0/Compose5.4.0，不设开机自启；不部署应用、不初始化云端库、不改DNS/安全组。该批已完成。先保存root专用基线，再刷新官方仓库核对版本、gpgcheck和公钥配置；事务只新增6包，无升级/删除/弱依赖/内核/重启。六个RPM逐包可信签名与版本校验后，以localpkg_gpgcheck=1从本地文件安装，未增加软件仓库。

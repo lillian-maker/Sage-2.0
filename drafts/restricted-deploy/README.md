@@ -2,7 +2,7 @@
 
 ## 独立Docker执行入口 · 2026-10-15
 
-用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；云端当前0个容器，初始化/部署和公网开放仍需具体批次确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
+用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5也已批准，三镜像已导入、TLS受限副本已准备，等待用户凭据交接后执行新库及完整回环验收。公网开放仍另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
 
 根Dockerfile复用原静态构建、版本锁和collectstatic；`app`与`web`目标分别生成应用及只读站点镜像，基镜像固定官方digest。Compose的长期服务是`db`、`app`、`web`；`migrate`是tools profile的一次性任务，使用迁移身份，长期app不获得迁移口令。应用UID10001、网关101、PG999；应用和PG无宿主端口，网关仅映射`127.0.0.1:9443`。默认真实认证、发送、注销和交易关闭，头像verified=0；预约和OAuth回调在预览网关拒绝，Basic入口认证始终开启。
 
@@ -27,7 +27,19 @@ Docker按digest导出可能不保留可解析的registry名称。本轮已为PG�
 ```sh
 docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml config --quiet
 docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml build app web
-docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml up -d db
+```
+
+上方build只用于本地从确定源码复建，云端离线候选禁止build/pull。首次新库初始化先用一次性db-bootstrap，不能直接让展开角色口令的失败SQL进入默认错误语句日志；以下离线路径同时指定两份配置：
+
+```sh
+docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml -f drafts/restricted-deploy/compose.offline.yaml run -d --no-deps --pull never --name sage-preview-db-bootstrap -e 'PGOPTIONS=-c log_min_error_statement=panic -c log_statement=none -c log_duration=off -c log_min_duration_statement=-1' db
+```
+
+先确认初始化成功、最终TCP ready、目标库/两角色及日志保护生效；失败保留该容器/卷与私有日志并停止，不重试清空目录。只在成功后停止并移除准确的db-bootstrap容器（保留命名卷），再以原Compose启动常驻db，不给它或应用继承PGOPTIONS；验证常驻新会话log_min_error_statement恢复ERROR。该流程已在同镜像合成新卷红绿验证，云端仍须实际验收；详见最新开发记录。
+
+以下为常驻db已就绪后的迁移检查示意；云端离线候选同样加入上述第二份配置及`--pull never`：
+
+```sh
 docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml run --rm migrate python manage.py check --deploy
 docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml run --rm migrate python manage.py migrate --plan
 ```
