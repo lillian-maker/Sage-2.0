@@ -2,7 +2,7 @@
 
 ## 独立Docker执行入口 · 2026-10-15
 
-用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5也已批准，三镜像已导入、TLS受限副本已准备，等待用户凭据交接后执行新库及完整回环验收。公网开放仍另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
+用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5的新库50项迁移、三容器、运行权限、真实回环HTTPS、重启/DB故障及独立卷恢复均通过。终端控件回显敏感输入后，入口口令仍须由用户安全轮换并复验；公网继续关闭，另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
 
 根Dockerfile复用原静态构建、版本锁和collectstatic；`app`与`web`目标分别生成应用及只读站点镜像，基镜像固定官方digest。Compose的长期服务是`db`、`app`、`web`；`migrate`是tools profile的一次性任务，使用迁移身份，长期app不获得迁移口令。应用UID10001、网关101、PG999；应用和PG无宿主端口，网关仅映射`127.0.0.1:9443`。默认真实认证、发送、注销和交易关闭，头像verified=0；预约和OAuth回调在预览网关拒绝，Basic入口认证始终开启。
 
@@ -14,13 +14,13 @@ web的`app`主机名通过extra_hosts绑定同一个必需的SAGE_APP_IP，与ap
 
 私有目录含`django_key`、`db_admin_password`、`db_runtime_password`、`db_migrate_password`、`tls.crt`、`tls.key`、`preview_htpasswd`。真实凭据由用户安全配置，不发聊天、不读旧`.env`或私钥正文。Compose secrets是每服务只读文件挂载，不是加密保险箱；file来源不保证uid/gid/mode重映射，必须在目标Linux实测可读性。宿主目录应由管理员所有且0700，逐文件按目标容器身份设最小读权限；本地合成测试用0700父目录隔离、0444绑定文件供非root读取，不能把它当所有生产主机的权限验收。PG初始化容器本身处于数据库管理边界，需要读取两种初始角色口令；应用/迁移进程分别只获自身口令。
 
-当前云引擎无userns remap，SELinux原先为Disabled且未更改。拟用root:root/0700父目录：django_key为10001:10001/0400，db_admin_password为999:999/0400，两个角色口令为10001:999/0440，TLS与preview_htpasswd为101:101/0400。角色口令的owner供应用/迁移读取、group供PG初始化读取；不用0444或新增ACL依赖，每个容器仍只挂载获准文件。下一批必须实测UID/GID及读取能力；映射或安全状态漂移时停止，不能关闭校验或安全机制。尚未创建这些云端凭据。
+当前云引擎无userns remap，SELinux原先为Disabled且未更改。云端已核root:root/0700父目录：django_key为10001:10001/0400，db_admin_password为999:999/0400，两个角色口令为10001:999/0440，TLS与preview_htpasswd为101:101/0400。角色口令的owner供应用/迁移读取、group供PG初始化读取；不用0444或新增ACL依赖，每个容器仍只挂载获准文件。实际初始化、迁移及长期服务已验证对应读取能力；后续映射或安全状态漂移时停止，不能关闭校验或安全机制。
 
 离线候选使用冻结应用源码`cfb411f21edc787f7dab1e75c6d3251287d001ed`的app/web镜像及同一官方PG16.15 amd64镜像，文件清单/摘要在`tmp/deploy-candidates/sage-docker-<源码SHA>/`。包内不含私钥、入口口令、数据库卷、媒体或备份。当前约250MB镜像包SHA256为`63cc5dfaeb03b7809a0cbc303a4b32757e143f000961d90ebfe39c22942a5a81`；外层部署包以最终manifest核验。不要从任意同名tag推定内容相同。
 
 Docker按digest导出可能不保留可解析的registry名称。本轮已为PG创建专属离线别名，并用`compose.offline.yaml`仅把db.image绑定到同一amd64 manifest ID；本地与当前云端均实测为containerd image store。先校验候选SHA/镜像内容/平台，再load，子命令前同时指定`-f drafts/restricted-deploy/compose.yaml -f drafts/restricted-deploy/compose.offline.yaml`；启动明确`up -d --no-build --pull never`，一次性任务明确`run --rm --pull never`。不覆盖基配置、不改registry mirror、不自动回退拉取或云端构建；加载后身份不匹配则停止。本地已验证别名移除→离线load恢复、组合config及无pull的postgres --version=16.15；这不是云端加载/新库验收。
 
-凭据初始化交由用户在终端执行：应用/DB密钥在服务器随机生成，入口口令由用户亲设，使用已实测的SHA-512 crypt；不粘贴聊天、不进入argv或日志，仅输出文件元数据和就绪布尔。是否复用已有Sage TLS证书/私钥的受限副本随下一批确认；旧文件保持不变，不读取/打印私钥正文。
+凭据初始化已由用户在终端执行：应用/DB密钥在服务器随机生成，入口口令由用户亲设，使用已实测的SHA-512 crypt；不粘贴聊天、不进入argv或日志，仅输出文件元数据和就绪布尔。用户已批准现有Sage TLS证书/私钥的受限副本，新文件101:101/0400；旧文件权限、大小及修改时间保留，不读取/打印私钥正文。
 
 以下命令在已显式提供非敏感输入、准备私有文件并批准相应数据变更后执行；`--env-file /dev/null`防止Compose自动读取工作区`.env`：
 
@@ -35,7 +35,7 @@ docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/
 docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml -f drafts/restricted-deploy/compose.offline.yaml run -d --no-deps --pull never --name sage-preview-db-bootstrap -e 'PGOPTIONS=-c log_min_error_statement=panic -c log_statement=none -c log_duration=off -c log_min_duration_statement=-1' db
 ```
 
-先确认初始化成功、最终TCP ready、目标库/两角色及日志保护生效；失败保留该容器/卷与私有日志并停止，不重试清空目录。只在成功后停止并移除准确的db-bootstrap容器（保留命名卷），再以原Compose启动常驻db，不给它或应用继承PGOPTIONS；验证常驻新会话log_min_error_statement恢复ERROR。该流程已在同镜像合成新卷红绿验证，云端仍须实际验收；详见最新开发记录。
+先确认初始化成功、最终TCP ready、目标库/两角色及日志保护生效；失败保留该容器/卷与私有日志并停止，不重试清空目录。只在成功后停止并移除准确的db-bootstrap容器（保留命名卷），再以原Compose启动常驻db，不给它或应用继承PGOPTIONS；验证常驻新会话log_min_error_statement恢复ERROR。该流程已在同镜像合成新卷及云端实际通过；云端为便于启动前核验，用等价docker create/start一次性容器、restart=no及同一批准镜像/卷/SQL/文件，上方Composerun为操作示意，不能混同已执行命令。详见最新开发记录。
 
 以下为常驻db已就绪后的迁移检查示意；云端离线候选同样加入上述第二份配置及`--pull never`：
 

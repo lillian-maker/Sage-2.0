@@ -6,7 +6,7 @@
 
 后续服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)、[容器执行说明](drafts/restricted-deploy/README.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 最新记录。上线对象为 **Sage-2.0深色首屏版本**；A独立三容器/新空库已批准，原七阶段商业目标保留。本地13组真实容器验收通过，应用镜像源码冻结于`cfb411f21edc787f7dab1e75c6d3251287d001ed`，已推送并由干净Git归档复建核对。
 
-用户另批批准后，上海CVM已安装并启动Moby29.7.0/Compose5.4.0，均未设开机自启；旧Sage、原管理与入站隔离保护验收通过。Task5封闭部署/新库初始化已批准并开始执行：固定离线包已传输、校验并导入三镜像，TLS受限副本已准备，当前等待用户亲自初始化凭据。新库与完整回环部署尚未验收；公网放行另批确认。应用源码锚点、部署配置提交和运维记录分别核验，不能用后续文档HEAD替换已测镜像来源。
+用户另批批准后，上海CVM已安装并启动Moby29.7.0/Compose5.4.0，均未设开机自启。Task5已完成新空库的50项准确迁移、独立三容器、真实CA/TLS入口矩阵、重启/DB故障恢复及新库备份→独立卷恢复，旧Sage保护检查通过；仅发布127.0.0.1:9443。因终端控件回显敏感输入，入口口令仍须由用户通过可信终端轮换后收尾，公网继续关闭并另批确认。应用源码锚点、部署配置提交和运维记录分别核验，不能用后续文档HEAD替换已测镜像来源。
 
 ## 本次代码同步核验 · 2026-10-13
 

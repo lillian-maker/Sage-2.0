@@ -4,9 +4,29 @@
 
 **当前结论：注册登录等主要代码已经完成本地开发和测试，但真实邮件、Google 登录、短信、支付和两个实际业务场景，还没有全部接通并验收。网站尚未正式开放。**
 
-本轮已通过TAT只读核实旧Sage和云端边界，并推进Sage-2.0深色首屏的独立Docker本地适配；具体结果及未验收项见下面最新记录。服务器安装、云端初始化和域名放行仍按具体批次确认。认证代码和邮件模板已有验证，网站真实认证仍待验收。本地通过不等于真实服务已接通。
+本轮已按批准批次完成Sage-2.0深色首屏的本地Docker适配、云引擎安装、新库迁移、独立三容器及云端回环HTTPS/恢复技术验收；具体结果及未完成项见下面最新记录。入口口令安全轮换尚未完成，域名放行仍须另批确认。认证代码和邮件模板已有验证，网站真实认证仍待验收。本地通过不等于真实服务已接通。
 
 ## 一、先看 TODO：接下来做什么
+
+### Task 5 云端回环技术验收通过，入口轮换待完成 · 2026-10-15
+
+用户已亲自完成初始化，代理仅核对七个凭据/TLS文件的类型、单硬链接、大小、UID/GID和mode，不读取正文。root:root/0700父目录；django_key为10001:10001/0400，db_admin_password为999:999/0400，运行/迁移口令为10001:999/0440，TLS与入口文件为101:101/0400。应用源仍为cfb411f21edc787f7dab1e75c6d3251287d001ed，部署配置仍为cf36ee3912c32f636733173d7434b7defc47c0d0；本节是运维记录，不替换镜像来源。
+
+**实际新库初始化及迁移（把握高）：**先create未启动的常驻db，核专属pgdata与backend网络，再以同一官方PG镜像、初始化SQL、卷和授权文件创建受限一次性bootstrap（docker create、restart=no，启动前可核配置）。只给bootstrap上述PGOPTIONS日志保护参数；最终TCP ready后确认sage_preview由sage_migrate拥有、两受限角色及零public表，成功停止/移除bootstrap并保留卷，再启动原Compose常驻db。常驻会话恢复默认log_min_error_statement=ERROR，不继承PGOPTIONS。云端迁移前的有序计划与本地固定镜像预期50项完全一致，实际应用50项、随后migrate --check通过且计划为空；makemigrations --check --dry-run通过。check --deploy退出0，保留sage.W001/W002及security.W002/W005/W021五项Warning。
+
+**实际服务与隔离：**db/app/web均running/healthy；容器.Image与候选内容ID一致，运行UID999/10001/101、只读根层、drop ALL、no-new-privileges和资源/日志上限已检查。仅web映射127.0.0.1:9443；backend为172.19.0.0/16 internal、frontend为10.231.216.0/24 internal、edge为172.20.0.0/16，实际网段与既有主机/VPC/Docker网段无重叠。Nginx语法检查通过，容器深色首页SHA256仍为a20a587802e11c33066260eed65198d72371135aed0964688b6e744fb098cdfb；正常CA校验访问新9443 ready，无入口凭据为401/TLS verify=0。
+
+**运行身份及保护实测：**正确角色密码通过TCP连接新库；运行账号七项DDL/提权反例均严格以42501拒绝，迁移账号创建探针后运行账号DML及序列权限通过，随后仅移除该合成探针。实际私有媒体卷跨进程flock互斥与杀进程释放通过，verified仍为0；这不替代完整头像故障矩阵。backend非信任来源伪造X-Forwarded-Proto=https仍301，缺密钥/Host/DB输入分别按具体原因拒绝启动。此阶段用户、预约、审计、订单、支付和会话均0。旧13个PID/comm、current、systemd及原监听保留，唯一新增宿主TCP为127.0.0.1:9443；旧8443 ready=200/TLS verify=0，原IPv4/IPv6 filter的INPUT/OUTPUT规则保留。Docker所属FORWARD/NAT及新bridge变化单列，不宣称主机网络未变。控制台刷新确认目标实例仍关联IPv4/IPv6入站ALL拒绝的安全组。
+
+服务器证据在/opt/sage-docker-preview/acceptance/，目录0700、记录0600：credentials-and-created-db.json、database-initialization.json、migration-summary.json、service-start-summary.json、runtime-acceptance.json、old-service-protection.json及私有日志。HTTPS脚本accept-loopback-https.py已上传并校验SHA256 a55b66c7622f578723d71f0c656fc3ddd8e8de05e3dcc5807b6a3d2a888e009e，用户亲自输入现有入口口令并执行。authenticated-https-summary.json实际passed：正常CA/TLS1.2/1.3、正确/缺少/错误Basic、深色首页摘要、中英/健康路径、错误Host/SNI、私有路径、Secure/HttpOnly/Lax Cookie、CSRF及预览写入门禁通过；真实重启后会话保持，新db停止时live=200/ready=503，恢复后ready=200。最终匿名Session恰好1，用户/预约/审计/订单/支付0，被拒OAuth查询标记未进入容器日志。这是服务器原生回环HTTP客户端验收，不是公网浏览器或真实供应商验收。
+
+**备份→独立卷恢复实际通过：**恢复前停止新app/web冻结新库，50条迁移、1条匿名Session及其余51张非元数据表零行已核对；源库完整快照在pg_dump前后稳定。另建sage-preview_restore-pgdata-20261015，以同一PG镜像与初始化文件重建受限角色，bootstrap成功后恢复默认错误语句日志，再在network=none、无发布端口的受限恢复容器执行单事务pg_restore。全量数据/序列/schema/owner/ACL/default ACL/角色快照一致；默认ACL的DML及序列探针回滚，两角色正确口令连接、随机错误口令拒绝、再次正确连接通过，运行角色七项权限反例严格42501。对恢复库迁移记录的合成损坏能使快照不同，ROLLBACK后源/恢复快照再次一致。成功移除两个本次恢复容器，保留新恢复卷和同机私有dump；新app/web重新健康启动。证据在/opt/sage-docker-preview/restore-acceptance-20261015/，summary.json实际passed。角色密码来自仍存在的授权私有文件，未导出角色密码哈希；这不代表凭据材料独立灾备、异机或PITR恢复。恢复主脚本SHA256为8839ab38375f0a8c34af4906b5ed79a38e43e9cf2e2a30424c4cd4c3209b0e7d。首次大命令传输超时没有执行；新TAT6只读确认目标目录不存在后，逐文件短传、核三份SHA再执行，未重复恢复或清空卷。
+
+恢复后的最终保护检查实际passed，记录在acceptance/final-protection-summary.json（2026-10-15T07:23:29 UTC，root/0600）；新TAT /dev/pts/9执行成功。再次确认旧13进程、旧current、六项服务、原监听、原TLS文件UID/GID/mode/大小和旧PG目录保留，新三容器内容ID/健康/绑定准确，迁移50/Session1，Docker/socket/containerd仍disabled自启。新增raw表的两条DROP规则逐项核对，只保护新web的edge地址172.20.0.2及非lo来源的127.0.0.1:9443；原IPv4/IPv6 filter INPUT/OUTPUT完全一致，不把raw默认链新增误算为原filter改变。检查工具的mode表示须与快照oct字符串一致，不能把0600与0o600格式差异当权限变化；本轮独立stat对照确认原值一致后修正了检查脚本，未修改主机权限或防火墙。
+
+**敏感输入回显及接续门禁：**HTTPS脚本只在内存中消费口令，不主动打印或持久保存明文，但终端网页控件自动回显了敏感输入，工具全量回读也包含该输入；不能用脚本摘要中的进程行为布尔项宣称整个UI未泄露。已清除残留输入、停止全量AX回显，不保存含敏感输入的截图、不复述或写入该值。入口口令须由用户经可信且不会向代理回显的终端轮换；getpass只控制服务端TTY，不能证明网页控件安全，不在原路径盲目重输。轮换及新口令Basic复验完成前，Task5仍保留收尾项、公网继续关闭。未修改旧数据、DNS/安全组或启用真实认证/支付/任务；公网浏览器、完整头像、OAuth启用后日志、异机/PITR和商业链仍分别验收。长期操作规则：用户输入凭据后不得直接全量回显终端AX；先交接安全输入路径，只核脱敏元数据，工具自动输出也计入项目敏感数据边界。
+
+轮换脚本/opt/sage-docker-preview/rotate-preview-entry.py已校验SHA256 b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8，root/0700，仅准备、尚未执行。它先核HTTPS/恢复通过及完整版本锚点，用户输入两次不同的新入口口令，仅原子替换preview_htpasswd、保留旧文件受限回滚副本；只重建web以更新只读文件绑定，正确/无/错Basic通过CA回环复验，不调用Session入口、不动其他六文件。已在实例详情页实际打开“登录→VNC登录”，停于login提示；VNC需要已有服务器root密码，用户自行查找系统生成的初始密码，代理不查看含密码的消息、不重置密码或重启主机。官方[VNC指南](https://cloud.tencent.com/document/product/213/35701)说明了前提与步骤；新窗口不是已登录证明。用户输入期间不读取该页，完成后由用户关闭页再只核服务器脱敏摘要。安全输入交接必须指明具体窗口及前提，不能把选择“可信终端”视为已经建立通道。
 
 ### Task 5 已批准：离线候选入库与凭据交接 · 2026-10-15
 
