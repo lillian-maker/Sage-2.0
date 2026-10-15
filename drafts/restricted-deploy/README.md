@@ -1,5 +1,37 @@
 # 受限部署候选与迁移清单
 
+## 独立Docker执行入口 · 2026-10-15
+
+用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。服务器安装、云端初始化和公网放行仍需具体批次确认。
+
+根Dockerfile复用原静态构建、版本锁和collectstatic；`app`与`web`目标分别生成应用及只读站点镜像，基镜像固定官方digest。Compose的长期服务是`db`、`app`、`web`；`migrate`是tools profile的一次性任务，使用迁移身份，长期app不获得迁移口令。应用UID10001、网关101、PG999；应用和PG无宿主端口，网关仅映射`127.0.0.1:9443`。默认真实认证、发送、注销和交易关闭，头像verified=0；预约和OAuth回调在预览网关拒绝，Basic入口认证始终开启。
+
+只有web加入用于端口发布的独立edge bridge；web→app的frontend、app→db的backend均为internal网络，app/db不加入edge。Docker29实测仅internal网络的容器不会落实宿主端口映射，因此不能用三个容器healthy替代实际HTTPS验证。edge默认绑定地址也限制为127.0.0.1，最终仍检查实际端口绑定及HTTPS可达性；不关闭内部网络隔离。
+
+web的`app`主机名通过extra_hosts绑定同一个必需的SAGE_APP_IP，与app静态frontend地址一致。并行重启时，Docker服务别名短暂无注册可能回落到宿主DNS；本机代理实测给出198.18.*并被Nginx缓存，造成应用healthy而入口502。使用已固定的准确地址消除该启动依赖；最小对照中网关先启动、应用随后启动及再次重启均恢复200，不采用重试掩盖错误路由。
+
+**执行前输入：**通过命令环境显式提供`SAGE_IMAGE_TAG`（审阅候选标识）、`SAGE_DOCKER_SECRETS_DIR`（绝对私有目录）、`SAGE_FRONTEND_SUBNET`、`SAGE_GATEWAY_IP`、`SAGE_APP_IP`（经路由和Docker网络盘点无冲突的子网及准确IP）；需要调整回环端口时提供`SAGE_HTTPS_PORT`。缺必需输入即失败，不提供示例生产凭据或默认网段。
+
+私有目录含`django_key`、`db_admin_password`、`db_runtime_password`、`db_migrate_password`、`tls.crt`、`tls.key`、`preview_htpasswd`。真实凭据由用户安全配置，不发聊天、不读旧`.env`或私钥正文。Compose secrets是每服务只读文件挂载，不是加密保险箱；file来源不保证uid/gid/mode重映射，必须在目标Linux实测可读性。宿主目录应由管理员所有且0700，逐文件按目标容器身份设最小读权限；本地合成测试用0700父目录隔离、0444绑定文件供非root读取，不能把它当所有生产主机的权限验收。PG初始化容器本身处于数据库管理边界，需要读取两种初始角色口令；应用/迁移进程分别只获自身口令。
+
+以下命令在已显式提供非敏感输入、准备私有文件并批准相应数据变更后执行；`--env-file /dev/null`防止Compose自动读取工作区`.env`：
+
+```sh
+docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml config --quiet
+docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml build app web
+docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml up -d db
+docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml run --rm migrate python manage.py check --deploy
+docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml run --rm migrate python manage.py migrate --plan
+```
+
+确认准确目标新库、迁移计划与恢复证据后，一次性`run --rm migrate`应用迁移，再`up -d app web`。不能用启动失败自动迁移/清库；不能把app切换成owner绕过权限。`check --deploy`保留邮件/销售关闭等Warning，不虚报商业或供应商就绪。镜像为linux/amd64；本机arm64的仿真验证须与上海x86_64原生验收区分。
+
+`docker exec`不会执行镜像ENTRYPOINT，也不会继承主进程启动后注入的环境。需要Django配置的运行身份管理检查应使用`docker compose --env-file /dev/null -p sage-preview -f drafts/restricted-deploy/compose.yaml exec -T app python /app/deploy/docker-entrypoint.py python manage.py check`；不要直接exec `manage.py`，不要读取`/proc`环境或把口令放进命令参数。迁移身份继续使用上方`run --rm migrate`，自然经过同一密钥加载入口。
+
+本地合成验收入口为`.venv/bin/python -B tests/docker-audit.py`，要求TLS1.3客户端能力（本轮为Python3.12/OpenSSL3.5.8）；系统Python3.9/LibreSSL2.8.3不能执行这项协议矩阵，脚本会在创建资源前失败。脚本独占project、空卷、临时CA和随机测试凭据，明确不读实际部署凭据；测试新库和网关，输出脱敏摘要，结束仅清理本次资源。测试不连接云端或真实供应商，不代替独立公网来源/撤销或正式业务验收。初始CPU/内存/PID/日志上限是受控验收起点，不能当容量承诺。
+
+停止新项目使用准确`-p sage-preview -f drafts/restricted-deploy/compose.yaml stop`，保留卷和失败现场；不执行全局prune、`down -v`或批量停止其他应用。正式升级先审阅候选、备份恢复、兼容性与回退；不能只凭镜像tag认定来源一致。
+
 > 2026-10-13说明：本目录保留原配置准备清单，正文“当前没有上传/下一批待批准”等属于起草阶段，不是服务器实时状态；以`../../docs/BILLING_DEVELOPMENT.md`最新服务器记录为准。本次GitHub代码同步不执行这里的安装、迁移、配置或开放步骤，也不包含实际密钥。
 
 本目录是配置准备稿，不代表云端已安装或网站已上线。接续先读 `../../docs/BILLING_DEVELOPMENT.md` 的最新部署记录。业务源码和既有未提交变更均保留；不以 Git HEAD 代替包含未跟踪文件的实际候选版本。

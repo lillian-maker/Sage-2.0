@@ -4,7 +4,7 @@
 
 ## Docker 部署与验收接续 · 2026-10-15
 
-后续容器适配、服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 本轮记录。已只读确认目标是上海 CVM、当前没有 Docker，旧 Sage 通过主机服务和回环 HTTPS 运行；新增独立 Compose 范围、引擎安装、独立数据和访问放行需按计划确认。原七阶段商业上线目标保留；本地验证、云端回环、受控公网和真实商业功能分别验收，不因方案入库而视为已部署或开放。
+后续容器适配、服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)、[容器执行说明](drafts/restricted-deploy/README.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 本轮记录。用户明确上线 **Sage-2.0深色首屏版本**，已批准A独立三容器/新空库、保留旧Sage，先受控部署再逐项接通商业链。已只读确认目标是上海CVM、当前没有Docker，旧Sage通过主机服务和回环HTTPS运行；服务器安装、云端初始化和访问放行仍按具体批次确认。原七阶段商业上线目标保留；本地验证、云端回环、受控公网和真实商业功能分别验收，不因本地容器通过而视为已部署或开放。
 
 ## 本次代码同步核验 · 2026-10-13
 

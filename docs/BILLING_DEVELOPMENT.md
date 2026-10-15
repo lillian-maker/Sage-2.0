@@ -4,9 +4,31 @@
 
 **当前结论：注册登录等主要代码已经完成本地开发和测试，但真实邮件、Google 登录、短信、支付和两个实际业务场景，还没有全部接通并验收。网站尚未正式开放。**
 
-服务器任务最新记录已推进到固定候选的本机HTTPS资源与安全检查通过，但用户浏览器访问通道仍未打通；本轮只复核记录，不操作服务器、不声称重新测过公网。认证代码和邮件模板已有验证，网站真实认证仍待验收。本地通过不等于真实服务已接通。
+本轮已通过TAT只读核实旧Sage和云端边界，并推进Sage-2.0深色首屏的独立Docker本地适配；具体结果及未验收项见下面最新记录。服务器安装、云端初始化和域名放行仍按具体批次确认。认证代码和邮件模板已有验证，网站真实认证仍待验收。本地通过不等于真实服务已接通。
 
 ## 一、先看 TODO：接下来做什么
+
+### Sage-2.0深色首屏：独立Docker适配与本地验收 · 2026-10-15
+
+**最新授权与版本边界：**用户明确上线Sage-2.0深色首屏，批准A独立Nginx、应用、PostgreSQL三容器及新空库，保留旧宿主机Sage；先受控部署，再逐项接通认证、支付和两个业务场景。当前批次执行本地适配、合成测试及GitHub提交；引擎安装、具体云端候选/迁移和公网开放另批确认。下方同日早期“架构待确认/尚无Dockerfile”仅为之前盘点事实，已由本节更新。
+
+**实际改动：**新增根Dockerfile/.dockerignore及现有restricted-deploy目录内Compose、Nginx、Gunicorn、密钥加载入口和PG初始化SQL，新增`tests/docker-audit.py`真实容器验收脚本。复用原静态构建、collectstatic和requirements版本锁，未改前端、业务源码、迁移或依赖。三个长期容器非root、只读根层、cap_drop ALL、no-new-privileges及有限资源/日志；仅web发布回环HTTPS。web专属edge bridge负责发布，frontend/backend仍internal，app/db不加入edge。运行/迁移角色分离，默认权限给必要DML及序列，应用不获得管理/迁移口令；一次性migrate不长期运行。
+
+镜像固定官方多架构index digest，实际Linux/amd64运行时为Python3.12.15、Django5.2.17、Gunicorn23.0.0、psycopg3.3.6、Nginx1.28.3、PostgreSQL16.15；镜像版本来自实际运行，不从浮动tag推断。版本锁缺逐包哈希，本轮没有冒充依赖内容哈希校验。Docker内新构建首页SHA256为`a20a587802e11c33066260eed65198d72371135aed0964688b6e744fb098cdfb`，与前阶段固定源码的深色首页完全一致。
+
+**本轮新鲜验证（把握高）：**项目Python3.12/OpenSSL3.5.8、Docker29.7.2/Compose5.4.0，在arm64本机真实运行Linux/amd64仿真容器；`.venv/bin/python -B tests/docker-audit.py`退出0，**13组全部通过**。证据`tmp/docker-audit-bsk8o720/`包括生产检查/50项迁移、三容器健康、实际网络/端口/身份隔离、缺配置具体错误反例、运行角色DDL禁止及默认ACL DML/序列、真实TLS1.2/1.3与入口认证/Host/SNI/私有路径、匿名会话和CSRF、预约及ConsultationAudit零写入、实际代理拓扑、媒体卷跨进程文件锁、重启持久性/DB故障恢复、备份到独立新卷恢复（全量行/序列/schema/owner/ACL/default ACL/角色及行损坏负对照）、被拒OAuth查询标记不进入日志。所有自有容器/网络/卷清理成功；本机其他两个容器的镜像、启动时间、状态和端口前后完全一致。该13组不与早期581项及UI fixture计数相加。
+
+测试镜像的本地image ID为app `sha256:bb08bfb9e0cc3cecf1fe6c22bd74bbb05af6068ec1f6c71c971a9ba91e9f4b77`、web `sha256:453e532f8d315b58a1f11395b9158f6a049501a1ee3e42a8058713359b416ead`；这是本地内容标识，未发布registry，不冒充远端RepoDigest。requirements SHA256为`5053e70b3c1daf310fad48d7215cec45d500f4bb2d54601315bb003fdf8a6287`，验收脚本SHA256为`62e310fbe2cda37ea98867a05a17d7fe91c68aec1f829437f70b3d34c666e7a1`。提交收尾从干净Git归档复建并核对已测镜像；候选完整来源SHA及镜像核验材料保留在`tmp/docker-implementation-20261015/`，远端上传状态以Git实际回读为准。
+
+`check --deploy`退出0但保留5项Warning：邮件与销售关闭、Django无XFrameOptionsMiddleware、未启用HSTS includeSubDomains/preload。网关实际配置X-Frame-Options DENY；不为消Warning开启商业能力或未核实子域策略。匿名session属于明确测试写入，不创建真实用户/预约/订单/支付，不读取旧库或调用供应商。
+
+**实测问题与长期规则：**PG `btrim`不去LF/CRLF，必须与Python端一致只去行尾CR/LF、保留口令首尾空格；独立PG16合成字符串红绿探针和新库角色认证验证该修正。非root只读Nginx启动还会初始化fastcgi/uwsgi/scgi临时目录，必须全部定位到已有tmpfs，不能通过放开根层写入绕过。Docker29仅internal网络不会落实端口发布，最小红绿探针证明web专属edge方案；容器healthy不能替代入口实测。Docker29多架构inspect需明确平台并以容器uname x86_64佐证。系统Python3.9/LibreSSL缺TLS1.3，脚本启动前失败，不跳过协议断言。Docker exec不继承PID1动态注入环境，Django管理探针必须显式经过同一密钥加载入口；缺配置反例须核对具体异常，不能把固定IP冲突的非零退出冒充正确拒绝。所有本地失败轮仅清理各自独占项目，保留脱敏证据。
+
+首次完整重启负例中app自身healthy，web却持续502/一次504；日志实际upstream为198.18.14.28，偏离固定frontend地址。独立最小对照复现网关在app别名注册前启动后缓存fake-IP；同一固定app地址加extra_hosts后，应用随后启动和故意网关先重启的两次检查均200。最小修正仅给web的app主机名绑定现有SAGE_APP_IP，不改DNS/代理系统设置、不降低入口断言、不增加重试掩盖错误；随后完整链重启及DB故障恢复通过。探针材料在`tmp/docker-implementation-20261015/`。
+
+恢复探针另两项经验：PG初始化临时进程可先接受Unix socket，随后关闭再启动最终进程；只等Unix ready会提前执行恢复。独立合成探针复现Unix ready/TCP未ready，最终TCP ready与SQL通过；恢复脚本改等127.0.0.1 TCP。PG16恢复会把CHECK中字面量varchar数组到text数组的整体cast重打印成逐元素cast；本轮全量比较仅10条CHECK存在该表示差异，所有其他数据/序列/owner/ACL/角色行相同。使用同一镜像逐条验证10个实际表达式的值、类型和ANY语义均一致，再沿用既有postgres-audit的有限规则适配pretty=true输出；保留值/顺序/有界类型/操作符/引号反例，绝不忽略CHECK、owner或ACL。服务器`dnf --cacheonly info`仅查询缓存候选：Moby29.7.0-1.tl4/AppStream、Compose5.4.0-1.oc9/EPOL；尚未安装，缓存约3天，安装批次仍需刷新/核签名/事务审阅。
+
+**仍未完成：**云端x86_64原生运行、生产凭据实际文件权限、完整头像上传/清理竞态故障矩阵、OAuth启用后的异常日志矩阵、恢复后角色密码认证、异机/PITR恢复及公网独立来源/撤销验收。头像verified保持0，预约/OAuth回调在预览网关拒绝，真实认证/发送/注销/交易/任务门禁保持关闭。未安装云端Docker、创建云容器/卷、迁移旧数据、修改安全组/DNS或正式开放。完整七阶段商业目标及关键批次门禁见[执行方案](../drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)。
 
 ### Docker 部署盘点、方案与本地基线 · 2026-10-15
 

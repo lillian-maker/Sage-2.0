@@ -1,0 +1,156 @@
+name: sage-preview
+
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "10m", max-file: "3"}
+
+x-app: &app
+  image: sage-app:${SAGE_IMAGE_TAG:?Set a reviewed image tag}
+  platform: linux/amd64
+  build: {context: ../.., target: app}
+  user: "10001:10001"
+  init: true
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: ["/tmp:size=64m,mode=1777"]
+  pids_limit: 128
+  cpus: 2
+  mem_limit: 1g
+  logging: *logging
+  environment: &app-environment
+    SAGE_ENV: production
+    SAGE_ALLOWED_HOSTS: sagegogo.com
+    SAGE_DB_NAME: sage_preview
+    SAGE_DB_USER: sage_runtime
+    SAGE_DB_HOST: db
+    SAGE_DB_PORT: "5432"
+    SAGE_TRUSTED_PROXY_IPS: ${SAGE_GATEWAY_IP:?Set the exact gateway address}
+    SAGE_MEDIA_ROOT: /app/media
+    SAGE_AVATAR_LOCAL_FLOCK_VERIFIED: "0"
+    SAGE_AUTH_EMAIL_ENABLED: "0"
+    SAGE_AUTH_PHONE_ENABLED: "0"
+    SAGE_AUTH_GOOGLE_ENABLED: "0"
+    SAGE_AUTH_REGISTRATION_ENABLED: "0"
+    SAGE_AUTH_CAPTCHA_ENABLED: "0"
+    SAGE_ACCOUNT_DELETION_ENABLED: "0"
+  networks: [backend]
+
+services:
+  db:
+    image: postgres:16-bookworm@sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4
+    platform: linux/amd64
+    user: "999:999"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    cpus: 2
+    mem_limit: 1g
+    logging: *logging
+    environment:
+      POSTGRES_DB: sage_preview
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_admin_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=trust
+    secrets: [db_admin_password, db_runtime_password, db_migrate_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker-init.sql:/docker-entrypoint-initdb.d/10-sage.sql:ro
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /var/run/postgresql:size=16m,uid=999,gid=999,mode=0755
+    networks: [backend]
+    healthcheck:
+      test: [CMD, pg_isready, -h, "127.0.0.1", -U, postgres, -d, sage_preview]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    stop_grace_period: 60s
+
+  app:
+    <<: *app
+    restart: unless-stopped
+    secrets:
+      - django_key
+      - source: db_runtime_password
+        target: db_password
+    volumes: [avatars:/app/media]
+    networks:
+      backend: {}
+      frontend: {ipv4_address: "${SAGE_APP_IP:?Set the application address}"}
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import http.client; c=http.client.HTTPConnection('127.0.0.1',8000,timeout=4); c.request('GET','/health/ready',headers={'Host':'sagegogo.com','X-Forwarded-Proto':'https'}); raise SystemExit(0 if c.getresponse().status==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    stop_grace_period: 35s
+
+  migrate:
+    <<: *app
+    profiles: [tools]
+    environment:
+      <<: *app-environment
+      SAGE_DB_USER: sage_migrate
+    secrets:
+      - django_key
+      - source: db_migrate_password
+        target: db_password
+    command: [python, manage.py, migrate, --noinput]
+    depends_on:
+      db: {condition: service_healthy}
+
+  web:
+    image: sage-web:${SAGE_IMAGE_TAG:?Set a reviewed image tag}
+    platform: linux/amd64
+    build: {context: ../.., target: web}
+    user: "101:101"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: ["/tmp:size=32m,uid=101,gid=101,mode=0700"]
+    pids_limit: 128
+    cpus: 0.5
+    mem_limit: 128m
+    logging: *logging
+    ports: ["127.0.0.1:${SAGE_HTTPS_PORT:-9443}:8443"]
+    extra_hosts:
+      app: "${SAGE_APP_IP:?Set the application address}"
+    secrets: [tls_certificate, tls_key, preview_htpasswd]
+    networks:
+      edge: {}
+      frontend: {ipv4_address: "${SAGE_GATEWAY_IP:?Set the exact gateway address}"}
+    depends_on:
+      app: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, nginx, -t]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  edge:
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+  frontend:
+    internal: true
+    ipam:
+      config: [{subnet: "${SAGE_FRONTEND_SUBNET:?Choose a non-overlapping subnet}"}]
+  backend:
+    internal: true
+
+volumes:
+  pgdata: {}
+  avatars: {}
+
+secrets:
+  django_key: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/django_key"}
+  db_admin_password: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/db_admin_password"}
+  db_runtime_password: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/db_runtime_password"}
+  db_migrate_password: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/db_migrate_password"}
+  tls_certificate: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/tls.crt"}
+  tls_key: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/tls.key"}
+  preview_htpasswd: {file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/preview_htpasswd"}

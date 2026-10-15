@@ -1,7 +1,7 @@
 ---
 title: Sage Docker 部署与验收执行方案
 date: 2026-10-15
-status: 已开始只读盘点与本地验证；Docker 架构及云端变更待确认
+status: A架构已批准；本地受控Docker基座验收通过；云端变更待分批确认
 scope: Sage-2.0 固定版本、本地容器适配、独立服务器部署、受控验收及商业上线接续
 ---
 
@@ -11,7 +11,9 @@ scope: Sage-2.0 固定版本、本地容器适配、独立服务器部署、受�
 
 **Goal:** 将确定版本的 Sage 通过独立 Docker 应用部署到 `ins-5ag0h225`，先证明本地可复建、运行隔离和可回退，再按批准的访问范围及功能逐项验收。
 
-**Architecture:** 建议新增独立 Compose 项目 `sage-preview`，包含 Nginx、Django/Gunicorn、PostgreSQL 三个容器；使用专属网络、数据卷、私有媒体及配置目录，初期仅映射宿主机回环 HTTPS 端口。保留现有宿主机 Sage 和 PostgreSQL；不迁移、不共享旧数据。此方案尚待用户确认。
+**Architecture:** 用户已批准新增独立 Compose 项目 `sage-preview`，包含 Nginx、Django/Gunicorn、PostgreSQL 三个长期运行容器；使用专属网络、数据卷、私有媒体及配置目录，初期仅映射宿主机回环 HTTPS 端口。另有复用应用镜像的受限一次性迁移任务，不长期运行。保留现有宿主机 Sage 和 PostgreSQL；不迁移、不共享旧数据。
+
+**用户确认 · 2026-10-15：**首个验收目标为独立Docker受控部署，之后逐项接通认证、支付和业务场景；采用A三容器及新空库、保留旧Sage。上线对象明确为 **Sage-2.0深色首屏版本**，不是历史WorldPilot或Sage归档。授权当前本地适配、测试及GitHub提交；服务器安装、云端初始化和公网放行仍按具体批次确认。
 
 **Tech Stack:** 现有 Python 3.12、Django 5.2、Gunicorn 23、PostgreSQL 16、Python 静态构建及 Playwright；TencentOS Server 4 官方支持的 Moby/Docker 与 Compose。版本及镜像须在适配时锁定，不使用浮动 `latest`。
 
@@ -89,6 +91,8 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 - 端口9443是根据本轮监听清单提出的候选，执行前重验；若已占用则停止并调整，不抢占原端口。
 - 项目命名`-p sage-preview`；网络/卷/容器均由该项目创建，不使用无前缀external卷、不挂Docker socket、不用host网络或privileged。开工前若出现同名资源须先核实归属，不直接复用或删除。
 - 专属bridge子网在实际主机路由/VPC及Docker网络盘点后选取无重叠网段；网关来源精确固定并配置到Gunicorn和`SAGE_TRUSTED_PROXY_IPS`，实际伪造头反例验收通过后才接认证。
+- 网关单独加入edge bridge用于回环端口发布；web→app的frontend与app→db的backend保持internal，app/db不加入edge。Docker29最小实测中仅internal网络无实际端口映射，增加web专属edge后回环HTTP通过；最终还须通过完整HTTPS入口矩阵。
+- web的app主机名通过extra_hosts绑定已固定且核验的SAGE_APP_IP，避免并行重启时服务别名尚未注册、外部DNS回落后被Nginx缓存。实际负例出现代理fake-IP/502，固定准确地址后的最小启动/重启对照200；不关闭TLS校验或扩大代理信任。
 - DB网络不发布到宿主机。初始化/迁移凭据只给受限一次性任务，长期应用账号无DDL/superuser/CREATEDB/CREATEROLE权限。外部供应商尚未启用时不注入其凭据。
 - 容器使用非root运行、只读代码/静态层、必要tmpfs和专属可写媒体/PG卷、`no-new-privileges`及最小capabilities。实际UID/卷权限须验证，不能只凭Compose字段声明隔离完成。
 - 初始资源上限须在本地运行和云端空载基线后给出，再确定CPU/内存/PID及日志大小/保留数；不得从16核64GiB推定承载用户数。健康检查区分进程存活和DB就绪。
@@ -97,7 +101,7 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 
 ## 5. 执行任务与通过条件
 
-### Task 1：冻结版本、盘点和本地基线（已开始）
+### Task 1：冻结版本、盘点和本地基线（本轮检查完成）
 
 **Files:** 只读源码、既有开发记录；一次性证据只写`tmp/`。
 
@@ -114,13 +118,15 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 
 **Files:** 新增根`Dockerfile`、`.dockerignore`；容器配置放`drafts/restricted-deploy/`；只在确需时修改现有settings/检查/测试；更新README与现有开发记录。
 
-- [ ] 获取第3节架构、独立数据与首批功能范围确认。
-- [ ] 先为匿名预约拒绝、生产Host/HTTPS和代理来源差异定义可失败的反例；在现有测试和网关验收中复用，不造通用框架。
-- [ ] 多阶段镜像执行原静态构建与`collectstatic`，按现有requirements哈希锁安装依赖；包含运行所需`src/pages/billing-catalog.json`。
-- [ ] 实现三服务Compose、运行/迁移身份分离、健康检查、持久卷和精确网络信任；默认真实认证/发送/交易/任务门禁关闭。
-- [ ] `docker compose -p sage-preview-local -f drafts/restricted-deploy/compose.yaml config --quiet`；只输出配置校验结果，不打印含凭据的解析配置。
-- [ ] 实际构建Linux/amd64镜像并从空卷启动；使用production设置运行`manage.py check --deploy`、`makemigrations --check --dry-run`、`migrate --plan`。不为消Warning虚报法律、供应商或头像验证就绪。
-- [ ] 执行批准的空库迁移、权限反例、重启持久性、私有头像锁/故障恢复、卷备份→另卷恢复和HTTPS网关矩阵。确认匿名预约拒绝且无业务写入。
+- [x] 用户批准A三容器、新空库、保留旧Sage，先受控验收再接商业链；明确Sage-2.0深色首屏。
+- [x] 为匿名预约拒绝、生产Host/HTTPS和代理来源差异定义并实际运行可失败的反例；复用现有工具，不造通用框架。
+- [x] 多阶段镜像执行原静态构建与`collectstatic`，按现有requirements版本锁安装依赖；包含运行所需`src/pages/billing-catalog.json`。现有自动生成锁没有逐包哈希，不冒充`--require-hashes`验证；基镜像以官方registry实际digest固定，不在本轮手改依赖锁。
+- [x] 实现三服务Compose、运行/迁移身份分离、健康检查、持久卷和精确网络信任；默认真实认证/发送/交易/任务门禁关闭。
+- [x] 实际Compose config --quiet通过；合成脚本使用空env-file、正式命令显式`--env-file /dev/null`，禁止自动读取工作区`.env`。只输出校验结果，不打印凭据。
+- [x] 实际构建Linux/amd64镜像并从空卷启动；production运行`manage.py check --deploy`、`makemigrations --check --dry-run`、`migrate --plan`及50项迁移。5项Warning保留，不虚报法律、供应商或头像就绪。
+- [x] 本地空库权限反例、重启持久性/DB故障恢复、实际媒体卷跨进程锁和HTTPS网关矩阵通过；匿名预约及其审计零写入，允许一个匿名会话写入。
+- [x] 卷备份→独立卷恢复，核对完整数据/序列/schema/owner/ACL/default ACL及角色；恢复权限探针及损坏合成行负对照通过。
+- [ ] 完整头像上传/清理竞态与故障矩阵在实际部署卷验收后才置verified=1；当前保持0，留作该功能启用门禁。
 
 **通过条件：**本机容器经真实HTTPS入口可验收；运行身份无DDL；缺密钥/Host/PG拒绝启动；仅发布回环HTTPS；旧服务/容器未变；记录镜像摘要及构建输入。正式凭据禁止用本地测试值代替。
 
@@ -134,6 +140,8 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 **通过条件：**本地提交=远端提交=候选源码；测试对应同一候选。文档提交只证明方案入库，不代表Docker已经适配或上线。
 
 ### Task 4：安装引擎前后保护检查（需云端变更确认）
+
+2026-10-15通过现有TAT执行`dnf --cacheonly info moby docker-compose-plugin`只读候选查询：AppStream为moby29.7.0-1.tl4/x86_64，EPOL为docker-compose-plugin5.4.0-1.oc9/x86_64；元数据约3天前，尚未安装。具体批准批次仍须刷新/核签名/审查事务；若候选漂移或需要额外仓库、内核更新/重启，停止并报告。
 
 - [ ] 新TAT重连；再次检查包、服务、监听、路由、主机防火墙、安全组关联、其他产品进程与已有Docker资源；保存受限回退材料，不展示凭据或原始敏感日志。
 - [ ] 审查官方仓库包候选、签名和安装事务；确认Moby/Compose版本兼容。若必须更换仓库、更新内核或重启，停止并另报方案，不默默扩大安装范围。
@@ -215,9 +223,9 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 
 ## 8. 执行状态与记录位置
 
-截至本轮收尾：完成仓库/远端、云端管理与架构、域名/DNS/安全组/TLS只读核实、固定HEAD双复建、581项隔离PG及两套UI回归；详细结果见Task1和现有开发记录。没有用新测试结果推定云端候选已经更新。
+截至本轮收尾：完成仓库/远端、云端管理与架构、域名/DNS/安全组/TLS只读核实、固定HEAD双复建、581项隔离PG及两套UI回归；A已批准，Sage-2.0深色首屏的本地Docker基座13组真实合成验收全部通过，退出0。详细结果和本地镜像ID见现有开发记录；验收材料`tmp/docker-audit-bsk8o720/`。两项其他本机容器保护对照一致，自有测试资源已清理；没有用本地结果推定云端候选已经更新。
 
-尚未安装服务器Docker、创建云端容器/卷、迁移旧数据、修改安全组/DNS、启用真实发送/支付/任务或正式开放。架构确认后按Task2开始实现；文档提交/push的实际结果见本轮收尾记录，不能由本文推定已经推送。
+尚未安装服务器Docker、创建云端容器/卷、迁移旧数据、修改安全组/DNS、启用真实发送/支付/任务或正式开放。完整头像故障矩阵、OAuth启用日志、恢复角色密码认证及异机/PITR等未验收项保留，相关功能继续关闭。Task3提交/push及干净候选复建的实际结果以本批Git远端和候选核验材料为准，不能由方案入库推定云端已部署；下一关键批次是Task4引擎安装保护检查。
 
 原始一次性本地验证材料在`tmp/local-readiness-head-_1py5_5a/`，不上传日志、截图或测试资料。长期结论与后续必读入口保存在本文件、README和现有`docs/BILLING_DEVELOPMENT.md`。
 
@@ -225,5 +233,7 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 
 - [TencentOS Server Docker用户指南](https://cloud.tencent.com/document/product/1397/110965)：TencentOS4建议安装Moby；本次未执行安装。
 - [Docker Compose项目名称](https://docs.docker.com/compose/how-tos/project-name/)：明确项目隔离及命名。命名本身不能证明网络/卷/端口没有冲突。
+- [Compose内部网络](https://docs.docker.com/reference/compose-file/networks/#internal)与[extra_hosts](https://docs.docker.com/reference/compose-file/services/#extra_hosts)：入口bridge与内部网络分离，固定已知服务地址。
+- [Compose secrets](https://docs.docker.com/compose/how-tos/use-secrets/)：每服务只读文件注入；Linux文件权限须在实际部署验证。
 - [Django 5.2部署检查清单](https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/)：production配置、WSGI、Host/HTTPS、数据库/媒体及备份。
 - [腾讯云ICP备案阻断说明](https://cloud.tencent.com/document/faq/243/20220)：大陆网站访问需备案及对应接入；实名和SSL签发不能替代。
