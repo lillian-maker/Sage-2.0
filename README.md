@@ -4,7 +4,9 @@
 
 ## Docker 部署与验收接续 · 2026-10-15
 
-后续容器适配、服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)、[容器执行说明](drafts/restricted-deploy/README.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 本轮记录。用户明确上线 **Sage-2.0深色首屏版本**，已批准A独立三容器/新空库、保留旧Sage，先受控部署再逐项接通商业链。已只读确认目标是上海CVM、当前没有Docker，旧Sage通过主机服务和回环HTTPS运行；服务器安装、云端初始化和访问放行仍按具体批次确认。原七阶段商业上线目标保留；本地验证、云端回环、受控公网和真实商业功能分别验收，不因本地容器通过而视为已部署或开放。
+后续服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)、[容器执行说明](drafts/restricted-deploy/README.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 最新记录。上线对象为 **Sage-2.0深色首屏版本**；A独立三容器/新空库已批准，原七阶段商业目标保留。本地13组真实容器验收通过，应用镜像源码冻结于`cfb411f21edc787f7dab1e75c6d3251287d001ed`，已推送并由干净Git归档复建核对。
+
+用户另批批准后，上海CVM已安装并启动Moby29.7.0/Compose5.4.0，均未设开机自启；旧Sage、原管理与入站隔离保护验收通过。云端目前0个容器，Sage封闭部署/新库初始化和公网放行仍待具体批次确认。官方registry本次只读探测超时，已准备不含凭据和数据卷的离线候选；本地专项加载验证不等于云端已部署。应用源码锚点、部署配置提交和运维记录分别核验，不能用后续文档HEAD替换已测镜像来源。
 
 ## 本次代码同步核验 · 2026-10-13
 

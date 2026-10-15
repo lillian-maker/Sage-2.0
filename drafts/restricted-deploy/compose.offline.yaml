@@ -1,0 +1,5 @@
+# Same tested linux/amd64 PostgreSQL manifest as the official index in compose.yaml.
+# Load the verified candidate archive first; use --pull never and --no-build.
+services:
+  db:
+    image: sha256:ec9f656f17c8b4dfebf49e58cf5c46d493d4846d4ea6d8b85d0637f68ee33bfc

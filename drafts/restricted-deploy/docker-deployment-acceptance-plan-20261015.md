@@ -1,7 +1,7 @@
 ---
 title: Sage Docker 部署与验收执行方案
 date: 2026-10-15
-status: A架构已批准；本地受控Docker基座验收通过；云端变更待分批确认
+status: 本地基座及云引擎保护验收通过；离线Sage封闭部署及公网放行待分批确认
 scope: Sage-2.0 固定版本、本地容器适配、独立服务器部署、受控验收及商业上线接续
 ---
 
@@ -21,7 +21,7 @@ scope: Sage-2.0 固定版本、本地容器适配、独立服务器部署、受�
 
 ## 1. 已确认事实和证据边界
 
-| 项目 | 2026-10-15 本轮核实结果 |
+| 项目 | 2026-10-15 起始核实快照；后续引擎变更见Task4 |
 |---|---|
 | 源码 | Sage 资料目录 README 明确指向 `Sage-2.0`；前者不是 Git 仓库 |
 | Git | `feat/billing-accounts`，HEAD `4f55ff66ebe852271b366e67b2e0e49b0d56cf8c`；开始时工作区干净，远端同分支提交一致 |
@@ -130,27 +130,41 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 
 **通过条件：**本机容器经真实HTTPS入口可验收；运行身份无DDL；缺密钥/Host/PG拒绝启动；仅发布回环HTTPS；旧服务/容器未变；记录镜像摘要及构建输入。正式凭据禁止用本地测试值代替。
 
-### Task 3：审查、提交及推送GitHub
+### Task 3：审查、提交及推送GitHub（应用来源批次已完成）
 
-- [ ] 复核`git status`和最小diff；敏感扫描只输出分类/计数，确认没有环境文件、密钥、数据库、日志、备份或测试媒体。
-- [ ] 更新既有`docs/BILLING_DEVELOPMENT.md`，README登记后续必读入口；发布候选从确定提交重新构建，不能用dirty工作区或旧dist。
-- [ ] 仅暂存本次确定文件，`git diff --cached --check`，提交并push对应分支；用`git ls-remote --heads origin <实际分支>`与本地完整SHA对照。禁止`git add .`、force-push或自动merge。
-- [ ] 保存来源SHA、依赖摘要、镜像digest及资源清单；上传方式在GitHub拉取镜像和校验离线传输之间依据实际连通选择，不为拉取失败临时配置未知镜像源或暴露私有仓库。
+- [x] 应用来源批次复核`git status`和最小diff；敏感扫描只输出分类/计数，确认没有环境文件、密钥、数据库、日志、备份或测试媒体。
+- [x] 更新既有`docs/BILLING_DEVELOPMENT.md`，README登记后续必读入口；发布候选从确定提交重新构建，不能用dirty工作区或旧dist。
+- [x] 仅暂存本次确定文件，`git diff --cached --check`，提交并push对应分支；`git ls-remote --heads origin feat/billing-accounts`与本地完整应用SHA一致。禁止`git add .`、force-push或自动merge。
+- [x] 保存来源SHA、依赖摘要、镜像digest及资源清单；依据本次registry探测结果准备离线候选，传输本身属于Task5待确认事项，不临时配置未知镜像源。
 
-**通过条件：**本地提交=远端提交=候选源码；测试对应同一候选。文档提交只证明方案入库，不代表Docker已经适配或上线。
+**通过条件：**冻结应用源码提交在本地/远端可核验，镜像内容与已测候选一致；记录性文档或单独部署配置后续提交不替换应用镜像来源。本轮应用锚点为`cfb411f21edc787f7dab1e75c6d3251287d001ed`，远端核验及干净Git归档复建完成，app/web内容ID与13组通过镜像完全一致。不能用新文档HEAD、mutable tag或方案入库推定新应用版本已验收/上线。
 
-### Task 4：安装引擎前后保护检查（需云端变更确认）
+引擎记录与离线Compose属于后续独立提交，同样逐文件审查、核验远端；不能由上述应用批次勾选推定后续提交已推送。
 
-2026-10-15通过现有TAT执行`dnf --cacheonly info moby docker-compose-plugin`只读候选查询：AppStream为moby29.7.0-1.tl4/x86_64，EPOL为docker-compose-plugin5.4.0-1.oc9/x86_64；元数据约3天前，尚未安装。具体批准批次仍须刷新/核签名/审查事务；若候选漂移或需要额外仓库、内核更新/重启，停止并报告。
+### Task 4：安装引擎前后保护检查（已单独批准并完成）
 
-- [ ] 新TAT重连；再次检查包、服务、监听、路由、主机防火墙、安全组关联、其他产品进程与已有Docker资源；保存受限回退材料，不展示凭据或原始敏感日志。
-- [ ] 审查官方仓库包候选、签名和安装事务；确认Moby/Compose版本兼容。若必须更换仓库、更新内核或重启，停止并另报方案，不默默扩大安装范围。
-- [ ] 获准后只安装本次必要包并启动Docker，不改入站、安全组、DNS或原Sage服务。
-- [ ] 对比前后路由/防火墙/监听，确认原8443 ready仍200、新TAT可重连。Docker API不得公网监听；docker组/root等价管理权限不授给应用账号。
+先缓存只读查询、后按用户单独批准刷新核验：AppStream moby29.7.0-1.tl4、EPOL docker-compose-plugin5.4.0-1.oc9与批准一致。事务只新增这两包及containerd/runc/container-selinux/pigz，共6个必要包；逐个可信RPM签名/版本检查后以localpkg_gpgcheck=1安装，未升级/删除/加仓库/更新内核或重启。Docker/API Unix socket与containerd已运行，三项服务均disabled自启。
+
+- [x] 新TAT重连并复核包/服务/监听/路由/防火墙/安全组关联，确认无已有Docker及容器数据；基线保存/root/sage-docker-install-20261015-6p04_oa8/，目录0700、记录0600。
+- [x] 刷新官方仓库候选并审查6包事务/签名，版本与批准一致；无额外仓库、内核更新/重启。
+- [x] 仅安装必要包并启动Docker，不改云入站、安全组、DNS或原Sage；不设Docker/socket/containerd开机自启。
+- [x] 原路由/网卡地址/旧监听及13个Sage/PG进程身份保留，原8443 ready=200/TLS verify=0；新TAT终端执行成功。Docker API仅Unix socket，docker组成员0，云端容器0。
 
 **通过条件：**引擎可用且旧服务、原管理和入站隔离实测保持；出现副作用停止新引擎、保留现场，不能盲目flush防火墙或卸包删除数据。
 
+实际变化单列：Docker bridge=172.18.0.0/16，未与原路由重叠；IPv4 forwarding 0→1、FORWARD ACCEPT→DROP，新增Docker/NAT链。原IPv4 INPUT/OUTPUT与规则保留；IPv6新增无INPUT/OUTPUT规则的ACCEPT默认链、forwarding仍0。containerd新增仅127.0.0.1的随机CRI streaming端口，已按MainPID确认归属；没有新增公网监听。SELinux原Disabled且未改变。不能宣称主机网络完全未变，详见最新开发记录及服务器post-install-summary.json。
+
 ### Task 5：独立云端封闭部署（需具体候选和数据变更确认）
+
+**拟执行的具体候选：**应用源`cfb411f21edc787f7dab1e75c6d3251287d001ed`，app/web为13组通过及干净复建的同一内容；镜像包250,343,284字节，SHA256 `63cc5dfaeb03b7809a0cbc303a4b32757e143f000961d90ebfe39c22942a5a81`。现有官方registry只读探测超时（exit28/HTTP000，未pull），拟经已有管理通道离线传输到`/opt/sage-docker-preview/releases/<源码SHA>/`，不发布外部registry或临时配置未知mirror。包内无凭据、数据卷、媒体或备份。
+
+Docker按digest导出会丢失PG可用registry名称；专属PG别名已加入归档，`compose.offline.yaml`只将db.image绑定到同一官方amd64 manifest ID。已实测别名移除→load恢复、组合config和无pull的postgres --version=16.15；本地与云引擎均为containerd image store。云端导入后必须核验全部镜像身份/平台及文件摘要，再以两份Compose文件、`--pull never`/`--no-build`运行；不把本地重导入当云端加载已完成。
+
+新增网络前再核路由：本次控制台只读确认目标VPC `vpc-on23oxy8`为172.17.0.0/16，默认路由表`rtb-pfudb7z7`共1条LOCAL路由。frontend拟用10.231.216.0/24，网关容器.2、应用.3；开工时与实际主机/VPC/Docker网段重新比较，edge/backend自动分配后也须核对无重叠与internal属性，不满足则停止。
+
+**拟授权副作用与凭据：**新项目`sage-preview`、独占`pgdata/avatars`，新库`sage_preview`与受限运行/迁移角色；实际计划必须匹配本地预期50项（32个项目迁移无自定义RunPython/RunSQL，另有Django框架元数据初始化），否则停止。凭据初始化交由用户在终端执行：应用/DB密钥在服务器随机生成，不显示/提交，入口口令由用户亲设SHA-512 crypt，禁止发聊天。root:root/0700父目录，角色口令10001:999/0440，其余按实际10001/999/101各自0400，先验证可读性。拟受限复制现有`/etc/sage/tls/sagegogo.com.fullchain.pem`和`/etc/sage/tls/sagegogo.com.key`到新私有目录供UID101只读，旧文件不动、不读取/打印私钥正文；此项与本批一起确认。
+
+备份/恢复只针对新库和另一个新卷，允许合成检查及一个匿名会话，用户/预约/订单/支付保持0；首个入口仅`127.0.0.1:9443`，不开放80/443或改DNS/安全组，不迁移旧数据。新项目同名资源、迁移漂移、文件/镜像身份异常、权限不符或传输限制无法满足时停止，不扩大发布渠道/权限。此批尚未批准或执行。
 
 - [ ] 提交本批候选SHA/digest、目标项目/目录/空库、实际迁移计划、备份/恢复范围和维护窗口；确认无旧数据迁移。
 - [ ] 独占创建Sage容器目录及卷；安全提供新凭据，仅输出权限/布尔就绪项，不读取`.env`或密钥正文。
@@ -225,7 +239,7 @@ Sage专属Nginx容器 → Django/Gunicorn容器 → Sage专属PostgreSQL16容器
 
 截至本轮收尾：完成仓库/远端、云端管理与架构、域名/DNS/安全组/TLS只读核实、固定HEAD双复建、581项隔离PG及两套UI回归；A已批准，Sage-2.0深色首屏的本地Docker基座13组真实合成验收全部通过，退出0。详细结果和本地镜像ID见现有开发记录；验收材料`tmp/docker-audit-bsk8o720/`。两项其他本机容器保护对照一致，自有测试资源已清理；没有用本地结果推定云端候选已经更新。
 
-尚未安装服务器Docker、创建云端容器/卷、迁移旧数据、修改安全组/DNS、启用真实发送/支付/任务或正式开放。完整头像故障矩阵、OAuth启用日志、恢复角色密码认证及异机/PITR等未验收项保留，相关功能继续关闭。Task3提交/push及干净候选复建的实际结果以本批Git远端和候选核验材料为准，不能由方案入库推定云端已部署；下一关键批次是Task4引擎安装保护检查。
+服务器引擎安装启动及保护验收已另批获准完成；仍未创建云端Sage容器/业务卷/新库、迁移旧数据、修改安全组/DNS、启用真实发送/支付/任务或正式开放。完整头像故障矩阵、OAuth启用日志、恢复角色密码认证及异机/PITR等未验收项保留，相关功能继续关闭。冻结应用源码已在远端核验、干净复建通过，后续记录提交不替换镜像来源；下一关键批次为上述Task5具体离线候选封闭部署与新库初始化。
 
 原始一次性本地验证材料在`tmp/local-readiness-head-_1py5_5a/`，不上传日志、截图或测试资料。长期结论与后续必读入口保存在本文件、README和现有`docs/BILLING_DEVELOPMENT.md`。
 

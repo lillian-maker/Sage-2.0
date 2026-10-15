@@ -8,6 +8,26 @@
 
 ## 一、先看 TODO：接下来做什么
 
+### 云引擎保护验收与离线候选 · 2026-10-15
+
+**授权与实际结论（把握高）：**用户单独批准在ins-5ag0h225安装并启动Moby29.7.0/Compose5.4.0，不设开机自启；不部署应用、不初始化云端库、不改DNS/安全组。该批已完成。先保存root专用基线，再刷新官方仓库核对版本、gpgcheck和公钥配置；事务只新增6包，无升级/删除/弱依赖/内核/重启。六个RPM逐包可信签名与版本校验后，以localpkg_gpgcheck=1从本地文件安装，未增加软件仓库。
+
+包版本：moby29.7.0-1.tl4、docker-compose-plugin5.4.0-1.oc9、containerd1.7.29-2.tl4、runc1.3.3-3.tl4、container-selinux2.234.2-1.tl4、pigz2.7-6.tl4。docker.service/docker.socket/containerd.service均active且disabled自启；Docker API只用/run/docker.sock，无TCP API，docker组无额外成员，当前云端容器数0。不得把空引擎通过当Sage镜像/新库已经部署。
+
+**实测保护：**旧sage-staging/sage-nginx-staging/postgresql仍active，13个受保护gunicorn/nginx/postgres进程的PID及comm与安装前相同；旧current仍84d27f0435cc。原路由、原网卡地址和所有旧TCP监听保留，旧8443 ready=200/真实TLS verify=0；新TAT终端/dev/pts/3实际执行版本与旧站检查成功。刷新安全组确认sg-2onrvlt0关联目标实例，IPv4/IPv6入站仍ALL拒绝。原快照、包签名/摘要、事务及post-install-summary.json/fresh-tat-summary.json保存在服务器/root/sage-docker-install-20261015-6p04_oa8/（目录0700、记录0600）；只读检查，不下载原始敏感配置。
+
+**实际主机网络变化：**Docker创建172.18.0.0/16 bridge，与全部安装前路由无重叠；IPv4 ip_forward从0变1、FORWARD策略从ACCEPT变DROP，并新增Docker链/NAT规则。IPv4原INPUT/OUTPUT和原规则保留。IPv6从未加载filter表变为无INPUT/OUTPUT规则的ACCEPT默认链，IPv6 forwarding仍0；不能把规则文本变化说成主机防火墙完全不变。containerd默认CRI streaming另有127.0.0.1随机端口，最终快照为35547，ss按MainPID确认归属containerd；没有新增公网TCP监听。两次保护检查先停新引擎保留现场，分别确认回环端口归属与未加载表的默认链语义后重验通过；未flush规则、关闭校验或恢复ALL允许。SELinux原为Disabled且保持，未为安装关闭安全机制。
+
+部署准备补查控制台：目标VPC vpc-on23oxy8为172.17.0.0/16，默认rtb-pfudb7z7共1条172.17.0.0/16 LOCAL路由。frontend候选10.231.216.0/24仍须在创建前与当时主机/VPC/Docker网段比较，不能把当前页面快照当长期无冲突保证。
+
+**长期操作规则：**发行版docker unit引用/etc/sysconfig/docker是正常默认，不应假设EnvironmentFiles必须空。以rpm -V验证官方文件未修改，并从同摘要签名RPM检查默认模板，不读取实际环境值；单位无额外drop-in且模板无TCP API。DNF安装会清理download-only缓存，须先保留签名结果及RPM摘要；核模板重新download-only，不实际reinstall。不可用“监听集合严格相等”忽略新依赖的回环服务，也不可忽略新增未知监听；须保留原监听并逐个核新增地址/进程。缺少IPv6 filter表与新增无规则ACCEPT链按语义核验，不删除原规则或忽略策略变化。
+
+**后续候选已具体准备：**应用镜像源提交cfb411f21edc787f7dab1e75c6d3251287d001ed已在远端核实，干净归档复建与13组通过镜像内容ID完全一致。registry-1.docker.io本次只读curl超时（exit28/HTTP000），未拉镜像，不据此断言永久不可达。已准备约250MB离线镜像包，SHA256为63cc5dfaeb03b7809a0cbc303a4b32757e143f000961d90ebfe39c22942a5a81；镜像、运行配置及metadata在tmp/deploy-candidates/sage-docker-cfb411f21edc787f7dab1e75c6d3251287d001ed/，干净源码归档另存tmp/docker-implementation-20261015/。镜像不包含凭据、数据库卷、备份或私有媒体。
+
+Docker按digest导出不保留PG registry可用名称，已添加本次专属PG离线别名和5行compose.offline.yaml，只改db.image表示为同一官方amd64 manifest ID ec9f656f17c8b4dfebf49e58cf5c46d493d4846d4ea6d8b85d0637f68ee33bfc。实际移除该专属别名再load，别名恢复；组合配置和--pull never下postgres --version=16.15通过。它只证明本机归档重导入/版本调用，不是干净daemon或云端导入验收。SHA-512 crypt在真实Nginx镜像中无/错口令401、正确合成口令200，通过且清理专属探针。原13组的PG镜像内容相同；不得冒称离线配置已经云端全链验收。
+
+**下一批待确认：**仅向/opt/sage-docker-preview/releases/cfb411f21edc787f7dab1e75c6d3251287d001ed/传输并校验候选，专属sage-preview项目/pgdata/avatars，确认无同名旧资源后初始化新sage_preview库（预期50迁移、32个项目迁移无自定义RunPython/RunSQL；Django会初始化框架元数据）。生成新应用/DB随机密钥，拟按10001/999/101最小文件权限注入；用户在终端亲设入口口令，拟受限复制现有Sage TLS文件，旧文件不动。新库备份→另一个新卷恢复后，仅127.0.0.1:9443验收；无旧数据迁移/真实供应商/公开80或443。尚未传候选、创建云端业务库/密钥文件、复制私钥或运行Sage容器。公网、认证、支付、场景及剩余头像/OAuth/灾备门禁继续保留。本文后续记录提交不替换已验收应用镜像的cfb411f源码锚点。
+
 ### Sage-2.0深色首屏：独立Docker适配与本地验收 · 2026-10-15
 
 **最新授权与版本边界：**用户明确上线Sage-2.0深色首屏，批准A独立Nginx、应用、PostgreSQL三容器及新空库，保留旧宿主机Sage；先受控部署，再逐项接通认证、支付和两个业务场景。当前批次执行本地适配、合成测试及GitHub提交；引擎安装、具体云端候选/迁移和公网开放另批确认。下方同日早期“架构待确认/尚无Dockerfile”仅为之前盘点事实，已由本节更新。
@@ -26,9 +46,9 @@
 
 首次完整重启负例中app自身healthy，web却持续502/一次504；日志实际upstream为198.18.14.28，偏离固定frontend地址。独立最小对照复现网关在app别名注册前启动后缓存fake-IP；同一固定app地址加extra_hosts后，应用随后启动和故意网关先重启的两次检查均200。最小修正仅给web的app主机名绑定现有SAGE_APP_IP，不改DNS/代理系统设置、不降低入口断言、不增加重试掩盖错误；随后完整链重启及DB故障恢复通过。探针材料在`tmp/docker-implementation-20261015/`。
 
-恢复探针另两项经验：PG初始化临时进程可先接受Unix socket，随后关闭再启动最终进程；只等Unix ready会提前执行恢复。独立合成探针复现Unix ready/TCP未ready，最终TCP ready与SQL通过；恢复脚本改等127.0.0.1 TCP。PG16恢复会把CHECK中字面量varchar数组到text数组的整体cast重打印成逐元素cast；本轮全量比较仅10条CHECK存在该表示差异，所有其他数据/序列/owner/ACL/角色行相同。使用同一镜像逐条验证10个实际表达式的值、类型和ANY语义均一致，再沿用既有postgres-audit的有限规则适配pretty=true输出；保留值/顺序/有界类型/操作符/引号反例，绝不忽略CHECK、owner或ACL。服务器`dnf --cacheonly info`仅查询缓存候选：Moby29.7.0-1.tl4/AppStream、Compose5.4.0-1.oc9/EPOL；尚未安装，缓存约3天，安装批次仍需刷新/核签名/事务审阅。
+恢复探针另两项经验：PG初始化临时进程可先接受Unix socket，随后关闭再启动最终进程；只等Unix ready会提前执行恢复。独立合成探针复现Unix ready/TCP未ready，最终TCP ready与SQL通过；恢复脚本改等127.0.0.1 TCP。PG16恢复会把CHECK中字面量varchar数组到text数组的整体cast重打印成逐元素cast；本轮全量比较仅10条CHECK存在该表示差异，所有其他数据/序列/owner/ACL/角色行相同。使用同一镜像逐条验证10个实际表达式的值、类型和ANY语义均一致，再沿用既有postgres-audit的有限规则适配pretty=true输出；保留值/顺序/有界类型/操作符/引号反例，绝不忽略CHECK、owner或ACL。本地批次结束时，服务器`dnf --cacheonly info`仅查询缓存候选：Moby29.7.0-1.tl4/AppStream、Compose5.4.0-1.oc9/EPOL；当时尚未安装，缓存约3天。后续已批准安装的刷新、签名、事务与保护结果见上方云引擎记录。
 
-**仍未完成：**云端x86_64原生运行、生产凭据实际文件权限、完整头像上传/清理竞态故障矩阵、OAuth启用后的异常日志矩阵、恢复后角色密码认证、异机/PITR恢复及公网独立来源/撤销验收。头像verified保持0，预约/OAuth回调在预览网关拒绝，真实认证/发送/注销/交易/任务门禁保持关闭。未安装云端Docker、创建云容器/卷、迁移旧数据、修改安全组/DNS或正式开放。完整七阶段商业目标及关键批次门禁见[执行方案](../drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)。
+**本地批次边界：**云端x86_64原生应用运行、生产凭据实际文件权限、完整头像上传/清理竞态故障矩阵、OAuth启用后的异常日志矩阵、恢复后角色密码认证、异机/PITR恢复及公网独立来源/撤销验收尚未完成。头像verified保持0，预约/OAuth回调在预览网关拒绝，真实认证/发送/注销/交易/任务门禁保持关闭。该本地批次没有安装云端Docker、创建云容器/卷、迁移旧数据、修改安全组/DNS或正式开放；后续引擎安装结果见上方记录。完整七阶段商业目标及关键批次门禁见[执行方案](../drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)。
 
 ### Docker 部署盘点、方案与本地基线 · 2026-10-15
 
