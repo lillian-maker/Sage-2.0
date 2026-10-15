@@ -32,7 +32,13 @@
 
 **首次轮换被重复口令门禁拒绝（把握高）：**用户报告failed并确认关闭整个OrcaTerm标签页后，代理先核旧页已关闭、当前OrcaTerm页数为0，再新建TAT「2 Sage-BoBo-TAT」；未回读旧输入页面。服务器summary.json显示stage=new-password-differs-from-current、AssertionError、new_file_installed=false、old_hash_backup_retained=false；同一时间窗的两次GET /health/ready状态准确为401、200，证明本次提交口令仍被当前入口接受，不能用作新口令。代理只输出时间和状态码，不读取认证值；当前无凭据请求401/TLS verify=0，三容器healthy，旧8443为200/TLS verify=0，pending/backup均不存在、入口文件UID101/mode0400/115字节。失败是重复口令保护生效，未修改脚本或放宽检查。
 
-已将首次私有证据目录原子改名为/opt/sage-docker-preview/entry-rotation-20261015-attempt1-failed，保留原summary.json并新增仅含脱敏判断的diagnostic-summary.json；原输出目录重新空缺，不覆盖失败证据。脚本SHA仍为b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8，尚未再次执行。下一次仍由用户亲自运行同一脚本，输入一个与之前完全不同的16–256字符口令；代理继续停止浏览器观察，直到用户关闭整个标签页并确认。禁止因失败直接重跑已有证据目录、清空证据或接受重复口令。轮换及新连接CA复验仍待完成，公网保持关闭。
+已将首次私有证据目录原子改名为/opt/sage-docker-preview/entry-rotation-20261015-attempt1-failed，保留原summary.json并新增仅含脱敏判断的diagnostic-summary.json；当时原输出目录重新空缺，不覆盖失败证据。脚本SHA仍为b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8；随后第二次用户执行结果见下文。该次交接由用户亲自运行同一脚本，输入一个与之前完全不同的16–256字符口令；代理继续停止浏览器观察，直到用户关闭整个标签页并确认。禁止因失败直接重跑已有证据目录、清空证据或接受重复口令。轮换及新连接CA复验仍待完成，公网保持关闭。
+
+**第二次轮换停在输入校验，未修改云端口令：**用户报告仍failed并关闭整个标签页；新鲜元数据确认旧页已关闭、OrcaTerm页数0后，再建立独立TAT连接。原entry-rotation-20261015/summary.json为stage=user-password-input、AssertionError、new_file_installed=false、old_hash_backup_retained=false；pending/backup不存在，当前入口文件UID101/GID101/mode0400/115字节，三容器running/healthy，旧8443 ready=200/TLS verify=0。该证据只定位输入校验，不能区分长度/控制字符/确认不一致，不将未知原因归咎于用户。未再次运行轮换、未清空或覆盖本次失败证据。
+
+用户指出preview口令已知、以为本轮需要root密码，代理纠正：当前TAT已经root身份，轮换预检亦已通过root检查；本步骤无需服务器root密码。网站入口轮换源于此前UI敏感输入回显，与遗忘服务器密码无关；不要重新引导VNC、重置root或重启主机。操作前必须明确口令用途；不能在错误诊断不足时连续要求用户重新输入。
+
+本地合成复现确认原脚本把短口令与确认不一致都压成无细节AssertionError。仅在tmp中的原轮换脚本增加三个固定input_error_code，区分长度范围、控制字符及确认不一致，不输出长度、口令或异常正文；修订脚本SHA256为4b95cac718c66f5ab48fead8f3196e453256d8c8fd6af2591ea41915d9547135。12个合成用例通过，含16/256边界、15/257拒绝、控制字符、Unicode及确认不一致；原版与修订版接受/拒绝结果完全一致，逆向还原原文SHA匹配b298a6fe8e496b2a4df791fdee7b9f2c06dea6da13b8c9d1ab6ceba15c85e3a8，证明只改输入错误分类。记录在tmp/docker-implementation-20261015/rotate-preview-entry-input-review.json；仅本地合成验证，未上传修订脚本、未执行真实重置。云端仍是原脚本及旧入口口令，Task5轮换未完成、公网仍关闭；当前不再要求用户盲试。
 
 ### Task 5 已批准：离线候选入库与凭据交接 · 2026-10-15
 
