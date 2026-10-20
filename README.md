@@ -2,6 +2,12 @@
 
 独立中英文官网，并承接 WorldPilot 数字员工设计素材；不替代已有 Sage 仓库。
 
+## 代码整合与GitHub同步 · 2026-10-20
+
+用户已授权将已验收成果同步至`main`与`feat/billing-accounts`。本轮整合企业管理四项操作、支付规则与渠道准备、账号通知及安全、个人权益页面，并允许1人提交合同采购咨询。两分支无分叉冲突，原数字员工素材保留。完整本地PG及浏览器1099项零跳过、16套页面检查及153个发布文件一致性核对通过；具体证据、测试修正和未完成事项见[`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md)最新记录。
+
+本节取代旧记录中本轮“仅同步开发分支”的范围限制。后续部署仍须从确定提交重新构建并另行验收；不以GitHub main更新推定服务器、真实渠道或公网已发布。密钥、数据库、临时证据与dist不上传，收费开关保持关闭。
+
 ## Docker 部署与验收接续 · 2026-10-15
 
 后续服务器部署或验收任务先读 [`drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md`](drafts/restricted-deploy/docker-deployment-acceptance-plan-20261015.md)、[容器执行说明](drafts/restricted-deploy/README.md) 和 [`docs/BILLING_DEVELOPMENT.md`](docs/BILLING_DEVELOPMENT.md) 最新记录。上线对象为 **Sage-2.0深色首屏版本**；A独立三容器/新空库已批准，原七阶段商业目标保留。本地13组真实容器验收通过，应用镜像源码冻结于`cfb411f21edc787f7dab1e75c6d3251287d001ed`，已推送并由干净Git归档复建核对。
@@ -94,3 +100,7 @@ SAGE_URL=http://127.0.0.1:8896 node tests/release-audit.cjs
 ## 公网受控内测接续 · 2026-10-13
 
 用户已确认停止付费Tailscale方向，改走公网受控内测；后续访问通道/上线任务必须先读 [`drafts/restricted-deploy/public-controlled-preview-plan-20261013.md`](drafts/restricted-deploy/public-controlled-preview-plan-20261013.md) 及 `docs/BILLING_DEVELOPMENT.md` 最新记录。本次仅写计划，没有放行、部署或改DNS。用户已澄清域名仅实名或SSL通过，不能当ICP通过；上海域名网站开放须先核实备案/接入。建议准确来源/32的443加HTTPS入口口令，不开放SSH/数据库/内部端口，不把共享代理IP当设备身份。仅改变七阶段计划中的访问方案，真实支付、两个真实场景及最终商业验收仍独立保留。历史全允许、安全组未隔离等文字是先前快照，不能当当前云端状态；执行前重新只读核实。
+
+## 银行卡与钱包申请准备 · 2026-10-16
+
+后续支付渠道咨询、选型或钱包申请前，先读[银行卡与钱包申请准备包](drafts/payment-provider-application-pack-20261016.md)，再对照原支付PRD与开发记录。准备包提供官方入口、未发送的咨询文案、能力/报价核对表和Apple Pay/Google Pay接续条件；不是机构准入、报价或支付开通证明。用户授权独立完成准备工作，不扩展为发送联系方式/内部资料、开户、签约、付费、创建凭据或开启收费。本轮只新增草案和此入口，保留其他任务的开发记录改动，不改变深圳主体、CNY和失败不自动重扣等产品规则。

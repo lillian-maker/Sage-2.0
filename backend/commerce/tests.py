@@ -25,9 +25,9 @@ def fixture_account(name="buyer"):
     return user, account
 
 
-def fixture_product():
+def fixture_product(audience="personal"):
     return ProductVersion.objects.create(
-        code="fixture_pack", version=1, kind="credits", audience="personal",
+        code="fixture_pack", version=1, kind="credits", audience=audience,
         unit_amount_minor=731, credits_quantity="10.000000000000000000000000000001",
         entitlements={"fixture": True, "benefits": {"zh": ["隔离测试权益，不对外销售。"],
                       "en": ["Isolated test benefits, not for sale."]}}, entitlement_version="fixture-1",
@@ -37,6 +37,503 @@ def fixture_product():
 
 
 FIXTURE_CHANNELS = {"fixture": {"enabled": True, "currency": "CNY", "merchant_entity": "fixture-shenzhen", "regions": ["CN"], "capabilities": ["one_time", "recurring_monthly", "recurring_annual"]}}
+
+
+@override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS={
+    'fixture':{**FIXTURE_CHANNELS['fixture'],'capabilities':[*FIXTURE_CHANNELS['fixture']['capabilities'],'automatic_topup']}})
+class SharedIncludedBusinessTests(TransactionTestCase):
+    """Approved China-reference resources; all amounts and receipts are synthetic."""
+    def setUp(self):
+        from .subscription_tests import SubscriptionTests
+        SubscriptionTests.setUp(self)
+        self.account=BillingAccount.objects.create(kind='business',name='shared-included-fixture')
+        self.owner=Membership.objects.create(account=self.account,user=self.user,role='owner')
+        self.product=ProductVersion.objects.create(code='fixture_shared_included',version=1,kind='subscription',
+            audience='business',billing_cycle='annual',minimum_seats=10,unit_amount_minor=12345,
+            credits_quantity='17.25',entitlements={'resource_mode':'shared_included'},
+            entitlement_version='fixture-1',credit_rule_version='fixture-1',terms_version='fixture-1',
+            state='published',effective_at=self.anchor-timedelta(days=1))
+
+    def quote(self, seats=10):
+        return create_quote(self.account,self.user,self.product.pk,seats,timezone.now()+timedelta(minutes=5),
+            channel='fixture',buyer_region='CN')
+
+    def paid(self, seats=10):
+        self.sequence+=1
+        quote=self.quote(seats)
+        order=create_order(self.account,self.user,{'quote_id':quote['id'],'agreement_acceptance':'fixture-1'},
+            'shared-included:'+str(self.sequence))
+        record_confirmed_payment(self.account,order['id'],channel='fixture',merchant_reference='fixture-shenzhen',
+            transaction_reference='shared-included:'+str(self.sequence),amount_minor=12345*seats,currency='CNY',
+            paid_at=timezone.now(),evidence_hash='b'*64)
+        return order['id']
+
+    def activate(self, seats=10):
+        from .subscriptions import activate_subscription
+        self.order_id=self.paid(seats)
+        return activate_subscription(self.account,self.order_id,activated_at=self.anchor,
+            billing_timezone='Asia/Shanghai',calendar_rule_version='fixture-calendar-v1',mandate=self.mandate)
+
+    def member_task(self, position=1):
+        from .models import PaidSeat
+        from .subscriptions import assign_seat
+        from .billing import start_shared_task
+        employee=get_user_model().objects.create_user(username='shared-included-employee-'+str(position))
+        member=Membership.objects.create(account=self.account,user=employee,role='member')
+        seat=PaidSeat.objects.get(subscription__account=self.account,position=position)
+        assign_seat(self.account,self.user,seat.pk,member.pk,expected_version=seat.version,
+            request_key='shared-seat:'+str(position))
+        task=start_shared_task(self.account,member.pk,'shared-task:'+str(position),'voc')
+        return member,seat,task
+
+    def topup(self):
+        from .subscriptions import register_verified_payment_method, authorize_topup_preset
+        method=register_verified_payment_method(self.account,channel='fixture',merchant_reference='fixture-shenzhen',
+            fingerprint='c'*64,evidence_hash='d'*64)
+        pack=fixture_product(audience='business')
+        preset={'approved':True,'product_id':str(pack.pk),'threshold':'2','monthly_cap_minor':1462,
+            'terms_version':'topup-fixture-1','policy_version':'service-month-v1'}
+        setting=override_settings(BILLING_TOPUP_PRESETS={'approved':preset})
+        setting.enable();self.addCleanup(setting.disable)
+        return authorize_topup_preset(self.account,self.user,preset_key='approved',payment_method_id=method,
+            mandate={**self.mandate,'agreement_reference':'shared-included-topup'},consent_evidence_hash='e'*64,
+            expected_version=0,request_key='shared-topup-consent')
+
+    def test_teams_one_seat_can_be_bought_and_activated(self):
+        ProductVersion.objects.filter(pk=self.product.pk).update(minimum_seats=1,entitlements={'resource_mode':'seat_included'})
+        self.product.refresh_from_db()
+        self.activate(1)
+        batch=CreditBatch.objects.get(account=self.account)
+        self.assertIsNotNone(batch.seat_id)
+        self.assertEqual(batch.initial_quantity,'17.25')
+        with self.assertRaisesRegex(ValueError,'INVALID_SEATS'):self.quote(0)
+
+    def test_enterprise_minimum_ten_is_not_a_ten_seat_increment(self):
+        with self.assertRaisesRegex(ValueError,'INVALID_SEATS'):self.quote(9)
+        self.assertEqual(self.quote(10)['amount_minor'],123450)
+        self.assertEqual(self.quote(11)['amount_minor'],135795)
+        ProductVersion.objects.filter(pk=self.product.pk).update(minimum_seats=9)
+        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):self.quote(10)
+
+    def test_both_new_business_modes_require_positive_monthly_quantity(self):
+        for mode in ('shared_included','seat_included'):
+            with self.subTest(mode=mode):
+                ProductVersion.objects.filter(pk=self.product.pk).update(credits_quantity='0',
+                    entitlements={'resource_mode':mode})
+                with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):self.quote()
+
+    def test_old_no_included_mode_cannot_create_a_new_purchase(self):
+        ProductVersion.objects.filter(pk=self.product.pk).update(minimum_seats=2,credits_quantity='0',
+            entitlements={'resource_mode':'shared_only'})
+        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):self.quote()
+        self.assertFalse(Order.objects.exists())
+
+    def test_named_business_plans_cannot_sell_the_other_allowance_mode(self):
+        for code, correct, wrong in (('teams','seat_included','shared_included'),
+                                     ('enterprise','shared_included','seat_included')):
+            with self.subTest(code=code):
+                ProductVersion.objects.filter(pk=self.product.pk).update(code=code,
+                    entitlements={'resource_mode':wrong})
+                with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+                    self.quote(10)
+                ProductVersion.objects.filter(pk=self.product.pk).update(entitlements={'resource_mode':correct})
+                self.assertEqual(self.quote(10)['amount_minor'],123450)
+        self.assertFalse(Order.objects.exists())
+
+    def test_named_legacy_enterprise_keeps_historical_delivery_gate_only(self):
+        from .billing import _sale_gate
+        ProductVersion.objects.filter(pk=self.product.pk).update(code='enterprise',minimum_seats=2,
+            credits_quantity='0',entitlements={'resource_mode':'shared_only'})
+        self.product.refresh_from_db()
+        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+            self.quote(2)
+        self.assertEqual(_sale_gate(self.product,self.account,timezone.now(),'fixture','CN',
+            'fixture-shenzhen',historical_subscription=True),'fixture-shenzhen')
+
+    def test_monthly_shared_batch_is_total_capacity_once_and_activation_replays(self):
+        from .subscriptions import activate_subscription, grant_due_credits
+        from .models import PaidSeat
+        ProductVersion.objects.filter(pk=self.product.pk).update(billing_cycle='monthly')
+        result=self.activate()
+        batch=CreditBatch.objects.get(account=self.account)
+        self.assertEqual((batch.source,batch.seat_id,batch.initial_quantity,batch.service_month),
+            ('subscription',None,'172.5',0))
+        self.assertEqual(PaidSeat.objects.filter(subscription_id=result['id']).count(),10)
+        self.assertEqual(grant_due_credits(self.account),{'created_batches':0})
+        self.assertEqual(activate_subscription(self.account,self.order_id,activated_at=self.anchor,
+            billing_timezone='Asia/Shanghai',calendar_rule_version='fixture-calendar-v1',mandate=self.mandate),result)
+        self.assertEqual(CreditBatch.objects.filter(account=self.account).count(),1)
+
+    def test_annual_grants_keep_monthly_expiry_and_late_history_is_not_spendable(self):
+        from backend.billing_rules import month_boundary
+        from .subscriptions import grant_due_credits
+        self.activate()
+        self.now.return_value=month_boundary(self.anchor,2)
+        self.assertEqual(grant_due_credits(self.account),{'created_batches':2})
+        self.assertEqual(credits_summary(self.account)['available'],'172.5')
+        for index,batch in enumerate(CreditBatch.objects.filter(account=self.account).order_by('service_month')):
+            self.assertEqual(batch.service_month,index)
+            self.assertEqual(batch.expires_at,month_boundary(self.anchor,index+1))
+        self.now.return_value=month_boundary(self.anchor,12)
+        grant_due_credits(self.account)
+        self.assertEqual(CreditBatch.objects.filter(account=self.account).count(),12)
+        self.assertEqual(credits_summary(self.account)['available'],'0')
+
+    def test_two_employees_consume_the_same_pool_without_private_or_other_company_points(self):
+        from .billing import consume_shared_task
+        self.activate()
+        first,_,one=self.member_task(1)
+        _,_,two=self.member_task(2)
+        private=BillingAccount.objects.create(kind='personal',name='shared-fixture-private',personal_owner=first.user)
+        other=BillingAccount.objects.create(kind='business',name='shared-fixture-other')
+        for account in (private,other):grant_credits(account,'purchased','isolation-fixture','100',self.anchor+timedelta(days=1))
+        self.assertTrue(consume_shared_task(self.account,one['id'],'first','100')['accepted'])
+        self.assertTrue(consume_shared_task(self.account,two['id'],'second','72.5')['accepted'])
+        self.assertFalse(consume_shared_task(self.account,two['id'],'insufficient','0.01')['accepted'])
+        self.assertEqual(CreditEntry.objects.filter(reservation__shared_task_id__in=[one['id'],two['id']],kind='settle')
+            .values('batch_id').distinct().count(),1)
+        for account in (private,other):self.assertEqual(credits_summary(account)['available'],'100')
+
+    def test_shared_pool_uses_earliest_expiry_and_excludes_expired_frozen_points(self):
+        from .billing import consume_shared_task, freeze_credits, _business_task_credit_scope
+        self.activate();_,_,task=self.member_task()
+        batch=CreditBatch.objects.get(account=self.account)
+        freeze_credits(self.account,batch.pk,'shared-frozen','170')
+        purchase=grant_credits(self.account,'purchased','shared-purchased','10',self.anchor+timedelta(days=1))
+        grant_credits(self.account,'purchased','shared-expired','100',self.anchor-timedelta(seconds=1))
+        self.assertEqual(str(_business_task_credit_scope(self.account)['shared_available']),'25/2')
+        self.assertTrue(consume_shared_task(self.account,task['id'],'draw','4')['accepted'])
+        entries=CreditEntry.objects.filter(reservation__shared_task_id=task['id'],kind='settle')
+        self.assertFalse(entries.filter(batch=batch).exists())
+        self.assertEqual(entries.get(batch_id=purchase['id']).quantity,'4')
+
+    def test_shared_pool_prefers_included_only_when_expiry_is_equal(self):
+        from .billing import consume_shared_task
+        self.activate();_,_,task=self.member_task()
+        batch=CreditBatch.objects.get(account=self.account)
+        purchase=grant_credits(self.account,'purchased','same-expiry-purchase','10',batch.expires_at)
+        self.assertTrue(consume_shared_task(self.account,task['id'],'draw','4')['accepted'])
+        entries=CreditEntry.objects.filter(reservation__shared_task_id=task['id'],kind='settle')
+        self.assertEqual(entries.get(batch=batch).quantity,'4')
+        self.assertFalse(entries.filter(batch_id=purchase['id']).exists())
+
+    def test_member_shared_usage_includes_actual_and_legacy_draws_and_resets_each_month(self):
+        from backend.billing_rules import month_boundary
+        from .billing import consume_shared_task
+        from .subscriptions import organization_summary, grant_due_credits
+        self.activate();member,_,task=self.member_task()
+        _,_,other_task=self.member_task(2)
+        consume_shared_task(self.account,task['id'],'member-shared-first','2')
+        consume_shared_task(self.account,other_task['id'],'other-member-shared','7')
+        reservation=reserve_credits(self.account,'member-legacy-shared','3',membership_id=member.pk)
+        settle_credits(self.account,reservation['id'],'3')
+        row=next(row for row in organization_summary(self.account)['members'] if row['id']==member.pk)
+        self.assertEqual((row['shared_used'],row['shared_reserved'],row['total_credits']),('5','0','2'))
+        self.now.return_value=month_boundary(self.anchor,1)
+        grant_due_credits(self.account)
+        consume_shared_task(self.account,task['id'],'member-shared-next-month','4')
+        row=next(row for row in organization_summary(self.account)['members'] if row['id']==member.pk)
+        self.assertEqual((row['shared_used'],row['shared_reserved'],row['total_credits']),('4','0','6'))
+
+    def test_member_shared_usage_excludes_teams_own_included_points(self):
+        from .billing import consume_shared_task
+        from .subscriptions import organization_summary
+        ProductVersion.objects.filter(pk=self.product.pk).update(minimum_seats=1,entitlements={'resource_mode':'seat_included'})
+        self.activate(1);member,_,task=self.member_task()
+        grant_credits(self.account,'purchased','member-shared-purchase','10',self.anchor+timedelta(days=1))
+        consume_shared_task(self.account,task['id'],'member-own-first','2')
+        row=next(row for row in organization_summary(self.account)['members'] if row['id']==member.pk)
+        self.assertEqual((row['shared_used'],row['total_credits']),('0','2'))
+        consume_shared_task(self.account,task['id'],'member-shared-after-own','16')
+        row=next(row for row in organization_summary(self.account)['members'] if row['id']==member.pk)
+        self.assertEqual((row['shared_used'],row['total_credits']),('0.75','18'))
+
+    def test_removal_and_reassignment_preserve_shared_pool_and_do_not_regrant(self):
+        from .billing import consume_shared_task, start_shared_task
+        from .subscriptions import remove_member, assign_seat, grant_due_credits
+        self.activate();member,seat,task=self.member_task()
+        self.assertTrue(consume_shared_task(self.account,task['id'],'first','1')['accepted'])
+        remove_member(self.account,self.user,member.pk,request_key='shared-remove')
+        seat.refresh_from_db();self.assertIsNone(seat.membership_id)
+        assign_seat(self.account,self.user,seat.pk,self.owner.pk,expected_version=seat.version,request_key='shared-reassign')
+        replacement=start_shared_task(self.account,self.owner.pk,'replacement','voc')
+        self.assertTrue(consume_shared_task(self.account,replacement['id'],'second','1')['accepted'])
+        self.assertTrue(consume_shared_task(self.account,task['id'],'removed-running','1')['accepted'])
+        self.assertEqual(grant_due_credits(self.account),{'created_batches':0})
+        self.assertEqual(CreditBatch.objects.filter(account=self.account).count(),1)
+        self.assertEqual(credits_summary(self.account)['available'],'169.5')
+
+    def test_legacy_internal_reservation_can_use_shared_included(self):
+        self.activate();member,_,_=self.member_task()
+        purchase=grant_credits(self.account,'purchased','legacy-earlier','1',self.anchor+timedelta(days=1))
+        reservation=reserve_credits(self.account,'legacy-shared-use','3',membership_id=member.pk)
+        settle_credits(self.account,reservation['id'],'3')
+        self.assertEqual(credits_summary(self.account)['available'],'170.5')
+        self.assertEqual(CreditEntry.objects.get(reservation_id=reservation['id'],kind='settle',batch_id=purchase['id']).quantity,'1')
+
+    def test_prepaid_renewal_grants_once_when_its_service_month_begins(self):
+        from backend.billing_rules import month_boundary
+        from .subscriptions import append_paid_period, grant_due_credits
+        result=self.activate();renewal=self.paid()
+        append_paid_period(self.account,result['id'],renewal,cycle_index=1)
+        append_paid_period(self.account,result['id'],renewal,cycle_index=1)
+        self.assertEqual(CreditBatch.objects.filter(account=self.account).count(),1)
+        self.now.return_value=month_boundary(self.anchor,12)
+        grant_due_credits(self.account)
+        self.assertEqual(credits_summary(self.account)['available'],'172.5')
+        self.assertEqual(CreditBatch.objects.filter(account=self.account,subscription_period__cycle_index=1).count(),1)
+        self.assertEqual(grant_due_credits(self.account),{'created_batches':0})
+
+    def test_future_service_refund_preserves_this_month_and_stops_future_shared_grants(self):
+        from backend.billing_rules import month_boundary
+        from .subscriptions import grant_due_credits
+        from .refunds import request_service_refund
+        result=self.activate()
+        request_service_refund(self.account,self.user,result['id'],'shared-future-refund')
+        self.assertEqual(credits_summary(self.account)['available'],'172.5')
+        self.now.return_value=month_boundary(self.anchor,1)
+        self.assertEqual(grant_due_credits(self.account),{'created_batches':0})
+        self.assertEqual(credits_summary(self.account)['available'],'0')
+
+    def test_shared_included_cannot_be_refunded_as_purchased_credits(self):
+        from .billing import reserve_credit_refund
+        from .models import CreditRefund
+        self.activate()
+        with self.assertRaisesRegex(ValueError,'REFUND_NOT_ELIGIBLE'):
+            reserve_credit_refund(self.account,self.order_id,'shared-not-purchased',review_evidence_hash='a'*64)
+        self.assertFalse(CreditRefund.objects.exists())
+
+    def test_auto_topup_counts_shared_included_and_requires_actual_demand(self):
+        from .subscriptions import evaluate_automatic_topup
+        from .billing import freeze_credits, consume_shared_task
+        self.activate();self.topup()
+        self.assertEqual(evaluate_automatic_topup(self.account)['reason'],'ABOVE_THRESHOLD')
+        batch=CreditBatch.objects.get(account=self.account)
+        freeze_credits(self.account,batch.pk,'shared-topup-freeze','171')
+        _,_,task=self.member_task()
+        self.assertEqual(evaluate_automatic_topup(self.account)['reason'],'NO_SHARED_DEMAND')
+        self.assertTrue(consume_shared_task(self.account,task['id'],'needs-shared','0.5')['accepted'])
+        self.assertTrue(evaluate_automatic_topup(self.account)['triggered'])
+
+    def test_next_month_shared_grant_closes_unsubmitted_topup(self):
+        from backend.billing_rules import month_boundary
+        from .subscriptions import evaluate_automatic_topup, claim_automatic_topup, grant_due_credits
+        from .billing import consume_shared_task
+        from .models import PaymentAttempt
+        self.activate();self.topup();_,_,task=self.member_task()
+        self.assertTrue(consume_shared_task(self.account,task['id'],'near-empty','171')['accepted'])
+        attempt=evaluate_automatic_topup(self.account)['attempt']
+        self.now.return_value=month_boundary(self.anchor,1)-timedelta(minutes=1)
+        PaymentAttempt.objects.filter(pk=attempt['id']).update(expires_at=month_boundary(self.anchor,1)+timedelta(minutes=1))
+        self.now.return_value=month_boundary(self.anchor,1)
+        grant_due_credits(self.account)
+        result=claim_automatic_topup(self.account,attempt['id'])
+        self.assertFalse(result['dispatch'])
+        self.assertIn(result['status'],('cancelled','expired'))
+        self.assertEqual(credits_summary(self.account)['available'],'172.5')
+
+    def test_restored_shared_allowance_cancels_a_live_unsubmitted_topup(self):
+        from .subscriptions import evaluate_automatic_topup, claim_automatic_topup
+        from .billing import freeze_credits, resolve_credit_freeze, consume_shared_task
+        from .models import PaymentAttempt
+        self.activate();self.topup();_,_,task=self.member_task()
+        batch=CreditBatch.objects.get(account=self.account)
+        frozen=freeze_credits(self.account,batch.pk,'shared-restorable','171')
+        self.assertTrue(consume_shared_task(self.account,task['id'],'shared-demand','0.5')['accepted'])
+        attempt=evaluate_automatic_topup(self.account)['attempt']
+        resolve_credit_freeze(self.account,frozen['id'],'released',evidence_hash='f'*64)
+        result=claim_automatic_topup(self.account,attempt['id'])
+        self.assertEqual((result['dispatch'],result['status'],result['reason']),
+            (False,'cancelled','TOPUP_NOT_NEEDED'))
+        row=PaymentAttempt.objects.select_related('order').get(pk=attempt['id'])
+        self.assertIsNone(row.dispatched_at)
+        self.assertEqual(row.order.status,'closed')
+
+    @override_settings(BILLING_RENEWAL_CHARGING_ENABLED=True)
+    def test_historical_zero_included_contract_still_delivers_its_authorized_renewal(self):
+        from backend.billing_rules import month_boundary
+        from .subscription_tests import SubscriptionTests, sent_renewal_notice_fixture
+        from .subscriptions import prepare_renewal_attempt, fulfill_renewal_attempt
+        from .billing import claim_payment_dispatch
+        from .models import PaymentAttempt, Subscription
+        order=SubscriptionTests.business_paid(self,'shared_only')
+        result=SubscriptionTests.activate(self,order)
+        original=Order.objects.get(pk=order).snapshot
+        boundary=month_boundary(self.anchor,12)
+        attempt=prepare_renewal_attempt(self.account,result['id'],cycle_index=1,
+            dispatch_not_before=boundary-timedelta(hours=1),expires_at=boundary)
+        sent_renewal_notice_fixture(self.account,attempt['id'])
+        self.now.return_value=boundary-timedelta(hours=1)
+        self.assertTrue(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        renewal=PaymentAttempt.objects.get(pk=attempt['id'])
+        record_confirmed_payment(self.account,renewal.order_id,channel='fixture',merchant_reference='fixture-shenzhen',
+            transaction_reference='historical-shared-renewal',amount_minor=24690,currency='CNY',
+            paid_at=timezone.now(),evidence_hash='b'*64)
+        first=fulfill_renewal_attempt(self.account,renewal.pk)
+        self.assertEqual(first,fulfill_renewal_attempt(self.account,renewal.pk))
+        self.assertEqual(Subscription.objects.get(pk=result['id']).periods.count(),2)
+        self.assertEqual(Order.objects.get(pk=order).snapshot,original)
+        self.assertFalse(CreditBatch.objects.filter(account=self.account).exists())
+        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):self.quote()
+
+
+@override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)
+class BusinessTaskCreditScopeTests(TransactionTestCase):
+    def setUp(self):
+        from .subscription_tests import SubscriptionTests
+        from .subscriptions import assign_seat
+        from .models import PaidSeat
+        from .billing import start_shared_task
+        SubscriptionTests.setUp(self)
+        SubscriptionTests.activate(self,SubscriptionTests.business_paid(self,'seat_included'))
+        self.employee=get_user_model().objects.create_user(username='scope-employee')
+        self.member=Membership.objects.create(account=self.account,user=self.employee,role='member')
+        self.seat=PaidSeat.objects.order_by('position').first()
+        assign_seat(self.account,self.user,self.seat.pk,self.member.pk,expected_version=0,request_key='scope-seat')
+        self.shared=grant_credits(self.account,'purchased','scope-shared','10',self.anchor+timedelta(days=2))
+        self.private=BillingAccount.objects.create(kind='personal',name='scope-private',personal_owner=self.employee)
+        grant_credits(self.private,'purchased','scope-private','100',self.anchor+timedelta(days=1))
+        self.task=start_shared_task(self.account,self.member.pk,'scope-task','voc')
+
+    def consume(self, quantity, event='actual'):
+        from .billing import consume_shared_task
+        return consume_shared_task(self.account,self.task['id'],event,quantity)
+
+    def test_own_included_precedes_earlier_expiring_shared_credits(self):
+        self.assertTrue(self.consume('5')['accepted'])
+        entries=CreditEntry.objects.filter(reservation__shared_task_id=self.task['id'],kind='settle')
+        self.assertEqual(entries.count(),1)
+        self.assertEqual(entries.get().batch.seat_id,self.seat.pk)
+        self.assertEqual(entries.get().quantity,'5')
+        self.assertEqual(credits_summary(self.private)['available'],'100')
+
+    def test_shared_follows_own_included_and_legacy_cap_has_no_effect(self):
+        from .billing import set_shared_limit
+        set_shared_limit(self.account,self.user,self.member.pk,'0',expected_version=0,request_key='historical-cap')
+        self.assertTrue(self.consume('20')['accepted'])
+        entries=CreditEntry.objects.filter(reservation__shared_task_id=self.task['id'],kind='settle')
+        self.assertEqual(entries.get(batch__seat=self.seat).quantity,'17.25')
+        self.assertEqual(entries.get(batch__source='purchased').quantity,'2.75')
+        self.assertFalse(entries.filter(batch__seat__isnull=False).exclude(batch__seat=self.seat).exists())
+        self.assertEqual(credits_summary(self.account)['reserved'],'0')
+
+    def test_other_seat_and_private_balance_cannot_cover_insufficient_usage(self):
+        from .billing import resume_shared_task
+        result=self.consume('28')
+        self.assertEqual((result['accepted'],result['status']),(False,'paused'))
+        self.assertEqual(credits_summary(self.account)['consumed'],'0')
+        self.assertEqual(credits_summary(self.private)['available'],'100')
+        with self.assertRaisesRegex(ValueError,'INSUFFICIENT_CREDITS'):
+            resume_shared_task(self.account,self.employee,self.task['id'])
+        grant_credits(self.account,'purchased','scope-replenish','1',self.anchor+timedelta(days=2))
+        self.assertFalse(self.consume('28')['accepted'])
+        resume_shared_task(self.account,self.employee,self.task['id'])
+        result=self.consume('28')
+        self.assertTrue(result['accepted'])
+        self.assertEqual(self.consume('28'),result)
+        self.assertEqual(credits_summary(self.account)['consumed'],'28')
+
+    def test_only_other_members_points_cannot_resume_a_task(self):
+        from .billing import resume_shared_task
+        self.assertTrue(self.consume('27.25')['accepted'])
+        self.assertFalse(self.consume('1','later')['accepted'])
+        self.assertEqual(credits_summary(self.account)['available'],'17.25')
+        with self.assertRaisesRegex(ValueError,'INSUFFICIENT_CREDITS'):
+            resume_shared_task(self.account,self.employee,self.task['id'])
+
+    def test_member_without_paid_seat_cannot_resume_using_shared_funds(self):
+        from .billing import resume_shared_task
+        from .subscriptions import assign_seat
+        self.assertFalse(self.consume('28')['accepted'])
+        assign_seat(self.account,self.user,self.seat.pk,None,expected_version=1,request_key='no-paid-seat')
+        grant_credits(self.account,'purchased','enough-shared','30',self.anchor+timedelta(days=2))
+        with self.assertRaisesRegex(ValueError,'TASK_RESUME_FORBIDDEN'):
+            resume_shared_task(self.account,self.employee,self.task['id'])
+        self.assertEqual(credits_summary(self.account)['consumed'],'0')
+
+    def test_active_member_without_paid_seat_cannot_continue_running_task(self):
+        from .subscriptions import assign_seat
+        assign_seat(self.account,self.user,self.seat.pk,None,expected_version=1,request_key='config-only')
+        result=self.consume('1')
+        self.assertEqual((result['accepted'],result['status']),(False,'paused'))
+        self.assertEqual(credits_summary(self.account)['consumed'],'0')
+
+    def test_removed_members_running_task_uses_only_shared_and_never_resumes_after_pause(self):
+        from .subscriptions import remove_member
+        from .billing import resume_shared_task
+        remove_member(self.account,self.user,self.member.pk,request_key='scope-remove')
+        self.assertTrue(self.consume('10')['accepted'])
+        entry=CreditEntry.objects.get(reservation__shared_task_id=self.task['id'],kind='settle')
+        self.assertEqual(entry.batch.source,'purchased')
+        self.assertFalse(self.consume('1','after-shared-empty')['accepted'])
+        grant_credits(self.account,'purchased','after-removal','10',self.anchor+timedelta(days=2))
+        with self.assertRaisesRegex(ValueError,'TASK_RESUME_FORBIDDEN'):
+            resume_shared_task(self.account,self.user,self.task['id'])
+
+    def test_seat_reassigned_to_another_member_does_not_move_running_tasks_credit_access(self):
+        from .models import PaidSeat
+        # Model-level ownership change isolates consumption from the separate seat-change policy.
+        owner=Membership.objects.get(account=self.account,user=self.user)
+        PaidSeat.objects.filter(pk=self.seat.pk).update(membership=owner)
+        self.assertFalse(self.consume('11')['accepted'])
+        self.assertEqual(credits_summary(self.account)['consumed'],'0')
+
+    def test_scope_excludes_expired_frozen_private_and_unassigned_included_batches(self):
+        from .billing import _business_task_credit_scope, freeze_credits
+        from .models import SharedTask
+        from fractions import Fraction
+        grant_credits(self.account,'purchased','scope-expired','100',self.anchor-timedelta(seconds=1))
+        freeze_credits(self.account,self.shared['id'],'scope-freeze','3')
+        scope=_business_task_credit_scope(self.account,SharedTask.objects.get(pk=self.task['id']))
+        self.assertEqual((scope['included_available'],scope['shared_available'],scope['available']),
+                         (Fraction('17.25'),Fraction(7),Fraction('24.25')))
+        shared=_business_task_credit_scope(self.account)
+        self.assertEqual((shared['included_available'],shared['available']),(0,7))
+        other_business=BillingAccount.objects.create(kind='business',name='scope-other-business')
+        with self.assertRaisesRegex(ValueError,'FORBIDDEN'):
+            _business_task_credit_scope(other_business,SharedTask.objects.get(pk=self.task['id']))
+
+    def test_shared_batches_keep_expiry_order_after_the_own_allowance(self):
+        early=grant_credits(self.account,'purchased','scope-shared-earlier','2',self.anchor+timedelta(days=1))
+        self.assertTrue(self.consume('18.25')['accepted'])
+        entries=CreditEntry.objects.filter(reservation__shared_task_id=self.task['id'],kind='settle')
+        self.assertEqual(entries.get(batch__seat=self.seat).quantity,'17.25')
+        self.assertEqual(entries.get(batch_id=early['id']).quantity,'1')
+        self.assertFalse(entries.filter(batch_id=self.shared['id']).exists())
+
+    def test_superseded_or_refunded_seat_cannot_start_another_task(self):
+        from .billing import start_shared_task
+        from .models import Subscription
+        for field in ('superseded_at','refund_cutoff_at'):
+            with self.subTest(field=field):
+                Subscription.objects.filter(pk=self.seat.subscription_id).update(**{field:self.anchor})
+                with self.assertRaisesRegex(ValueError,'SEAT_REQUIRED'):
+                    start_shared_task(self.account,self.member.pk,'obsolete-'+field,'voc')
+                Subscription.objects.filter(pk=self.seat.subscription_id).update(**{field:None})
+
+    def test_ordinary_expiry_keeps_existing_member_access_to_unexpired_shared_purchase(self):
+        from .billing import start_shared_task, consume_shared_task
+        from backend.billing_rules import month_boundary
+        self.now.return_value=month_boundary(self.anchor,12)
+        grant_credits(self.account,'purchased','scope-long-lived','2',self.now.return_value+timedelta(days=1))
+        task=start_shared_task(self.account,self.member.pk,'expired-plan-task','voc')
+        self.assertTrue(consume_shared_task(self.account,task['id'],'actual','1')['accepted'])
+        entry=CreditEntry.objects.get(reservation__shared_task_id=task['id'],kind='settle')
+        self.assertEqual(entry.batch.source,'purchased')
+
+    def test_next_service_month_grants_only_restore_the_same_members_allowance(self):
+        from .subscriptions import grant_due_credits
+        from .billing import resume_shared_task
+        from backend.billing_rules import month_boundary
+        self.assertTrue(self.consume('27.25')['accepted'])
+        self.assertFalse(self.consume('1','pending-next-month')['accepted'])
+        self.now.return_value=month_boundary(self.anchor,1)
+        grant_due_credits(self.account)
+        resume_shared_task(self.account,self.employee,self.task['id'])
+        self.assertTrue(self.consume('1','pending-next-month')['accepted'])
+        entry=CreditEntry.objects.get(reservation__shared_task_id=self.task['id'],
+            reservation__actual_quantity='1',kind='settle')
+        self.assertEqual((entry.batch.seat_id,entry.batch.service_month),(self.seat.pk,1))
 
 
 @override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS,
@@ -56,7 +553,9 @@ class PublicPurchaseEligibilityTests(TransactionTestCase):
 
     def quote(self, product=None, public=True):
         from .billing import purchase_terms
-        return create_quote(self.account,self.user,(product or self.product).pk,1,
+        product = product or self.product
+        seats = 2 if self.account.kind == 'business' and product.kind == 'subscription' else 1
+        return create_quote(self.account,self.user,product.pk,seats,
             self.now+timedelta(minutes=5),channel='fixture',buyer_region='CN',
             terms_digest=purchase_terms('fixture-1')['digest'] if public else None)
 
@@ -119,12 +618,14 @@ class PublicPurchaseEligibilityTests(TransactionTestCase):
     def test_public_credits_require_current_paid_period_not_auto_renew_or_future_period(self):
         from .billing import purchase_catalog
         pack = fixture_product()
-        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
             self.quote(pack)
-        self.assertFalse(next(item for item in purchase_catalog(self.account)['items'] if item['kind']=='credits')['quote_available'])
+        blocked = next(item for item in purchase_catalog(self.account)['items'] if item['kind']=='credits')
+        self.assertFalse(blocked['quote_available'])
+        self.assertEqual(blocked['unavailable_reason'],'CREDITS_SUBSCRIPTION_REQUIRED')
         self.assertIn('id',self.quote(pack,public=False))
         self.subscribed(future=True)
-        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
             self.quote(pack)
         from .models import SubscriptionPeriod
         SubscriptionPeriod.objects.update(starts_at=self.now-timedelta(days=1))
@@ -133,10 +634,138 @@ class PublicPurchaseEligibilityTests(TransactionTestCase):
         delayed = self.quote(pack)
         SubscriptionPeriod.objects.update(ends_at=self.now-timedelta(seconds=1))
         self.assertEqual(self.order(quote,'credits'),order)
-        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
             self.order(delayed,'expired-credits')
-        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
             self.quote(pack)
+
+    def test_expired_credits_quote_explains_renewal_and_resumes_after_paid_term_returns(self):
+        from .billing import purchase_catalog, purchase_quote_detail
+        from .models import SubscriptionPeriod
+        pack = fixture_product()
+        self.subscribed()
+        quote = self.quote(pack)
+        SubscriptionPeriod.objects.update(ends_at=self.now-timedelta(seconds=1))
+        detail = purchase_quote_detail(self.account,quote['id'])
+        self.assertFalse(detail['can_order'])
+        self.assertEqual(detail['unavailable_reason'],'CREDITS_SUBSCRIPTION_REQUIRED')
+        SubscriptionPeriod.objects.update(ends_at=self.now+timedelta(days=30))
+        self.assertTrue(purchase_quote_detail(self.account,quote['id'])['can_order'])
+        self.assertTrue(next(item for item in purchase_catalog(self.account)['items'] if item['kind']=='credits')['quote_available'])
+        self.assertIn('id',self.order(quote,'renewed-pack'))
+
+    def test_credit_purchase_stays_closed_when_total_switch_is_off(self):
+        from .billing import purchase_catalog, purchase_quote_detail, prepare_payment_attempt, claim_payment_dispatch
+        pack = fixture_product()
+        self.subscribed()
+        quote, delayed = self.quote(pack), self.quote(pack)
+        order = self.order(quote,'switch-order')
+        attempt = prepare_payment_attempt(self.account,self.user,order['id'],'switch-attempt',
+            expires_at=self.now+timedelta(minutes=5))
+        with override_settings(BILLING_CREDITS_PURCHASE_ENABLED=False):
+            self.assertFalse(next(item for item in purchase_catalog(self.account)['items'] if item['kind']=='credits')['quote_available'])
+            self.assertFalse(purchase_quote_detail(self.account,delayed['id'])['can_order'])
+            for action in (lambda:self.quote(pack),lambda:self.order(delayed,'switch-delayed'),
+                    lambda:claim_payment_dispatch(self.account,attempt['id'])):
+                with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+                    action()
+        from .models import PaymentAttempt
+        self.assertEqual(PaymentAttempt.objects.get(pk=attempt['id']).state,'created')
+
+    def test_expiry_rechecked_before_preparing_and_claiming_unpaid_credit_order(self):
+        from .billing import prepare_payment_attempt, claim_payment_dispatch
+        from .models import SubscriptionPeriod, PaymentAttempt
+        pack = fixture_product()
+        self.subscribed()
+        prepared_order = self.order(self.quote(pack),'before-expiry')
+        unprepared_order = self.order(self.quote(pack),'prepare-after-expiry')
+        expiry = self.now+timedelta(minutes=5)
+        attempt = prepare_payment_attempt(self.account,self.user,prepared_order['id'],'before-expiry',expires_at=expiry)
+        SubscriptionPeriod.objects.update(ends_at=self.now-timedelta(seconds=1))
+        self.assertEqual(prepare_payment_attempt(self.account,self.user,prepared_order['id'],'before-expiry',expires_at=expiry),attempt)
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
+            prepare_payment_attempt(self.account,self.user,unprepared_order['id'],'after-expiry',expires_at=expiry)
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
+            claim_payment_dispatch(self.account,attempt['id'])
+        row = PaymentAttempt.objects.get(pk=attempt['id'])
+        self.assertEqual(row.state,'created')
+        self.assertIsNone(row.dispatched_at)
+        self.assertFalse(row.events.exists())
+        SubscriptionPeriod.objects.update(ends_at=self.now+timedelta(days=30))
+        self.assertTrue(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        self.assertFalse(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+
+    def test_expiry_does_not_discard_late_received_money_or_old_unexpired_credits(self):
+        from .billing import prepare_payment_attempt, claim_payment_dispatch
+        from .models import SubscriptionPeriod
+        pack = fixture_product()
+        self.subscribed()
+        quote = self.quote(pack)
+        order = self.order(quote,'paid-pack')
+        attempt = prepare_payment_attempt(self.account,self.user,order['id'],'paid-pack',
+            expires_at=self.now+timedelta(minutes=5))
+        self.assertTrue(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        SubscriptionPeriod.objects.update(ends_at=self.now-timedelta(seconds=1))
+        with override_settings(BILLING_CREDITS_PURCHASE_ENABLED=False):
+            fact = record_confirmed_payment(self.account,order['id'],channel='fixture',
+                merchant_reference='fixture-shenzhen',transaction_reference='late-paid-pack',
+                amount_minor=731,currency='CNY',paid_at=self.now,evidence_hash='a'*64)
+            self.assertEqual(fact['disposition'],'accepted')
+            self.assertEqual(fulfill_paid_order(self.account,order['id'])['status'],'fulfilled')
+            self.assertEqual(self.order(quote,'paid-pack')['id'],order['id'])
+            self.assertFalse(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        self.assertEqual((PaymentFact.objects.count(),CreditBatch.objects.count()),(1,1))
+        held = reserve_credits(self.account,'retained-paid-balance','1')
+        settle_credits(self.account,held['id'],'1')
+        self.assertEqual(credits_summary(self.account)['consumed'],'1')
+        self.assertEqual(CreditBatch.objects.get().source,'purchased')
+
+    def test_service_cutoffs_and_confirmed_signing_failure_share_purchase_eligibility(self):
+        from .billing import purchase_catalog
+        from .models import Subscription
+        pack = fixture_product()
+        subscription = self.subscribed()
+        Subscription.objects.filter(pk=subscription.pk).update(mandate={
+            'renewal_setup_failure':{'status':'confirmed_failed','evidence_hash':'f'*64}},cancellation_state='none')
+        self.assertTrue(next(item for item in purchase_catalog(self.account)['items'] if item['kind']=='credits')['quote_available'])
+        for field in ('superseded_at','refund_cutoff_at'):
+            with self.subTest(cutoff=field):
+                try:
+                    Subscription.objects.filter(pk=subscription.pk).update(**{field:self.now+timedelta(days=1)})
+                    self.assertIn('id',self.quote(pack))
+                    Subscription.objects.filter(pk=subscription.pk).update(**{field:self.now-timedelta(seconds=1)})
+                    with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
+                        self.quote(pack)
+                finally:
+                    Subscription.objects.filter(pk=subscription.pk).update(**{field:None})
+
+    def test_business_purchase_uses_same_paid_service_rule_without_member_limits(self):
+        from .billing import purchase_catalog, purchase_quote_detail, prepare_payment_attempt, claim_payment_dispatch
+        from .models import SubscriptionPeriod
+        self.account.kind='business'; self.account.personal_owner=None
+        self.account.save(update_fields=['kind','personal_owner'])
+        Membership.objects.create(account=self.account,user=self.user,role='owner')
+        self.product = ProductVersion.objects.create(code='teams',version=1,kind='subscription',
+            audience='business',billing_cycle='monthly',minimum_seats=2,unit_amount_minor=19900,credits_quantity='10',
+            entitlements={'resource_mode':'seat_included','benefits':{'zh':['测试权益'],'en':['Test benefit']}},
+            entitlement_version='fixture-1',credit_rule_version='fixture-1',terms_version='fixture-1',
+            state='published',effective_at=self.now-timedelta(days=1))
+        pack = fixture_product('business')
+        with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
+            self.quote(pack)
+        self.subscribed()
+        quote = self.quote(pack)
+        order = self.order(quote,'business-pack')
+        attempt = prepare_payment_attempt(self.account,self.user,order['id'],'business-pack',
+            expires_at=self.now+timedelta(minutes=5))
+        delayed = self.quote(pack)
+        SubscriptionPeriod.objects.update(ends_at=self.now-timedelta(seconds=1))
+        self.assertEqual(next(item for item in purchase_catalog(self.account)['items'] if item['kind']=='credits')['unavailable_reason'],
+            'CREDITS_SUBSCRIPTION_REQUIRED')
+        self.assertEqual(purchase_quote_detail(self.account,delayed['id'])['unavailable_reason'],'CREDITS_SUBSCRIPTION_REQUIRED')
+        for action in (lambda:self.order(delayed,'business-expired'),lambda:claim_payment_dispatch(self.account,attempt['id'])):
+            with self.assertRaisesRegex(ValueError,'CREDITS_SUBSCRIPTION_REQUIRED'):
+                action()
 
     def test_closed_subscription_with_unresolved_receipt_does_not_allow_repurchase(self):
         quote = self.quote()
@@ -179,10 +808,10 @@ class CommerceTests(TransactionTestCase):
         self.assertEqual(credit_refund_assessment(self.account,order['id'])['reason'],'task_settlement_required')
         settle_credits(self.account,reservation['id'],'1')
         partial = credit_refund_assessment(self.account,order['id'])
-        self.assertEqual(partial['reason'],'rounding_policy_pending')
-        self.assertIsNone(partial['reference_minor'])
+        self.assertEqual(partial['reason'],'policy_review_required')
         from fractions import Fraction
         expected = Fraction(731)*(Fraction(self.product.credits_quantity)-1)/Fraction(self.product.credits_quantity)
+        self.assertEqual(partial['reference_minor'], str((2*expected.numerator+expected.denominator)//(2*expected.denominator)))
         self.assertEqual(partial['unrounded_minor'],{'numerator':str(expected.numerator),'denominator':str(expected.denominator)})
         record_confirmed_payment(self.account,order['id'],channel='fixture',merchant_reference='fixture-shenzhen',
             transaction_reference='refund-source-duplicate',amount_minor=731,currency='CNY',paid_at=self.now,evidence_hash='c'*64)
@@ -277,9 +906,9 @@ class CommerceTests(TransactionTestCase):
         self.assertEqual(replay['state'],'released')
         task = reserve_credits(self.account,'post-release-use','1')
         settle_credits(self.account,task['id'],'1')
-        with self.assertRaisesRegex(ValueError,'ROUNDING_POLICY_REQUIRED'):
-            reserve_credit_refund(self.account,order['id'],'reassess',review_evidence_hash='e'*64)
-        self.assertEqual(CreditRefund.objects.count(),1)
+        reassessed = reserve_credit_refund(self.account,order['id'],'reassess',review_evidence_hash='e'*64)
+        self.assertEqual(reassessed['amount_minor'],'658')
+        self.assertEqual(CreditRefund.objects.count(),2)
 
     def test_internal_billing_check_reports_without_changing_records(self):
         from .billing import check_billing_integrity, reserve_credit_refund
@@ -1466,17 +2095,56 @@ class ProductImportTests(TransactionTestCase):
 
     def test_business_resource_modes_and_credits_pack_are_explicit(self):
         from django.core.management.base import CommandError
-        enterprise = {**self.product(), 'audience': 'business', 'minimum_seats': 2,
-            'credits_quantity': '0', 'entitlements': {**self.product()['entitlements'], 'resource_mode': 'shared_only'}}
+        enterprise = {**self.product(), 'audience': 'business', 'minimum_seats': 10,
+            'credits_quantity': '10', 'entitlements': {**self.product()['entitlements'], 'resource_mode': 'shared_included'}}
         self.run_import([enterprise], True)
-        for changes in ({'credits_quantity': '1'}, {'minimum_seats': 1}):
+        for changes in ({'credits_quantity': '0'}, {'minimum_seats': 1}, {'minimum_seats':9},
+                {'credits_quantity':'0','entitlements':{**enterprise['entitlements'],'resource_mode':'shared_only'}}):
             with self.assertRaises(CommandError):
                 self.run_import([{**enterprise, 'code': 'fixture_invalid', **changes}], True)
+        teams={**self.product('fixture_teams_import'),'audience':'business',
+            'entitlements':{**self.product()['entitlements'],'resource_mode':'seat_included'}}
+        self.run_import([teams],True)
+        with self.assertRaises(CommandError):
+            self.run_import([{**teams,'code':'fixture_empty_teams','credits_quantity':'0'}],True)
         pack = {**self.product('fixture_pack_import'), 'kind': 'credits', 'billing_cycle': ''}
         self.run_import([pack], True)
         with self.assertRaises(CommandError):
             self.run_import([{**pack, 'code': 'fixture_zero_pack', 'credits_quantity': '0'}], True)
-        self.assertEqual(ProductVersion.objects.count(), 2)
+        self.assertEqual(ProductVersion.objects.count(), 3)
+
+    def test_named_business_plans_reject_inconsistent_identity_before_any_write(self):
+        from django.core.management.base import CommandError
+        for code, mode, wrong in (('teams','seat_included','shared_included'),
+                                  ('enterprise','shared_included','seat_included')):
+            valid={**self.product(code),'audience':'business','minimum_seats':10,
+                'entitlements':{**self.product()['entitlements'],'resource_mode':mode}}
+            for changes in ({'entitlements':{**valid['entitlements'],'resource_mode':wrong}},
+                            {'audience':'personal','minimum_seats':1},
+                            {'kind':'credits','billing_cycle':''}):
+                with self.subTest(code=code,changes=changes):
+                    with transaction.atomic():
+                        try:
+                            with self.assertRaisesRegex(CommandError,'INVALID_BUSINESS_RESOURCES'):
+                                self.run_import([self.product('fixture_first'),{**valid,**changes}],True)
+                            self.assertFalse(ProductVersion.objects.exists())
+                        finally:
+                            transaction.set_rollback(True)
+            self.assertEqual(self.run_import([valid])['create'],1)
+
+    @override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)
+    def test_named_business_sale_gate_rejects_personal_or_credit_products(self):
+        from .billing import _sale_gate
+        user,personal=fixture_account('named-plan-owner')
+        business=BillingAccount.objects.create(kind='business',name='named-plan-business')
+        for code,mode in (('teams','seat_included'),('enterprise','shared_included')):
+            for kind,account in (('subscription',personal),('credits',business)):
+                product=ProductVersion(**{**self.product(code),'kind':kind,'audience':account.kind,
+                    'billing_cycle':'monthly' if kind=='subscription' else '',
+                    'entitlements':{**self.product()['entitlements'],'resource_mode':mode}},
+                    state='published',effective_at=timezone.now()-timedelta(days=1))
+                with self.subTest(code=code,kind=kind), self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+                    _sale_gate(product,account,timezone.now(),'fixture','CN','fixture-shenzhen')
 
 
 @override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)

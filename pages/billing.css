@@ -36,3 +36,16 @@
 @media(max-width:760px){.price{white-space:normal}.price small{display:inline-block;white-space:nowrap}#session-alert{flex-direction:column}#session-alert .button{max-width:100%}}
 .pricing-heading h1{font-size:clamp(32px,4.2vw,56px);line-height:1.25;letter-spacing:-.035em;font-weight:500;font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
  .member-removal-dialog{width:min(600px,calc(100% - 32px));max-height:calc(100dvh - 48px);overflow:auto;box-sizing:border-box;border:1px solid #d7e3f0;border-radius:16px;padding:28px;background:#fff;color:#202b38;box-shadow:0 16px 60px #14243a24;font:16px/1.7 Arial,"PingFang SC","Microsoft YaHei",sans-serif}.member-removal-dialog::backdrop{background:#14243a66}.member-removal-dialog h2{font-size:26px;line-height:1.3;margin:0 0 20px}.member-removal-dialog p,.member-removal-dialog label{margin:14px 0;overflow-wrap:anywhere}.member-removal-dialog input{width:18px;height:18px;vertical-align:middle;accent-color:#396397}.member-removal-actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:24px}.member-removal-dialog :focus-visible{outline:2px solid #396397;outline-offset:3px}.organization-members .button{justify-self:start;min-height:44px}@media(max-width:600px){.member-removal-dialog{padding:20px}.member-removal-dialog h2{font-size:22px}.member-removal-actions{flex-direction:column}.member-removal-actions .button{width:100%}}
+
+/* Confirmed personal benefits and visibly pending plan details. */
+.personal-benefits{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
+.plan-includes{font-size:14px;font-weight:600;line-height:1.6;margin:0 0 16px}
+.personal-benefits ul{padding:0;margin:0;border:0;list-style:none;display:grid;align-content:start;gap:12px;font-size:13px;color:#505050}
+.plan .personal-benefits ul{min-height:64px}
+.personal-benefits li{display:flex;align-items:flex-start;gap:10px}
+.personal-benefits li .ui-icon{width:17px;height:17px;margin-top:3px;opacity:.65}
+.plan-pending{display:grid;gap:12px;margin:18px 0 0;padding-top:18px;border-top:1px solid #efefec;font-size:13px}
+.plan-pending>div{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px}
+.plan-pending dt{color:#595959;min-width:0}
+.plan-pending dd{margin:0;padding:2px 8px;border:1px solid #e2e5e7;border-radius:5px;background:#f5f6f7;color:#59636a;font-size:12px;line-height:1.6}
+.plan-release-note{margin:16px 0 0;font-size:12px;line-height:1.6;color:#626d73}

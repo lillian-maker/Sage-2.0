@@ -42,7 +42,8 @@ def load_catalog():
         audience, seats = plan.get('audience'), plan.get('minimum_seats')
         if audience not in ('personal', 'business') or type(seats) is not int:
             raise ValueError('CATALOG_INVALID')
-        if (audience == 'personal' and seats != 1) or (audience == 'business' and seats < 2):
+        if (audience == 'personal' and seats != 1) or (
+                audience == 'business' and seats < (10 if code == 'enterprise' else 1)):
             raise ValueError('CATALOG_INVALID')
         if type(plan.get('purchasable')) is not bool:
             raise ValueError('CATALOG_INVALID')

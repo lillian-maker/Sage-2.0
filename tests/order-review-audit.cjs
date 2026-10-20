@@ -49,8 +49,10 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
       requests.push([endpoint,request.method()]);
       assert.equal(request.method(),'GET');
       const json = value => route.fulfill({contentType:'application/json',body:JSON.stringify(value)});
+      if (endpoint === '/api/account/invoices') return json({available:false,items:[]});
       if (endpoint === '/api/billing/catalog') return json(JSON.parse(fs.readFileSync(path.join(__dirname,'../src/pages/billing-catalog.json'),'utf8')));
       if (endpoint === '/api/auth/session') return json({authenticated:true,user:{id:'fixture-user',display_name:'Fixture user'},accounts:[account,{...account,id:otherAccountId,name:'Fixture other'}],active_account_id:activeAccount,csrf_token:'fixture-only-csrf'});
+      if (endpoint === '/api/account/notifications/summary') return json({user_id:'fixture-user',unread_count:0});
       if (endpoint === '/api/billing/account') return json({account:activeAccount===accountId?account:{...account,id:otherAccountId,name:'Fixture other'},credits:{available:'10'},orders:activeAccount===accountId?[order]:[],capabilities:{}});
       if (endpoint === '/api/billing/subscriptions') return planReadFails ? route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:{code:'UNAVAILABLE'}})}) : json({items:planItems});
       if (endpoint === '/api/billing/notifications') {
@@ -99,7 +101,7 @@ const annualAssessment = () => ({order_id:orderId,account_id:accountId,can_submi
         await page.goto(`${base}/pages/billing${language}.html`);
         await page.locator('[data-order]').first().waitFor();
         assert.equal(await page.locator('#account-section-title').innerText(),language?'My bills':'我的账单');
-        assert.equal(await page.locator('.billing-center-sidebar>nav a').count(),3);
+        assert.equal(await page.locator('.billing-center-sidebar>nav a').count(),5);assert.equal(await page.locator('.billing-center-sidebar>nav a[href$="#organization"]').count(),1);assert.equal(await page.locator('.billing-center-sidebar>nav a[href$="#security"]').count(),1);
         assert.equal(await page.locator('.billing-orders-table th').count(),6);
         for(const selector of ['#billing-account-select','[data-order-product]','[data-order-kind]']){
           const style=await page.locator(selector).evaluate(node=>{const css=getComputedStyle(node);return {minHeight:css.minHeight,radius:css.borderRadius,border:css.borderTopColor,padding:css.paddingTop,color:css.color};});

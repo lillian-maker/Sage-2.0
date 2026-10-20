@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-01.1",
+  "version": "2026-10-16.1",
   "currency": "CNY",
   "mode": "development",
   "plans": [
@@ -7,8 +7,8 @@
     {"code":"pro","name":"Pro","audience":"personal","monthly_amount_minor":19900,"annual_amount_minor":null,"minimum_seats":1,"credits":null,"purchasable":false},
     {"code":"pro_plus","name":"Pro+","audience":"personal","monthly_amount_minor":49900,"annual_amount_minor":null,"minimum_seats":1,"credits":null,"purchasable":false},
     {"code":"ultra","name":"Ultra","audience":"personal","monthly_amount_minor":199000,"annual_amount_minor":null,"minimum_seats":1,"credits":null,"purchasable":false},
-    {"code":"teams","name":"Teams","audience":"business","monthly_amount_minor":null,"annual_amount_minor":null,"minimum_seats":2,"credits":null,"purchasable":false},
-    {"code":"enterprise","name":"Enterprise","audience":"business","monthly_amount_minor":null,"annual_amount_minor":null,"minimum_seats":2,"credits":0,"purchasable":false}
+    {"code":"teams","name":"Teams","audience":"business","monthly_amount_minor":null,"annual_amount_minor":null,"minimum_seats":1,"credits":null,"purchasable":false},
+    {"code":"enterprise","name":"Enterprise","audience":"business","monthly_amount_minor":null,"annual_amount_minor":null,"minimum_seats":10,"credits":null,"purchasable":false}
   ],
   "channels": [
     {"code":"alipay","name":"支付宝","enabled":false,"recurring":false},

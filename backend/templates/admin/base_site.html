@@ -1,0 +1,4 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ title }} | Sage{% endblock %}
+{% block branding %}<h1>Sage 内部管理</h1>{% endblock %}
+{% block userlinks %}{{ block.super }} / <a href="/pages/profile.html#security">设备确认 / Confirm device</a>{% endblock %}

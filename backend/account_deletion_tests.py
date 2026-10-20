@@ -200,9 +200,10 @@ class AccountDeletionTests(TestCase):
         call_command('cleanup_account_deletions', '--apply', stdout=StringIO())
         self.assertFalse(AccountDeletionRequest.objects.filter(pk=row.pk).exists())
 
-    def test_business_days_skip_weekends(self):
-        friday = timezone.now().replace(year=2026, month=10, day=9)
-        self.assertEqual(_business_due(friday, 2).weekday(), 1)
+    def test_business_days_include_official_adjusted_saturday(self):
+        from datetime import datetime
+        friday = datetime.fromisoformat('2026-10-09T10:00:00+08:00')
+        self.assertEqual(_business_due(friday, 2).date().isoformat(), '2026-10-12')
 
     def test_deleting_personal_identity_preserves_business_inquiry_content(self):
         from .models import PurchaseInquiry

@@ -47,6 +47,9 @@ class BillingHTTPTests(unittest.TestCase):
         self.assertEqual(plans['pro_plus']['monthly_amount_minor'], 49900)
         self.assertEqual(plans['ultra']['monthly_amount_minor'], 199000)
         self.assertIsNone(plans['pro']['annual_amount_minor'])
+        self.assertEqual(plans['teams']['minimum_seats'], 1)
+        self.assertEqual(plans['enterprise']['minimum_seats'], 10)
+        self.assertIsNone(plans['enterprise']['credits'])
         self.assertTrue(all(not plan['purchasable'] for plan in plans.values()))
 
     def test_quote_is_server_priced_preview_not_an_order(self):
@@ -62,8 +65,12 @@ class BillingHTTPTests(unittest.TestCase):
     def test_unconfigured_prices_and_invalid_seats_are_rejected(self):
         for payload, code in [
             ({'plan_code': 'pro', 'billing_cycle': 'annual', 'seat_quantity': 1}, 'PRICE_NOT_CONFIGURED'),
-            ({'plan_code': 'teams', 'billing_cycle': 'monthly', 'seat_quantity': 1}, 'INVALID_SEATS'),
+            ({'plan_code': 'teams', 'billing_cycle': 'monthly', 'seat_quantity': 0}, 'INVALID_SEATS'),
+            ({'plan_code': 'teams', 'billing_cycle': 'monthly', 'seat_quantity': 1}, 'PRICE_NOT_CONFIGURED'),
             ({'plan_code': 'teams', 'billing_cycle': 'monthly', 'seat_quantity': 2}, 'PRICE_NOT_CONFIGURED'),
+            ({'plan_code': 'enterprise', 'billing_cycle': 'monthly', 'seat_quantity': 9}, 'INVALID_SEATS'),
+            ({'plan_code': 'enterprise', 'billing_cycle': 'monthly', 'seat_quantity': 10}, 'PRICE_NOT_CONFIGURED'),
+            ({'plan_code': 'enterprise', 'billing_cycle': 'monthly', 'seat_quantity': 11}, 'PRICE_NOT_CONFIGURED'),
             ({'plan_code': 'pro', 'billing_cycle': 'monthly', 'seat_quantity': True}, 'INVALID_SEATS'),
             ({'plan_code': 'pro', 'billing_cycle': 'monthly', 'seat_quantity': 2}, 'INVALID_SEATS'),
             ({'plan_code': 'pro', 'billing_cycle': 'monthly', 'seat_quantity': 1, 'amount_minor': 1}, 'INVALID_REQUEST'),
@@ -113,7 +120,7 @@ class BillingHTTPTests(unittest.TestCase):
         status, data = self.request('/api/billing/catalog')
         self.assertEqual(status, 200)
         data = data['policy']
-        self.assertEqual(data['version'], '2026-10-02')
+        self.assertEqual(data['version'], '2026-10-16.2')
         self.assertEqual(data['currency'], 'CNY')
         self.assertEqual(data['renewal']['manual_payment_window_days'], 3)
         self.assertFalse(data['renewal']['automatic_retry'])
@@ -149,6 +156,10 @@ class BillingHTTPTests(unittest.TestCase):
             data['plans'][1][key] = value
             invalid.append(data)
         invalid.extend([{**original, 'currency': 'USD'}, {**original, 'version': ''}, []])
+        for code, minimum in [('teams', 0), ('enterprise', 9)]:
+            data = json.loads(json.dumps(original))
+            next(plan for plan in data['plans'] if plan['code'] == code)['minimum_seats'] = minimum
+            invalid.append(data)
         for data in invalid:
             with self.subTest(data=data), patch('backend.billing.Path.read_text', return_value=json.dumps(data)):
                 status, body = self.request('/api/billing/catalog')

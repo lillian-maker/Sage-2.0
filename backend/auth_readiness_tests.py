@@ -29,7 +29,12 @@ class AuthReadinessTests(SimpleTestCase):
         output = io.StringIO()
         with patch('requests.sessions.Session.request', side_effect=AssertionError('No HTTP allowed')), \
                 patch('backend.email.SesClient.SendEmail', side_effect=AssertionError('No email allowed')), \
-                patch('backend.authentication.CommonClient.call_json', side_effect=AssertionError('No CAPTCHA allowed')):
+                patch('backend.authentication.CommonClient.call_json', side_effect=AssertionError('No CAPTCHA allowed')), \
+                patch('socket.create_connection', side_effect=AssertionError('No socket allowed')), \
+                patch('socket.socket.connect', side_effect=AssertionError('No socket allowed')), \
+                patch('socket.getaddrinfo', side_effect=AssertionError('No DNS allowed')), \
+                patch('django.db.backends.base.base.BaseDatabaseWrapper.connect', side_effect=AssertionError('No DB allowed')), \
+                patch('django.db.backends.base.base.BaseDatabaseWrapper.cursor', side_effect=AssertionError('No DB allowed')):
             call_command('check_auth_readiness', stdout=output, **options)
         return json.loads(output.getvalue())
 
@@ -48,6 +53,30 @@ class AuthReadinessTests(SimpleTestCase):
         self.assertEqual(report['blockers'], ['email_registration'])
         self.assertTrue(report['checks']['password_recovery'])
         self.assertTrue(report['checks']['google_login'])
+
+    def test_missing_purpose_templates_fail_only_their_dependent_checks(self):
+        for setting, blockers in (
+                ('AUTH_PASSWORD_SES_TEMPLATE_ID', ['password_recovery', 'password_change_notification']),
+                ('AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID', ['password_change_notification']),
+                ('AUTH_GOOGLE_BIND_SES_TEMPLATE_ID', ['google_bind_email'])):
+            with self.subTest(setting=setting), override_settings(**{setting: ''}):
+                self.assertEqual(self.report()['blockers'], blockers)
+
+    def test_closed_gates_override_otherwise_complete_configuration(self):
+        for setting, blockers in (
+                ('AUTH_GOOGLE_ENABLED', ['google_login', 'google_registration', 'google_callback_host']),
+                ('AUTH_REGISTRATION_ENABLED', ['legal_approval_declared', 'email_registration', 'google_registration']),
+                ('AUTH_EMAIL_ENABLED', ['email_transport', 'email_registration', 'password_recovery',
+                                        'password_change_notification', 'google_bind_email']),
+                ('AUTH_CAPTCHA_ENABLED', ['captcha', 'email_registration', 'password_login', 'password_recovery'])):
+            with self.subTest(setting=setting), override_settings(**{setting: False}):
+                self.assertEqual(self.report()['blockers'], blockers)
+
+    def test_strict_failure_does_not_poison_a_later_complete_check(self):
+        with override_settings(GOOGLE_REDIRECT_URI='https://other.example.invalid/api/auth/google/callback'):
+            with self.assertRaisesMessage(CommandError, 'Authentication configuration is incomplete'):
+                self.report(strict=True)
+        self.assertEqual(self.report(strict=True)['blockers'], [])
 
     def test_strict_mode_fails_without_echoing_configuration(self):
         output = io.StringIO()

@@ -77,7 +77,14 @@ class ConfirmedPolicyTests(unittest.TestCase):
         self.assertFalse(policy['renewal']['automatic_retry'])
         self.assertEqual(policy['renewal']['manual_payment_window_days'], 3)
         self.assertEqual(policy['credits']['purchased_valid_months'], 12)
+        self.assertEqual(policy['credits']['business_consume_order'],
+                         ['own_seat_included', 'business_shared'])
+        self.assertEqual(policy['credits']['business_shared_sources'], ['subscription', 'purchased'])
+        self.assertEqual(policy['credits']['enterprise_included_grant'], 'monthly_shared_by_purchased_seats')
+        self.assertFalse(policy['credits']['business_uses_personal_credits'])
+        self.assertFalse(policy['credits']['member_shared_limits'])
         self.assertFalse(policy['auto_topup']['default_enabled'])
+        self.assertTrue(policy['auto_topup']['requires_actual_shared_demand'])
         self.assertNotIn('checkout_enabled', policy)
 
     def test_trial_input_validation_and_original_task_lock(self):
@@ -218,6 +225,37 @@ class ConfirmedPolicyTests(unittest.TestCase):
             renewal_failure_decision('succeeded', self.now, month_boundary(self.now, 1), self.now)
         with self.assertRaisesRegex(ValueError, 'INVALID_AUTHORIZATION_STATE'):
             payment_method_removal_decision(['deleted'], [])
+
+
+class SubscriptionChangeAmountTests(unittest.TestCase):
+    def calculate(self, **changes):
+        from backend.billing_rules import subscription_change_amounts
+        values=dict(current_price_minor=10000,actual_cash_minor=10000,
+            starts_at=datetime.fromisoformat('2026-10-01T00:00:00+08:00'),
+            ends_at=datetime.fromisoformat('2026-11-01T00:00:00+08:00'),
+            quoted_at=datetime.fromisoformat('2026-10-16T12:00:00+08:00'),new_price_minor=20000)
+        values.update(changes)
+        return subscription_change_amounts(**values)
+
+    def test_precise_seconds_cash_floor_and_final_half_up(self):
+        self.assertEqual(self.calculate()['due_minor'],15000)
+        result=self.calculate(current_price_minor=5000)
+        self.assertEqual(result['due_minor'],15000)
+        result=self.calculate(quoted_at=datetime.fromisoformat('2026-10-16T12:00:01+08:00'))
+        self.assertNotEqual(result['remaining_ratio'],[1,2])
+
+    def test_promotion_is_never_cash_and_prepaid_excess_is_refundable(self):
+        result=self.calculate(current_price_minor=30000,actual_cash_minor=10000,prepaid_minor=10000)
+        self.assertEqual((result['due_minor'],result['refund_minor'],result['cash_carried_minor'],result['promotion_minor']),(0,5000,10000,10000))
+
+    def test_cash_source_rounding_conserves_refund_plus_carried_cash(self):
+        result=self.calculate(current_price_minor=26,actual_cash_minor=14,new_price_minor=3,
+            quoted_at=datetime.fromisoformat('2026-10-28T21:36:00+08:00'),prepaid_minor=1)
+        self.assertEqual(result['refund_minor']+result['cash_carried_minor'],2)
+
+    def test_invalid_or_excess_cash_requires_review(self):
+        with self.assertRaisesRegex(ValueError,'CASH_CREDIT_REQUIRES_REVIEW'):self.calculate(new_price_minor=1)
+        with self.assertRaisesRegex(ValueError,'INVALID_AMOUNT'):self.calculate(actual_cash_minor=True)
 
 
 if __name__ == '__main__':

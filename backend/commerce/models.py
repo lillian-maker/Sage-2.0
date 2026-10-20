@@ -93,6 +93,7 @@ class PaymentAttempt(models.Model):
     state = models.CharField(max_length=12, default="created")
     dispatched_at = models.DateTimeField(null=True)
     dispatch_authorization = models.JSONField(null=True)
+    wechat_code_url = models.CharField(max_length=2048, null=True)
     needs_reconciliation = models.BooleanField(default=False)
     subscription = models.ForeignKey('Subscription', null=True, on_delete=models.PROTECT)
     renewal_cycle_index = models.PositiveIntegerField(null=True)
@@ -122,6 +123,8 @@ class PaymentAttempt(models.Model):
             original = type(self).objects.get(pk=self.pk)
             if original.dispatched_at is not None or original.dispatch_authorization is not None:
                 _unchanged(self, ['dispatched_at', 'dispatch_authorization'])
+            if original.wechat_code_url is not None:
+                _unchanged(self, ['wechat_code_url'])
         return super().save(*args, **kwargs)
 
 
@@ -209,6 +212,8 @@ class Subscription(models.Model):
     cancel_requested_at = models.DateTimeField(null=True)
     cancel_confirmed_at = models.DateTimeField(null=True)
     cancellation_evidence_hash = models.CharField(max_length=64, blank=True)
+    superseded_at = models.DateTimeField(null=True)
+    refund_cutoff_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -218,13 +223,148 @@ class Subscription(models.Model):
             models.CheckConstraint(condition=models.Q(billing_cycle__in=["monthly", "annual"]),
                                    name="commerce_subscription_cycle_valid"),
             models.CheckConstraint(condition=(models.Q(auto_renew=True, cancellation_state="none") |
-                                   models.Q(auto_renew=False, cancellation_state__in=["processing", "completed"])),
+                                   models.Q(auto_renew=False, cancellation_state__in=["none", "processing", "completed"])),
                                    name="commerce_subscription_cancel_valid"),
         ]
 
     def save(self, *args, **kwargs):
         _unchanged(self, ["account_id", "initial_order_id", "original_anchor", "billing_timezone",
                           "calendar_rule_version", "billing_cycle", "mandate", "payment_method_id", "authorization_version"])
+        return super().save(*args, **kwargs)
+
+
+class SubscriptionChange(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT, related_name='plan_changes')
+    new_subscription = models.OneToOneField(Subscription, null=True, on_delete=models.PROTECT, related_name='incoming_change')
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    quote = models.OneToOneField(Quote, on_delete=models.PROTECT)
+    order = models.OneToOneField(Order, null=True, on_delete=models.PROTECT)
+    request_key = models.CharField(max_length=64)
+    request_hash = models.CharField(max_length=64)
+    snapshot = models.JSONField()
+    cash_sources = models.JSONField(default=list)
+    state = models.CharField(max_length=20, default='quoted')
+    activated_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account','request_key'],name='commerce_plan_change_request'),
+            models.CheckConstraint(condition=models.Q(state__in=['quoted','pending_payment','activated']),name='commerce_plan_change_state')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, ['account_id','subscription_id','actor_id','quote_id','request_key','request_hash','snapshot','cash_sources'])
+        return super().save(*args, **kwargs)
+
+
+class SeatPurchaseChange(models.Model):
+    """One purchase of additional capacity for one existing paid period."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT, related_name='seat_purchases')
+    period = models.ForeignKey('SubscriptionPeriod', on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    quote = models.OneToOneField(Quote, on_delete=models.PROTECT)
+    order = models.OneToOneField(Order, null=True, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    request_key = models.CharField(max_length=64)
+    request_hash = models.CharField(max_length=64)
+    snapshot = models.JSONField()
+    covered_seat_ids = models.JSONField(default=list)
+    state = models.CharField(max_length=20, default='quoted')
+    activated_at = models.DateTimeField(null=True)
+    granted_months = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account', 'request_key'], name='commerce_seat_purchase_request'),
+            models.CheckConstraint(condition=models.Q(quantity__gte=1), name='commerce_seat_purchase_positive'),
+            models.CheckConstraint(condition=models.Q(state__in=['quoted', 'pending_payment', 'activated', 'payment_review', 'expired']),
+                name='commerce_seat_purchase_state')]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding and type(self).objects.filter(pk=self.pk, state='activated').exists():
+            _unchanged(self, ['covered_seat_ids'])
+        _unchanged(self, ['account_id', 'subscription_id', 'period_id', 'actor_id', 'quote_id', 'quantity',
+            'request_key', 'request_hash', 'snapshot'])
+        super().save(*args, **kwargs)
+
+
+class ServiceRefund(models.Model):
+    """Cash refund intent only. A row is never proof of a provider refund."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT, related_name='service_refunds')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    request_key = models.CharField(max_length=64)
+    request_hash = models.CharField(max_length=64)
+    status = models.CharField(max_length=20, default='approved')
+    purpose = models.CharField(max_length=20, default='service', choices=[('service', 'service'), ('seat_reduction', 'seat_reduction')])
+    amount_minor = models.PositiveBigIntegerField()
+    allocations = models.JSONField(default=list)
+    pending_from = models.DateTimeField()
+    evidence_hash = models.CharField(max_length=64, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account','request_key'],name='commerce_service_refund_request'),
+            models.CheckConstraint(condition=models.Q(status__in=['review','approved','processing','refunded','unknown','terminated']),
+                                   name='commerce_service_refund_state')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, ['account_id','subscription_id','created_by_id','request_key','request_hash',
+                         'amount_minor','allocations','pending_from','purpose'])
+        return super().save(*args, **kwargs)
+
+
+class SeatReduction(models.Model):
+    """A specific period's capacity reduction; original paid periods remain intact."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT, related_name='seat_reductions')
+    period = models.ForeignKey('SubscriptionPeriod', on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    seat_ids = models.JSONField()
+    snapshot = models.JSONField()
+    request_key = models.CharField(max_length=64)
+    request_hash = models.CharField(max_length=64)
+    confirmation_key = models.CharField(max_length=64, blank=True)
+    refund = models.OneToOneField(ServiceRefund, null=True, on_delete=models.PROTECT, related_name='seat_reduction')
+    state = models.CharField(max_length=12, default='quoted')
+    expires_at = models.DateTimeField()
+    applied_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account', 'request_key'], name='commerce_seat_reduction_request'),
+            models.CheckConstraint(condition=models.Q(state__in=['quoted', 'applied', 'reverted']), name='commerce_seat_reduction_state')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, ['account_id', 'subscription_id', 'period_id', 'actor_id', 'seat_ids', 'snapshot',
+            'request_key', 'request_hash', 'expires_at'])
+        super().save(*args, **kwargs)
+
+
+class ServiceRefundReceipt(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    refund = models.ForeignKey(ServiceRefund, on_delete=models.PROTECT, related_name='receipts')
+    payment = models.ForeignKey(PaymentFact, on_delete=models.PROTECT)
+    event_key = models.CharField(max_length=128)
+    outcome = models.CharField(max_length=16, choices=[(value,value) for value in ('refunded','failed','unknown','terminated')])
+    amount_minor = models.PositiveBigIntegerField()
+    provider_reference = models.CharField(max_length=128, blank=True)
+    evidence_hash = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['refund','payment','event_key'],name='commerce_service_refund_event'),
+            models.UniqueConstraint(fields=['payment','provider_reference'],
+                condition=models.Q(outcome='refunded') & ~models.Q(provider_reference=''),name='commerce_service_refund_reference')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, [field.attname for field in self._meta.concrete_fields if field.name!='created_at'])
         return super().save(*args, **kwargs)
 
 
@@ -272,6 +412,8 @@ class TopupAuthorization(models.Model):
     revocation_requested_at = models.DateTimeField(null=True)
     revoked_at = models.DateTimeField(null=True)
     revocation_evidence_hash = models.CharField(max_length=64, blank=True)
+    trigger_armed = models.BooleanField(default=True)
+    trigger_sequence = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -342,6 +484,7 @@ class PaidSeat(models.Model):
     position = models.PositiveIntegerField()
     membership = models.ForeignKey('backend.Membership', null=True, on_delete=models.PROTECT)
     version = models.PositiveIntegerField(default=0)
+    purchase_change = models.ForeignKey(SeatPurchaseChange, null=True, on_delete=models.PROTECT, related_name='seats')
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['subscription','position'],name='commerce_paid_seat_unique'),
@@ -349,7 +492,57 @@ class PaidSeat(models.Model):
                        models.CheckConstraint(condition=models.Q(position__gte=1),name='commerce_paid_seat_positive')]
 
     def save(self, *args, **kwargs):
-        _unchanged(self, ['subscription_id','position'])
+        _unchanged(self, ['subscription_id','position', 'purchase_change_id'])
+        super().save(*args, **kwargs)
+
+
+class BusinessInvitation(models.Model):
+    """A targeted invitation; its optional seat is reserved until accepted or invalid."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    creator = models.ForeignKey('backend.Membership', on_delete=models.PROTECT, related_name='+')
+    subscription = models.ForeignKey(Subscription, on_delete=models.PROTECT)
+    seat = models.ForeignKey(PaidSeat, null=True, on_delete=models.PROTECT)
+    method = models.CharField(max_length=10, choices=[('email', 'email'), ('phone', 'phone')])
+    identifier = models.CharField(max_length=254)
+    role = models.CharField(max_length=20, choices=[('member', 'member'), ('billing_admin', 'billing_admin')])
+    request_key = models.CharField(max_length=64)
+    state = models.CharField(max_length=12, default='pending', choices=[
+        ('pending', 'pending'), ('accepted', 'accepted'), ('revoked', 'revoked'), ('invalidated', 'invalidated')])
+    accepted_membership = models.ForeignKey('backend.Membership', null=True, on_delete=models.PROTECT, related_name='+')
+    accepted_at = models.DateTimeField(null=True)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account', 'request_key'], name='commerce_business_invite_request'),
+            models.CheckConstraint(condition=models.Q(expires_at__gt=models.F('created_at')),
+                name='commerce_business_invite_expiry')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, ['account_id', 'creator_id', 'subscription_id', 'seat_id', 'method',
+            'identifier', 'role', 'request_key', 'expires_at'])
+        super().save(*args, **kwargs)
+
+
+class MembershipRoleChange(models.Model):
+    membership = models.ForeignKey('backend.Membership', on_delete=models.PROTECT, related_name='role_changes')
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    before_role = models.CharField(max_length=20)
+    after_role = models.CharField(max_length=20)
+    request_key = models.CharField(max_length=64)
+    expected_version = models.PositiveIntegerField()
+    resulting_version = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account', 'request_key'], name='commerce_member_role_request'),
+            models.UniqueConstraint(fields=['membership', 'resulting_version'], name='commerce_member_role_version')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, ['membership_id', 'account_id', 'actor_id', 'before_role', 'after_role',
+            'request_key', 'expected_version', 'resulting_version'])
         super().save(*args, **kwargs)
 
 
@@ -379,6 +572,7 @@ class CreditBatch(models.Model):
     source_key = models.CharField(max_length=128)
     order = models.OneToOneField(Order, null=True, on_delete=models.PROTECT)
     subscription_period = models.ForeignKey(SubscriptionPeriod, null=True, on_delete=models.PROTECT)
+    purchase_change = models.ForeignKey(SeatPurchaseChange, null=True, on_delete=models.PROTECT)
     service_month = models.PositiveSmallIntegerField(null=True)
     seat = models.ForeignKey(PaidSeat, null=True, on_delete=models.PROTECT)
     initial_quantity = models.TextField()
@@ -387,7 +581,8 @@ class CreditBatch(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["account", "source_key"], name="commerce_credit_source_unique"),
-                       models.UniqueConstraint(fields=["subscription_period", "service_month"], condition=models.Q(seat__isnull=True), name="commerce_subscription_month_unique"),
+                       models.UniqueConstraint(fields=["subscription_period", "service_month"], condition=models.Q(seat__isnull=True, purchase_change__isnull=True), name="commerce_subscription_month_unique"),
+                       models.UniqueConstraint(fields=['purchase_change', 'service_month'], condition=models.Q(seat__isnull=True, purchase_change__isnull=False), name='commerce_seat_purchase_month_unique'),
                        models.UniqueConstraint(fields=['subscription_period','service_month','seat'], condition=models.Q(seat__isnull=False),name='commerce_seat_month_unique')]
 
 
@@ -437,6 +632,7 @@ class CreditRefund(models.Model):
     request_key = models.CharField(max_length=128)
     amount_minor = models.PositiveBigIntegerField()
     review_evidence_hash = models.CharField(max_length=64)
+    review_state = models.CharField(max_length=12, choices=[('approved','approved'),('review','review')], default='approved')
     state = models.CharField(max_length=12, default='reserved')
     evidence_hash = models.CharField(max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -454,22 +650,49 @@ class CreditRefund(models.Model):
         super().save(*args, **kwargs)
 
 
+class SharedTask(models.Model):
+    """Enterprise execution metadata only; task contents belong to the executor."""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    membership = models.ForeignKey('backend.Membership', on_delete=models.PROTECT)
+    task_key = models.CharField(max_length=128)
+    task_type = models.CharField(max_length=80)
+    exact_quantity = models.TextField(default='0')
+    state = models.CharField(max_length=12, default='running')
+    resume_blocked = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account','task_key'],name='commerce_shared_task_key'),
+            models.CheckConstraint(condition=models.Q(state__in=['running','paused','completed']),
+                                   name='commerce_shared_task_state')]
+
+    def save(self, *args, **kwargs):
+        _unchanged(self, ['account_id','membership_id','task_key','task_type','created_at'])
+        return super().save(*args, **kwargs)
+
+
 class Reservation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey("backend.BillingAccount", on_delete=models.PROTECT)
     task_key = models.CharField(max_length=128)
     membership = models.ForeignKey('backend.Membership', null=True, on_delete=models.PROTECT)
+    shared_task = models.ForeignKey(SharedTask, null=True, on_delete=models.PROTECT, related_name='debits')
     shared_period_start = models.DateTimeField(null=True)
     shared_period_end = models.DateTimeField(null=True)
     quantity = models.TextField()
     settled_quantity = models.TextField(null=True)
+    actual_quantity = models.TextField(null=True)
     state = models.CharField(max_length=12, default="reserved")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["account", "task_key"], name="commerce_task_reservation_unique"),
-            models.CheckConstraint(condition=(models.Q(membership__isnull=True,shared_period_start__isnull=True,shared_period_end__isnull=True) |
-                models.Q(membership__isnull=False,shared_period_start__isnull=False,shared_period_end__isnull=False,shared_period_end__gt=models.F('shared_period_start'))),
+            models.CheckConstraint(condition=(models.Q(shared_task__isnull=True,membership__isnull=True,shared_period_start__isnull=True,shared_period_end__isnull=True) |
+                models.Q(shared_task__isnull=True,membership__isnull=False,shared_period_start__isnull=False,shared_period_end__isnull=False,shared_period_end__gt=models.F('shared_period_start')) |
+                models.Q(shared_task__isnull=False,membership__isnull=False,shared_period_start__isnull=True,shared_period_end__isnull=True)),
                 name='commerce_reservation_member_period')]
 
 
@@ -518,9 +741,14 @@ class BillingNotification(models.Model):
              'topup_authorization_recorded','topup_authorization_paused',
              'topup_revocation_processing','topup_revocation_confirmed',
              'seat_assignment_changed','shared_limit_changed',
-             'renewal_payment_received','topup_payment_received','topup_payment_failed')
+             'renewal_payment_received','topup_payment_received','topup_payment_failed',
+             'renewal_reminder','renewal_notice_blocked','invoice_requested','invoice_sent',
+             'account_security','member_removed','member_role_changed','plan_changed',
+             'service_refund_requested','service_refund_refunded','service_refund_failed','seats_purchased','seat_capacity_ending',
+             'next_seats_purchased','seats_reduced')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT)
+    account = models.ForeignKey('backend.BillingAccount', null=True, on_delete=models.PROTECT)
+    recipient_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
     type = models.CharField(max_length=32)
     source_event = models.CharField(max_length=160)
     order = models.ForeignKey(Order, null=True, on_delete=models.PROTECT)
@@ -532,10 +760,14 @@ class BillingNotification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['account','source_event'],name='commerce_notification_event_unique')]
+        constraints = [models.UniqueConstraint(fields=['account','source_event'],name='commerce_notification_event_unique'),
+            models.UniqueConstraint(fields=['recipient_user','source_event'],condition=models.Q(account__isnull=True),
+                                    name='commerce_personal_security_event'),
+            models.CheckConstraint(condition=models.Q(account__isnull=False)|models.Q(type='account_security',recipient_user__isnull=False),
+                                   name='commerce_notification_account_required')]
 
     def save(self, *args, **kwargs):
-        _unchanged(self, ['account_id','type','source_event','order_id','subscription_id','refund_id',
+        _unchanged(self, ['account_id','recipient_user_id','type','source_event','order_id','subscription_id','refund_id',
                          'amount_minor','currency','occurred_at'])
         if self.type not in self.TYPES:
             raise ValueError('INVALID_NOTIFICATION_TYPE')

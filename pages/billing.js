@@ -20,16 +20,18 @@
   let catalog, online = false;
   let audience = initial.get('audience') === 'business' ? 'business' : 'personal';
   let cycle = initial.get('cycle') === 'annual' ? 'annual' : 'monthly';
-  let seats = /^[0-9]+$/.test(initial.get('seats') || '') ? Number(initial.get('seats')) : 2;
-  if (!Number.isSafeInteger(seats) || seats < 2 || seats > 10000) seats = 2;
+  let seats = /^[0-9]+$/.test(initial.get('seats') || '') ? Number(initial.get('seats')) : 1;
+  if (!Number.isSafeInteger(seats) || seats < 1 || seats > 10000) seats = 1;
   const boundary = t('订阅服务暂未开放购买。你可以查看方案；开通后将明确展示权益和费用。','Subscriptions are not yet available to purchase. Explore the plans now; full benefits and charges will be shown before purchases open.');
   let session = null, sessionState = 'loading', sessionBusy = false, accountVersion = 0, sessionVersion = 0;
   let sessionNotice = '', logoutToken = null, logoutPending = false, logoutUserId = null;
   let purchaseRefresh = null, purchaseCatalog = null, closeMemberDialog = null;
+  let googlePayScript = null;
   let pricingSubscriptions = null, pricingSubscriptionState = 'idle', pricingReadVersion = 0;
   const accountUnavailable = t('账户服务暂时无法连接，当前数据未知。请重新连接；不会把无法读取的余额当作 0。','Account services cannot be reached. Your data is unknown. Reconnect; unavailable balances are never shown as zero.');
   const authURL = () => `${page('auth')}?${new URLSearchParams({return:location.pathname + location.search + location.hash})}`;
-  const requestError = (error, fallback) => ({FORBIDDEN:t('你没有办理此操作的权限，请切换有权限的账户或联系管理员。','You do not have permission for this action. Switch to an authorized account or contact your admin.'),CSRF_FAILED:t('页面验证已失效，请重新连接账户服务后再试。','Page verification has expired. Reconnect to account services and retry.'),ACCOUNT_CHANGED:t('计费账户已在其他页面变更，旧账户数据已清除。请重新连接并核对账户；操作不会自动重试。','The billing account changed on another page. Previous account data has been cleared. Reconnect and review the account; the action will not retry automatically.')})[error.message] || fallback;
+  const creditsSubscriptionRequired=t('当前没有生效的已付套餐；续订后可购买新点数，未过期的已有点数仍可使用。','Your paid service is not active. Renew before purchasing new Credits; existing unexpired Credits remain usable.');
+  const requestError = (error, fallback) => ({CREDITS_SUBSCRIPTION_REQUIRED:creditsSubscriptionRequired,VERIFICATION_CANCELLED:t('已取消身份验证，未提交本次操作。','Identity verification cancelled. This action was not submitted.'),FORBIDDEN:t('你没有办理此操作的权限，请切换有权限的账户或联系管理员。','You do not have permission for this action. Switch to an authorized account or contact your admin.'),CSRF_FAILED:t('页面验证已失效，请重新连接账户服务后再试。','Page verification has expired. Reconnect to account services and retry.'),ACCOUNT_CHANGED:t('计费账户已在其他页面变更，旧账户数据已清除。请重新连接并核对账户；操作不会自动重试。','The billing account changed on another page. Previous account data has been cleared. Reconnect and review the account; the action will not retry automatically.')})[error.message] || fallback;
   const activeAccount = () => session?.accounts.find(item => item.id === session.active_account_id);
   const accountName = account => account.kind === 'personal' && account.name === '个人账户' ? t('个人账户','Personal account') : account.name;
   function validSession(value) {
@@ -95,6 +97,7 @@
     }
   }
   function renderAccountChrome() {
+    window.dispatchEvent(new CustomEvent('sage:session',{detail:session || {authenticated:false}}));
     const menu = document.querySelector('.account-dropdown');
     if (!menu) return;
     const account = activeAccount();
@@ -199,19 +202,25 @@
   }
   function faqs() {
     const entries = [
-      [t('Sage Credits 何时发放和到期？','When are Sage Credits granted and when do they expire?'),t('订阅额度按服务月发放，当期有效、不结转；年付也逐月发放。每笔加购自确认到账起 12 个月有效，新购买不延长旧批次。优先使用最早到期的可用批次；同一到期时间，先订阅额度再加购。','Subscription credits are granted each service month, expire at its end and do not roll over, including on annual plans. Each purchase lasts 12 months from confirmed payment; new purchases do not extend older batches. Eligible credits expiring first are used first; subscription credits precede purchased credits when expiry times match.')],
-      [t('用完后会自动扣费吗？','Will usage trigger another charge?'),t('个人账户仅主动加购或升级，不自动充值、不透支。企业管理员可单独开启并授权自动充值，设置触发阈值、固定购买包和月度金额上限；默认关闭，不随订阅自动开启。相关服务尚未开放。','Personal accounts require a manual purchase or upgrade, with no automatic top-ups or overdrafts. Business admins may separately enable and authorize auto top-up with a threshold, fixed pack and monthly spending cap. It is off by default and not enabled with a subscription. These services are not yet available.')],
-      [t('Teams 和 Enterprise 如何分配额度？','How do Teams and Enterprise credits work?'),t('Teams 每个真人席位的内含额度独立使用，额外购买进入企业共享池。Enterprise 席位不含 Sage Credits，需另购共享池。管理员可设置成员使用共享池的月上限，不占用席位内含额度。具体额度与权益开售前公布。','Teams included credits belong to each human seat; purchased credits enter the business shared pool. Enterprise seats exclude Sage Credits and use a separately purchased shared pool. Admins can cap each member’s monthly shared-pool usage without reducing included seat credits. Allowances and benefits will be published before sales open.')],
+      [t('Sage Credits 何时发放和到期？','When are Sage Credits granted and when do they expire?'),t('订阅额度按服务月发放，当期有效、不结转；年付也逐月发放。每笔加购自确认到账起 12 个月有效，新购买不延长旧批次。个人账户优先使用最早到期的可用批次，同到期先用订阅额度。Teams 公司任务先用本人企业套餐内含点数，再用企业共享点数；各来源内优先使用最早到期批次。','Subscription credits are granted each service month, expire at its end and do not roll over, including on annual plans. Each purchase lasts 12 months from confirmed payment; new purchases do not extend older batches. Personal accounts use eligible Credits expiring first, with subscription Credits first when expiry matches. Teams company tasks use the member’s business plan allowance before shared business Credits; within each source, earliest expiry comes first.')],
+      [t('用完后会自动扣费吗？','Will usage trigger another charge?'),t('个人账户仅主动加购或升级，不自动充值、不透支。企业自动充值默认关闭，管理员需从固定方案中选择并单独授权。只有任务需要使用企业共享点数，且共享可用余额低于触发线时才充值，不因共享余额偏低提前扣费。相关服务尚未开放。','Personal accounts require a manual purchase or upgrade, with no automatic top-ups or overdrafts. Business auto top-up is off by default and needs separate admin authorization of a fixed preset. It triggers only when a task needs shared business Credits and the available shared balance is below the threshold, not just because that balance is low. These services are not yet available.')],
+      [t('Teams 和 Enterprise 如何分配额度？','How do Teams and Enterprise credits work?'),t('Teams 每个付费名额的月内含点数独享，不转给其他成员；企业加购点数共享。Enterprise 套餐内含点数按购买名额汇入企业共享池，每个服务月发放、当月有效；年付也逐月发放。公司任务先用本人企业套餐内含点数，再用企业共享点数，不扣私人点数，也不设置成员共享用量上限。具体额度与权益开售前公布。','Each Teams paid seat has an individual monthly allowance that cannot be transferred. Purchased business Credits are shared. Enterprise included Credits are pooled according to purchased seats, granted each service month and expire at its end, including on annual plans. Company tasks use the member’s business plan allowance before shared Credits, never private Credits. There are no per-member shared usage caps. Allowances and benefits will be published before sales open.')],
       [t('订阅结束后，已购买额度还能使用吗？','Can purchased credits be used after a subscription ends?'),t('尚未到期的已购 Sage Credits 仍可用于届时公布的基础任务，但不再发放订阅额度，也不保留原档位专属权益。','Unexpired purchased Sage Credits remain usable for the published basic tasks. Subscription credits stop and exclusive plan benefits do not continue.')],
       [t('如何关闭自动续费？','How do I stop automatic renewal?'),t('服务开放后，可在“订阅与账单”关闭自动续费。已付款周期内的权益保留；关闭续费不等于退款。企业自动充值独立管理，可单独关闭。','Once available, turn off renewal in Billing. Paid access remains through the current term; cancellation is separate from a refund. Business auto top-up is managed and cancelled separately.')],
-      [t('退款如何计算？','How are refunds calculated?'),t('已开始的月度订阅原则不退，主动升档等约定例外除外。年付可退未来尚未开始的完整服务月，当前服务月保留。加购需在到期前按购买订单申请，退该单全部未用付费余额；按实付与未用比例计算，赠送额度不折现。已开票、合同或异常订单由财务审核，法定权利不受影响。','Started monthly terms are generally non-refundable, except for agreed cases such as a paid upgrade. Annual refunds cover future complete service months, preserving the current month. Before expiry, request an order’s entire unused paid credit balance, proportional to its payment and unused amount; promotional credits have no cash value. Invoiced, contract and exceptional orders require finance review. Statutory rights remain unaffected.')]
+      [t('退款如何计算？','How are refunds calculated?'),t('已开始的月度订阅原则不退，主动升档等约定例外除外。年付可退未来尚未开始的完整服务月，当前服务月保留。加购需在到期前按购买订单申请，退该单全部未用付费余额；按实付与未用比例计算，套餐内含点数不能单独折现。已开票、合同或异常订单由财务审核，法定权利不受影响。','Started monthly terms are generally non-refundable, except for agreed cases such as a paid upgrade. Annual refunds cover future complete service months, preserving the current month. Before expiry, request an order’s entire unused paid credit balance, proportional to its payment and unused amount; included plan Credits cannot be cashed out separately. Invoiced, contract and exceptional orders require finance review. Statutory rights remain unaffected.')]
     ];
     return `<section class="rules"><div><span class="eyebrow">SAGE CREDITS</span><h2>${t('订阅与用量，清楚分开','Clear plans. Clear usage.')}</h2><p>${t('了解有效期、企业额度，以及续费和退款规则。','Understand credit validity, business resources, renewals and refunds.')}</p></div><div>${entries.map(([q,a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')}</div></section>`;
   }
 
+  function personalBenefits(code) {
+    const includes = code === 'ultra' ? t('包含 Pro+ 全部功能','Everything in Pro+') : code === 'pro_plus' ? t('包含 Pro 全部功能','Everything in Pro') : t('个人业务功能','Personal business features');
+    const features = [t('1 个真人使用席位','1 human seat')];
+    if (code !== 'pro') features.push(t('优先体验新功能','Early access to new features'));
+    return `<div class="plan-benefits personal-benefits"><p class="plan-includes">${includes}</p><ul>${features.map(text=>`<li>${icon('check2')}<span>${text}</span></li>`).join('')}</ul><dl class="plan-pending">${[t('每月内含点数','Monthly Credits'),t('同时运行任务数','Concurrent tasks'),t('具体功能清单','Feature details')].map(label=>`<div><dt>${label}</dt><dd>${t('待定','Pending')}</dd></div>`).join('')}</dl><p class="plan-release-note">${code === 'pro' ? t('具体功能以正式公布为准。','Specific features will be published before sales open.') : t('新功能优先体验随发布安排开放。','Early access follows the release schedule.')}</p></div>`;
+  }
   function pricing() {
     document.title = t('价格 · Sage','Pricing · Sage');
-    shell(`<header class="page-heading pricing-heading"><span class="eyebrow">SAGE MEMBERSHIP</span><h1>${t('选择适合你的 Sage 计划','Choose your Sage plan')}</h1><p>${t('从个人经营到企业协作，选择适合你的方案与使用节奏','Find the right plan for individual work or business collaboration.')}</p><div class="segmented audience-control" role="group" aria-label="${t('方案类型','Plan type')}"><button data-audience="personal" aria-pressed="${audience === 'personal'}">${t('个人版','Personal')}</button><button data-audience="business" aria-pressed="${audience === 'business'}">${t('企业版','Business')}</button></div></header><section id="pricing-subscription-status" class="policy-block" aria-live="polite"></section><div class="controls"><h2>${audience === 'personal' ? t('个人方案','Personal plans') : t('企业方案','Business plans')}</h2><div class="segmented" role="group" aria-label="${t('付费周期','Billing cycle')}"><button data-cycle="monthly" aria-pressed="${cycle === 'monthly'}">${t('连续包月','Monthly renewal')}</button><button data-cycle="annual" aria-pressed="${cycle === 'annual'}">${t('连续包年','Annual renewal')}</button></div></div>${audience === 'business' ? `<div class="seat-selector"><label for="pricing-seats">${t('真人席位数量','Human seats')}</label><input id="pricing-seats" type="number" min="2" max="10000" step="1" value="${seats}" inputmode="numeric" aria-describedby="pricing-seat-help pricing-seat-error"><p id="pricing-seat-help">${t('2 个席位起购。企业价格与完整权益尚未公布，当前不接受付款。','Minimum 2 seats. Business prices and full benefits are pending; no payment is accepted.')}</p><p id="pricing-seat-error" class="field-error" role="status"></p></div>` : ''}<div id="plans" class="plan-grid ${audience === 'business' ? 'business' : ''}" aria-live="polite"></div><p class="notice">${icon('info-circle')}${boundary}</p><section class="credits-entry"><div>${icon('wallet2')}<div><h2>${t('按需加购 Sage Credits','Buy additional Sage Credits')}</h2><p>${t('每笔购买独立有效 12 个月，不改变订阅周期','Each purchase lasts 12 months and does not change your subscription term.')}</p></div></div><a class="button" href="${page('billing')}#credits">${t('了解加购','Explore add-ons')}</a></section>${faqs()}`);
+    shell(`<header class="page-heading pricing-heading"><span class="eyebrow">SAGE MEMBERSHIP</span><h1>${t('选择适合你的 Sage 计划','Choose your Sage plan')}</h1><p>${t('从个人经营到企业协作，选择适合你的方案与使用节奏','Find the right plan for individual work or business collaboration.')}</p><div class="segmented audience-control" role="group" aria-label="${t('方案类型','Plan type')}"><button data-audience="personal" aria-pressed="${audience === 'personal'}">${t('个人版','Personal')}</button><button data-audience="business" aria-pressed="${audience === 'business'}">${t('企业版','Business')}</button></div></header><section id="pricing-subscription-status" class="policy-block" aria-live="polite"></section><div class="controls"><h2>${audience === 'personal' ? t('个人方案','Personal plans') : t('企业方案','Business plans')}</h2><div class="segmented" role="group" aria-label="${t('付费周期','Billing cycle')}"><button data-cycle="monthly" aria-pressed="${cycle === 'monthly'}">${t('连续包月','Monthly renewal')}</button><button data-cycle="annual" aria-pressed="${cycle === 'annual'}">${t('连续包年','Annual renewal')}</button></div></div>${audience === 'business' ? `<div class="seat-selector"><label for="pricing-seats">${t('真人席位数量','Human seats')}</label><input id="pricing-seats" type="number" min="1" max="10000" step="1" value="${seats}" inputmode="numeric" aria-describedby="pricing-seat-help pricing-seat-error"><p id="pricing-seat-help">${t('Teams 1 席起，Enterprise 10 席起；按购买的名额上限安排员工。企业价格与完整权益尚未公布，当前不接受付款。','Teams starts at 1 seat; Enterprise starts at 10. Assign members within the purchased capacity. Business prices and full benefits are pending; no payment is accepted.')}</p><p id="pricing-seat-error" class="field-error" role="status"></p></div>` : ''}<div id="plans" class="plan-grid ${audience === 'business' ? 'business' : ''}" aria-live="polite"></div><p class="notice">${icon('info-circle')}${boundary}</p><section class="credits-entry"><div>${icon('wallet2')}<div><h2>${t('按需加购 Sage Credits','Buy additional Sage Credits')}</h2><p>${t('每笔购买独立有效 12 个月，不改变订阅周期','Each purchase lasts 12 months and does not change your subscription term.')}</p></div></div><a class="button" href="${page('billing')}#credits">${t('了解加购','Explore add-ons')}</a></section>${faqs()}`);
     for (const button of document.querySelectorAll('[data-audience]')) button.onclick = () => { audience = button.dataset.audience; history.replaceState(null, '', selectionURL('pricing')); pricing(); document.querySelector(`[data-audience="${audience}"]`).focus(); };
     for (const button of document.querySelectorAll('[data-cycle]')) button.onclick = () => { cycle = button.dataset.cycle; history.replaceState(null, '', selectionURL('pricing')); pricing(); document.querySelector(`[data-cycle="${cycle}"]`).focus(); };
     const descriptions = {
@@ -219,16 +228,16 @@
       pro:t('个人日常经营分析的起点。','A starting point for everyday business analysis.'),
       pro_plus:t('适合更频繁的个人业务分析。','For more frequent individual business work.'),
       ultra:t('面向高频、深入的个人业务分析。','For intensive individual business work.'),
-      teams:t('席位内含额度独立，加购额度共享。','Included credits per seat; purchased credits shared.'),
-      enterprise:t('席位与 Sage Credits 分开采购。','Purchase seats and Sage Credits separately.')
+      teams:t('每个付费名额独享月内含点数，企业加购点数共享。','Individual monthly Credits per paid seat; business add-ons are shared.'),
+      enterprise:t('套餐内含点数与企业加购点数共享使用。','Included monthly Credits and business add-ons are shared.')
     };
     document.querySelector('#plans').innerHTML = catalog.plans.filter(p => p.audience === audience).map(p => {
       const trial = p.code === 'trial', price = trial ? 0 : p[`${cycle}_amount_minor`];
       const priced = Number.isSafeInteger(price) && price >= 0;
       const features = trial ? [t('VOC 机会洞察 / Shopify 店铺诊断二选一','Choose VOC insights or a Shopify diagnosis'),t('仅一次成功体验；当前可查看示例','One successful trial; examples are currently available'),t('无需银行卡，不自动转付费','No card required. No automatic paid conversion')]
-        : [t(p.audience === 'personal' ? '1 个真人使用席位' : '2 个真人席位起购',p.audience === 'personal' ? '1 human seat' : 'Minimum 2 human seats'),p.code === 'enterprise' ? t('席位不含 Sage Credits，需单独购买','Sage Credits purchased separately') : p.code === 'teams' ? t('各席位内含额度独立使用，数量待公布','Included credits are private to each seat; amounts pending') : t('包含 Sage Credits 数量待公布','Included Sage Credits to be announced'),t('任务执行前确认预算','Approve each task budget'),t('完整权益开售前公布','Full benefits published before sales open')];
-      return `<article class="plan"><div class="plan-top"><h2>${escape(trial ? t('体验版','Trial') : p.name)}</h2>${p.code === 'pro' ? `<span class="tag">${t('日常经营','Everyday work')}</span>` : ''}</div><p class="plan-description">${descriptions[p.code] || ''}</p><div class="price ${priced ? '' : 'pending'}">${priced ? amountMarkup(price) : t('价格待公布','Price pending')}${trial || !priced ? '' : `<small>/${p.audience === 'business' ? t('席位/','seat/') : ''}${cycle === 'annual' ? t('年','year') : t('月','month')}</small>`}</div><p class="price-note">${trial ? t('不绑定支付方式','No payment method required') : priced ? t('人民币参考价 · 完整权益尚未开售','CNY reference price · Full plan not yet on sale') : t('未定价，不接受付款','Not priced. No payment accepted.')}</p>${trial ? `<a class="button" href="${page('trial')}">${t('查看体验示例','Explore trial examples')}</a>` : `<a class="button ${priced ? 'primary' : ''}" data-plan-link="${escape(p.code)}" href="${escape(selectionURL('checkout', {plan:p.code}))}">${priced ? t('订阅','Subscribe') : t('查看方案','Review plan')}</a>`}<ul>${features.map(f => `<li>${icon('check2')}<span>${f}</span></li>`).join('')}</ul></article>`;
-    }).join('') + (audience === 'business' ? `<article class="plan"><div class="plan-top"><h2>${t('合同采购','Contract')}</h2></div><p class="plan-description">${t('按企业需求约定席位、资源与服务。','Agree seats, resources and services for your business.')}</p><div class="price pending">${t('联系销售','Custom quote')}</div><p class="price-note">${t('对公转账 · 财务核验到账后开通','Corporate transfer · Access after verified receipt')}</p><a class="button primary" href="${page('billing')}#procurement">${t('查看采购说明','View procurement details')}</a><ul><li>${t('2 个真人席位起购','Minimum 2 human seats')}</li><li>${t('合同明确含税金额与服务期','Tax-inclusive amount and service term in contract')}</li><li>${t('对公采购不自动续费','Contract purchases do not renew automatically')}</li></ul></article>` : '');
+        : [t(`${p.minimum_seats} 个真人席位起购`,`Minimum ${p.minimum_seats} human seats`),p.code === 'enterprise' ? t('月内含点数按购买名额共享，数量待公布','Monthly Credits pooled by purchased seats; amounts pending') : t('每个付费名额独享月内含点数，数量待公布','Individual monthly Credits per paid seat; amounts pending'),t('任务执行前确认预算','Approve each task budget'),t('完整权益开售前公布','Full benefits published before sales open')];
+      return `<article class="plan"><div class="plan-top"><h2>${escape(trial ? t('体验版','Trial') : p.name)}</h2>${p.code === 'pro' ? `<span class="tag">${t('日常经营','Everyday work')}</span>` : ''}</div><p class="plan-description">${descriptions[p.code] || ''}</p><div class="price ${priced ? '' : 'pending'}">${priced ? amountMarkup(price) : t('价格待定','Price pending')}${trial || !priced ? '' : `<small>/${p.audience === 'business' ? t('席位/','seat/') : ''}${cycle === 'annual' ? t('年','year') : t('月','month')}</small>`}</div><p class="price-note">${trial ? t('不绑定支付方式','No payment method required') : priced ? t('参考价 · 正式价格待定','Reference only · Final price pending') : t('未定价，不接受付款','Not priced. No payment accepted.')}</p>${trial ? `<a class="button" href="${page('trial')}">${t('查看体验示例','Explore trial examples')}</a>` : `<a class="button ${priced ? 'primary' : ''}" data-plan-link="${escape(p.code)}" data-minimum-seats="${p.minimum_seats}" href="${escape(selectionURL('checkout', {plan:p.code}))}">${t('查看方案','Review plan')}</a>`}${!trial && p.audience === 'personal' ? personalBenefits(p.code) : `<div class="plan-benefits"><ul>${features.map(f => `<li>${icon('check2')}<span>${f}</span></li>`).join('')}</ul></div>`}</article>`;
+    }).join('') + (audience === 'business' ? `<article class="plan"><div class="plan-top"><h2>${t('合同采购','Contract')}</h2></div><p class="plan-description">${t('按企业需求约定席位、资源与服务。','Agree seats, resources and services for your business.')}</p><div class="price pending">${t('联系销售','Custom quote')}</div><p class="price-note">${t('对公转账 · 财务核验到账后开通','Corporate transfer · Access after verified receipt')}</p><a class="button primary" href="${page('billing')}#procurement">${t('查看采购说明','View procurement details')}</a><ul><li>${t('1 人也可提交采购咨询','Purchasing inquiries welcome from 1 person')}</li><li>${t('合同明确含税金额与服务期','Tax-inclusive amount and service term in contract')}</li><li>${t('对公采购不自动续费','Contract purchases do not renew automatically')}</li></ul></article>` : '');
     if (purchaseCatalog && purchaseCatalog.account_id === session?.active_account_id) {
       for (const link of document.querySelectorAll('[data-plan-link]')) {
         const product = purchaseCatalog.items.find(item=>item.code === link.dataset.planLink && item.billing_cycle === cycle && item.audience === audience && item.quote_available === true);
@@ -240,13 +249,15 @@
         const card = link.closest('.plan');
         card.querySelector('.price').innerHTML = `${amountMarkup(product.unit_amount_minor)}<small>/${audience === 'business' ? t('席位/','seat/') : ''}${cycle === 'annual' ? t('年','year') : t('月','month')}</small>`;
         card.querySelector('.price-note').textContent = t('已批准商品价 · 付款前以服务端报价为准','Approved product price · Confirm the server quote before payment');
-        card.querySelector('ul').innerHTML = benefits.map(text=>`<li>${icon('check2')}<span>${escape(text)}</span></li>`).join('') + `<li>${icon('wallet2')}<span>${escape(product.credits_quantity)} Sage Credits</span></li>`;
+        card.querySelector('.price').classList.remove('pending');
+        card.querySelector('.plan-benefits').classList.remove('personal-benefits');
+        card.querySelector('.plan-benefits').innerHTML = `<ul>${benefits.map(text=>`<li>${icon('check2')}<span>${escape(text)}</span></li>`).join('')}<li>${icon('wallet2')}<span>${escape(product.credits_quantity)} Sage Credits</span></li></ul>`;
       }
       if (document.querySelector('[data-purchase-product]')) {
         const notice = document.querySelector('.notice');
         notice.replaceChildren(document.createTextNode(t('已批准方案可获取报价并创建订单。创建订单不会扣款，支付与续费授权尚未接通。其他方案仍为参考信息。','Approved plans support quotes and order creation, without charging you. Payment and renewal authorization are not connected. Other plans remain reference information.')));
         const help = document.querySelector('#pricing-seat-help');
-        if (help) help.textContent=t('2 个真人席位起购。已批准商品以正式报价为准；创建订单不等于付款或开通。','Minimum 2 human seats. Approved products use the confirmed quote; creating an order does not mean payment or activation.');
+        if (help) help.textContent=t('Teams 1 席起，Enterprise 10 席起。已批准商品以正式报价为准；创建订单不等于付款或开通。','Teams starts at 1 seat; Enterprise starts at 10. Approved products use the confirmed quote; creating an order does not mean payment or activation.');
       }
     }
     const subscriptionStatus = document.querySelector('#pricing-subscription-status');
@@ -280,20 +291,26 @@
       }
     } else subscriptionStatus.remove();
     const input = document.querySelector('#pricing-seats');
-    if (input) input.addEventListener('input', () => {
+    const updateSeatSelection = (updateLocation = false) => {
+      if (!input) return;
       const valid = input.validity.valid && /^[0-9]+$/.test(input.value);
       input.setAttribute('aria-invalid', String(!valid));
-      document.querySelector('#pricing-seat-error').textContent = valid ? '' : t('请输入 2 至 10,000 的整数席位数。','Enter a whole number of seats from 2 to 10,000.');
+      document.querySelector('#pricing-seat-error').textContent = valid ? '' : t('请输入 1 至 10,000 的整数席位数；Enterprise 至少 10 席。','Enter a whole number from 1 to 10,000; Enterprise requires at least 10 seats.');
+      if (valid) seats = Number(input.value);
       for (const link of document.querySelectorAll('[data-plan-link]')) {
-        link.setAttribute('aria-disabled', String(!valid));
-        if (!valid) link.removeAttribute('href');
+        if (link.dataset.subscriptionManaged) continue;
+        const eligible = valid && seats >= Number(link.dataset.minimumSeats);
+        link.setAttribute('aria-disabled', String(!eligible));
+        if (eligible) link.href = link.dataset.purchaseProduct ? `${page('checkout')}?${new URLSearchParams({product:link.dataset.purchaseProduct,seats:String(seats)})}` : selectionURL('checkout', {plan:link.dataset.planLink});
+        else link.removeAttribute('href');
       }
-      if (valid) {
-        seats = Number(input.value); history.replaceState(null, '', selectionURL('pricing'));
-        for (const link of document.querySelectorAll('[data-plan-link]')) if (!link.dataset.subscriptionManaged) link.href = link.dataset.purchaseProduct ? `${page('checkout')}?${new URLSearchParams({product:link.dataset.purchaseProduct,seats:String(seats)})}` : selectionURL('checkout', {plan:link.dataset.planLink});
+      if (valid && updateLocation) {
+        history.replaceState(null, '', selectionURL('pricing'));
         document.dispatchEvent(new Event('sage:location-updated'));
       }
-    });
+    };
+    updateSeatSelection();
+    if (input) input.addEventListener('input', () => updateSeatSelection(true));
   }
 
   async function checkout() {
@@ -310,19 +327,19 @@
     if (!plan || !['monthly','annual'].includes(period)) return fail(t('方案信息无效，请返回价格页重新选择。','Invalid plan details. Return to Pricing and choose a plan.'));
     audience = plan.audience; cycle = period;
     const raw = params.get('seats') ?? String(plan.minimum_seats), quantity = Number(raw);
-    if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(quantity) || quantity < plan.minimum_seats || quantity > 10000 || (audience === 'personal' && quantity !== 1)) return fail(t('席位数量无效。个人方案限 1 席，企业方案至少 2 席，请返回方案重新选择。','Invalid seat count. Personal plans have 1 seat and business plans require at least 2. Return to plans to choose again.'));
+    if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(quantity) || quantity < plan.minimum_seats || quantity > 10000 || (audience === 'personal' && quantity !== 1)) return fail(t(`席位数量无效。${plan.name} 至少 ${plan.minimum_seats} 席，个人方案限 1 席，请返回方案重新选择。`,`Invalid seat count. ${plan.name} requires at least ${plan.minimum_seats} seat(s); personal plans have exactly 1. Return to plans to choose again.`));
     seats = quantity;
     document.title = t('确认方案 · Sage','Review plan · Sage');
     const channelIcon = {alipay:'alipay',card:'credit-card',wechat:'wechat',google_pay:'google',apple_pay:'apple'};
     const channelRow = c => `<button class="channel ${escape(c.code)}" disabled aria-describedby="payment-unavailable">${c.code === 'google_pay' ? '<img class="ui-icon" src="icons/google-color.png" alt="" aria-hidden="true">' : icon(channelIcon[c.code] || 'credit-card')}<span>${escape(({alipay:t('支付宝','Alipay'),card:t('银行卡','Card'),wechat:t('微信支付','WeChat Pay')})[c.code] || c.name)}</span><small>${t('暂不可用','Unavailable')}</small></button>`;
-    shell(`<a class="back-link plan-return" href="${escape(selectionURL('pricing'))}">${icon('arrow-left')}${t('返回方案','Back to plans')}</a><header class="page-heading checkout-heading"><h1>${t('确认你的 Sage 订阅','Review your Sage subscription')}</h1><p>${t('核对方案、席位与计费周期。订阅暂未开放，不会扣款。','Review your plan, seats and billing cycle. Subscriptions are not yet available; no charge will be made.')}</p></header><div class="checkout-grid"><section class="order-summary" aria-labelledby="summary-title"><p class="summary-label" id="summary-title">${t('你选择的方案','Your selected plan')}</p><h2 class="selected-plan">Sage ${escape(plan.name)}</h2><p class="reference-label">${t('方案参考金额，不是待付款账单','Plan reference amount — not a payable bill')}</p><div class="total"><strong id="quote-amount">—</strong><span>${period === 'monthly' ? t('/ 月','/ month') : t('/ 年','/ year')}</span></div><p class="summary-frequency">${period === 'monthly' ? t('连续包月 · 人民币计价','Monthly renewal · CNY') : t('连续包年 · 人民币计价','Annual renewal · CNY')}</p><div class="currency-pill">${icon('wallet2')} CNY <span>${t('人民币','Chinese yuan')}</span></div><div class="order-lines"><div class="line-item"><span>${icon('calendar3')}${t('订阅周期','Billing cycle')}</span><strong>${period === 'monthly' ? t('每月','Monthly') : t('每年','Annually')}</strong></div><div class="line-item seat-line">${audience === 'business' ? `<label for="checkout-seats">${icon('person')}${t('真人席位','Human seats')}</label><input id="checkout-seats" type="number" min="2" max="10000" step="1" value="${seats}" inputmode="numeric" aria-describedby="checkout-seat-error">` : `<span>${icon('person')}${t('真人席位','Human seats')}</span><strong>1</strong>`}</div><p id="checkout-seat-error" class="field-error" role="status"></p><div class="line-item"><span>${icon('wallet2')}Sage Credits</span><strong>${plan.code === 'enterprise' ? t('单独购买','Sold separately') : t('额度待公布','Allowance pending')}</strong></div><div class="line-item"><span>${icon('receipt')}${t('费用与发票','Charges & invoices')}</span><strong>${t('含税计价，按实付申请发票','Tax-inclusive; invoice based on actual payment')}</strong></div><div class="line-item"><span>${t('下一次扣款','Next charge')}</span><strong>${t('未开通，无扣款计划','Not subscribed; no charge scheduled')}</strong></div></div><p id="quote-status" class="checkout-note" role="status" aria-live="polite"></p><button type="button" class="button quote-refresh" id="quote-refresh">${t('重新查询方案金额','Refresh plan amount')}</button><div class="summary-assurance">${icon('shield-lock')}<p>${t('深圳主体提供服务并收款。<br>开通时将明确展示签约主体、费用和续费授权。','Service and payment collection by the Shenzhen company.<br>The legal entity, charges and renewal authorization will be shown before purchase.')}</p></div></section><section class="checkout-payment" aria-labelledby="payment-title"><div class="billing-identity"><h2>${t('计费账户','Billing account')}</h2><div class="identity-row">${icon('person')}<div><strong>${t('账户服务暂未开放','Account services unavailable')}</strong><p>${t('暂无法登录或确认本次购买归属，不接受付款','Sign-in and billing-account verification are unavailable; no payment is accepted')}</p></div>${icon('lock')}</div></div><h2 id="payment-title">${t('支付方式','Payment methods')}</h2><p class="payment-hint" id="payment-unavailable">${t('支付服务尚未开放。以下方式正在评估，当前均不能付款或签约自动续费。','Payment services are not yet available. The methods below are being evaluated and cannot accept payments or renewal authorizations.')}</p><div class="express-pay">${catalog.channels.filter(c => ['apple_pay','google_pay'].includes(c.code)).map(channelRow).join('')}</div><div class="payment-divider"><span>${t('银行卡与本地支付','Cards & local payments')}</span></div><div class="channel-list">${catalog.channels.filter(c => !['apple_pay','google_pay'].includes(c.code)).sort((a,b) => a.code === 'card' ? -1 : b.code === 'card' ? 1 : 0).map(channelRow).join('')}</div><label class="consent"><input type="checkbox" disabled><span>${t('购买前需主动同意自动续费条款，并确认后续扣款时间和金额。当前不能授权，也不会保存支付信息。','Before purchase, explicitly accept renewal terms and review future charge dates and amounts. Authorization and payment-detail storage are currently unavailable.')}</span></label><button class="button wide purchase-unavailable" disabled aria-describedby="payment-unavailable">${icon('lock')}${t('暂未开放订阅','Subscriptions not yet available')}</button><div class="checkout-support"><a class="text-link" href="${page('billing')}#procurement">${t('企业采购说明','Enterprise purchasing')}</a><a class="text-link" href="${page('billing')}#payment-methods">${t('支付方式管理说明','Managing payment methods')}</a></div></section></div><p class="notice">${icon('info-circle')}${boundary}</p>`);
+    shell(`<a class="back-link plan-return" href="${escape(selectionURL('pricing'))}">${icon('arrow-left')}${t('返回方案','Back to plans')}</a><header class="page-heading checkout-heading"><h1>${t('确认你的 Sage 订阅','Review your Sage subscription')}</h1><p>${t('核对方案、席位与计费周期。订阅暂未开放，不会扣款。','Review your plan, seats and billing cycle. Subscriptions are not yet available; no charge will be made.')}</p></header><div class="checkout-grid"><section class="order-summary" aria-labelledby="summary-title"><p class="summary-label" id="summary-title">${t('你选择的方案','Your selected plan')}</p><h2 class="selected-plan">Sage ${escape(plan.name)}</h2><p class="reference-label">${t('方案参考金额 · 正式价格待定','Plan reference amount · Final price pending')}</p><div class="total"><strong id="quote-amount">—</strong><span>${period === 'monthly' ? t('/ 月','/ month') : t('/ 年','/ year')}</span></div><p class="summary-frequency">${period === 'monthly' ? t('连续包月 · 人民币计价','Monthly renewal · CNY') : t('连续包年 · 人民币计价','Annual renewal · CNY')}</p><div class="currency-pill">${icon('wallet2')} CNY <span>${t('人民币','Chinese yuan')}</span></div><div class="order-lines"><div class="line-item"><span>${icon('calendar3')}${t('订阅周期','Billing cycle')}</span><strong>${period === 'monthly' ? t('每月','Monthly') : t('每年','Annually')}</strong></div><div class="line-item seat-line">${audience === 'business' ? `<label for="checkout-seats">${icon('person')}${t('真人席位','Human seats')}</label><input id="checkout-seats" type="number" min="${plan.minimum_seats}" max="10000" step="1" value="${seats}" inputmode="numeric" aria-describedby="checkout-seat-error">` : `<span>${icon('person')}${t('真人席位','Human seats')}</span><strong>1</strong>`}</div><p id="checkout-seat-error" class="field-error" role="status"></p>${audience === 'business' ? `<div class="line-item"><span>${icon('wallet2')}Sage Credits</span><strong>${plan.code === 'enterprise' ? t('每月共享额度待公布','Shared monthly allowance pending') : t('额度待公布','Allowance pending')}</strong></div>` : ''}<div class="line-item"><span>${icon('receipt')}${t('费用与发票','Charges & invoices')}</span><strong>${t('含税计价，按实付申请发票','Tax-inclusive; invoice based on actual payment')}</strong></div><div class="line-item"><span>${t('下一次扣款','Next charge')}</span><strong>${t('未开通，无扣款计划','Not subscribed; no charge scheduled')}</strong></div></div>${audience === 'personal' ? personalBenefits(code) : ''}<p id="quote-status" class="checkout-note" role="status" aria-live="polite"></p><button type="button" class="button quote-refresh" id="quote-refresh">${t('重新查询方案金额','Refresh plan amount')}</button><div class="summary-assurance">${icon('shield-lock')}<p>${t('深圳主体提供服务并收款。<br>开通时将明确展示签约主体、费用和续费授权。','Service and payment collection by the Shenzhen company.<br>The legal entity, charges and renewal authorization will be shown before purchase.')}</p></div></section><section class="checkout-payment" aria-labelledby="payment-title"><div class="billing-identity"><h2>${t('计费账户','Billing account')}</h2><div class="identity-row">${icon('person')}<div><strong>${t('账户服务暂未开放','Account services unavailable')}</strong><p>${t('暂无法登录或确认本次购买归属，不接受付款','Sign-in and billing-account verification are unavailable; no payment is accepted')}</p></div>${icon('lock')}</div></div><h2 id="payment-title">${t('支付方式','Payment methods')}</h2><p class="payment-hint" id="payment-unavailable">${t('支付服务尚未开放。以下方式正在评估，当前均不能付款或签约自动续费。','Payment services are not yet available. The methods below are being evaluated and cannot accept payments or renewal authorizations.')}</p><div class="express-pay">${catalog.channels.filter(c => ['apple_pay','google_pay'].includes(c.code)).map(channelRow).join('')}</div><div class="payment-divider"><span>${t('银行卡与本地支付','Cards & local payments')}</span></div><div class="channel-list">${catalog.channels.filter(c => !['apple_pay','google_pay'].includes(c.code)).sort((a,b) => a.code === 'card' ? -1 : b.code === 'card' ? 1 : 0).map(channelRow).join('')}</div><label class="consent"><input type="checkbox" disabled><span>${t('购买前需主动同意自动续费条款，并确认后续扣款时间和金额。当前不能授权，也不会保存支付信息。','Before purchase, explicitly accept renewal terms and review future charge dates and amounts. Authorization and payment-detail storage are currently unavailable.')}</span></label><button class="button wide purchase-unavailable" disabled aria-describedby="payment-unavailable">${icon('lock')}${t('暂未开放订阅','Subscriptions not yet available')}</button><div class="checkout-support"><a class="text-link" href="${page('billing')}#procurement">${t('企业采购说明','Enterprise purchasing')}</a><a class="text-link" href="${page('billing')}#payment-methods">${t('支付方式管理说明','Managing payment methods')}</a></div></section></div><p class="notice">${icon('info-circle')}${boundary}</p>`);
     const status = document.querySelector('#quote-status'), amount = document.querySelector('#quote-amount'), refresh = document.querySelector('#quote-refresh'), input = document.querySelector('#checkout-seats');
     let requestId = 0;
     async function refreshQuote(useNetwork = true) {
       const id = ++requestId;
       const valid = !input || (input.validity.valid && /^[0-9]+$/.test(input.value));
       if (input) input.setAttribute('aria-invalid', String(!valid));
-      document.querySelector('#checkout-seat-error').textContent = valid ? '' : t('请输入 2 至 10,000 的整数席位数。','Enter a whole number of seats from 2 to 10,000.');
+      document.querySelector('#checkout-seat-error').textContent = valid ? '' : t(`请输入 ${plan.minimum_seats} 至 10,000 的整数席位数。`,`Enter a whole number of seats from ${plan.minimum_seats} to 10,000.`);
       if (!valid) { amount.textContent = '—'; status.textContent = t('请先修正席位数量，再查询参考金额。','Correct the seat count before refreshing the reference amount.'); refresh.disabled = true; return; }
       if (input) seats = Number(input.value);
       history.replaceState(null, '', selectionURL('checkout', {plan:code}));
@@ -372,10 +389,16 @@
   async function purchaseCheckout(params) {
     const validId = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
     if ((params.has('product') && !validId(params.get('product'))) || (params.has('quote') && !validId(params.get('quote')))) return fail(t('购买信息无效，请返回方案页重新选择。','Invalid purchase details. Return to the plans page.'));
-    let requestVersion = 0, quoteData = null, product = null, options = [], busy = false;
+    let requestVersion = 0, quoteData = null, product = null, options = [], busy = false, paymentRequested = null, quoteTimer = null, paymentVersion = 0, paymentTimer = null;
+    let walletVersion = 0, walletPending = null, walletCleanup = null;
+    function clearWalletTests() {walletVersion++;walletCleanup?.();document.querySelector('#wallet-tests')?.remove();}
+    function clearPayment() { paymentVersion++;clearTimeout(paymentTimer);paymentTimer=null;document.querySelector('#purchase-payment')?.remove(); }
     const orderLink = id => `${page('billing')}?${new URLSearchParams({order:id})}#orders`;
     const message = error => requestError(error, ({TERMS_UNAVAILABLE:t('购买条款尚未批准，暂不能提交订单。','Purchase terms are not approved; orders are unavailable.'),TERMS_MISMATCH:t('条款版本已变更，请重新核对，不会自动提交。','The terms have changed. Review them again; nothing is submitted automatically.'),CONFIG_INCOMPLETE:t('商品或支付准入未完成，暂不能购买。','Product or payment approval is incomplete. Purchasing is unavailable.'),NOT_FOUND:t('未找到当前账户的购买记录，请核对计费账户。','This purchase record was not found in your current billing account.'),QUOTE_EXPIRED:t('报价已过期，不能提交新订单。原订单结果仍可查询。','This quote has expired. No new order can be submitted; the original order can still be checked.')})[error.message] || t('暂时无法读取购买记录。请刷新查询，不要重复付款。','The purchase record could not be loaded. Refresh its status; do not pay again.'));
     function draw() {
+      clearInterval(quoteTimer);quoteTimer=null;
+      clearWalletTests();
+      clearPayment();
       shell(`<a class="back-link" href="${page('pricing')}">${icon('arrow-left')}${t('返回方案','Back to plans')}</a><header class="page-heading checkout-heading"><h1>${t('确认你的 Sage 方案','Review your Sage plan')}</h1><p>${t('先确认账户、服务内容与费用，再创建订单','Review your account, benefits and charges before creating an order.')}</p></header><div class="checkout-grid"><section class="order-summary" id="purchase-summary"><p>${t('正在读取服务端方案…','Loading the server-approved plan…')}</p></section><section class="checkout-payment"><div class="billing-identity"><h2>${t('计费账户','Billing account')}</h2><div class="identity-row"></div></div><div id="purchase-controls"></div><p id="purchase-status" class="checkout-note" role="status" aria-live="polite"></p></section></div>`);
     }
     function status(text, failed = false) { const node = document.querySelector('#purchase-status'); if (node) {node.textContent=text;node.classList.toggle('error',failed);} }
@@ -395,27 +418,219 @@
       return data && validId(data.id) && data.account_id === accountId && data.currency === 'CNY' && Number.isSafeInteger(data.amount_minor) && data.amount_minor > 0 && data.snapshot && data.snapshot.amount_minor === data.amount_minor && Number.isFinite(Date.parse(data.expires_at)) && typeof data.can_order === 'boolean' && (data.order_id === null || validId(data.order_id));
     }
     function showQuote(data) {
+      clearInterval(quoteTimer);quoteTimer=null;
       summary(data.snapshot,data.amount_minor);
       const controls = document.querySelector('#purchase-controls');
       if (data.order_id) {
         controls.innerHTML = `<h2>${t('订单已创建','Order created')}</h2><p>${t('订单不等于支付成功。请在订单详情确认支付与权益状态，不要再次建单。','An order is not a successful payment. Check payment and benefit status in the order details; do not create another order.')}</p><a class="button primary" id="purchase-order-link" href="${escape(orderLink(data.order_id))}">${t('查看原订单','View original order')}</a>`;
         status(t('已恢复原订单；未再次提交或扣款。','The original order was recovered. No new order or charge was made.'));
+        renderWalletTests(controls,data.order_id);
+        renderPaymentStart(controls,data.order_id);
         return;
       }
       const approvedTerms = data.terms, content = approvedTerms?.[en ? 'en' : 'zh'];
+      async function renewQuote(){
+        if(busy)return;busy=true;const accountId=session?.active_account_id,version=requestVersion;
+        try{const original=await api(`/api/billing/purchase-quotes/${encodeURIComponent(data.id)}`);if(version!==requestVersion||accountId!==session?.active_account_id)return;if(!validQuote(original,accountId))throw Error('INVALID_QUOTE');if(original.order_id){quoteData=original;showQuote(original);return;}const snapshot=original.snapshot;if(!snapshot.product_id||!snapshot.channel||!snapshot.buyer_region)throw Error('CONFIG_INCOMPLETE');const renewed=await api('/api/billing/purchase-quotes',{product_id:snapshot.product_id,seat_quantity:snapshot.seat_quantity,channel:snapshot.channel,buyer_region:snapshot.buyer_region});if(version!==requestVersion||accountId!==session?.active_account_id)return;if(!validQuote(renewed,accountId))throw Error('INVALID_QUOTE');history.replaceState(null,'',`${location.pathname}?${new URLSearchParams({quote:renewed.id})}`);quoteData=renewed;showQuote(renewed);}catch(error){status(message(error),true);}finally{busy=false;}
+      }
       if (!data.can_order || Date.parse(data.expires_at) <= Date.now()) {
         controls.innerHTML = `<button class="button" id="purchase-recover">${t('刷新原报价与订单状态','Refresh original quote and order')}</button>`;
         controls.querySelector('button').onclick = load;
+        if(Date.parse(data.expires_at)<=Date.now()){const renew=document.createElement('button');renew.type='button';renew.className='button primary';renew.id='purchase-renew-quote';renew.textContent=t('更新报价并重新确认','Update quote and review again');renew.onclick=renewQuote;controls.append(renew);}
         status(message(new Error(Date.parse(data.expires_at) <= Date.now() ? 'QUOTE_EXPIRED' : data.unavailable_reason)),true);
         return;
       }
       if (!approvedTerms || approvedTerms.version !== data.snapshot.terms_version || approvedTerms.digest !== data.snapshot.terms_document_digest || !content || typeof content.title !== 'string' || !Array.isArray(content.paragraphs) || !content.paragraphs.length || content.paragraphs.some(text=>typeof text !== 'string')) throw new Error('TERMS_UNAVAILABLE');
-      controls.innerHTML = `<h2>${escape(content.title)}</h2><div class="policy-block" tabindex="0">${content.paragraphs.map(text=>`<p>${escape(text)}</p>`).join('')}</div><p>${t('报价有效至','Quote valid until')} ${dateLabel(data.expires_at)}</p><label class="consent"><input id="purchase-agree" type="checkbox"><span>${t('我已阅读并同意以上服务条款，确认计费账户和本次方案费用。','I have read and accept these service terms and confirm the billing account and plan charges.')}</span></label><button class="button primary wide" id="purchase-submit" disabled>${t('确认并创建订单','Confirm and create order')}</button><button class="button" id="purchase-recover">${t('刷新原报价与订单状态','Refresh original quote and order')}</button>`;
+      controls.innerHTML = `<h2>${escape(content.title)}</h2><div class="policy-block" tabindex="0">${content.paragraphs.map(text=>`<p>${escape(text)}</p>`).join('')}</div><p>${t('报价有效至','Quote valid until')} ${dateLabel(data.expires_at)} <span id="purchase-countdown" aria-live="off"></span></p><label class="consent"><input id="purchase-agree" type="checkbox"><span>${t('我已阅读并同意以上服务条款，确认计费账户和本次方案费用。','I have read and accept these service terms and confirm the billing account and plan charges.')}</span></label><button class="button primary wide" id="purchase-submit" disabled>${t('确认并创建订单','Confirm and create order')}</button><button class="button" id="purchase-recover">${t('刷新原报价与订单状态','Refresh original quote and order')}</button>`;
       const submit = document.querySelector('#purchase-submit'), agree = document.querySelector('#purchase-agree');
-      agree.onchange=()=>{submit.disabled=!agree.checked||busy;};
+      function countdown(){if(!controls.isConnected){clearInterval(quoteTimer);return;}const seconds=Math.max(0,Math.ceil((Date.parse(data.expires_at)-Date.now())/1000));const node=controls.querySelector('#purchase-countdown');if(node)node.textContent=t(`剩余 ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`,`Remaining ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`);submit.disabled=busy||!agree.checked||seconds===0;if(seconds===0){agree.checked=false;agree.disabled=true;clearInterval(quoteTimer);showQuote({...data,can_order:false});}}
+      quoteTimer=setInterval(countdown,1000);countdown();
+      agree.onchange=()=>{submit.disabled=!agree.checked||busy||Date.parse(data.expires_at)<=Date.now();};
       controls.querySelector('#purchase-recover').onclick=load;
       submit.onclick=submitOrder;
       status(t('请逐项核对。不会默认同意条款、扣款或开通订阅。','Review each item. Terms, payment and subscription activation are not accepted automatically.'));
+    }
+    async function renderPaymentStart(controls, orderId) {
+      clearPayment();
+      const version=requestVersion, paymentRead=paymentVersion, accountId=session?.active_account_id, accountRead=accountVersion;
+      const current=()=>version===requestVersion && paymentRead===paymentVersion && document.visibilityState!=='hidden' && accountRead===accountVersion && accountId===session?.active_account_id && !sessionBusy && controls.isConnected;
+      let detail;
+      try { detail=await api(`/api/billing/orders/${encodeURIComponent(orderId)}`); }
+      catch(error) {
+        if(error.status!==503 && current())status(requestError(error,t('订单支付状态读取失败，请查看原订单；不会自动再次发起付款。','Payment status could not be read. Check the original order; no payment will be started automatically.')),true);
+        return;
+      }
+      if(!current())return;
+      const order=detail.order, capability=detail.payment_start;
+      if(order?.id!==orderId || order.account_id!==accountId || order.currency!=='CNY' || !Number.isSafeInteger(order.amount_minor) || order.amount_minor<=0 || order.amount_minor!==quoteData?.amount_minor)return;
+      const wechat=order.snapshot?.channel==='wechat' || detail.payment_attempt?.channel==='wechat' || capability?.channel==='wechat';
+      const allowedChannel=wechat ? capability?.environment==='LOCAL_TEST' && capability.channel==='wechat' && order.snapshot?.channel==='wechat' : capability?.environment==='SANDBOX' && capability.channel==='alipay';
+      const available=allowedChannel && capability.available===true && capability.order_id===orderId && capability.account_id===accountId && order.status==='pending_payment' && !order.paid_at && order.snapshot?.kind==='credits' && order.snapshot.billing_cycle==='' && (!detail.payment_attempt || detail.payment_attempt.status==='created') && paymentRequested!==orderId;
+      if(!available && !detail.payment_attempt && paymentRequested!==orderId)return;
+      const panel=document.createElement('section');panel.id='purchase-payment';panel.className='policy-block';
+      panel.innerHTML=`<h3>${t('原订单支付状态','Original order payment status')}</h3><p id="purchase-payment-status" role="status" aria-live="polite"></p>${wechat?`<p>${t('隔离本地测试，不是已开通正式微信收款；付款与交付以原订单服务端记录为准。','Isolated local test; not enabled for live WeChat collection. Payment and delivery follow the original server order.')}</p>`:''}${available?`${!wechat?`<p>${t('仅用于获准的一次性 Credits 沙箱测试，不是正式收款或订阅续费。付款与交付状态以原订单服务端记录为准。','Approved one-time Credits sandbox test only; not live collection or subscription renewal. Payment and delivery status come from the original server order.')}</p>`:''}<button type="button" class="button" id="purchase-payment-start">${wechat?t('生成微信本地测试二维码','Generate WeChat local test QR'):t('支付宝沙箱测试付款','Alipay sandbox test payment')}</button>`:''}<button type="button" class="button" id="purchase-payment-refresh">${t('查询原交易状态','Check original payment status')}</button>`;
+      controls.append(panel);
+      let operation=0,querying=false;
+      const active=()=>current() && panel.isConnected;
+      const note=text=>{if(active())panel.querySelector('#purchase-payment-status').textContent=text;};
+      const unconfirmed=t('付款结果未确认，请查询原交易；本页不会再次发起付款。','Payment is unconfirmed. Check the original payment; this page will not start another payment.');
+      function showQR(result) {
+        panel.querySelector('#purchase-payment-qr')?.remove();
+        clearTimeout(paymentTimer);paymentTimer=null;
+        const qr=result.payment_qr, attempt=result.payment_attempt;
+        if(!wechat || !active() || order.status!=='pending_payment' || order.paid_at || detail.delivery?.status!=='not_started' || detail.needs_review===true || !Array.isArray(detail.payments) || detail.payments.length || !attempt || attempt.status!=='pending' || (attempt.channel!==undefined && attempt.channel!=='wechat') || attempt.needs_reconciliation!==false || !validId(attempt.id) || !qr || qr.channel!=='wechat' || qr.account_id!==accountId || qr.order_id!==orderId || qr.attempt_id!==attempt.id || qr.expires_at!==attempt.expires_at || !Number.isFinite(Date.parse(attempt.expires_at)))return;
+        const expiry=Date.parse(attempt.expires_at);
+        const expired=()=>note(t('二维码已过期，请查询原交易；过期不代表付款失败，不要重新付款。','The QR has expired. Check the original payment; expiry does not mean payment failed. Do not pay again.'));
+        if(expiry<=Date.now()){expired();return;}
+        // SVG stays in an image context. Accept only the QR library's inert geometry;
+        // never insert provider markup into HTML or follow a payment code URL.
+        const image=qr.image_svg_base64;
+        if(typeof image!=='string' || !image.length || image.length>524288 || image.length%4!==0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(image))return;
+        let svg;
+        try {
+          const source=atob(image);
+          if(btoa(source)!==image || /<!DOCTYPE|<!ENTITY/i.test(source))return;
+          svg=new DOMParser().parseFromString(source,'image/svg+xml');
+          const attributes=new Set(['xmlns','width','height','viewBox','version','d','id','fill','fill-opacity','fill-rule','stroke','x','y']);
+          if(svg.documentElement.localName!=='svg' || svg.documentElement.namespaceURI!=='http://www.w3.org/2000/svg' || svg.querySelector('parsererror') || [...svg.querySelectorAll('*')].some(node=>!['svg','path','rect'].includes(node.localName) || node.namespaceURI!=='http://www.w3.org/2000/svg' || [...node.attributes].some(attr=>!attributes.has(attr.name) || (attr.name==='xmlns' ? attr.value!=='http://www.w3.org/2000/svg' : attr.namespaceURI || (['fill','stroke'].includes(attr.name) && !/^(?:#[0-9a-f]{3,8}|black|white|none)$/i.test(attr.value)) || /[<>&"'()\\]|(?:https?|javascript|weixin):/i.test(attr.value)))) || svg.documentElement.textContent.trim())return;
+        }catch(_){return;}
+        const img=document.createElement('img');img.id='purchase-payment-qr';img.alt=t('微信原订单隔离本地测试二维码','WeChat original order isolated local test QR');img.setAttribute('aria-describedby','purchase-payment-status');img.width=240;img.height=240;img.style.cssText='display:block;width:240px;max-width:100%;height:auto;background:#fff';img.src=`data:image/svg+xml;base64,${image}`;
+        panel.querySelector('#purchase-payment-refresh').before(img);
+        note(t('请仅核对本地测试二维码；有效至 ','Review the local test QR only; valid until ')+dateLabel(attempt.expires_at)+t('。扫码不代表已付款，请查询原交易确认。','. Scanning does not confirm payment. Check the original payment.'));
+        const expire=()=>{if(!active()){clearTimeout(paymentTimer);return;}if(expiry>Date.now()){paymentTimer=setTimeout(expire,Math.min(expiry-Date.now(),2147483647));return;}img.remove();expired();};
+        paymentTimer=setTimeout(expire,Math.min(expiry-Date.now(),2147483647));
+      }
+      note(available?t('沙箱入口已由服务端允许；尚未发起付款。','The server allows this sandbox entry; payment has not been started.'):detail.payment_attempt?t('服务端已记录原交易，请查询原交易；不重新发起付款。','The server recorded the original payment. Check the original payment; do not start another payment.'):unconfirmed);
+      if(wechat){
+        if(order.status==='fulfilled' || detail.delivery?.status==='completed')note(t('服务端已确认付款与交付，请查看原订单。','The server confirmed payment and delivery. View the original order.'));
+        else if(order.paid_at || order.status==='paid')note(t('付款已确认，交付仍在处理中；不要重新付款，请查询原订单。','Payment is confirmed; delivery is processing. Do not pay again. Check the original order.'));
+        else if(available)note(t('服务端已允许隔离本地测试；尚未发起微信付款。','The server allows the isolated local test; WeChat payment has not been started.'));
+        showQR(detail);
+      }
+      panel.querySelector('#purchase-payment-refresh').onclick=async()=>{
+        if(!active() || querying)return;
+        if(!wechat){renderPaymentStart(controls,orderId);return;}
+        querying=true;operation++;paymentRequested=orderId;
+        panel.querySelector('#purchase-payment-qr')?.remove();panel.querySelector('#purchase-payment-start')?.remove();clearTimeout(paymentTimer);paymentTimer=null;
+        const refresh=panel.querySelector('#purchase-payment-refresh');refresh.disabled=true;note(unconfirmed);
+        try {await api(`/api/billing/orders/${encodeURIComponent(orderId)}/payment-status`,{});if(active())await renderPaymentStart(controls,orderId);}
+        catch(error){if(active()){note(requestError(error,unconfirmed));querying=false;refresh.disabled=false;}}
+      };
+      const button=panel.querySelector('#purchase-payment-start');
+      if(button)button.onclick=async()=>{
+        if(!active() || paymentRequested===orderId)return;
+        paymentRequested=orderId;button.disabled=true;
+        const paymentOperation=++operation;
+        note(wechat?t('正在请求原订单的本地测试二维码，请勿重复点击。','Requesting the original order local test QR. Do not click again.'):t('正在请求沙箱付款入口，请勿重复点击。','Requesting the sandbox payment entry. Do not click again.'));
+        try {
+          const result=await api(`/api/billing/orders/${encodeURIComponent(orderId)}/pay`,{});
+          if(!active() || paymentOperation!==operation)return;
+          if(!result.payment_attempt || !['created','pending','unknown'].includes(result.payment_attempt.status))throw new Error('PAYMENT_UNCONFIRMED');
+          if(wechat){note(unconfirmed);showQR(result);return;}
+          if(result.payment_url===undefined || result.payment_attempt.status==='unknown'){note(unconfirmed);return;}
+          if(typeof result.payment_url!=='string')throw new Error('INVALID_PAYMENT_URL');
+          const url=new URL(result.payment_url);
+          if(url.origin!=='https://openapi.alipaydev.com' || url.pathname!=='/gateway.do' || url.username || url.password || url.hash)throw new Error('INVALID_PAYMENT_URL');
+          if(active())location.assign(url.href);
+        }catch(error){if(active())note(requestError(error,unconfirmed));}
+      };
+    }
+    async function renderWalletTests(controls, orderId) {
+      clearWalletTests();
+      const version=requestVersion, accountId=session?.active_account_id, accountRead=accountVersion, walletRead=walletVersion;
+      const current=()=>walletRead===walletVersion && version===requestVersion && accountRead===accountVersion && accountId===session?.active_account_id && !sessionBusy && controls.isConnected;
+      let result;
+      try { result=await api(`/api/billing/orders/${encodeURIComponent(orderId)}/wallet-test`); }
+      catch(error) {
+        // Missing test capability is the normal production response.
+        if(error.status!==503 && current())status(requestError(error,t('钱包测试配置读取失败，请重新读取原订单。','Wallet test configuration could not be loaded. Reload the original order.')),true);
+        return;
+      }
+      if(!current() || !Array.isArray(result.wallet_tests) || !result.wallet_tests.length)return;
+      const tests=result.wallet_tests;
+      if(tests.some(item=>item.environment!=='TEST' || !['google_pay','apple_pay'].includes(item.channel) || item.account_id!==accountId || item.order_id!==orderId || item.currency!=='CNY' || typeof item.amount_minor!=='string' || !/^[1-9][0-9]{0,15}$/.test(item.amount_minor) || !['','monthly','annual'].includes(item.billing_cycle)) || new Set(tests.map(item=>item.channel)).size!==tests.length)return;
+      const panel=document.createElement('section');panel.id='wallet-tests';panel.className='policy-block';
+      panel.innerHTML=`<h3>${t('隔离钱包测试','Isolated wallet tests')}</h3><p>${t('仅测试付款面板和本地请求；不收款、不交付、不建立续费授权。Google 使用官方 example gateway，不代表任何处理机构联调。真实面板需要兼容浏览器、设备与账号；Apple 还需获准支付机构和有效商户会话。','Tests the payment sheet and local requests only. No payment, fulfillment or renewal authorization. Google uses the official example gateway, not a payment processor integration. Real sheets require a compatible browser, device and account; Apple also requires an approved processor and valid merchant session.')}</p><div data-wallet-items></div><button type="button" class="button" data-wallet-refresh>${t('重新检查钱包测试','Recheck wallet tests')}</button>`;
+      controls.querySelector('#wallet-tests')?.remove();controls.append(panel);
+      const active=()=>current() && panel.isConnected;
+      panel.querySelector('[data-wallet-refresh]').onclick=()=>{if(active()){panel.remove();renderWalletTests(controls,orderId);}};
+      const waiting=t('正在等待原测试面板关闭；关闭后请手动重新检查。','Waiting for the original test sheet to close. Recheck manually after it closes.');
+      const closingUnknown=t('原 Apple Pay 会话关闭未确认；请先取消原测试面板，再手动重新检查。','The original Apple Pay session closure is unconfirmed. Cancel the original test sheet, then recheck manually.');
+      for(const item of tests) {
+        const target=document.createElement('section');target.dataset.walletTest=item.channel;
+        target.innerHTML=`<h4>${item.channel==='google_pay'?'Google Pay TEST':'Apple Pay · '+t('本地准备','Local preparation')}</h4><p>${t('隔离测试金额','Isolated test amount')} ${escape(money(item.amount_minor,true))}</p><p data-wallet-status role="status" aria-live="polite"></p><div data-wallet-button></div>`;
+        panel.querySelector('[data-wallet-items]').append(target);
+        const note=text=>{if(active())target.querySelector('[data-wallet-status]').textContent=text;};
+        const minor=BigInt(item.amount_minor), amount=`${minor/100n}.${String(minor%100n).padStart(2,'0')}`;
+        const buttons=target.querySelector('[data-wallet-button]');
+        if(walletPending){note(walletPending.closeUnknown?closingUnknown:waiting);continue;}
+        if(item.channel==='google_pay') {
+          note(t('正在检查 Google Pay TEST…','Checking Google Pay TEST…'));
+          try {
+            if(!window.google?.payments?.api?.PaymentsClient) {
+              if(!googlePayScript)googlePayScript=new Promise((resolve,reject)=>{
+                const script=document.createElement('script');script.src='https://pay.google.com/gp/p/js/pay.js';script.async=true;
+                let deadline;
+                const failed=()=>{clearTimeout(deadline);script.onload=script.onerror=null;script.remove();googlePayScript=null;reject(new Error('SDK_UNAVAILABLE'));};
+                script.onload=()=>{if(window.google?.payments?.api?.PaymentsClient){clearTimeout(deadline);script.onload=script.onerror=null;resolve();}else failed();};script.onerror=failed;
+                deadline=setTimeout(failed,8000);
+                document.head.append(script);
+              });
+              await googlePayScript;
+            }
+            if(!active())return;
+            const client=new window.google.payments.api.PaymentsClient({environment:'TEST'});
+            const card={type:'CARD',parameters:{allowedAuthMethods:['PAN_ONLY','CRYPTOGRAM_3DS'],allowedCardNetworks:['VISA','MASTERCARD']}};
+            const base={apiVersion:2,apiVersionMinor:0,allowedPaymentMethods:[card]};
+            let deadline, ready;
+            try {
+              ready=await Promise.race([client.isReadyToPay(base),new Promise((_,reject)=>{deadline=setTimeout(()=>reject(new Error('SDK_UNAVAILABLE')),8000);})]);
+            } finally {clearTimeout(deadline);}
+            if(!active())return;
+            if(ready.result!==true){note(t('此设备的 Google Pay TEST 不可用。','Google Pay TEST is unavailable on this device.'));continue;}
+            const button=client.createButton({buttonLocale:en?'en':'zh',onClick:()=>{
+              if(!active())return;
+              if(walletPending){note(walletPending.closeUnknown?closingUnknown:waiting);return;}
+              const owned={channel:'google_pay'};walletPending=owned;buttons.inert=true;note(t('正在打开测试面板；不会收款。','Opening the test sheet; no payment will be collected.'));
+              const request={...base,allowedPaymentMethods:[{...card,tokenizationSpecification:{type:'PAYMENT_GATEWAY',parameters:{gateway:'example',gatewayMerchantId:'exampleGatewayMerchantId'}}}],transactionInfo:{currencyCode:'CNY',totalPriceStatus:'FINAL',totalPrice:amount,checkoutOption:'DEFAULT'},merchantInfo:{merchantName:'Sage TEST'}};
+              // No acquirer is configured. The optional countryCode is not inferred from the legal entity.
+              new Promise(resolve=>resolve(client.loadPaymentData(request))).then(()=>{
+                note(t('测试面板已返回；未收款、未交付，也未建立续费授权。','The test sheet returned; no payment was collected, no benefits delivered and no renewal authorized.'));
+              }).catch(error=>note(error?.statusCode==='CANCELED'?t('测试面板已取消；未收款或授权。','The test sheet was canceled; no payment or authorization.'):t('测试面板结果未确认；未收款，请手动重新检查。','The test sheet result is unconfirmed; no payment collected. Recheck manually.'))).finally(()=>{if(walletPending===owned)walletPending=null;if(active())buttons.inert=false;});
+            }});
+            buttons.append(button);note(t('可打开 Google Pay TEST 面板；仅 example gateway。','Google Pay TEST sheet is available; example gateway only.'));
+          }catch(_){note(t('Google Pay SDK 加载失败或检查失败，请手动重新检查。','Google Pay SDK failed to load or check. Recheck manually.'));}
+        }else {
+          const Apple=window.ApplePaySession;
+          let capable=false;
+          try { capable=!!Apple && Apple.supportsVersion(3) && Apple.canMakePayments(); }
+          catch(_){note(t('Apple Pay 能力检查不可用，请重新检查。','Apple Pay capability check is unavailable. Recheck manually.'));continue;}
+          if(!capable){note(t('此设备的 Apple Pay 不可用。','Apple Pay is unavailable on this device.'));continue;}
+          if(typeof item.country_code!=='string' || !/^[A-Z]{2}$/.test(item.country_code)){note(t('尚未配置测试收单国家；不能构造 Apple Pay 请求。','The test acquiring country is not configured; an Apple Pay request cannot be constructed.'));continue;}
+          const unavailable=t('Apple Pay 会话不可用；未收款，请重新检查。','Apple Pay session is unavailable; no payment collected. Recheck manually.');
+          const button=document.createElement('button');button.type='button';button.className='button';button.textContent=t('检查本地 Apple Pay 会话','Check local Apple Pay session');
+          button.onclick=()=>{
+            if(!active())return;
+            if(walletPending){note(walletPending.closeUnknown?closingUnknown:waiting);return;}
+            let apple;
+            try {
+              button.disabled=true;
+              // This first-payment request labels the cycle; MIT/recurring authorization requires the future PSP contract.
+              apple=new Apple(3,{countryCode:item.country_code,currencyCode:'CNY',supportedNetworks:['visa','masterCard'],merchantCapabilities:['supports3DS'],total:{label:`Sage TEST${item.billing_cycle?' · '+item.billing_cycle:''}`,amount,type:'final'}});
+              const owned={channel:'apple_pay',session:apple,closeUnknown:false};walletPending=owned;
+              const finish=text=>{if(walletPending!==owned)return;walletPending=null;walletCleanup=null;apple.onvalidatemerchant=apple.onpaymentauthorized=apple.oncancel=null;if(active())button.disabled=false;note(text);};
+              const close=text=>{if(walletPending!==owned || owned.closeUnknown)return;apple.onvalidatemerchant=apple.onpaymentauthorized=null;try{apple.abort();finish(text);}catch(_){if(walletPending===owned){owned.closeUnknown=true;note(closingUnknown);}}};
+              walletCleanup=()=>close(unavailable);
+              const refuse=()=>{if(active())close(t('商户会话未配置，本地检查已终止；未收款或授权。','The merchant session is not configured. The local check was aborted; no payment or authorization.'));};
+              apple.onvalidatemerchant=refuse;
+              apple.onpaymentauthorized=refuse;
+              apple.oncancel=()=>finish(t('Apple Pay 检查已取消；未收款或授权。','The Apple Pay check was canceled; no payment or authorization.'));
+              apple.begin();
+            }catch(_){if(apple && walletPending?.session===apple)walletCleanup?.();if(!walletPending && active())button.disabled=false;note(walletPending?.closeUnknown?closingUnknown:unavailable);}
+          };
+          buttons.append(button);note(t('仅检查本地请求与取消；商户会话及续费授权尚未配置。','Checks local requests and cancellation only. Merchant sessions and renewal authorization are not configured.'));
+        }
+      }
     }
     async function load() {
       const version = ++requestVersion, accountId = session?.active_account_id;
@@ -483,6 +698,8 @@
       }catch(error){if(current()){document.querySelector('#purchase-controls').innerHTML=`<button class="button" id="purchase-recover">${t('查询原订单结果','Check original order result')}</button>`;document.querySelector('#purchase-recover').onclick=load;status(requestError(error,t('提交结果尚未确认。请先查询原订单；重试只使用同一报价和幂等键，不会自动新建或扣款。','The submission result is unconfirmed. Check the original order first. Any retry uses the same quote and idempotency key; no new order or charge is started automatically.')),true);}}
       finally{if(current())busy=false;}
     }
+    window.addEventListener('pagehide',()=>{clearInterval(quoteTimer);clearPayment();clearWalletTests();},{once:true});
+    document.addEventListener('visibilitychange',()=>{clearPayment();clearWalletTests();if(document.visibilityState==='visible')load();});
     purchaseRefresh=load;
     await load();
   }
@@ -491,28 +708,26 @@
     const sections = {overview:t('我的账单','My bills'),subscription:t('订阅管理','Subscription'),credits:'Sage Credits',orders:t('订单记录','Orders'),notifications:t('账务通知','Billing updates'),invoices:t('发票','Invoices'),'payment-methods':t('支付方式','Payment methods'),organization:t('企业管理','Business settings'),procurement:t('企业采购','Enterprise purchasing')};
     sections['credits-ledger'] = t('额度流水','Credits history');
     if (activeAccount()?.kind === 'business') sections['organization-history'] = t('企业变更记录','Business change history');
-    if (activeAccount()?.kind === 'business') sections['my-usage'] = t('我的使用限制','My usage limits');
+
     const requested = location.hash.slice(1), selected = Object.hasOwn(sections, requested) ? requested : 'overview';
     const icons = {subscription:'calendar3',credits:'wallet2',orders:'receipt',notifications:'info-circle',invoices:'building','payment-methods':'credit-card',organization:'person',procurement:'building'};
-    icons['my-usage'] = 'person';
     icons['credits-ledger'] = 'receipt';
     icons['organization-history'] = 'person';
     const policies = {
       subscription:t('取消自动续费不会退款或提前收回已付服务。Sage 先停止发起新扣款，再确认支付渠道解约；渠道确认前显示处理中。在途交易需另行核实，不代表已被撤回。新购、升级和支付方式变更尚未开放。','Cancelling automatic renewal does not refund or end paid service early. Sage stops initiating new charges, then confirms cancellation with the payment channel; the status remains processing until confirmed. In-flight transactions must be checked separately and are not automatically withdrawn. New purchases, upgrades and payment-method changes are not yet available.'),
-      credits:t('订阅额度按服务月发放、当期有效。加购到账起 12 个月有效，优先使用最早到期批次。个人仅主动加购；企业自动充值默认关闭，需管理员另行授权。','Subscription credits are granted by service month and expire at its end. Purchased credits last 12 months from confirmed receipt; earliest expiry is used first. Personal top-ups are manual; business auto top-up is off by default and requires separate admin authorization.'),
+      credits:t('订阅额度按服务月发放、当期有效。加购到账起 12 个月有效。Teams 公司任务先用本人企业套餐内含点数，再用企业共享点数，Enterprise 仅用企业共享点数；不扣员工私人点数。相同可用来源内优先使用最早到期批次。个人仅主动加购；企业自动充值默认关闭，需管理员另行授权。','Subscription Credits are granted by service month and expire at its end. Purchased Credits last 12 months from confirmed receipt. Teams company tasks use the member’s business plan allowance before shared business Credits; Enterprise uses shared business Credits only. Private Credits are never charged. Within each eligible source, earliest expiry comes first. Personal top-ups are manual; business auto top-up is off by default and requires separate admin authorization.'),
       orders:t('订单、支付确认与权益交付是不同状态。付款页面返回不等于支付成功，最终以服务端确认结果为准。','Orders, confirmed payments and benefit delivery have separate states. Returning from a payment page does not prove payment; server confirmation is authoritative.'),
       notifications:t('这里保留服务端确认的账务事件，不代表订单的最新状态。请进入对应订单或订阅管理核对后续结果。邮件、短信与扣款前提醒尚未接入。','This is a record of server-confirmed billing events, not an order’s latest status. Check the order or subscription for later results. Email, SMS and pre-charge reminders are not yet connected.'),
       invoices:t('从实付订单申请发票，财务审核开票后发送至指定邮箱。手机号登录也可填写独立收票邮箱。开票服务尚未接入。','Invoices are requested from paid orders, reviewed by finance and sent to a designated email, independently of phone sign-in. Invoice requests are not yet available.'),
       'payment-methods':t('订阅与企业自动充值分别授权。更换方式不重复收取当期费用；移除前先停止新扣款并查明在途交易。绑定、更换和移除暂不可用。','Renewal and business auto top-up have separate authorizations. Changing a method does not recharge the current term. Removal stops new charges and resolves in-flight payments first. Linking, changing and removal are not yet available.'),
-      organization:t('企业 2 个真人席位起购。Teams 每席内含额度独立，加购额度共享；Enterprise 另购共享额度。企业所有者可移除成员并立即撤销企业访问权限，不删除个人账号及企业共有成果；席位分配与共享上限修改尚未开放。','Business plans start at 2 human seats. Teams includes separate seat credits and shared purchased credits; Enterprise purchases shared credits separately. Owners can immediately revoke a member’s business access without deleting their personal account or shared business work. Seat assignment and shared-limit changes are not available.'),
+      organization:t('Teams 1 个付费名额起购，Enterprise 10 个起购。Teams 每个付费名额独享月内含点数，企业加购点数共享；Enterprise 套餐月内含点数按购买名额汇入共享池，年付也逐月发放、当月到期。公司任务不扣员工私人点数，不设成员共享用量上限。仅管理的免费管理员和待分配成员没有付费使用权。移除成员立即撤销企业访问权限，保留个人账号及企业成果；余额不足时暂停任务，补充后手动继续。','Teams starts at 1 paid seat; Enterprise starts at 10. Teams provides an individual monthly allowance per paid seat; purchased business Credits are shared. Enterprise included monthly Credits are pooled by purchased seats, granted monthly even on annual plans and expire at the service month’s end. Company tasks never charge private Credits, and there are no per-member shared usage caps. Free management-only admins and members awaiting a seat have no paid access. Removal revokes business access immediately while retaining the personal account and business work. Tasks pause when Credits run out and continue manually after Credits are added.'),
       procurement:t('深圳主体签约与收款；合同明确席位、Sage Credits、服务范围、含税金额和服务期。申请不是订单，也不自动续费；财务确认实际到账后才开通，汇款回单不等于付款确认。','The Shenzhen company contracts and collects payment. Contracts define seats, Sage Credits, scope, tax-inclusive charges and term. An inquiry is not an order and does not renew automatically. Access follows verified bank receipt, not a transfer document alone.')
     };
     const version = ++accountVersion;
-    policies['my-usage'] = t('仅展示你在当前企业的席位与共享池使用限制，不展示其他成员或企业资金。共享上限不占用席位内含额度；如需调整，请联系企业管理员。','Only your seat and shared-pool usage limits in this business are shown, not other members or business funds. Shared caps do not reduce included seat credits. Contact your administrator for changes.');
     policies['credits-ledger'] = t('这里展示实际记录的额度动作，不是当前余额或人民币账单。预占不代表消耗，释放预占不代表退款；到期余额请在 Sage Credits 查看。','These are recorded credit movements, not current balances or a currency bill. Reservations are not consumption and releases are not refunds. Check Sage Credits for expiring balances.');
     policies['organization-history'] = t('只读展示已记录的席位分配和成员共享上限变更，不代表当前配置。操作人标识已脱敏；缺失的历史版本显示未知，不视为不限制。此处不会修改成员、席位或额度。','This is a read-only record of seat assignments and member shared-limit changes, not the current configuration. Actor identifiers are masked. Missing historical versions are unknown, not unlimited. This page does not change members, seats or Credits.');
     document.title = t('我的账单 · Sage','My bills · Sage');
-    shell(`<div class="account-layout billing-center"><aside class="billing-center-sidebar"><nav class="account-menu" aria-label="${t('个人设置导航','Personal settings navigation')}"><a href="${page('profile')}">${icon('person')}${t('个人信息','Personal information')}</a><a href="${page('profile')}#usage">${icon('bar-chart')}${t('用量明细','Usage details')}</a><a href="${page('billing')}" aria-current="page">${icon('receipt')}${t('我的账单','My bills')}</a></nav><details class="billing-management" ${selected !== 'overview' ? 'open' : ''}><summary>${t('账务管理','Billing management')}</summary><nav class="account-menu" aria-label="${t('账务管理导航','Billing management navigation')}">${Object.entries(sections).filter(([key]) => key !== 'overview').map(([key,label]) => `<a href="#${key}" ${selected === key ? 'aria-current="page"' : ''}>${icon(icons[key])}${label}</a>`).join('')}</nav></details></aside><section class="panel billing-center-content" aria-labelledby="account-section-title"><h1 id="account-section-title">${sections[selected]}</h1><div id="account-live" aria-live="polite"></div>${selected !== 'overview' ? `<div class="policy-block"><h3>${t('使用与办理说明','How it works')}</h3><p>${policies[selected]}</p>${selected === 'procurement' ? `<a class="button" href="${page('enterprise')}#contact">${t('查看企业服务与采购说明','View enterprise services and procurement')}</a>` : ''}</div>` : ''}${selected === 'credits' ? `<section id="credit-packs" aria-live="polite"></section>` : ''}</section></div>`);
+    shell(`<div class="account-layout billing-center"><aside class="billing-center-sidebar"><nav class="account-menu" aria-label="${t('个人设置导航','Personal settings navigation')}"><a href="${page('profile')}">${icon('person')}${t('个人信息','Personal information')}</a><a href="${page('profile')}#usage">${icon('bar-chart')}${t('用量明细','Usage details')}</a><a href="${page('billing')}" aria-current="page">${icon('receipt')}${t('我的账单','My bills')}</a><a href="${page('profile')}#organization">${icon('people')}${t('企业管理','Business management')}</a><a href="${page('profile')}#security">${icon('shield-lock')}${t('安全设置','Security')}</a></nav><details class="billing-management" ${selected !== 'overview' ? 'open' : ''}><summary>${t('账务管理','Billing management')}</summary><nav class="account-menu" aria-label="${t('账务管理导航','Billing management navigation')}">${Object.entries(sections).filter(([key]) => !['overview','organization','notifications','my-usage'].includes(key)).map(([key,label]) => `<a href="#${key}" ${selected === key ? 'aria-current="page"' : ''}>${icon(icons[key])}${label}</a>`).join('')}</nav></details></aside><section class="panel billing-center-content" aria-labelledby="account-section-title"><h1 id="account-section-title">${sections[selected]}</h1><div id="account-live" aria-live="polite"></div>${selected !== 'overview' ? `<div class="policy-block"><h3>${t('使用与办理说明','How it works')}</h3><p>${policies[selected]}</p>${selected === 'procurement' ? `<a class="button" href="${page('enterprise')}#contact">${t('查看企业服务与采购说明','View enterprise services and procurement')}</a>` : ''}</div>` : ''}${selected === 'credits' ? `<section id="credit-packs" aria-live="polite"></section>` : ''}</section></div>`);
     const target = document.querySelector('#account-live');
     if (!session?.authenticated || sessionBusy || !activeAccount()) {
       const reason = sessionBusy || sessionState === 'loading' ? t('正在确认账户，请稍候…','Confirming your account…') : sessionState === 'signed-out' ? t('登录后查看当前账户的数据。','Sign in to view your account data.') : accountUnavailable;
@@ -548,17 +763,6 @@
       }
       if (selected === 'notifications') {
         await renderNotifications(target, current, expectedAccount);
-        return;
-      }
-      if (selected === 'my-usage') {
-        const data = await api('/api/billing/my-usage');
-        if (!current()) return;
-        const member = data.member;
-        if (data.account_id !== expectedAccount || !member || String(member.user_id) !== String(session.user?.id) || member.active !== true || data.can_edit !== false) throw new Error('INVALID_MEMBER_USAGE');
-        for (const key of ['shared_limit','shared_used','shared_reserved']) if (member[key] !== null && (typeof member[key] !== 'string' || !/^\d+(\.\d+)?$/.test(member[key]))) throw new Error('INVALID_MEMBER_USAGE');
-        if (member.seat_position !== null && (!Number.isInteger(member.seat_position) || member.seat_position < 1)) throw new Error('INVALID_MEMBER_USAGE');
-        target.innerHTML = `<h3 class="records-title">${t('本人席位与共享池','Your seat and shared pool')}</h3><p>${member.seat_position === null ? t('未分配席位','No seat assigned') : `${t('席位','Seat')} ${member.seat_position}`}</p><dl class="account-metrics"><div><dt>${t('共享上限','Shared limit')}</dt><dd>${member.shared_limit === null ? t('不限制','Unlimited') : member.shared_limit === '0' ? t('禁止使用','Disabled') : escape(member.shared_limit)}</dd></div><div><dt>${t('共享已用','Shared used')}</dt><dd>${member.shared_used === null ? unknown() : escape(member.shared_used)}</dd></div><div><dt>${t('共享预占','Shared reserved')}</dt><dd>${member.shared_reserved === null ? unknown() : escape(member.shared_reserved)}</dd></div></dl><p class="account-context">${data.subscription_active === true ? `${t('当前额度周期','Current credit period')}：${dateLabel(data.period_start)} – ${dateLabel(data.period_end)}` : t('当前没有生效订阅，周期用量未知，不表示零。','There is no active subscription. Period usage is unknown, not zero.')}</p><button class="button" id="usage-refresh">${t('刷新','Refresh')}</button>`;
-        target.querySelector('#usage-refresh').addEventListener('click',account);
         return;
       }
       const data = await api('/api/billing/account');
@@ -597,11 +801,11 @@
       } else if (selected === 'subscription') {
         content = data.capabilities?.subscription !== true ? unavailableModule() : '';
       } else if (selected === 'invoices') {
-        content = data.capabilities?.invoices !== true ? unavailableModule() : emptyText(t('请在已付款订单中查看可申请的发票。','Check your paid orders for invoice eligibility.'));
+        await renderInvoices(target,current,expectedAccount,data.orders);return;
       } else if (selected === 'payment-methods') {
         content = data.capabilities?.payment_methods !== true ? unavailableModule() : emptyText(t('支付方式管理尚未开放操作。','Payment-method management is not yet available.'));
       } else if (selected === 'organization') {
-        content = emptyText(data.account.kind === 'personal' ? t('当前是个人账户。已有企业账户可在右上角切换。','This is a personal account. Switch to an existing business account from the top-right menu.') : t('当前企业账户已连接；成员、席位和使用上限管理尚未开放。','Your business account is connected; member, seat and usage-cap management is not yet available.'));
+        content = emptyText(data.account.kind === 'personal' ? t('当前是个人账户。已有企业账户可在右上角切换。','This is a personal account. Switch to an existing business account from the top-right menu.') : t('请在个人设置的“企业管理”查看成员与用量。成员移除是否可用，以当前权限和成员状态为准。','View members and usage under Business management in Personal settings. Member removal depends on your current permissions and the member’s status.'));
       } else content = '';
       target.innerHTML = prefix + content;
       if (selected === 'credits') {
@@ -619,7 +823,7 @@
             if (items.some(item => typeof item.quote_available !== 'boolean')) throw new Error('INVALID_CREDIT_PACK');
             const available = items.filter(item => item.quote_available);
             for (const item of available) if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id) || item.currency !== 'CNY' || typeof item.unit_amount_minor !== 'string' || !/^\d+$/.test(item.unit_amount_minor) || BigInt(item.unit_amount_minor) <= 0n || typeof item.credits_quantity !== 'string' || !/^\d+(\.\d+)?$/.test(item.credits_quantity) || !/[1-9]/.test(item.credits_quantity) || !Array.isArray(item.purchase_options) || !item.purchase_options.length) throw new Error('INVALID_CREDIT_PACK');
-            packs.innerHTML = `<h3>${t('Sage Credits 一次性加购','One-time Sage Credits purchase')}</h3><p class="checkout-note">${t('加购额度自确认到账起 12 个月有效。查看报价或创建订单不会立即收款，也不会开启自动充值。','Purchased credits last 12 months from confirmed receipt. Viewing a quote or creating an order does not charge you or enable auto top-up.')}</p>` + (available.length ? `<ul class="record-list">${available.map(item => `<li><strong>${escape(item.credits_quantity)} Sage Credits</strong><span>${money(item.unit_amount_minor,true)}</span><a class="button" data-credit-purchase href="${page('checkout')}?${new URLSearchParams({product:item.id,seats:'1'})}">${t('查看加购报价','Review purchase quote')}</a></li>`).join('')}</ul>` : `<p data-credit-packs-empty>${t('当前账户暂无可报价的额度包。可能尚未开放加购，或当前订阅不满足购买条件；不能付款。','No credit packs can be quoted for this account. Purchases may not be enabled or your subscription may not be eligible; no payment is available.')}</p>`);
+            packs.innerHTML = `<h3>${t('Sage Credits 一次性加购','One-time Sage Credits purchase')}</h3><p class="checkout-note">${t('加购额度自确认到账起 12 个月有效。查看报价或创建订单不会立即收款，也不会开启自动充值。','Purchased credits last 12 months from confirmed receipt. Viewing a quote or creating an order does not charge you or enable auto top-up.')}</p>` + (available.length ? `<ul class="record-list">${available.map(item => `<li><strong>${escape(item.credits_quantity)} Sage Credits</strong><span>${money(item.unit_amount_minor,true)}</span><a class="button" data-credit-purchase href="${page('checkout')}?${new URLSearchParams({product:item.id,seats:'1'})}">${t('查看加购报价','Review purchase quote')}</a></li>`).join('')}</ul>` : `<p data-credit-packs-empty>${items.some(item=>item.unavailable_reason==='CREDITS_SUBSCRIPTION_REQUIRED')?creditsSubscriptionRequired:t('当前账户暂无可报价的额度包。可能尚未开放加购，或当前订阅不满足购买条件；不能付款。','No credit packs can be quoted for this account. Purchases may not be enabled or your subscription may not be eligible; no payment is available.')}</p>`);
           } catch (error) {
             if (!latest()) return;
             packs.innerHTML = `<h3>Sage Credits</h3><p class="error" role="status">${requestError(error,t('额度包读取失败，可购买状态未知，不能据此判断没有额度包。','Credit packs could not be loaded. Availability is unknown; this does not mean there are no packs.'))}</p><button class="button" data-credit-packs-retry>${t('重新查询额度包','Retry credit packs')}</button>`;
@@ -715,21 +919,23 @@
           (data.items.length && data.total < offset+data.items.length)) throw new Error('INVALID_ORGANIZATION_HISTORY');
       const ids = new Set();
       for (const item of data.items) {
-        if (!item || !['seat_assignment','shared_limit','member_removal'].includes(item.type) ||
-            typeof item.id !== 'string' || !(item.type === 'seat_assignment' ? /^seat:[1-9]\d*$/.test(item.id) : item.type === 'member_removal' ? /^removal:[1-9]\d*$/.test(item.id) : /^limit:[1-9]\d*$/.test(item.id)) || ids.has(item.id) ||
+        if (!item || !['seat_assignment','shared_limit','member_removal','member_role'].includes(item.type) ||
+            typeof item.id !== 'string' || !(item.type === 'seat_assignment' ? /^seat:[1-9]\d*$/.test(item.id) : item.type === 'member_removal' ? /^removal:[1-9]\d*$/.test(item.id) : item.type === 'member_role' ? /^role:[1-9]\d*$/.test(item.id) : /^limit:[1-9]\d*$/.test(item.id)) || ids.has(item.id) ||
             typeof item.created_at !== 'string' || !Number.isFinite(Date.parse(item.created_at)) ||
             typeof item.actor_masked_identifier !== 'string' || (item.type !== 'member_removal' && !positive(item.version))) throw new Error('INVALID_ORGANIZATION_CHANGE');
         if (item.type === 'seat_assignment') {
           if (typeof item.seat_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.seat_id) ||
               !positive(item.seat_position) || !Number.isSafeInteger(item.before_version) || item.before_version < 0 || item.version !== item.before_version+1 ||
               [item.before_membership_id,item.after_membership_id].some(value=>value !== null && !positive(value))) throw new Error('INVALID_SEAT_CHANGE');
-        } else if(item.type === 'member_removal') {if(!positive(item.membership_id)||typeof item.handoff_pending!=='boolean'||!Number.isSafeInteger(item.pending_task_count)||item.pending_task_count<0||item.executor_connected!==false)throw Error('INVALID_REMOVAL_HISTORY');}
+        } else if(item.type === 'member_role'){if(!positive(item.membership_id)||!['member','billing_admin'].includes(item.before_role)||!['member','billing_admin'].includes(item.after_role)||!Number.isSafeInteger(item.before_version)||item.before_version<0||item.version!==item.before_version+1)throw Error('INVALID_MEMBER_ROLE_CHANGE');}
+        else if(item.type === 'member_removal') {if(!positive(item.membership_id)||typeof item.handoff_pending!=='boolean'||!Number.isSafeInteger(item.pending_task_count)||item.pending_task_count<0||item.executor_connected!==false)throw Error('INVALID_REMOVAL_HISTORY');}
         else if (!positive(item.membership_id) || !quantity(item.quantity) || typeof item.previous_known !== 'boolean' ||
                    !quantity(item.previous_quantity) || (!item.previous_known && item.previous_quantity !== null)) throw new Error('INVALID_SHARED_LIMIT_CHANGE');
         ids.add(item.id);
       }
-      target.innerHTML = `<h3 class="records-title" id="organization-history-title" tabindex="-1">${t('席位与共享上限历史','Seat and shared-limit history')}</h3>` +
+      target.innerHTML = `<h3 class="records-title" id="organization-history-title" tabindex="-1">${t('企业成员与名额历史','Business member and seat history')}</h3>` +
         (data.items.length ? `<ul class="record-list">${data.items.map(item=>{
+          if(item.type==='member_role'){const role=value=>value==='billing_admin'?t('企业管理员','Business administrator'):t('普通员工','Employee');return `<li class="billing-notification" data-organization-change="${escape(item.id)}"><div><strong>${t('成员','Member')} #${item.membership_id} · ${t('管理员权限变更','Administrator permission change')}</strong><p>${t('变更前','Before')}：${role(item.before_role)}<br>${t('变更后','After')}：${role(item.after_role)}</p><small>${t('版本','Version')} ${item.before_version} → ${item.version} · ${dateLabel(item.created_at)}</small><p>${t('操作人','Changed by')}：${escape(item.actor_masked_identifier||unknown())}</p></div></li>`;}
           if(item.type==='member_removal')return `<li class="billing-notification" data-organization-change="${escape(item.id)}"><div><strong>${t('成员','Member')} #${item.membership_id} · ${t('企业权限已撤销','Business access revoked')}</strong><p>${item.handoff_pending?t('工作交接待处理；真实任务执行器尚未接通。','Work handoff pending; no live task executor is connected.'):t('个人账号与企业共有成果保留。','Personal account and shared business work retained.')}</p><small>${dateLabel(item.created_at)}</small><p>${t('操作人','Changed by')}：${escape(item.actor_masked_identifier||unknown())}</p></div></li>`;
           const seat = item.type === 'seat_assignment';
           const title = seat ? `${t('席位','Seat')} ${item.seat_position} · ${t('分配变更','Assignment change')}` : `${t('成员','Member')} #${item.membership_id} · ${t('共享上限变更','Shared limit change')}`;
@@ -768,12 +974,27 @@
       renewal_failed:[t('续费失败已确认','Renewal failure confirmed'),t('此笔续费已确认失败，未因此延长服务期。请核对原订单及订阅的当前状态。','This renewal is confirmed failed and has not extended the service term. Check the original order and current subscription status.')],
       credit_batch_expired:[t('一个 Credits 批次已到期','A Credits batch has expired'),t('对应批次的有效期已结束；这不表示其他批次也已到期。请查看 Credits 的当前余额和批次记录。','This batch has reached its expiry. Other batches may still be valid; check current Credits balances and batch records.')],
       service_period_ended:[t('一个已付款服务期已结束','A paid service term has ended'),t('此记录对应原订单的服务期终点，不表示后续已付款期间结束，也不代表整个账户已停服。请查看订阅当前状态。','This records the end of the original order’s service term. Later paid terms may still be valid; it does not mean the entire account has lost service. Check current subscription status.')],
+      seats_purchased:[t('新增使用名额已开通','Additional seats activated'),t('这笔订单新增的名额已在本期生效，原到期日不变。请查看原订单及企业当前名额。','The additional seats from this order are active for the current term, with the original end date unchanged. Check the original order and current business seats.')],
+      next_seats_purchased:[t('下一期新增名额已购买','Additional next-term seats purchased'),t('新增名额将在已付的下一期开始时生效，本期名额和点数不变。请查看原订单和企业名额。','The additional seats take effect when the prepaid next term starts. Current-term seats and Credits are unchanged. Check the original order and business seats.')],
+      seats_reduced:[t('本期购买名额已减少','Current-term seats reduced'),t('本期购买名额已调整，已付下一期仍保留原购买数量。如有退款，请查看退款处理结果；这条通知不代表钱已退回。','Current-term capacity has changed; the prepaid next term keeps its purchased quantity. Check the refund status if applicable; this notice does not confirm money has been returned.')],
+      member_role_changed:[t('成员权限已变更','Member permissions changed'),t('成员的企业管理权限已调整。请查看企业变更记录和当前权限；此操作不会增加购买名额或产生扣款。','The member’s business permissions have changed. Check organization history and current permissions; this action does not buy seats or create a charge.')],
+      member_removed:[t('企业成员已移除','Business member removed'),t('该成员已失去企业访问权限，已有企业成果保留。请查看企业变更记录；移除成员不等于退还名额费。','The member no longer has business access; existing business work is retained. Check organization history. Removing a member does not refund seat fees.')],
+      renewal_reminder:[t('订阅将在一天后续费','Subscription renews in one day'),t('此金额是本次续费预计扣款金额，不代表已经扣款。请在订阅页核对续费日期或关闭自动续费。','This is the expected renewal charge, not a completed payment. Check the renewal date or cancel automatic renewal on the subscription page.')],
+      renewal_notice_blocked:[t('续费提醒未能发送','Renewal reminder could not be sent'),t('本次提醒未确认发送成功，自动扣款暂停。已付款服务保留至原到期日，请查看订阅状态，需要时主动续费。','Delivery of this reminder was not confirmed, so the automatic charge is paused. Paid service remains valid until its original end date. Check subscription status and renew manually if needed.')],
+      invoice_requested:[t('发票申请已记录','Invoice request recorded'),t('开票申请已受理，尚不代表发票已开具或发送。请在发票页查看办理状态。','The invoice request has been recorded. This does not confirm that an invoice was issued or sent. Check its status on the invoices page.')],
+      invoice_sent:[t('发票已发送','Invoice sent'),t('发票已发送至申请时填写的邮箱。请核对收件箱和发票记录；此事件不会再次扣款。','The invoice was sent to the email address supplied in the request. Check your inbox and invoice record; this event does not create another charge.')],
+      account_security:[t('账号安全变更','Account security change'),t('账号发生了安全相关变更。请进入个人设置核对登录设备和安全设置，如非本人操作请及时处理。','A security-related account change was recorded. Check your sessions and security settings in your profile and act if you did not make this change.')],
+      plan_changed:[t('套餐已变更','Plan changed'),t('新套餐已开通。显示金额为此次变更订单金额，请查看原订单及订阅的当前期限和点数；退款另行核对。','The new plan has been activated. The displayed amount belongs to this change order. Check the original order, current term and Credits; verify any refund separately.')],
+      service_refund_requested:[t('订阅退款申请已记录','Subscription refund request recorded'),t('订阅退款申请已记录，尚未确认钱已退回。请查看订阅和退款处理状态。','The subscription refund request was recorded; no return of money is confirmed. Check the subscription and refund status.')],
+      service_refund_refunded:[t('订阅退款已确认','Subscription refund confirmed'),t('已收到订阅退款成功确认，实际到账时间以支付渠道及银行为准。请查看退款记录核对金额。','Subscription refund success has been confirmed. Arrival depends on the payment channel and bank. Check the refund record for the amount.')],
+      service_refund_failed:[t('订阅退款需要核对','Subscription refund requires review'),t('退款结果需要进一步核对，不能据此认定退款成功或重新申请退款。请查看原退款处理状态。','The refund outcome needs verification. Do not assume success or submit another refund from this notice. Check the original refund status.')],
+      seat_capacity_ending:[t('本期新增名额即将到期','Additional seats expire soon'),t('这些新增名额未包含在已付的下一期内，到期后暂停使用付费功能，成员和已有成果保留。需要继续使用时，请管理员另行购买下一期名额。','These additional seats are not included in the prepaid next term. Paid access pauses when they expire; members and existing work are retained. Ask an administrator to purchase next-term seats if needed.')],
       topup_authorization_recorded:[t('自动充值授权已记录','Top-up authorization recorded'),t('此记录不代表已充值或已扣款。请核对授权与账务状态。','This record does not confirm a top-up or a charge. Check authorization and billing status.')],
       topup_authorization_paused:[t('自动充值已在本地暂停','Automatic top-up paused locally'),t('系统已暂停发起新的自动充值；这不代表支付渠道授权已撤销，也不改变在途交易的结果。','New automatic top-ups are paused locally. Channel authorization is not necessarily revoked and in-flight transactions are unchanged.')],
       topup_revocation_processing:[t('充值授权撤销处理中','Top-up revocation processing'),t('已在本地停用自动充值，支付渠道尚未确认授权撤销。','Automatic top-up is disabled locally; channel revocation has not yet been confirmed.')],
       topup_revocation_confirmed:[t('充值授权撤销已确认','Top-up revocation confirmed'),t('支付渠道已确认撤销此充值授权；既有充值与在途交易仍以各自结果为准。','The channel has confirmed revocation of this authorization. Existing top-ups and in-flight payments retain their own outcomes.')],
       seat_assignment_changed:[t('席位配置已记录','Seat configuration recorded'),t('席位分配配置已生成新的版本记录。请核对企业当前席位；此记录不代表已向成员发送通知。','A new seat assignment version has been recorded. Check current organization seats; this does not confirm delivery of a notice to members.')],
-      shared_limit_changed:[t('共享额度上限配置已记录','Shared limit configuration recorded'),t('企业共享额度上限已生成新的版本记录；这不会产生新的 Credits 或扣款。','A new shared limit configuration version has been recorded. It creates no new Credits or charge.')],
+      shared_limit_changed:[t('历史共享额度设置记录','Historical shared Credits settings'),t('这是旧版共享额度设置的历史记录。当前企业额度共同使用，没有成员月上限；此记录不会产生新的 Credits 或扣款。','This is a historical record of earlier shared Credits settings. Business Credits are now shared without member monthly caps; this record creates no new Credits or charge.')],
       credit_refund_reserved:[t('退款处理中','Refund processing'),t('已为此申请冻结对应 Credits，尚未确认资金退款。请查看订单中的后续结果。','The corresponding Credits have been frozen for this request. No money refund has been confirmed; check the order for later results.')],
       credit_refund_refunded:[t('退款已确认','Refund confirmed'),t('已收到退款成功确认；实际到账时间以支付渠道及银行为准。','Refund success has been confirmed. Arrival in your account depends on the payment channel and bank.')],
       credit_refund_released:[t('退款已终止，未退回款项','Refund ended without payment'),t('已确认此次申请未退款并结束处理，对应 Credits 冻结已解除；可用额度仍受批次有效期限制。','The request ended with no refund; its Credits freeze was released. Available Credits remain subject to batch expiry.')],
@@ -789,19 +1010,22 @@
           (data.items.length && data.total < offset+data.items.length)) throw new Error('INVALID_NOTIFICATIONS');
       const ids = new Set();
       for (const item of data.items) {
-        const monetary = ['payment_received','renewal_payment_received','topup_payment_received','credit_refund_reserved','credit_refund_refunded','credit_refund_released'].includes(item.type);
+        const monetary = ['payment_received','renewal_payment_received','topup_payment_received','seats_purchased','next_seats_purchased','seats_reduced','renewal_reminder','plan_changed','service_refund_requested','service_refund_refunded','credit_refund_reserved','credit_refund_refunded','credit_refund_released'].includes(item.type) || (item.type === 'service_refund_failed' && (item.currency !== null || item.amount_minor !== null));
+        const zeroAllowed = ['seats_purchased','next_seats_purchased','seats_reduced','plan_changed','service_refund_failed'].includes(item.type);
         if (!validId(item.id) || ids.has(item.id) || !Object.hasOwn(messages,item.type) ||
             typeof item.occurred_at !== 'string' || !Number.isFinite(Date.parse(item.occurred_at)) ||
             ['order_id','subscription_id','refund_id'].some(key=>item[key] !== null && !validId(item[key])) ||
-            (monetary ? item.currency !== 'CNY' || typeof item.amount_minor !== 'string' || !/^\d+$/.test(item.amount_minor) || BigInt(item.amount_minor) <= 0n : item.currency !== null || item.amount_minor !== null)) throw new Error('INVALID_NOTIFICATION');
+            (monetary ? item.currency !== 'CNY' || typeof item.amount_minor !== 'string' || !/^\d+$/.test(item.amount_minor) || (!zeroAllowed && BigInt(item.amount_minor) === 0n) : item.currency !== null || item.amount_minor !== null)) throw new Error('INVALID_NOTIFICATION');
         ids.add(item.id);
       }
       target.innerHTML = `<h3 class="records-title" id="notifications-title" tabindex="-1">${t('账务事件记录','Billing event history')}</h3>` +
         (data.items.length ? `<ul class="record-list">${data.items.map(item=>{
           const [title,note] = messages[item.type];
-          const link = item.type === 'unknown' ? '' : item.type.startsWith('cancellation_') ? `<a class="text-link" href="#subscription">${t('查看订阅','View subscription')}</a>` :
-            ['seat_assignment_changed','shared_limit_changed'].includes(item.type) ? `<a class="text-link" href="#organization-history">${t('查看企业变更记录','View organization history')}</a>` :
+          const link = item.type === 'unknown' ? '' : (item.type.startsWith('cancellation_') || ['renewal_reminder','renewal_notice_blocked','plan_changed','service_refund_requested','service_refund_refunded','service_refund_failed'].includes(item.type)) ? `<a class="text-link" href="#subscription">${t('查看订阅','View subscription')}</a>` :
+            ['seat_assignment_changed','shared_limit_changed','member_role_changed','member_removed'].includes(item.type) ? `<a class="text-link" href="#organization-history">${t('查看企业变更记录','View organization history')}</a>` :
             item.type.startsWith('topup_') && !item.order_id ? `<a class="text-link" href="#credits">${t('查看充值授权','View top-up authorization')}</a>` :
+            ['invoice_requested','invoice_sent'].includes(item.type) ? `<a class="text-link" href="#invoices">${t('查看发票','View invoices')}</a>` :
+            item.type === 'account_security' ? `<a class="text-link" href="${page('profile')}#security">${t('查看安全设置','View security settings')}</a>` :
             item.type === 'credit_batch_expired' ? `<a class="text-link" href="#credits">${t('查看额度批次','View Credits batches')}</a>` :
             item.order_id ? `<a class="text-link" href="${page('billing')}?${new URLSearchParams({order:item.order_id})}#orders">${t('查看订单','View order')}</a>` : '';
           return `<li class="billing-notification"><div><strong>${title}</strong>${item.amount_minor === null ? '' : `<span class="notification-amount">${money(item.amount_minor,true)}</span>`}<p>${note}</p><small>${dateLabel(item.occurred_at)}</small></div>${link}</li>`;
@@ -890,9 +1114,9 @@
       }
       const quantity = value => value === null ? '—' : `${escape(value)} Sage Credits`;
       const roles = {owner:t('所有者','Owner'),billing_admin:t('账务管理员','Billing admin'),member:t('成员','Member')};
-      target.innerHTML = prefix + `<h3 class="records-title">${t('成员与席位','Members and seats')}</h3><dl class="account-metrics"><div><dt>${t('购买席位','Purchased seats')}</dt><dd>${data.seat_count}</dd></div><div><dt>${t('已分配','Assigned')}</dt><dd>${data.assigned_seats}</dd></div><div><dt>${t('成员总数','Total members')}</dt><dd>${data.total_members}</dd></div></dl><p class="account-context">${data.subscription_active ? `${t('当前额度周期','Current credit period')}：${dateLabel(data.period_start)} – ${dateLabel(data.period_end)}` : t('当前没有生效中的订阅，本期共享用量暂不计算；“—”不表示零。','There is no active subscription. Current-period shared usage is unavailable; “—” does not mean zero.')}</p><p class="account-context">${t('当前为只读视图。席位分配与上限修改尚未开放，不会在此产生变更。','This view is read-only. Seat assignments and limit changes are not available here.')}</p>${data.members.length ? `<ul class="record-list organization-members">${data.members.map(item => `<li><strong>${escape(item.masked_identifier || `${t('成员','Member')} #${item.id}`)}</strong><span>${escape(roles[item.role] || unknown())} · ${item.active ? t('有效成员','Active member') : t('已停用','Inactive')}</span><span>${item.seat_position === null ? t('未分配席位','No seat assigned') : `${t('席位','Seat')} ${escape(item.seat_position)}`}</span><small>${t('共享上限','Shared limit')}：${item.shared_limit === null ? t('不限制','Unlimited') : item.shared_limit === '0' ? t('禁止使用共享池','Shared pool disabled') : quantity(item.shared_limit)}</small><small>${t('共享已用','Shared used')}：${quantity(item.shared_used)} · ${t('共享预占','Shared reserved')}：${quantity(item.shared_reserved)}</small></li>`).join('')}</ul>` : emptyText(t('此页没有成员记录。','There are no members on this page.'))}<div class="organization-pagination">${offset > 0 ? `<button class="text-link" data-org-offset="${Math.max(0,offset-50)}">${t('上一页','Previous')}</button>` : ''}${data.next_offset !== null && Number.isInteger(data.next_offset) ? `<button class="text-link" data-org-offset="${data.next_offset}">${t('下一页','Next')}</button>` : ''}<a class="text-link" href="#credits">${t('查看 Sage Credits 批次','View Sage Credits batches')}</a></div>`;
+      target.innerHTML = prefix + `<h3 class="records-title">${t('成员与席位','Members and seats')}</h3><dl class="account-metrics"><div><dt>${t('购买席位','Purchased seats')}</dt><dd>${data.seat_count}</dd></div><div><dt>${t('已分配','Assigned')}</dt><dd>${data.assigned_seats}</dd></div><div><dt>${t('成员总数','Total members')}</dt><dd>${data.total_members}</dd></div></dl><p class="account-context">${data.subscription_active ? `${t('当前额度周期','Current credit period')}：${dateLabel(data.period_start)} – ${dateLabel(data.period_end)}` : t('当前没有生效中的订阅，本期共享用量暂不计算；“—”不表示零。','There is no active subscription. Current-period shared usage is unavailable; “—” does not mean zero.')}</p><p class="account-context">${t('当前为只读视图。席位分配与上限修改尚未开放，不会在此产生变更。','This view is read-only. Seat assignments and limit changes are not available here.')}</p>${data.members.length ? `<ul class="record-list organization-members">${data.members.map(item => `<li><strong>${escape(item.masked_identifier || `${t('成员','Member')} #${item.id}`)}</strong><span>${escape(roles[item.role] || unknown())} · ${item.active ? t('有效成员','Active member') : t('已停用','Inactive')}</span><span>${item.seat_position === null ? t('未分配席位','No seat assigned') : `${t('席位','Seat')} ${escape(item.seat_position)}`}</span><small>${t('累计使用点数','Total Credits used')}：${item.total_credits===undefined?unknown():quantity(item.total_credits)}</small><small>${t('共享已用','Shared used')}：${quantity(item.shared_used)} · ${t('共享预占','Shared reserved')}：${quantity(item.shared_reserved)}</small></li>`).join('')}</ul>` : emptyText(t('此页没有成员记录。','There are no members on this page.'))}<div class="organization-pagination">${offset > 0 ? `<button class="text-link" data-org-offset="${Math.max(0,offset-50)}">${t('上一页','Previous')}</button>` : ''}${data.next_offset !== null && Number.isInteger(data.next_offset) ? `<button class="text-link" data-org-offset="${data.next_offset}">${t('下一页','Next')}</button>` : ''}<a class="text-link" href="#credits">${t('查看 Sage Credits 批次','View Sage Credits batches')}</a></div>`;
       const policy=target.querySelectorAll('.account-context')[1];
-      if(policy)policy.textContent=t('企业所有者可移除成员并立即撤销企业访问权限；个人账号和企业共有成果保留。席位分配与额度上限修改尚未开放。','Owners can remove members and immediately revoke business access. Personal accounts and shared business work are retained. Seat assignment and limit changes are not available.');
+      if(policy){policy.textContent=t('Teams套餐点数按名额独享，Enterprise套餐点数由企业共享；企业加购点数共享，不设置成员用量上限。名额和管理员权限在企业管理中操作。','Teams plan Credits belong to individual seats; Enterprise plan Credits are shared. Purchased business Credits are shared, without per-member caps. Manage seats and administrator permissions in Business management.');const manage=document.createElement('a');manage.className='button';manage.href=page('profile')+'#organization';manage.textContent=t('打开企业管理','Open Business management');manage.dataset.businessManagement='';policy.after(manage);}
       for(const [index,item] of data.members.entries()){
         if(data.capabilities?.member_removal===true&&item.can_remove===true&&item.active&&item.role!=='owner'){
           const action=document.createElement('button');action.type='button';action.className='button';action.textContent=t('移除成员','Remove member');action.addEventListener('click',()=>removeMember(item,action));target.querySelectorAll('.organization-members>li')[index].append(action);
@@ -921,6 +1145,24 @@
       target.querySelector('[data-org-retry]').addEventListener('click', () => renderOrganization(target,prefix,current,accountId,offset));
     }
   }
+  async function renderInvoices(target,current,accountId,orders){
+    target.innerHTML=emptyText(t('正在读取发票…','Loading invoices…'));
+    try{
+      const data=await api('/api/account/invoices?'+new URLSearchParams({account_id:accountId}));if(!current())return;
+      if(!Array.isArray(data.items)||typeof data.available!=='boolean')throw Error('INVALID_INVOICES');
+      const states={requested:t('已申请','Requested'),reviewing:t('审核中','Under review'),issued:t('已开具','Issued'),sent:t('已发送','Sent'),failed:t('需要处理','Needs attention')};
+      for(const item of data.items)if(typeof item.id!=='string'||typeof item.title!=='string'||typeof item.recipient_email!=='string'||!Object.hasOwn(states,item.status))throw Error('INVALID_INVOICE');
+      target.innerHTML=`<h3>${t('发票记录','Invoices')}</h3>${data.items.length?`<ul class="record-list">${data.items.map(item=>`<li><strong>${escape(item.title)}</strong><span>${states[item.status]}</span><small>${escape(item.recipient_email)}</small><small>${dateLabel(item.created_at)}</small></li>`).join('')}</ul>`:emptyText(t('暂无发票申请。','No invoice requests.'))}<p>${t('收票邮箱仅用于发送发票，不修改或绑定登录邮箱。申请成功不代表已开具或已发送。','The invoice recipient email is independent of your sign-in email. An accepted request does not mean an invoice was issued or sent.')}</p>`;
+      const paid=orders.filter(item=>item.status==='fulfilled');
+      if(!data.available||!paid.length){target.insertAdjacentHTML('beforeend',`<button type="button" class="button" disabled>${t('申请发票','Request invoice')}</button><p>${data.available?t('当前没有可申请的已付款订单。','No eligible paid orders are available.'):t('开票申请服务尚未就绪，请稍后再试。','Invoice requests are not available yet. Retry later.')}</p>`);return;}
+      const form=document.createElement('form');form.className='procurement-form';form.method='dialog';form.innerHTML=`<label>${t('已付款订单','Paid order')}<select name="order_id">${paid.map(item=>`<option value="${escape(item.id)}">${escape(item.plan_code||t('订单','Order'))} · ${money(item.amount_minor,true)} · ${escape(item.id)}</option>`).join('')}</select></label><label>${t('发票抬头','Invoice title')}<input name="title" maxlength="200" required autocomplete="organization"></label><label>${t('税号','Tax number')}<input name="tax_number" maxlength="80" required></label><label>${t('收票邮箱','Invoice recipient email')}<input name="recipient_email" type="email" required autocomplete="email" maxlength="254"></label><button type="submit" class="button primary">${t('提交发票申请','Submit invoice request')}</button><p role="status"></p>`;target.append(form);
+      let busy=false,key=null,submitted=null;form.onsubmit=async event=>{event.preventDefault();if(busy||!current()||!form.reportValidity())return;const payload=Object.fromEntries(new FormData(form)),serialized=JSON.stringify(payload);if(serialized!==submitted){submitted=serialized;key=crypto.randomUUID();}const submit=form.querySelector('[type=submit]'),note=form.querySelector('[role=status]');busy=true;submit.disabled=true;
+        try{if(activeAccount()?.kind==='business')await window.sageConfirmSensitive(accountId,session.csrf_token);if(!current())return;const saved=await api('/api/account/invoices',{...payload,request_key:key});if(!current())return;if(typeof saved.id!=='string'||saved.status!=='requested')throw Error('INVOICE_UNCONFIRMED');await renderInvoices(target,current,accountId,orders);}
+        catch(error){if(current())note.textContent=requestError(error,t('申请结果未确认，请刷新记录核对或以相同内容重试；不会重复申请。','Request status is unconfirmed. Refresh records or retry the same details; the request will not be duplicated.'));}
+        finally{busy=false;if(submit.isConnected)submit.disabled=false;}};
+    }catch(error){if(current()){target.innerHTML=`<p class="error" role="status">${requestError(error,t('发票状态读取失败，当前状态未知。','Invoices could not be loaded; their status is unknown.'))}</p><button class="button" data-invoices-refresh>${t('重新读取','Retry')}</button>`;target.querySelector('button').onclick=()=>renderInvoices(target,current,accountId,orders);}}
+  }
+
   async function renderAutomaticTopup(target,current,accountId) {
     const request = Symbol(); target.topupRequest = request;
     const heading = `<h3>${t('企业自动充值','Business auto top-up')}</h3>`;
@@ -940,10 +1182,28 @@
             !amount(b.spent_minor) || !amount(b.reserved_minor) || typeof b.needs_review !== 'boolean' ||
             (b.remaining_minor !== null && !amount(b.remaining_minor))))) throw new Error('INVALID_TOPUP_STATUS');
       target.innerHTML = heading + `<p class="notice">${t('自动扣款尚未启用。这里仅展示授权记录与预算，不会触发充值。','Automatic charges are not enabled. This view shows authorization and budget records only; it cannot trigger a top-up.')}</p>` +
-        (a ? `<p>${states[a.state]}</p><dl class="account-metrics"><div><dt>${t('余额阈值','Balance threshold')}</dt><dd>${escape(a.threshold)}</dd></div><div><dt>${t('固定购买包','Fixed pack')}</dt><dd>${escape(a.pack_credits)} Sage Credits</dd></div><div><dt>${t('每次金额','Per top-up')}</dt><dd>${money(a.pack_amount_minor,true)}</dd></div><div><dt>${t('授权月金额上限','Authorized monthly cap')}</dt><dd>${money(a.monthly_cap_minor,true)}</dd></div></dl>` : emptyText(t('尚未记录独立充值授权。订阅续费授权不包含自动充值。','No separate top-up authorization is recorded. A renewal authorization does not include auto top-up.'))) +
+        (a ? `<p>${states[a.state]}</p><dl class="account-metrics"><div><dt>${t('共享余额触发线','Shared balance threshold')}</dt><dd>${escape(a.threshold)}</dd></div><div><dt>${t('固定购买包','Fixed pack')}</dt><dd>${escape(a.pack_credits)} Sage Credits</dd></div><div><dt>${t('每次金额','Per top-up')}</dt><dd>${money(a.pack_amount_minor,true)}</dd></div><div><dt>${t('本服务月金额上限','Service-month spending cap')}</dt><dd>${money(a.monthly_cap_minor,true)}</dd></div></dl>` : emptyText(t('尚未记录独立充值授权。订阅续费授权不包含自动充值。','No separate top-up authorization is recorded. A renewal authorization does not include auto top-up.'))) +
         (b ? `<h4>${t('已记录预算窗口','Recorded budget window')}</h4><p>${dateLabel(b.starts_at)} — ${dateLabel(b.ends_at)}</p><dl class="account-metrics"><div><dt>${t('已用金额','Spent')}</dt><dd>${money(b.spent_minor,true)}</dd></div><div><dt>${t('在途预留','Pending reservation')}</dt><dd>${money(b.reserved_minor,true)}</dd></div><div><dt>${t('预算余量','Budget remaining')}</dt><dd>${b.remaining_minor === null ? '—' : money(b.remaining_minor,true)}</dd></div></dl>${b.needs_review ? `<p class="notice">${t('存在待核对交易，预算余量未知。查明原交易前不会开启下一笔充值。','A payment requires review, so the remaining budget is unknown. No further top-up may begin until it is resolved.')}</p>` : ''}` : emptyText(t('尚未建立当前预算窗口，不能据此判断本月已用金额为零。','No current budget window has been established. This does not mean monthly spending is zero.'))) +
-        `<p class="account-context">${t('订阅费用与自动充值预算分别计算。暂停或撤销不会清除历史支出。','Subscription fees and auto top-up budgets are separate. Pausing or revoking authorization does not erase past spending.')}</p><button class="text-link" data-topup-refresh>${t('刷新状态','Refresh status')}</button>`;
+        `<p class="account-context">${t('自动充值默认关闭，采用固定方案。只有任务需要使用企业共享点数，且共享可用余额低于触发线时才充值；本人套餐点数与私人点数不计入该余额。每次只购买一包，受本服务月金额上限约束。订阅费用单独计算，暂停或撤销不会清除历史支出。','Auto top-up is off by default and uses fixed presets. It triggers only when a task needs shared business Credits and the available shared balance is below the threshold. Individual plan and private Credits are excluded from this balance. Each trigger purchases one pack within the service-month spending cap. Subscription fees are separate; pausing or revoking authorization does not erase past spending.')}</p><button class="text-link" data-topup-refresh>${t('刷新状态','Refresh status')}</button>`;
       target.querySelector('[data-topup-refresh]').addEventListener('click',()=>renderAutomaticTopup(target,current,accountId));
+      if(a&&['revoking','revoked'].includes(a.state)){
+        const stopped=document.createElement('p');stopped.setAttribute('role','status');stopped.textContent=a.state==='revoking'?t('已停止新的自动充值扣款。渠道撤销仍待确认；原有在途付款仍需核对。','New auto top-up charges are stopped. Channel revocation is awaiting confirmation; existing in-flight payments still need checking.'):t('自动充值已关闭，渠道撤销已确认；原有在途付款仍需核对。','Auto top-up is off and channel revocation is confirmed. Existing in-flight payments still need checking.');target.append(stopped);
+      }
+      if(a&&typeof a.id==='string'&&/^[0-9a-f-]{36}$/i.test(a.id)&&['authorized','paused','superseded'].includes(a.state)&&['owner','billing_admin'].includes(activeAccount()?.role)){
+        const controls=document.createElement('div');controls.innerHTML=`<button type="button" class="button" data-topup-disable aria-expanded="false">${t('关闭自动充值','Turn off auto top-up')}</button><section class="policy-block" data-topup-stop-confirm hidden><h4>${t('确认关闭自动充值？','Turn off auto top-up?')}</h4><p>${t('关闭后先停止新的自动充值扣款。支付渠道撤销仍需确认，原有在途付款继续核对，不会清除历史支出。','Turning off first stops new auto top-up charges. Channel revocation still needs confirmation; existing in-flight payments still need checking, and past spending is retained.')}</p><div class="action-row"><button type="button" class="button primary" data-topup-stop-submit>${t('确认关闭自动充值','Confirm turning off auto top-up')}</button><button type="button" class="button" data-topup-stop-back>${t('暂不关闭','Keep auto top-up')}</button></div><p role="status"></p></section>`;target.append(controls);
+        const open=controls.querySelector('[data-topup-disable]'),confirm=controls.querySelector('[data-topup-stop-confirm]'),submit=controls.querySelector('[data-topup-stop-submit]'),back=controls.querySelector('[data-topup-stop-back]'),feedback=confirm.querySelector('[role=status]');let busy=false;const active=()=>current()&&target.isConnected&&target.topupRequest===request;
+        open.onclick=()=>{if(busy||!active())return;confirm.hidden=false;open.setAttribute('aria-expanded','true');submit.focus();};back.onclick=()=>{if(busy||!active())return;confirm.hidden=true;open.setAttribute('aria-expanded','false');feedback.textContent='';open.focus();};
+        submit.onclick=async()=>{if(busy||!active())return;busy=true;open.disabled=submit.disabled=back.disabled=true;feedback.textContent=t('正在关闭…','Turning off…');try{const saved=await api('/api/billing/automatic-topup/disable',{authorization_id:a.id,confirm:true});if(!active())return;if(saved.account_id!==accountId||saved.charging_enabled!==false||saved.authorization?.id!==a.id||!['revoking','revoked'].includes(saved.authorization.state))throw Error('TOPUP_DISABLE_UNCONFIRMED');await renderAutomaticTopup(target,current,accountId);}catch(error){if(active())feedback.textContent=requestError(error,t('关闭结果未确认。请刷新原授权状态核对，或主动重试；本页不会自动重试。','Turning off is unconfirmed. Read the original authorization status or retry explicitly; this request will not retry automatically.'));}finally{busy=false;if(controls.isConnected)open.disabled=submit.disabled=back.disabled=false;}};
+      }
+      const presets=data.presets;
+      if(presets!==undefined){
+        if(!Array.isArray(presets)||presets.some(item=>typeof item.key!=='string'||!quantity(item.threshold)||!quantity(item.pack_credits)||!amount(item.pack_amount_minor)||!amount(item.monthly_cap_minor)||item.currency!=='CNY'))throw Error('INVALID_TOPUP_PRESETS');
+        const form=document.createElement('form');form.method='dialog';form.className='procurement-form';form.innerHTML=`<h4>${t('选择固定充值方案','Choose a fixed top-up preset')}</h4><label>${t('充值方案','Top-up preset')}<select name="preset_key">${presets.map(item=>`<option value="${escape(item.key)}">${t('低于','Below')} ${escape(item.threshold)} Credits · ${t('每次','Per top-up')} ${escape(item.pack_credits)} Credits (${money(item.pack_amount_minor,true)}) · ${t('本服务月最多','Service-month cap')} ${money(item.monthly_cap_minor,true)}</option>`).join('')}</select></label><label class="consent"><input type="checkbox" name="confirm"><span>${t('我单独授权：任务需要使用共享点数且共享余额低于上述触发线时，按此固定购买包和服务月金额上限自动充值。订阅续费授权不包含自动充值。','I separately authorize auto top-up when a task needs shared Credits and the shared balance is below this threshold, using this fixed pack and service-month spending cap. Subscription renewal does not authorize auto top-up.')}</span></label><button type="submit" class="button primary" disabled>${t('确认自动充值授权','Confirm auto top-up authorization')}</button><p role="status">${t('真实自动扣款授权尚未接通，当前不能开启。保存或展示方案不代表已授权扣款。','Recurring payment authorization is not connected, so auto top-up cannot be enabled. Displaying a preset does not authorize charges.')}</p>`;
+        const submit=form.querySelector('[type=submit]'),consent=form.querySelector('[type=checkbox]');const available=data.can_authorize===true&&typeof data.payment_method_id==='string'&&presets.length>0;let busy=false,key=null;
+        consent.onchange=()=>submit.disabled=busy||!available||!consent.checked;
+        form.onsubmit=async event=>{event.preventDefault();if(submit.disabled||!current())return;busy=true;submit.disabled=true;key=key||crypto.randomUUID();try{await window.sageConfirmSensitive(accountId,session.csrf_token);if(!current())return;const saved=await api('/api/billing/automatic-topup',{preset_key:form.elements.preset_key.value,payment_method_id:data.payment_method_id,expected_version:data.authorization?.version??null,request_key:key,confirm:true});if(!current())return;if(typeof saved.id!=='string'||!Number.isSafeInteger(saved.version)||typeof saved.charging_enabled!=='boolean')throw Error('AUTHORIZATION_UNCONFIRMED');await renderAutomaticTopup(target,current,accountId);}catch(error){if(current())form.querySelector('[role=status]').textContent=requestError(error,t('授权结果未确认，请刷新原记录核对；不会自动再次授权。','Authorization is unconfirmed. Refresh the original record; authorization will not retry automatically.'));}finally{busy=false;if(submit.isConnected)submit.disabled=!available||!consent.checked;}};target.append(form);
+      }
+
     } catch (error) {
       if (!current() || !target.isConnected || target.topupRequest !== request) return;
       target.innerHTML = heading + `<p class="error">${requestError(error,t('授权与预算状态未知，请重试。','Authorization and budget status are unknown. Please retry.'))}</p><button class="button" data-topup-retry>${t('重试','Retry')}</button>`;
@@ -1007,12 +1267,64 @@
   }
   function validSubscription(item) {
     const date = value => value === null || (typeof value === 'string' && Number.isFinite(Date.parse(value)));
+    const setup=item?.renewal_setup;
+    if(setup!=null&&(typeof setup!=='object'||Array.isArray(setup)||setup.status!=='failed'||setup.separate_authorization_required!==true||item.auto_renew!==false||item.can_cancel!==false))return false;
     if (item?.renewal != null && (!['created','pending','unknown','succeeded','failed','expired','cancelled','review','missing'].includes(item.renewal.status) || !item.renewal.manual_payment_deadline || !date(item.renewal.manual_payment_deadline) || !['manual_payment_eligible','new_subscription_payment_eligible','query_original_payment','reauthorization_required'].every(key => typeof item.renewal[key] === 'boolean'))) return false;
     return item && typeof item.id === 'string' && /^[0-9a-f-]{36}$/i.test(item.id) && typeof item.plan_code === 'string' && item.plan_code.length > 0 && ['monthly','annual'].includes(item.billing_cycle) && ['active','expired','scheduled'].includes(item.status) && ['none','processing','completed'].includes(item.cancellation_state) && typeof item.auto_renew === 'boolean' && typeof item.can_cancel === 'boolean' && ['period_start','period_end','next_credit_grant_at','prepaid_through'].every(key => date(item[key])) && item.capabilities && typeof item.capabilities.cancel === 'boolean' && !(item.cancellation_state !== 'none' && item.auto_renew);
   }
+  function annualRefund(target,item,current){
+    const accountId=session?.active_account_id,subscriptionId=item.id,active=()=>current()&&target.isConnected&&session?.active_account_id===accountId;
+    target.innerHTML=`<h4>${t('年度订阅退款','Annual subscription refund')}</h4><p>${t('退回未来尚未开始的完整服务月，包括已付款的下一期；当前服务月保留。提交申请立即关闭续费，到账需以退款记录为准。','Refund future full service months, including paid future terms; retain the current month. Submitting stops renewal immediately. Receipt of funds depends on the refund record.')}</p><button type="button" class="button" data-annual-review>${t('核对可退金额','Review refund amount')}</button><div data-annual-refund></div>`;
+    const panel=target.querySelector('[data-annual-refund]');let key=crypto.randomUUID(),busy=false,refundId=null;
+    const review=target.querySelector('[data-annual-review]');review.onclick=()=>assess();
+    async function assess(restoreOnly=false){
+      if(busy||!active())return;busy=true;review.disabled=true;if(!restoreOnly)panel.innerHTML=emptyText(t('正在核对…','Checking…'));
+      try{const data=await api(`/api/billing/subscriptions/${encodeURIComponent(subscriptionId)}/refund-assessment`);if(!active())return;if(data.subscription_id!==subscriptionId||typeof data.eligible!=='boolean'||data.currency!=='CNY'||(data.amount_minor!==null&&(typeof data.amount_minor!=='string'||!/^\d+$/.test(data.amount_minor)))||(data.eligible&&data.amount_minor===null)||typeof data.automatic_review!=='boolean')throw Error('INVALID_ANNUAL_REFUND');
+        if(data.existing_refund!==undefined&&data.existing_refund!==null){show(data.existing_refund);return;}if(restoreOnly)return;
+        panel.innerHTML=`<dl class="order-detail-list"><dt>${t('可退金额','Refund amount')}</dt><dd>${data.amount_minor===null?t('暂不可计算','Unavailable'):money(data.amount_minor,true)}</dd><dt>${t('当前服务保留至','Current service retained until')}</dt><dd>${dateLabel(data.current_service_ends_at)}</dd></dl><p>${data.automatic_review?t('普通申请按规则由系统处理；实际到账时间以支付渠道为准。','Ordinary requests are processed under the rules. Posting time depends on the payment channel.'):t('此申请需要人工核对，不代表已经退款。','This request requires manual review; no refund has been confirmed.')}</p><label class="consent"><input type="checkbox" data-annual-agree><span>${t('我确认申请上述退款并立即关闭自动续费。','I confirm this refund request and immediate cancellation of renewal.')}</span></label><button type="button" class="button primary" data-annual-submit disabled>${t('提交年度退款申请','Submit annual refund request')}</button><p role="status"></p>`;
+        const agree=panel.querySelector('[data-annual-agree]'),submit=panel.querySelector('[data-annual-submit]');if(!data.eligible){const reasons={no_future_months:t('没有尚未开始的完整服务月。','There are no future full service months.'),no_future_service_months:t('没有尚未开始的完整服务月。','There are no future full service months.'),not_annual:t('此订阅不是年度订阅。','This is not an annual subscription.'),task_settlement_required:t('相关任务需要先完成结算。','Related tasks must settle first.'),payment_review_required:t('原付款需要先核对。','The original payment requires review.')};panel.querySelector('[role=status]').textContent=reasons[data.reason]||t('当前不满足在线申请条件，请核对原订单及订阅状态。','Online refund requirements are not currently met. Check the original order and subscription.');agree.disabled=true;}agree.onchange=()=>submit.disabled=busy||!data.eligible||!agree.checked;
+        submit.onclick=async()=>{if(busy||submit.disabled||!active())return;busy=true;submit.disabled=true;const feedback=panel.querySelector('[role=status]');try{if(activeAccount()?.kind==='business')await window.sageConfirmSensitive(accountId,session.csrf_token);if(!active())return;const saved=await api(`/api/billing/subscriptions/${encodeURIComponent(subscriptionId)}/refunds`,{request_key:key,confirm:true});if(!active())return;show(saved);}catch(error){if(active())feedback.textContent=requestError(error,t('申请结果未知。请使用本页原请求核对，不要新建另一笔申请。','Request status is unknown. Retry the original request here; do not create another request.'));}finally{busy=false;if(submit.isConnected)submit.disabled=!agree.checked||!data.eligible;}};
+      }catch(error){if(active())panel.innerHTML=`<p class="error" role="status">${requestError(error,t('退款条件读取失败，状态未知，请重新核对。','Refund eligibility could not be loaded. Its state is unknown. Check again.'))}</p>`;}finally{busy=false;if(review.isConnected)review.disabled=false;}
+    }
+    assess(true);
+    function show(data){
+      const states={approved:t('系统已接受，尚未确认退款到账','Accepted; refund receipt is not yet confirmed'),review:t('等待人工核对','Awaiting manual review'),processing:t('退款处理中','Refund processing'),refunded:t('退款已确认，到账时间以渠道为准','Refund confirmed; posting time depends on the channel'),unknown:t('原退款结果未知，正在核对','Original refund outcome unknown'),terminated:t('本次退款已结束，自动续费仍关闭','This refund request has ended. Automatic renewal remains off.')};
+      if(typeof data.id!=='string'||!Object.hasOwn(states,data.status)||data.currency!=='CNY'||typeof data.amount_minor!=='string'||!/^\d+$/.test(data.amount_minor)||data.auto_renew!==false)throw Error('INVALID_REFUND_RESULT');refundId=data.id;item.auto_renew=false;item.can_cancel=false;const card=target.closest('.subscription-card');if(card){const renewal=card.querySelector('.subscription-renewal>strong');if(renewal)renewal.textContent=t('自动续费已在系统关闭','Renewal stopped in the system');card.querySelector('[data-cancel-open]')?.remove();card.querySelector('.subscription-confirm')?.remove();}
+      panel.innerHTML=`<p role="status">${states[data.status]}</p><p>${t('自动续费已在系统关闭；当前服务保留至','Renewal is stopped in the system; current service retained until')} ${dateLabel(data.current_service_ends_at)}</p><p>${money(data.amount_minor,true)}</p><button type="button" class="button" data-annual-refresh>${t('核对原退款状态','Check original refund status')}</button>`;
+      panel.querySelector('button').onclick=async()=>{if(busy||!active())return;busy=true;try{const saved=await api(`/api/billing/refunds/${encodeURIComponent(refundId)}`);if(active()){if(saved.id!==refundId)throw Error('REFUND_MISMATCH');show(saved);}}catch(_){if(active())panel.querySelector('[role=status]').textContent=t('原退款状态读取失败，当前结果未知，请重试查询。','The original refund could not be loaded. Its outcome is unknown. Retry the read.');}finally{busy=false;}};
+    }
+  }
+
+  async function renderSubscriptionChanges(target,item,current){
+    target.innerHTML=`<h4>${t('更换套餐或周期','Change plan or billing cycle')}</h4><p>${t('正在读取可选方案…','Loading available plans…')}</p>`;
+    const accountId=session?.active_account_id,subscriptionId=item.id;const active=()=>current()&&target.isConnected&&session?.active_account_id===accountId;
+    try{
+      const data=await api(`/api/billing/subscriptions/${encodeURIComponent(subscriptionId)}/change-options`);if(!active())return;
+      if(data.subscription_id!==subscriptionId||typeof data.available!=='boolean'||!Array.isArray(data.items))throw Error('INVALID_CHANGE_OPTIONS');
+      for(const option of data.items)if(typeof option.product_id!=='string'||typeof option.code!=='string'||!['monthly','annual'].includes(option.billing_cycle)||option.currency!=='CNY'||typeof option.amount_minor!=='string'||!/^\d+$/.test(option.amount_minor))throw Error('INVALID_CHANGE_OPTION');
+      if(activeAccount()?.kind==='business')data.items=data.items.filter(option=>option.code===item.plan_code);
+      target.innerHTML=`<h4>${t('更换套餐或周期','Change plan or billing cycle')}</h4><p>${t('按剩余服务时间抵扣。新套餐实际开通时开始完整周期，首月发放完整内含点数；旧套餐内含点数结束，加购点数保留。','Credit is based on remaining service time. A complete new term begins on activation with the full first-month allowance. Old included Credits end; purchased Credits remain.')}</p>`;
+      if(!data.available||!data.items.length){target.insertAdjacentHTML('beforeend',`<button class="button" disabled>${t('更换套餐','Change plan')}</button><p>${t('可售方案、费用规则或支付服务尚未就绪，当前无法变更。','Approved plans, pricing rules or payment services are not ready; changes are unavailable.')}</p>`);return;}
+      const form=document.createElement('form');form.method='dialog';form.innerHTML=`<label>${t('目标套餐','Target plan')}<select name="product_id">${data.items.map(option=>`<option value="${escape(option.product_id)}">${escape(option.code)} · ${option.billing_cycle==='annual'?t('年付','Annual'):t('月付','Monthly')} · ${money(option.amount_minor,true)}</option>`).join('')}</select></label><button type="submit" class="button">${t('核对变更费用','Review change charges')}</button><p role="status"></p><div data-change-quote></div>`;target.append(form);
+      let quote=null,quoteKey=null,changeKey=null,busy=false,timer=null;const note=form.querySelector('[role=status]'),quotePanel=form.querySelector('[data-change-quote]'),select=form.querySelector('select');
+      const submit=form.querySelector('[type=submit]');select.onchange=()=>{clearInterval(timer);quote=null;quoteKey=null;changeKey=null;quotePanel.replaceChildren();note.textContent='';};
+      form.onsubmit=async event=>{event.preventDefault();if(busy||!active())return;busy=true;submit.disabled=true;quoteKey=quoteKey||crypto.randomUUID();try{const saved=await api(`/api/billing/subscriptions/${encodeURIComponent(subscriptionId)}/change-quotes`,{product_id:select.value},session.csrf_token,{'Idempotency-Key':quoteKey});if(!active())return;const terms=saved.terms,content=terms?.[en?'en':'zh']||terms;if(saved.subscription_id!==subscriptionId||saved.product_id!==select.value||saved.currency!=='CNY'||typeof saved.id!=='string'||!Number.isFinite(Date.parse(saved.expires_at))||['gross_minor','discount_minor','due_minor','refund_minor'].some(key=>typeof saved[key]!=='string'||!/^\d+$/.test(saved[key]))||typeof terms?.version!=='string'||typeof content.title!=='string'||!Array.isArray(content.paragraphs)||content.paragraphs.some(value=>typeof value!=='string'))throw Error('INVALID_CHANGE_QUOTE');quote=saved;changeKey=crypto.randomUUID();showQuote(content);}
+        catch(error){if(active())note.textContent=requestError(error,t('变更报价未确认。可用相同选择重试，系统使用原请求，不会自动创建订单。','The change quote is unconfirmed. Retry the same selection with the original request; no order is automatically created.'));}finally{busy=false;if(submit.isConnected)submit.disabled=false;}};
+      function showQuote(content){
+        clearInterval(timer);quotePanel.innerHTML=`<dl class="order-detail-list"><dt>${t('新套餐金额','New plan price')}</dt><dd>${money(quote.gross_minor,true)}</dd><dt>${t('剩余服务抵扣','Remaining service credit')}</dt><dd>${money(quote.discount_minor,true)}</dd><dt>${t('本次应付','Amount due')}</dt><dd>${money(quote.due_minor,true)}</dd><dt>${t('另行退款','Separate refund')}</dt><dd>${money(quote.refund_minor,true)}</dd></dl><h4>${escape(content.title)}</h4>${content.paragraphs.map(value=>`<p>${escape(value)}</p>`).join('')}<p data-change-countdown></p><label class="consent"><input type="checkbox" data-change-agree><span>${t('我已阅读并同意变更条款，确认以上费用、点数处理与新服务周期。','I have read and accept the change terms and confirm these charges, Credits treatment and new term.')}</span></label><button type="button" class="button primary" data-change-confirm disabled>${t('确认变更','Confirm change')}</button>`;
+        const agree=quotePanel.querySelector('[data-change-agree]'),confirm=quotePanel.querySelector('[data-change-confirm]');
+        function countdown(){if(!active()||!quotePanel.isConnected){clearInterval(timer);return;}const seconds=Math.max(0,Math.ceil((Date.parse(quote.expires_at)-Date.now())/1000));quotePanel.querySelector('[data-change-countdown]').textContent=seconds?t(`报价剩余 ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`,`Quote remaining ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`):t('报价已过期，请更新费用并重新确认。','Quote expired. Update charges and review again.');confirm.disabled=busy||!agree.checked||seconds===0;if(seconds===0){agree.checked=false;agree.disabled=true;clearInterval(timer);quoteKey=null;submit.textContent=t('更新变更报价','Update change quote');}}
+        agree.onchange=countdown;timer=setInterval(countdown,1000);busy=false;countdown();
+        confirm.onclick=async()=>{if(confirm.disabled||!active())return;busy=true;confirm.disabled=true;select.disabled=true;submit.disabled=true;try{if(activeAccount()?.kind==='business')await window.sageConfirmSensitive(accountId,session.csrf_token);if(!active())return;const result=await api(`/api/billing/subscriptions/${encodeURIComponent(subscriptionId)}/changes`,{quote_id:quote.id,agreement_acceptance:quote.terms.version},session.csrf_token,{'Idempotency-Key':changeKey});if(!active())return;if(typeof result.id!=='string'||!['pending_payment','activated'].includes(result.status)||typeof result.payment_required!=='boolean'||typeof result.order_id!=='string')throw Error('CHANGE_UNCONFIRMED');clearInterval(timer);quotePanel.innerHTML=`<p role="status">${result.status==='activated'?t('服务端已确认变更生效，请刷新订阅核对。','The server confirms activation. Refresh subscriptions to verify.'):t('变更订单已创建，等待付款确认，当前尚未生效。','A change order was created and awaits confirmed payment. The change is not active.')}</p><a class="button" href="${page('billing')}?${new URLSearchParams({order:result.order_id})}#orders">${t('查看原订单','View original order')}</a>`;note.textContent='';}
+          catch(error){if(active())note.textContent=requestError(error,t('变更结果未知。请核对原订阅或用本页相同请求重试；不会自动重复扣款。','The change result is unknown. Check the original subscription or retry the same request here; no automatic duplicate charge is made.'));}
+          finally{busy=false;if(active()){select.disabled=false;submit.disabled=false;if(confirm.isConnected)countdown();}}};
+      }
+    }catch(error){if(active())target.innerHTML=`<h4>${t('更换套餐或周期','Change plan or billing cycle')}</h4><p role="status">${requestError(error,t('可变更方案读取失败，当前状态未知。','Change options could not be loaded; their state is unknown.'))}</p><button type="button" class="button" data-change-retry>${t('重新读取','Retry')}</button>`;target.querySelector('[data-change-retry]')?.addEventListener('click',()=>renderSubscriptionChanges(target,item,current));}
+  }
+
   async function renderSubscriptions(target, prefix, current) {
     let items = [], pending = null, confirming = null, uncertain = null, readVersion = 0;
-    const renewText = item => item.cancellation_state === 'processing' ? t('取消处理中','Cancellation processing') : item.cancellation_state === 'completed' ? t('自动续费已取消','Automatic renewal cancelled') : item.auto_renew ? t('自动续费已开启','Automatic renewal on') : t('自动续费未开启','Automatic renewal off');
+    const renewText = item => item.cancellation_state === 'processing' ? t('取消处理中','Cancellation processing') : item.cancellation_state === 'completed' ? t('自动续费已取消','Automatic renewal cancelled') : item.renewal_setup?.status==='failed'&&item.status==='active' ? t('已付服务已开通，自动续费未开启；需要时请另行开启','Paid service is active. Automatic renewal is off; enable it separately when needed.') : item.auto_renew ? t('自动续费已开启','Automatic renewal on') : t('自动续费未开启','Automatic renewal off');
     const serviceText = item => ({active:t('生效中','Active'),expired:t('已到期','Expired'),scheduled:t('待生效','Scheduled')})[item.status];
     const planName = code => ({pro:'Pro',pro_plus:'Pro+',ultra:'Ultra',teams:'Teams',enterprise:'Enterprise'})[code] || code;
     const dateText = value => value === null ? t('未提供','Not available') : dateLabel(value);
@@ -1067,6 +1379,7 @@
         guide.append(heading,detail);
         target.querySelector(`[data-subscription="${item.id}"]`).append(guide);
       }
+      for(const item of items){if(item.status!=='active')continue;const panel=document.createElement('section');panel.className='policy-block subscription-change-options';target.querySelector(`[data-subscription="${item.id}"]`).append(panel);renderSubscriptionChanges(panel,item,current);if(item.billing_cycle==='annual'){const refund=document.createElement('section');refund.className='policy-block';target.querySelector(`[data-subscription="${item.id}"]`).append(refund);annualRefund(refund,item,current);}}
       for (const button of target.querySelectorAll('[data-cancel-open]')) button.onclick = () => { if (!current() || pending) return; confirming = button.dataset.cancelOpen; paint(`cancel-title-${confirming}`); };
       for (const button of target.querySelectorAll('[data-cancel-back]')) button.onclick = () => { const id = button.dataset.cancelBack; confirming = null; paint(); target.querySelector(`[data-cancel-open="${id}"]`)?.focus(); };
       for (const button of target.querySelectorAll('[data-cancel-confirm]')) button.onclick = () => cancel(button.dataset.cancelConfirm);
@@ -1191,12 +1504,13 @@
     try {
       const data = await api(`/api/billing/orders/${encodeURIComponent(orderId)}/refund-assessment`);
       if (!current()) return;
-      if (data.order_id !== orderId || data.account_id !== accountId || data.can_submit !== false || data.currency !== 'CNY' || !Object.hasOwn(reasons,data.reason) || !['unavailable','assessment_ready','scope_ready'].includes(data.status)) throw new Error('INVALID_REFUND_ASSESSMENT');
+      if (data.order_id !== orderId || data.account_id !== accountId || typeof data.can_submit !== 'boolean' || data.currency !== 'CNY' || !Object.hasOwn(reasons,data.reason) || !['unavailable','assessment_ready','scope_ready'].includes(data.status)) throw new Error('INVALID_REFUND_ASSESSMENT');
       let metrics = '';
       if (data.status === 'assessment_ready') {
         if (data.scope !== 'all_unused_paid_credits' || !['policy_review_required','rounding_policy_pending'].includes(data.reason) || typeof data.unused_quantity !== 'string' || !/^\d+(\.\d+)?$/.test(data.unused_quantity) || typeof data.paid_minor !== 'string' || !/^\d+$/.test(data.paid_minor) || (data.reference_minor !== null && (typeof data.reference_minor !== 'string' || !/^\d+$/.test(data.reference_minor) || BigInt(data.reference_minor) > BigInt(data.paid_minor)))) throw new Error('INVALID_REFUND_AMOUNT');
         metrics = `<dl class="order-detail-list"><dt>${t('原单实付','Original payment')}</dt><dd>${money(data.paid_minor,true)}</dd><dt>${t('全部未用付费额度','Entire unused paid balance')}</dt><dd>${escape(data.unused_quantity)} Sage Credits</dd><dt>${t('退款参考金额','Reference refund amount')}</dt><dd>${data.reference_minor === null ? t('待确认','Not yet confirmed') : money(data.reference_minor,true)}</dd></dl>`;
       }
+      if(data.scope==='annual_future_service_months'&&data.can_submit)throw Error('INVALID_ANNUAL_SCOPE');
       if (data.status === 'scope_ready') {
         if (data.scope !== 'annual_future_service_months' || !Number.isInteger(data.future_month_count) || data.future_month_count < 0 || data.future_month_count > 11 || !Array.isArray(data.future_service_months) || data.future_service_months.length !== data.future_month_count || data.reason !== (data.future_month_count ? 'annual_refund_policy_review_required' : 'annual_no_future_months')) throw new Error('INVALID_ANNUAL_SCOPE');
         // Compare the API's exact microseconds, not Date.parse's truncated
@@ -1230,8 +1544,15 @@
         const range = value => `${escape(format(value.starts_at))} → ${escape(format(value.ends_at))}`;
         metrics = `<dl class="order-detail-list"><dt>${t('原年度服务期','Original annual service term')}</dt><dd>${range(data.service_period)}</dd><dt>${t('当前服务月','Current service month')}</dt><dd>${range(data.current_service_month)}</dd><dt>${t('未来完整服务月','Future full service months')}</dt><dd data-annual-month-count>${data.future_month_count}</dd>${data.future_service_months.map((value,index)=>`<dt>${t(`未来服务月 ${index+1}`,`Future service month ${index+1}`)}</dt><dd data-annual-future-month>${range(value)}</dd>`).join('')}</dl><p>${t('当前服务月保留，不计入退款范围。时间统一为北京时间（UTC+08:00），含起点、不含终点。仅展示范围，不表示已解约、冻结或停止服务。','The current service month is retained and excluded from the refund scope. All times use Beijing time (UTC+08:00), including the start and excluding the end. This shows scope only; no cancellation, freeze or service termination is implied.')}</p>`;
       } else if (['annual_refund_policy_review_required','annual_no_future_months'].includes(data.reason)) throw new Error('INVALID_ANNUAL_SCOPE');
-      target.innerHTML = heading + metrics + `<p role="status">${reasons[data.reason]}</p><button type="button" class="button" data-refund-refresh>${t('重新核对','Check again')}</button>`;
+      target.innerHTML = heading + metrics + `<p role="status">${data.can_submit?t('退款范围已核对，提交前请确认原订单及可退金额。','Refund scope checked. Review the original order and refund amount before submitting.'):reasons[data.reason]}</p><button type="button" class="button" data-refund-refresh>${t('重新核对','Check again')}</button>`;
       target.querySelector('[data-refund-refresh]').onclick = () => renderRefundAssessment(target,orderId,accountId,isCurrent);
+      if(data.can_submit){
+        const section=document.createElement('section');section.innerHTML=`<p>${t('按原订单申请全部未用付费点数退款。普通申请按规则由系统处理，异常情况转人工；申请不等于资金已到账。','Request a refund of this order’s entire unused paid Credits. Ordinary requests follow system rules; exceptions require manual review. A request does not confirm receipt of funds.')}</p><label class="consent"><input type="checkbox" data-credit-refund-agree><span>${t('我确认申请该订单全部未用付费点数退款。','I confirm a refund request for all unused paid Credits from this order.')}</span></label><button type="button" class="button primary" data-credit-refund-submit disabled>${t('提交退款申请','Submit refund request')}</button><p role="status"></p>`;
+        target.append(section);let busy=false;const key=crypto.randomUUID(),agree=section.querySelector('input'),submit=section.querySelector('button'),feedback=section.querySelector('[role=status]');agree.onchange=()=>submit.disabled=busy||!agree.checked;
+        submit.onclick=async()=>{if(busy||!agree.checked||!current())return;busy=true;submit.disabled=true;try{if(activeAccount()?.kind==='business')await window.sageConfirmSensitive(accountId,session.csrf_token);if(!current())return;const saved=await api(`/api/billing/orders/${encodeURIComponent(orderId)}/refunds`,{request_key:key,confirm:true});if(!current())return;if(typeof saved.id!=='string'||!['approved','review','processing','refunded','unknown'].includes(saved.status))throw Error('REFUND_UNCONFIRMED');section.innerHTML=`<p role="status">${saved.status==='refunded'?t('退款已由服务端确认，请以渠道到账记录为准。','The server confirmed the refund. Check channel posting records.'):saved.status==='review'?t('申请已记录，等待人工核对；尚未确认到账。','The request is recorded and awaits manual review. Receipt is not confirmed.'):t('申请已记录，退款处理中或待核对，尚未确认到账。','The request is recorded and processing or under review. Receipt is not confirmed.')}</p><button type="button" class="button" data-credit-refund-refresh>${t('核对原订单退款状态','Check original order refund status')}</button>`;section.querySelector('button').onclick=()=>target.querySelector('[data-refund-refresh]').click();}
+          catch(error){if(current())feedback.textContent=requestError(error,t('退款申请结果未知。请核对原订单，或在此用同一请求重试，不要新建退款。','The refund request outcome is unknown. Check the original order or retry the same request here; do not create a new refund.'));}finally{busy=false;if(submit.isConnected)submit.disabled=!agree.checked;}};
+      }
+
     } catch (_) {
       if (!current()) return;
       target.innerHTML = heading + `<p class="error" role="status">${t('退款范围读取失败，目前状态未知，不代表不可退款。请重试。','Refund eligibility could not be loaded. Its status is unknown, not ineligible. Please retry.')}</p><button type="button" class="button" data-refund-refresh>${t('重试','Retry')}</button>`;
@@ -1244,7 +1565,7 @@
       target.innerHTML = prefix + emptyText(!permitted ? t('仅企业管理员可提交与查看采购申请，请联系你的管理员。','Only business admins can submit or view purchasing inquiries. Contact your admin.') : t('采购申请接收服务尚未接入，不能提交申请或上传汇款资料。','Procurement requests are not connected. Inquiries and transfer documents cannot be submitted.'));
       return;
     }
-    target.innerHTML = prefix + `<form class="procurement-form" id="procurement-form"><h3>${t('提交企业采购需求','Submit a purchasing inquiry')}</h3><label for="purchase-company">${t('企业名称','Company name')}</label><input id="purchase-company" name="company" required maxlength="160" autocomplete="organization"><label for="purchase-seats">${t('预计真人席位','Expected human seats')}</label><input id="purchase-seats" name="seats" type="number" min="2" max="10000" step="1" value="2" required><label for="purchase-email">${t('联系邮箱','Contact email')}</label><input id="purchase-email" name="contact_email" type="email" required maxlength="254" autocomplete="email"><label for="purchase-requirements">${t('业务需求','Requirements')}</label><textarea id="purchase-requirements" name="requirements" required maxlength="2000" rows="4" placeholder="${t('请说明场景、使用规模与采购需求；不要填写密码、密钥或银行资料。','Describe your use cases, scale and purchasing needs. Do not include passwords, keys or bank details.')}"></textarea><p class="checkout-note">${t('仅提交采购需求，不会创建付款订单、开通订阅或扣款。','This sends an inquiry only. It does not create a payable order, subscription or charge.')}</p><p id="procurement-feedback" class="checkout-note" role="status"></p><button type="submit" class="button primary">${t('提交采购申请','Submit inquiry')}</button></form><h3 class="records-title">${t('已提交的申请','Submitted inquiries')}</h3><div id="procurement-records"></div>`;
+    target.innerHTML = prefix + `<form class="procurement-form" id="procurement-form"><h3>${t('提交企业采购需求','Submit a purchasing inquiry')}</h3><label for="purchase-company">${t('企业名称','Company name')}</label><input id="purchase-company" name="company" required maxlength="160" autocomplete="organization"><label for="purchase-seats">${t('预计真人席位','Expected human seats')}</label><input id="purchase-seats" name="seats" type="number" min="1" max="10000" step="1" value="1" required><label for="purchase-email">${t('联系邮箱','Contact email')}</label><input id="purchase-email" name="contact_email" type="email" required maxlength="254" autocomplete="email"><label for="purchase-requirements">${t('业务需求','Requirements')}</label><textarea id="purchase-requirements" name="requirements" required maxlength="2000" rows="4" placeholder="${t('请说明场景、使用规模与采购需求；不要填写密码、密钥或银行资料。','Describe your use cases, scale and purchasing needs. Do not include passwords, keys or bank details.')}"></textarea><p class="checkout-note">${t('仅提交采购需求，不会创建付款订单、开通订阅或扣款。','This sends an inquiry only. It does not create a payable order, subscription or charge.')}</p><p id="procurement-feedback" class="checkout-note" role="status"></p><button type="submit" class="button primary">${t('提交采购申请','Submit inquiry')}</button></form><h3 class="records-title">${t('已提交的申请','Submitted inquiries')}</h3><div id="procurement-records"></div>`;
     const form = target.querySelector('#procurement-form'), records = target.querySelector('#procurement-records'), feedback = target.querySelector('#procurement-feedback');
     let recordsOffset = 0, recordsRequest = 0;
     async function loadInquiries(offset = recordsOffset) {
@@ -1255,7 +1576,7 @@
         if (!current() || !records.isConnected || recordsRequest !== request) return;
         if (data.account_id !== accountData.id || data.offset !== offset || !Number.isSafeInteger(data.total) || data.total < 0 ||
             (data.next_offset !== null && data.next_offset !== offset+50) || !Array.isArray(data.items) || data.items.length > 50 ||
-            data.items.some(item => !item || !/^[0-9a-f-]{36}$/i.test(item.id) || typeof item.company !== 'string' || typeof item.requirements !== 'string' || !Number.isSafeInteger(item.seats) || item.seats < 2 || typeof item.status !== 'string' || !Number.isFinite(Date.parse(item.created_at)))) throw new Error('INVALID_INQUIRIES');
+            data.items.some(item => !item || !/^[0-9a-f-]{36}$/i.test(item.id) || typeof item.company !== 'string' || typeof item.requirements !== 'string' || !Number.isSafeInteger(item.seats) || item.seats < 1 || typeof item.status !== 'string' || !Number.isFinite(Date.parse(item.created_at)))) throw new Error('INVALID_INQUIRIES');
         recordsOffset = offset;
         records.innerHTML = data.items.length ? `<ul class="record-list">${data.items.map(item => `<li><strong>${escape(item.company)}</strong><small style="overflow-wrap:anywhere">${t('申请编号','Request ID')} ${escape(item.id)}</small><span>${escape(item.seats)} ${t('席位','seats')}</span><span>${statusLabel(item.status)}</span><small>${dateLabel(item.created_at)}</small><details><summary>${t('查看已提交需求','View submitted requirements')}</summary><p style="white-space:pre-wrap;overflow-wrap:anywhere">${escape(item.requirements)}</p></details></li>`).join('')}</ul>` : emptyText(offset ? t('此页没有申请，请返回上一页。','No inquiries on this page. Go to the previous page.') : t('当前账户还没有采购申请。','This account has no purchasing inquiries.'));
         records.insertAdjacentHTML('beforeend', `<div class="account-actions">${offset ? `<button type="button" class="button" data-inquiries-prev>${t('上一页','Previous')}</button>` : ''}${data.next_offset !== null ? `<button type="button" class="button" data-inquiries-next>${t('下一页','Next')}</button>` : ''}</div>`);
@@ -1270,7 +1591,7 @@
     form.addEventListener('submit', async event => {
       event.preventDefault(); if (submitting || !current() || !form.reportValidity()) return;
       const fields = new FormData(form), quantity = Number(fields.get('seats'));
-      if (!Number.isSafeInteger(quantity) || quantity < 2 || quantity > 10000) return;
+      if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 10000) return;
       const payload = {company:fields.get('company').trim(),seats:quantity,contact_email:fields.get('contact_email').trim(),requirements:fields.get('requirements').trim()};
       if (!payload.company || !payload.requirements || [...payload.company].length > 160 || [...payload.requirements].length > 2000) { feedback.textContent = t('企业名称请填写 1–160 字，业务需求请填写 1–2000 字。','Enter 1–160 characters for the company and 1–2000 for requirements.'); return; }
       submitting = true; for (const control of form.elements) control.disabled = true;
@@ -1305,7 +1626,7 @@
       await sessionReady;
       if (view === 'pricing') {
         const rawSeats = initial.get('seats');
-        const invalidSeats = initial.has('seats') && (!/^[0-9]+$/.test(rawSeats) || !Number.isSafeInteger(Number(rawSeats)) || Number(rawSeats) > 10000 || (audience === 'business' ? Number(rawSeats) < 2 : Number(rawSeats) !== 1));
+        const invalidSeats = initial.has('seats') && (!/^[0-9]+$/.test(rawSeats) || !Number.isSafeInteger(Number(rawSeats)) || Number(rawSeats) > 10000 || (audience === 'business' ? Number(rawSeats) < 1 : Number(rawSeats) !== 1));
         if ((initial.has('cycle') && !['monthly','annual'].includes(initial.get('cycle'))) || (initial.has('audience') && !['personal','business'].includes(initial.get('audience'))) || invalidSeats) return fail(t('方案类型、周期或席位数量无效，请返回价格页重新选择。','The plan type, billing cycle or seat count is invalid. Return to Pricing to choose again.'));
         pricing(); loadPurchaseCatalog();
       } else if (view === 'checkout') await checkout(); else account();

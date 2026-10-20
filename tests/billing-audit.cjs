@@ -55,13 +55,24 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
   };
   const noOverflow = async label => assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1), false, `${label}: horizontal overflow`);
   const english = async label => assert.equal(await page.locator('body').evaluate(el => /[\u4e00-\u9fff]/.test(el.innerText.replaceAll('中文',''))), false, `${label}: untranslated English`);
+  const organizationNavigation = async (lang, unavailable = false) => {
+    const beforeWrites = writes.length;
+    const link = page.locator('.billing-center-sidebar > nav').getByRole('link', {name:lang ? 'Business management' : '企业管理',exact:true});
+    assert.equal(await link.getAttribute('href'), `profile${lang}.html#organization`, 'business management must open personal settings');
+    await link.click();
+    await page.waitForURL(url => url.pathname.endsWith(`/profile${lang}.html`) && url.hash === '#organization');
+    const content = page.locator('#sage-profile-data');
+    await content.filter({hasText:unavailable ? (lang ? /Unable to load/ : /暂时无法读取/) : (lang ? /Sign in to view/ : /登录后查看/)}).waitFor();
+    assert.equal(await content.locator('input:not(:disabled),select:not(:disabled),textarea:not(:disabled)').count(), 0, 'unavailable account must not accept business management data');
+    assert.equal(writes.length, beforeWrites, 'unavailable business management navigation performs no business writes');
+  };
   try {
     // Invalid URL values must never be silently turned into a different purchase.
-    for (const query of ['?cycle=weekly', '?cycle=', '?audience=other', '?audience=business&seats=1', '?audience=business&seats=2.5']) {
+    for (const query of ['?cycle=weekly', '?cycle=', '?audience=other', '?audience=business&seats=0', '?audience=business&seats=2.5']) {
       await visit('pricing.html', query);
       assert.equal(await page.locator('[role="alert"]').count(), 1, `invalid pricing selection ${query} must be explained`);
     }
-    for (const query of ['?plan=missing', '?plan=', '?cycle=weekly', '?cycle=', '?plan=pro&seats=2', '?plan=teams&seats=1', '?plan=teams&seats=2.5', '?plan=teams&seats=10001']) {
+    for (const query of ['?plan=missing', '?plan=', '?cycle=weekly', '?cycle=', '?plan=pro&seats=2', '?plan=teams&seats=0', '?plan=enterprise&seats=1', '?plan=enterprise&seats=9', '?plan=teams&seats=2.5', '?plan=teams&seats=10001']) {
       await visit('checkout.html', query);
       assert.equal(await page.locator('[role="alert"]').count(), 1, `invalid checkout selection ${query}`);
     }
@@ -107,11 +118,64 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
       }
     }
     for (const lang of ['', '-en']) {
+      for (const count of [1,9,10,11]) {
+        await visit(`pricing${lang}.html`, `?audience=business&seats=${count}`);
+        assert.equal(await page.locator('#pricing-seats').inputValue(), String(count));
+        assert.equal(await page.locator('#pricing-seats').getAttribute('min'), '1');
+        assert.equal(await page.locator('[data-plan-link="teams"]').getAttribute('aria-disabled'), 'false');
+        const enterprise = page.locator('[data-plan-link="enterprise"]');
+        assert.equal(await enterprise.getAttribute('aria-disabled'), String(count < 10));
+        assert.equal((await enterprise.getAttribute('href')) !== null, count >= 10);
+        assert.match(await page.locator('#pricing-seat-help').innerText(), lang ? /Teams starts at 1 seat; Enterprise starts at 10/ : /Teams 1 席起，Enterprise 10 席起/);
+      }
+      for (const count of [1,10,9]) {
+        await page.locator('#pricing-seats').fill(String(count));
+        assert.equal(await page.locator('#pricing-seats').getAttribute('aria-invalid'), 'false');
+        assert.equal(await page.locator('[data-plan-link="teams"]').getAttribute('aria-disabled'), 'false');
+        assert.equal((await page.locator('[data-plan-link="enterprise"]').getAttribute('href')) !== null, count >= 10);
+      }
+      for (const count of [1,9]) {
+        await visit(`checkout${lang}.html`, `?plan=enterprise&seats=${count}`);
+        assert.equal(await page.locator('[role="alert"]').count(), 1, `${lang || 'zh'} Enterprise rejects ${count} seats`);
+      }
+      for (const [plan,count] of [['teams',1],['teams',9],['enterprise',10],['enterprise',11]]) {
+        await visit(`checkout${lang}.html`, `?plan=${plan}&seats=${count}`);
+        await settledQuote(); await blockedPayment();
+        assert.equal(await page.locator('#checkout-seats').inputValue(), String(count));
+        assert.equal(await page.locator('#checkout-seats').getAttribute('min'), plan === 'enterprise' ? '10' : '1');
+        assert.equal(await page.locator('#quote-amount').innerText(), '—', 'Unpriced plans cannot become payable');
+        if (plan === 'enterprise') {
+          assert.ok((await page.locator('.order-lines').innerText()).includes(lang ? 'Shared monthly allowance pending' : '每月共享额度待公布'));
+          await page.locator('#checkout-seats').fill('9');
+          assert.equal(await page.locator('#checkout-seats').getAttribute('aria-invalid'), 'true');
+          assert.equal(await page.locator('#quote-refresh').isDisabled(), true);
+          assert.match(await page.locator('#checkout-seat-error').innerText(), /10/);
+        }
+      }
+      report.local_http.push(`${lang || 'zh'} Teams 1-seat / Enterprise 10-seat minimum; 9 rejected for Enterprise; 11 allowed, no fixed-pack restriction; no payment`);
       await visit(`pricing${lang}.html`);
       assert.equal(await page.locator('.plan').count(), 4);
+      for (const [code, includes] of [['pro', lang ? 'Personal business features' : '个人业务功能'], ['pro_plus', lang ? 'Everything in Pro' : '包含 Pro 全部功能'], ['ultra', lang ? 'Everything in Pro+' : '包含 Pro+ 全部功能']]) {
+        const card = page.locator('.plan').filter({has:page.locator(`[data-plan-link="${code}"]`)});
+        assert.equal(await card.locator('.plan-includes').innerText(), includes);
+        assert.equal(await card.locator('.plan-pending dd').count(), 3);
+        assert.deepEqual(await card.locator('.plan-pending dd').allTextContents(), Array(3).fill(lang ? 'Pending' : '待定'));
+        assert.equal(await card.locator('.plan-pending .ui-icon').count(), 0, 'Unconfirmed details must not have a confirmed checkmark');
+        assert.equal((await card.locator('ul').innerText()).includes(lang ? 'Early access to new features' : '优先体验新功能'), code !== 'pro');
+        assert.equal(await card.locator('[data-plan-link]').innerText(), lang ? 'Review plan' : '查看方案');
+        assert.ok((await card.locator('.price-note').innerText()).includes(lang ? 'Final price pending' : '正式价格待定'));
+      }
+      await page.locator('[data-plan-link="pro_plus"]').click();
+      await settledQuote(); await blockedPayment();
+      assert.equal(await page.locator('.plan-includes').innerText(), lang ? 'Everything in Pro' : '包含 Pro 全部功能');
+      assert.deepEqual(await page.locator('.plan-pending dd').allTextContents(), Array(3).fill(lang ? 'Pending' : '待定'));
+      await page.locator('.plan-return').click();
+      await page.waitForSelector('.plan');
+      report.local_http.push(`${lang || 'zh'} personal inheritance and early access; three pending details per tier and review page; payment remains disabled`);
       await page.locator('[data-cycle="annual"]').click();
       await page.waitForURL(url => url.searchParams.get('cycle') === 'annual');
       assert.equal(await page.locator('.price.pending').count(), 3);
+      assert.deepEqual(await page.locator('.price.pending').allTextContents(), Array(3).fill(lang ? 'Price pending' : '价格待定'));
       assert.equal(new URL(page.url()).searchParams.get('cycle'), 'annual');
       await page.reload(); await page.waitForSelector('.plan');
       assert.equal(await page.locator('[data-cycle="annual"]').getAttribute('aria-pressed'), 'true');
@@ -120,7 +184,7 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
       await page.locator('#pricing-seats').fill('3');
       await page.waitForURL(url => url.searchParams.get('seats') === '3');
       assert.equal(new URL(page.url()).searchParams.get('seats'), '3');
-      await page.locator('#pricing-seats').fill('1');
+      await page.locator('#pricing-seats').fill('0');
       assert.equal(await page.locator('#pricing-seats').getAttribute('aria-invalid'), 'true');
       assert.equal(await page.locator('[data-plan-link][href]').count(), 0);
       await page.locator('#pricing-seats').fill('3');
@@ -162,13 +226,26 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
           report.layouts.push(`${route}${lang}:${width}`);
         }
       }
-      for (const width of [320,1440]) for (const section of ['subscription','credits','orders','invoices','payment-methods','organization','procurement']) {
+      for (const width of [320,1440]) for (const section of ['subscription','credits','credits-ledger','orders','invoices','payment-methods','procurement']) {
         await page.setViewportSize({width,height:1000});
         await visit(`billing${lang}.html`, `#${section}`);
         assert.equal(await page.locator('.billing-management .account-menu a[aria-current]').getAttribute('href'), `#${section}`);
         await noOverflow(`billing${lang}#${section}:${width}`);
         if (lang) await english(`billing#${section}`);
         assert.equal(await page.locator('input:not(:disabled)').count(), 0, 'unavailable account must not pretend to accept billing data');
+      }
+      for (const width of [320,1440]) {
+        await page.setViewportSize({width,height:1000});
+        await visit(`billing${lang}.html`, '#organization');
+        assert.equal(await page.locator('#account-section-title').innerText(), lang ? 'Business settings' : '企业管理');
+        await page.locator('#account-live').filter({hasText:lang ? /Sign in to view/ : /登录后查看/}).waitFor();
+        assert.equal(await page.locator('#account-live input:not(:disabled),#account-live select:not(:disabled),#account-live textarea:not(:disabled)').count(), 0, 'legacy business settings hash remains a safe read-only view');
+        await noOverflow(`billing${lang}#organization legacy:${width}`);
+        if (lang) await english('billing#organization legacy');
+        await organizationNavigation(lang);
+        await noOverflow(`profile${lang}#organization:${width}`);
+        if (lang) await english('profile#organization');
+        report.local_http.push(`${lang || 'zh'}:${width} legacy billing business settings / sidebar to profile business management / anonymous read-only denial`);
       }
       await visit(`pricing${lang}.html`);
       await page.locator('.nav-login').waitFor({state:'visible'});
@@ -203,6 +280,7 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
       assert.equal(await page.locator('.account-metrics,#procurement-form').count(),0);
       assert.equal(await page.locator('#account-live input:not(:disabled)').count(),0);
       assert.equal(await page.locator('#account-reconnect').isVisible(),true);
+      await organizationNavigation(lang, true);
     }
     assert.equal(writes.length,beforeUnknownWrites,'Unknown authentication performs no account or payment writes');
     sessionUnavailable = false;

@@ -89,7 +89,18 @@ def _authorize_purchase(account, user):
     raise ValueError("FORBIDDEN")
 
 
-def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=None, *, public_purchase=False):
+def _credits_purchase_gate(account, now):
+    if not getattr(settings, 'BILLING_CREDITS_PURCHASE_ENABLED', False):
+        raise ValueError('CONFIG_INCOMPLETE')
+    from .subscriptions import active_subscription_periods
+    if not active_subscription_periods(account, now).exists():
+        # Retained purchased balances do not authorize a new purchase. An active
+        # paid term remains eligible when automatic renewal was never enabled.
+        raise ValueError('CREDITS_SUBSCRIPTION_REQUIRED')
+
+
+def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=None, *, public_purchase=False,
+               historical_subscription=False):
     if not getattr(settings, "BILLING_SALES_ENABLED", False) or not getattr(settings, "BILLING_APPROVED_CHANNELS", {}):
         raise ValueError("CONFIG_INCOMPLETE")
     if (product.state != "published" or product.currency != "CNY"
@@ -98,8 +109,13 @@ def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=Non
             or not product.credit_rule_version or not product.terms_version
             or not product.effective_at or product.effective_at > now
             or product.audience != account.kind or product.kind not in {"credits", "subscription"}
-            or product.minimum_seats < (2 if account.kind == "business" and product.kind == "subscription" else 1)):
+            or product.minimum_seats < 1):
         raise ValueError("CONFIG_INCOMPLETE")
+    if product.code in {'teams', 'enterprise'} and not historical_subscription:
+        expected_mode = 'seat_included' if product.code == 'teams' else 'shared_included'
+        if (product.audience != 'business' or product.kind != 'subscription' or
+                product.entitlements.get('resource_mode') != expected_mode):
+            raise ValueError('CONFIG_INCOMPLETE')
     if product.kind == "subscription" and product.billing_cycle not in {"monthly", "annual"}:
         raise ValueError("CONFIG_INCOMPLETE")
     if product.kind == "credits" and product.billing_cycle:
@@ -109,7 +125,7 @@ def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=Non
         if product.unit_amount_minor > 9007199254740991:
             raise ValueError('CONFIG_INCOMPLETE')
         from .models import Subscription, SubscriptionPeriod
-        periods = SubscriptionPeriod.objects.filter(subscription__account=account)
+        periods = SubscriptionPeriod.objects.filter(subscription__account=account,subscription__superseded_at__isnull=True)
         if product.kind == 'subscription':
             # A public new purchase is not an upgrade, conversion or recovery.
             # Recheck under the account lock before accepting a new order.
@@ -120,16 +136,20 @@ def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=Non
                     PaymentFact.objects.filter(order__account=account,order__snapshot__kind='subscription')
                         .exclude(disposition='accepted').exists()):
                 raise ValueError('CONFIG_INCOMPLETE')
-        elif not periods.filter(starts_at__lte=now,ends_at__gt=now).exists():
-            # D10 does not permit inferring new purchases from retained balances.
-            raise ValueError('CONFIG_INCOMPLETE')
+        else:
+            _credits_purchase_gate(account, now)
     try:
         quantity = _quantity(product.credits_quantity, positive=product.kind == "credits")
     except ValueError as exc:
         raise ValueError("CONFIG_INCOMPLETE") from exc
     if product.kind == 'subscription' and account.kind == 'business':
         mode = product.entitlements.get('resource_mode')
-        if mode not in ('seat_included', 'shared_only') or (mode == 'shared_only' and quantity != 0):
+        # Old zero-allowance contracts remain deliverable/renewable, but are not
+        # a selectable new product under the approved China-reference rules.
+        if (mode not in ('seat_included', 'shared_included', 'shared_only') or
+                (mode == 'shared_only' and (not historical_subscription or public_purchase or quantity != 0 or product.minimum_seats < 2)) or
+                (mode == 'seat_included' and quantity <= 0 and not historical_subscription) or
+                (mode == 'shared_included' and (quantity <= 0 or product.minimum_seats < 10))):
             raise ValueError('CONFIG_INCOMPLETE')
     channels = settings.BILLING_APPROVED_CHANNELS
     configuration = channels.get(channel) if isinstance(channels, dict) and isinstance(channel, str) else None
@@ -235,8 +255,8 @@ def purchase_catalog(account):
         options, reason = [], 'CONFIG_INCOMPLETE'
         ttl = settings.BILLING_QUOTE_TTL_SECONDS
         try:
-            if product.kind == 'credits' and not settings.BILLING_CREDITS_PURCHASE_ENABLED:
-                raise ValueError('CONFIG_INCOMPLETE')
+            if product.kind == 'credits':
+                _credits_purchase_gate(account, now)
             purchase_benefits(product)
             document = purchase_terms(product.terms_version)
             if type(ttl) is not int or ttl <= 0:
@@ -293,9 +313,9 @@ def purchase_quote_detail(account, quote_id):
                        quote.snapshot.get('buyer_region'), quote.snapshot.get('merchant_entity'),
                        public_purchase=bool(quote.snapshot.get('terms_document_digest')))
         except ValueError as exc:
-            if str(exc) != 'CONFIG_INCOMPLETE':
+            if str(exc) not in ('CONFIG_INCOMPLETE', 'CREDITS_SUBSCRIPTION_REQUIRED'):
                 raise
-            reason = 'CONFIG_INCOMPLETE'
+            reason = str(exc)
     return {'id': str(quote.pk), 'account_id': str(account.pk),
             'amount_minor': quote.amount_minor, 'currency': quote.currency,
             'expires_at': quote.expires_at.isoformat(),
@@ -318,6 +338,8 @@ def create_order(account, user, payload, idempotency_key):
             raise ValueError("IDEMPOTENCY_CONFLICT")
         return _order_dict(existing)
     quote = _get(Quote.objects.select_for_update().select_related("product"), account=account, pk=payload["quote_id"])
+    if quote.snapshot.get('seat_purchase_change_id'):
+        raise ValueError('INVALID_REQUEST')
     if Order.objects.filter(account=account, quote=quote).exists():
         raise ValueError("QUOTE_ALREADY_ORDERED")
     _sale_gate(quote.product, account, timezone.now(), quote.snapshot.get("channel"), quote.snapshot.get("buyer_region"), quote.snapshot.get("merchant_entity"),
@@ -407,7 +429,7 @@ def order_detail(account, order_id):
     attempt = PaymentAttempt.objects.filter(order=order).first()
     attempt_data = None
     if attempt:
-        attempt_data = {'status': _effective_attempt_state(attempt, order),
+        attempt_data = {'id': str(attempt.pk), 'status': _effective_attempt_state(attempt, order),
                         'needs_reconciliation': attempt.needs_reconciliation,
                         'expires_at': attempt.expires_at.isoformat()}
     review_reasons = {payment['status'] for payment in payments if payment['status'] != 'accepted'}
@@ -520,10 +542,10 @@ def credit_refund_assessment(account, order_id):
         return {**result,'reason':'no_unused_credits'}
     purchased = _quantity(batch.initial_quantity,positive=True)
     exact = Fraction(facts[0].amount_minor)*balance['available']/purchased
-    return {**result,'status':'assessment_ready','reason':'policy_review_required' if exact.denominator == 1 else 'rounding_policy_pending',
+    return {**result,'status':'assessment_ready','reason':'policy_review_required',
         'scope':'all_unused_paid_credits','unused_quantity':_text(balance['available']),
         'purchased_quantity':_text(purchased),'paid_minor':str(facts[0].amount_minor),
-        'reference_minor':str(exact.numerator) if exact.denominator == 1 else None,
+        'reference_minor':str((2*exact.numerator+exact.denominator)//(2*exact.denominator)),
         'unrounded_minor':{'numerator':str(exact.numerator),'denominator':str(exact.denominator)}}
 
 
@@ -701,6 +723,11 @@ def resolve_credit_refund(account, refund_id, outcome, *, evidence_hash):
         if item.state != outcome or item.evidence_hash != evidence_hash:
             raise ValueError('IDEMPOTENCY_CONFLICT')
         return _credit_refund_dict(item)
+    if outcome == 'refunded' and item.review_state != 'approved':
+        raise ValueError('REFUND_REVIEW_REQUIRED')
+    if outcome == 'released' and PaymentAttemptEvent.objects.filter(attempt__order_id=item.payment.order_id,
+            event_key='sandbox-refund-claim:'+str(item.pk)).exists():
+        raise ValueError('REFUND_RECONCILIATION_REQUIRED')
     _resolve_credit_freeze(account,item.freeze_id,outcome,evidence_hash=evidence_hash)
     item.state,item.evidence_hash,item.resolved_at = outcome,evidence_hash,timezone.now()
     item.save(update_fields=['state','evidence_hash','resolved_at'])
@@ -950,7 +977,8 @@ def set_shared_limit(account, actor, membership_id, quantity, *, expected_versio
     if (latest.version if latest else 0) != expected_version:
         raise ValueError('LIMIT_CHANGED')
     now = timezone.now()
-    if not SubscriptionPeriod.objects.filter(subscription__account=account,starts_at__lte=now,ends_at__gt=now).exists():
+    from .subscriptions import active_subscription_periods
+    if not active_subscription_periods(account,now).exists():
         old = latest.quantity if latest else None
         if limit is None or (old is not None and _quantity(limit) > _quantity(old)):
             raise ValueError('SUBSCRIPTION_EXPIRED')
@@ -971,7 +999,8 @@ def _business_credit_scope(account, membership_id):
         raise ValueError('NOT_FOUND')
     member = _get(Membership.objects,account=account,pk=membership_id,is_active=True,user__is_active=True)
     now = timezone.now()
-    seat = _get(PaidSeat.objects.select_related('subscription'),membership=member,subscription__account=account,
+    seat = _get(_usable_business_seats(account, member.pk, now).select_related('subscription'),membership=member,subscription__account=account,
+        subscription__superseded_at__isnull=True,
         subscription__periods__starts_at__lte=now,subscription__periods__ends_at__gt=now)
     subscription = seat.subscription
     local = now.astimezone(_calendar_zone(subscription.billing_timezone))
@@ -993,11 +1022,74 @@ def _business_credit_scope(account, membership_id):
     return member,seat,start,end,remaining
 
 
+def _usable_business_seats(account, membership_id, now):
+    from .models import PaidSeat
+    from .subscriptions import _period_seats
+    from .models import Subscription
+    usable = []
+    for subscription in Subscription.objects.filter(account=account):
+        period = subscription.periods.filter(starts_at__lte=now).order_by('-starts_at').first()
+        if period:
+            usable.extend(_period_seats(period, now).values_list('pk', flat=True))
+    return PaidSeat.objects.filter(pk__in=usable,subscription__account=account,membership_id=membership_id).filter(
+        Q(subscription__superseded_at__isnull=True)|Q(subscription__superseded_at__gt=now)).filter(
+        Q(subscription__refund_cutoff_at__isnull=True)|Q(subscription__refund_cutoff_at__gt=now))
+
+
+def _business_task_credit_scope(account, task=None):
+    """Own allowance first, then shared funds by expiry (included wins a tie).
+
+    Callers hold the account lock. A removed member's existing running task may
+    continue on company shared Credits, but cannot retain their former allowance.
+    With no task, return only the shared pool used by automatic top-up checks.
+    """
+    from .models import SharedTask
+    if account.kind != 'business' or (task is not None and (
+            not isinstance(task, SharedTask) or task.account_id != account.pk or
+            task.membership.account_id != account.pk)):
+        raise ValueError('FORBIDDEN')
+    now = timezone.now()
+    shared_included = Q(source='subscription',seat__isnull=True,
+        subscription_period__subscription__account=account,
+        subscription_period__snapshot__entitlements__resource_mode='shared_included')
+    shared_included &= (Q(subscription_period__subscription__superseded_at__isnull=True)|
+        Q(subscription_period__subscription__superseded_at__gt=now))
+    shared_included &= (Q(subscription_period__subscription__refund_cutoff_at__isnull=True)|
+        Q(subscription_period__subscription__refund_cutoff_at__gt=now))
+    scope = Q(source='purchased',seat__isnull=True)|shared_included
+    can_consume = True
+    if task is not None:
+        # Only actual removal permits an old running task to outlive its seat.
+        # An active, management-only member cannot keep using paid resources.
+        can_consume = (not task.membership.is_active or
+            (task.membership.user.is_active and _usable_business_seats(account,task.membership_id,now).exists()))
+        own = Q(source='subscription',seat__membership_id=task.membership_id,
+            seat__membership__is_active=True,seat__membership__user__is_active=True,
+            seat__subscription__account=account)
+        own &= Q(seat__subscription__superseded_at__isnull=True)|Q(seat__subscription__superseded_at__gt=now)
+        own &= Q(seat__subscription__refund_cutoff_at__isnull=True)|Q(seat__subscription__refund_cutoff_at__gt=now)
+        scope |= own
+    batches = list(CreditBatch.objects.filter(account=account,expires_at__gt=now).filter(scope)) if can_consume else []
+    batches.sort(key=lambda batch: (batch.seat_id is None,batch.expires_at,batch.source != 'subscription',str(batch.pk)))
+    available = [(batch,_balances(batch)['available']) for batch in batches]
+    included = sum((value for batch,value in available if batch.seat_id is not None),Fraction(0))
+    shared = sum((value for batch,value in available if batch.seat_id is None),Fraction(0))
+    return {'batches':available,'included_available':included,'shared_available':shared,'can_consume':can_consume,
+            'available':included+shared}
+
+
 @transaction.atomic
-def reserve_credits(account, task_key, quantity, *, membership_id=None):
+def reserve_credits(account, task_key, quantity, *, membership_id=None, _shared_task=None):
     account = _lock_account(account)
     member,seat,start,end,shared_remaining = None,None,None,None,None
-    if account.kind == 'business':
+    if _shared_task is not None:
+        from .models import SharedTask
+        if (account.kind != 'business' or not isinstance(_shared_task, SharedTask) or
+                _shared_task.account_id != account.pk or _shared_task.membership_id != membership_id or
+                _shared_task.state != 'running'):
+            raise ValueError('FORBIDDEN')
+        member = _shared_task.membership
+    elif account.kind == 'business':
         member,seat,start,end,shared_remaining = _business_credit_scope(account,membership_id)
     elif membership_id is not None:
         raise ValueError('FORBIDDEN')
@@ -1007,23 +1099,34 @@ def reserve_credits(account, task_key, quantity, *, membership_id=None):
     if existing:
         if _quantity(existing.quantity) != amount or existing.membership_id != (member.pk if member else None):
             raise ValueError("IDEMPOTENCY_CONFLICT")
-        return _reservation_dict(existing)
-    query = CreditBatch.objects.filter(account=account, expires_at__gt=timezone.now())
-    if member:
-        query = query.filter(Q(seat=seat)|Q(source='purchased',seat__isnull=True))
-    batches = list(query)
-    batches.sort(key=lambda batch: (batch.expires_at, batch.source != "subscription", str(batch.pk)))
-    available = []
-    for batch in batches:
-        value = _balances(batch)['available']
-        if member and batch.seat_id is None and shared_remaining is not None:
-            value = min(value,shared_remaining)
-            shared_remaining -= value
-        available.append((batch,value))
+        if _shared_task is None or existing.state != 'pending':
+            return _reservation_dict(existing)
+    if _shared_task is not None:
+        available = _business_task_credit_scope(account,_shared_task)['batches']
+    else:
+        query = CreditBatch.objects.filter(account=account, expires_at__gt=timezone.now())
+        if member:
+            query = query.filter(Q(seat=seat)|Q(source='purchased',seat__isnull=True)|Q(
+                source='subscription',seat__isnull=True,subscription_period__subscription=seat.subscription,
+                subscription_period__snapshot__entitlements__resource_mode='shared_included'))
+        batches = list(query)
+        batches.sort(key=lambda batch: (batch.seat_id is None,batch.expires_at,batch.source != "subscription",str(batch.pk)))
+        available = []
+        for batch in batches:
+            value = _balances(batch)['available']
+            if member and batch.seat_id is None and shared_remaining is not None:
+                value = min(value,shared_remaining)
+                shared_remaining -= value
+            available.append((batch,value))
     if sum(value for _, value in available) < amount:
         raise ValueError("INSUFFICIENT_CREDITS")
-    reservation = Reservation.objects.create(account=account, task_key=task_key, quantity=_text(amount),
-        membership=member,shared_period_start=start,shared_period_end=end)
+    if existing:
+        reservation = existing
+        reservation.state = 'reserved'
+        reservation.save(update_fields=['state'])
+    else:
+        reservation = Reservation.objects.create(account=account, task_key=task_key, quantity=_text(amount),
+            membership=member,shared_task=_shared_task,shared_period_start=start,shared_period_end=end)
     remaining = amount
     for batch, value in available:
         take = min(remaining, value)
@@ -1033,6 +1136,149 @@ def reserve_credits(account, task_key, quantity, *, membership_id=None):
         if remaining == 0:
             break
     return _reservation_dict(reservation)
+
+
+def _shared_task_dict(task):
+    charged = sum((_quantity(value) for value in task.debits.filter(state='settled').values_list(
+        'settled_quantity', flat=True)), Fraction(0))
+    return {'id':str(task.pk),'occurred_at':task.created_at.isoformat(),'task_type':task.task_type,
+            'status':task.state,'credits':_text(charged),'resume_blocked':task.resume_blocked}
+
+
+@transaction.atomic
+def start_shared_task(account, membership_id, task_key, task_type):
+    """Trusted executor hook. Holds no Credits and never stores task contents."""
+    from .models import SharedTask
+    account = _lock_account(account)
+    if account.kind != 'business' or type(membership_id) is not int:
+        raise ValueError('FORBIDDEN')
+    _identifier(task_key)
+    _identifier(task_type)
+    if len(task_type) > 80:
+        raise ValueError('INVALID_TASK_TYPE')
+    member = _get(Membership.objects,account=account,pk=membership_id,is_active=True,user__is_active=True)
+    now = timezone.now()
+    seats = _usable_business_seats(account,member.pk,now)
+    if not seats.exists():
+        raise ValueError('SEAT_REQUIRED')
+    existing = SharedTask.objects.filter(account=account,task_key=task_key).first()
+    if existing:
+        if existing.membership_id != member.pk or existing.task_type != task_type:
+            raise ValueError('IDEMPOTENCY_CONFLICT')
+        return _shared_task_dict(existing)
+    if Reservation.objects.filter(account=account,task_key=task_key,shared_task__isnull=True).exists():
+        raise ValueError('LEGACY_RESERVATION_REVIEW_REQUIRED')
+    task = SharedTask.objects.create(account=account,membership=member,task_key=task_key,task_type=task_type)
+    return _shared_task_dict(task)
+
+
+@transaction.atomic
+def consume_shared_task(account, task_id, event_key, quantity):
+    """Charge one trusted actual-use event atomically; never a task-long hold.
+
+    The caller supplies approved converted Credits, not costs or a client price.
+    An insufficient balance commits a pause and consumes nothing. Recovery is
+    explicit; retrying an already accepted event cannot debit it twice.
+    """
+    from .models import SharedTask
+    account = _lock_account(account)
+    task = _get(SharedTask.objects.select_for_update(),account=account,pk=task_id)
+    _identifier(event_key)
+    exact = _quantity(quantity)
+    key = 'actual:' + str(task.pk) + ':' + hashlib.sha256(event_key.encode()).hexdigest()
+    previous = Reservation.objects.filter(account=account,task_key=key).first()
+    if previous:
+        if previous.shared_task_id != task.pk or previous.actual_quantity is None or _quantity(previous.actual_quantity) != exact:
+            raise ValueError('IDEMPOTENCY_CONFLICT')
+        if previous.state == 'settled':
+            return {**_shared_task_dict(task),'accepted':True}
+    if task.state != 'running':
+        return {**_shared_task_dict(task),'accepted':False,'reason':'TASK_NOT_RUNNING'}
+    if not previous:
+        if task.debits.filter(state='pending').exists():
+            return {**_shared_task_dict(task),'accepted':False,'reason':'UNSETTLED_USAGE_REQUIRED'}
+        cumulative = _quantity(task.exact_quantity) + exact
+        rounded = Fraction((2*cumulative.numerator*100+cumulative.denominator)//(2*cumulative.denominator),100)
+        charged = _quantity(_shared_task_dict(task)['credits'])
+        amount = rounded - charged
+        if amount < 0:
+            raise ValueError('LEDGER_INCONSISTENT')
+        previous = Reservation.objects.create(account=account,task_key=key,membership=task.membership,
+            shared_task=task,quantity=_text(amount),actual_quantity=_text(exact),state='pending')
+        task.exact_quantity = _text(cumulative)
+        task.save(update_fields=['exact_quantity','updated_at'])
+    amount = _quantity(previous.quantity)
+    scope = _business_task_credit_scope(account,task)
+    if not scope['can_consume'] or scope['available'] < amount:
+        task.state = 'paused'
+        task.save(update_fields=['state','updated_at'])
+        return {**_shared_task_dict(task),'accepted':False,
+                'reason':'INSUFFICIENT_CREDITS' if scope['can_consume'] else 'TASK_SEAT_REQUIRED'}
+    if amount:
+        reservation = reserve_credits(account,key,_text(amount),membership_id=task.membership_id,_shared_task=task)
+        settle_credits(account,reservation['id'],_text(amount))
+    else:
+        previous.state,previous.settled_quantity = 'settled','0'
+        previous.save(update_fields=['state','settled_quantity'])
+    return {**_shared_task_dict(task),'accepted':True}
+
+
+@transaction.atomic
+def resume_shared_task(account, actor, task_id):
+    from .models import SharedTask
+    account = _lock_account(account)
+    task = _get(SharedTask.objects.select_for_update().select_related('membership__user'),account=account,pk=task_id)
+    if not actor or not actor.is_active or not Membership.objects.filter(account=account,user=actor,is_active=True).exists():
+        raise ValueError('FORBIDDEN')
+    if actor.pk != task.membership.user_id:
+        _authorize_purchase(account,actor)
+    if task.resume_blocked or not task.membership.is_active or not task.membership.user.is_active:
+        raise ValueError('TASK_RESUME_FORBIDDEN')
+    now = timezone.now()
+    if not _usable_business_seats(account,task.membership_id,now).exists():
+        raise ValueError('TASK_RESUME_FORBIDDEN')
+    if task.state == 'completed':
+        raise ValueError('TASK_COMPLETED')
+    available = _business_task_credit_scope(account,task)['available']
+    outstanding = sum((_quantity(value) for value in task.debits.filter(state='pending').values_list('quantity',flat=True)),Fraction(0))
+    if available <= 0 or available < outstanding:
+        raise ValueError('INSUFFICIENT_CREDITS')
+    task.state = 'running'
+    task.save(update_fields=['state','updated_at'])
+    return _shared_task_dict(task)
+
+
+@transaction.atomic
+def complete_shared_task(account, task_id, *, result_persisted):
+    from .models import SharedTask
+    account = _lock_account(account)
+    task = _get(SharedTask.objects.select_for_update(),account=account,pk=task_id)
+    if result_persisted is not True:
+        raise ValueError('TASK_RESULT_NOT_READY')
+    if task.state == 'paused':
+        raise ValueError('TASK_NOT_RUNNING')
+    if task.debits.exclude(state='settled').exists():
+        raise ValueError('UNSETTLED_USAGE_REQUIRED')
+    if task.state != 'completed':
+        task.state,task.completed_at = 'completed',timezone.now()
+        task.save(update_fields=['state','completed_at','updated_at'])
+    return _shared_task_dict(task)
+
+
+@transaction.atomic
+def shared_task_usage(account, actor, *, membership_id, offset=0):
+    from .models import SharedTask
+    account = _lock_account(account)
+    _authorize_purchase(account,actor)
+    if account.kind != 'business' or type(membership_id) is not int or type(offset) is not int or offset < 0:
+        raise ValueError('INVALID_REQUEST')
+    _get(Membership.objects,account=account,pk=membership_id)
+    tasks = SharedTask.objects.filter(account=account,membership_id=membership_id).order_by('-created_at','-pk')
+    total = tasks.count()
+    items = [{key:value for key,value in _shared_task_dict(task).items() if key != 'resume_blocked'}
+             for task in tasks[offset:offset+50]]
+    return {'account_id':str(account.pk),'membership_id':membership_id,'items':items,'offset':offset,
+            'total':total,'next_offset':offset+50 if offset+50 < total else None}
 
 
 @transaction.atomic
@@ -1173,6 +1419,13 @@ def fulfill_paid_order(account, order_id):
         return _order_dict(order)
     if order.status != "paid_pending_entitlement":
         raise ValueError("ORDER_STATE_CONFLICT")
+    if order.snapshot.get('seat_purchase_change_id'):
+        from .subscriptions import fulfill_seat_purchase
+        from .models import SeatPurchaseChange
+        change = _get(SeatPurchaseChange.objects, account=account, order=order, pk=order.snapshot['seat_purchase_change_id'])
+        fulfill_seat_purchase(account, change.pk)
+        order.refresh_from_db()
+        return _order_dict(order)
     if order.snapshot.get("kind") == "credits":
         try:
             quantity = _quantity(order.snapshot["credits_quantity"], positive=True)
@@ -1183,10 +1436,17 @@ def fulfill_paid_order(account, order_id):
         day = min(paid_at.day, calendar.monthrange(year, paid_at.month)[1])
         expires_at = paid_at.replace(year=year, day=day)
         grant_credits(account, "purchased", f"order:{order.pk}", _text(quantity), expires_at, order=order)
+        from .models import TopupBudget
+        topup = TopupBudget.objects.filter(attempt__order=order).select_related('authorization').first()
+        if topup and topup.authorization.state == 'authorized' and topup.authorization.configuration.get('preset_key'):
+            if _business_task_credit_scope(account)['shared_available'] >= _quantity(topup.authorization.configuration['threshold']):
+                topup.authorization.trigger_armed = True
+                topup.authorization.save(update_fields=['trigger_armed'])
         order.status = "fulfilled"
         order.save(update_fields=["status"])
-    # Subscription activation requires separately confirmed mandate/calendar
-    # inputs in subscriptions.py; a paid receipt alone is not enough.
+    # Subscription activation requires a trusted calendar and either a confirmed
+    # mandate or confirmed signing failure in subscriptions.py. A payment receipt
+    # never guesses the signing result or silently grants future debit authority.
     return _order_dict(order)
 
 
@@ -1261,13 +1521,16 @@ def prepare_payment_attempt(account, user, order_id, intent_key, *, expires_at):
         raise ValueError('ORDER_STATE_CONFLICT')
     if expires_at <= timezone.now():
         raise ValueError('PAYMENT_EXPIRED')
+    if order.snapshot.get('seat_purchase_change_id') and (order.quote.expires_at <= timezone.now() or expires_at > order.quote.expires_at):
+        raise ValueError('QUOTE_EXPIRED')
     _sale_gate(order.quote.product, account, timezone.now(), order.snapshot.get('channel'),
-               order.snapshot.get('buyer_region'), order.snapshot.get('merchant_entity'))
+               order.snapshot.get('buyer_region'), order.snapshot.get('merchant_entity'),
+               public_purchase=order.snapshot.get('kind') == 'credits' and bool(order.snapshot.get('terms_document_digest')))
     attempt = PaymentAttempt.objects.create(account=account, order=order, intent_key=intent_key, expires_at=expires_at)
     return _attempt_dict(attempt, order)
 
 
-def claim_payment_dispatch(account, attempt_id):
+def claim_payment_dispatch(account, attempt_id, *, request=None, dispatch_context=None):
     """Commit one dispatch claim BEFORE network I/O, never blindly resend it.
 
     A caller crash before/after sending must query the PSP using this attempt ID.
@@ -1277,12 +1540,49 @@ def claim_payment_dispatch(account, attempt_id):
     if transaction.get_connection().in_atomic_block:
         raise ValueError('DISPATCH_REQUIRES_AUTOCOMMIT')
     with transaction.atomic():
+        if request is not None:
+            from backend.account import _lock_current
+            _lock_current(request)
+            selected = str(account.pk)
+            if (request.session.load().get('active_account_id') != selected or
+                    request.headers.get('X-Billing-Account') != selected):
+                raise ValueError('ACCOUNT_CHANGED')
         account = _lock_account(account)
+        if request is not None:
+            if not Membership.objects.filter(account=account, user=request.user,
+                    is_active=True, role__in=('owner', 'billing_admin')).exists():
+                raise ValueError('FORBIDDEN')
+            _authorize_purchase(account, request.user)
         from .models import TopupBudget
         if TopupBudget.objects.filter(account=account,attempt_id=attempt_id).exists():
             raise ValueError('TOPUP_CHARGING_DISABLED')
         attempt = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=attempt_id)
         order = _get(Order.objects.select_for_update().select_related('quote__product'), pk=attempt.order_id, account=account)
+        if dispatch_context is not None:
+            wechat_identity = (type(dispatch_context) is dict and set(dispatch_context) == {
+                'channel', 'environment', 'app_id', 'mch_id', 'merchant_entity'} and
+                dispatch_context.get('channel') == 'wechat' and
+                dispatch_context.get('environment') == 'LIVE' and
+                isinstance(dispatch_context.get('app_id'), str) and
+                bool(re.fullmatch(r'[A-Za-z0-9_-]{1,32}', dispatch_context['app_id'])) and
+                isinstance(dispatch_context.get('mch_id'), str) and
+                bool(re.fullmatch(r'[0-9]{1,32}', dispatch_context['mch_id'])))
+            alipay_identity = (type(dispatch_context) is dict and set(dispatch_context) == {
+                    'channel', 'environment', 'app_id', 'seller_id', 'merchant_entity'})
+            alipay_identity = (alipay_identity and dispatch_context.get('channel') == 'alipay' and
+                dispatch_context.get('environment') == 'SANDBOX' and
+                all(isinstance(dispatch_context.get(key), str) and
+                    re.fullmatch(r'[0-9]{1,64}', dispatch_context[key]) for key in ('app_id', 'seller_id')))
+            if (not (wechat_identity or alipay_identity) or settings.ENVIRONMENT != 'test' or
+                    not isinstance(dispatch_context.get('merchant_entity'), str) or
+                    not dispatch_context['merchant_entity'].strip() or
+                    len(dispatch_context['merchant_entity']) > 128 or
+                    order.snapshot.get('channel') != dispatch_context['channel'] or
+                    order.snapshot.get('merchant_entity') != dispatch_context['merchant_entity'] or
+                    attempt.subscription_id or attempt.recovery_of_id or
+                    attempt.dispatch_authorization not in (None, dispatch_context) or
+                    (attempt.dispatched_at and attempt.dispatch_authorization != dispatch_context)):
+                raise ValueError('INVALID_DISPATCH_CONTEXT')
         result = {**_attempt_dict(attempt, order), 'dispatch': False, 'request_reference': str(attempt.pk)}
         if attempt.state != 'created' or result['status'] != 'created' or order.status != 'pending_payment':
             return result
@@ -1305,9 +1605,10 @@ def claim_payment_dispatch(account, attempt_id):
             if attempt.expires_at > deadline or order.snapshot != source:
                 raise ValueError('RECOVERY_INTENT_CONFLICT')
         if attempt.subscription_id:
-            from .subscriptions import _mandate, _boundary, _months, _renewal_snapshot
+            from .subscriptions import _mandate, _boundary, _months, _renewal_snapshot, _billing_operator
             from .models import Subscription
             subscription = _get(Subscription.objects.select_for_update(), account=account, pk=attempt.subscription_id)
+            _billing_operator(account, subscription.initial_order.created_by)
             if not subscription.auto_renew or subscription.cancellation_state != 'none':
                 attempt.state = 'cancelled'
                 attempt.save(update_fields=['state'])
@@ -1339,7 +1640,9 @@ def claim_payment_dispatch(account, attempt_id):
         if attempt.subscription_id and not getattr(settings, 'BILLING_RENEWAL_CHARGING_ENABLED', False):
             raise ValueError('RENEWAL_CHARGING_DISABLED')
         _sale_gate(order.quote.product, account, now, snapshot.get('channel'),
-                   order.snapshot.get('buyer_region'), order.snapshot.get('merchant_entity'))
+                   order.snapshot.get('buyer_region'), order.snapshot.get('merchant_entity'),
+                   public_purchase=order.snapshot.get('kind') == 'credits' and bool(order.snapshot.get('terms_document_digest')),
+                   historical_subscription=bool(attempt.subscription_id or attempt.recovery_of_id))
         if attempt.subscription_id:
             if subscription.payment_method_id:
                 from .models import PaymentMethod
@@ -1347,12 +1650,18 @@ def claim_payment_dispatch(account, attempt_id):
                 if (method.state != 'active' or method.channel != subscription.mandate['channel'] or
                     method.merchant_reference != subscription.mandate['merchant_reference']):
                     raise ValueError('PAYMENT_METHOD_NOT_AVAILABLE')
+            from backend.notifications import assert_renewal_notice
+            assert_renewal_notice(subscription, attempt.renewal_cycle_index,
+                charge_at=attempt.dispatch_not_before)
             # Frozen with the dispatch claim before any provider call. Workers
             # must query this transaction using this snapshot, never a newer mandate.
             attempt.dispatch_authorization = {'subscription_id':str(subscription.pk),
                 'authorization_version': subscription.authorization_version,
                 'payment_method_id':str(subscription.payment_method_id) if subscription.payment_method_id else None,
                 'mandate':dict(subscription.mandate)}
+        elif dispatch_context is not None:
+            # Only nonsecret sandbox identity; frozen atomically with this claim.
+            attempt.dispatch_authorization = dict(dispatch_context)
         attempt.state, attempt.dispatched_at = 'pending', now
         attempt.save(update_fields=['state', 'dispatched_at', 'dispatch_authorization'])
         result.update(status='pending', dispatch=True, channel=snapshot['channel'])
@@ -1365,13 +1674,16 @@ def record_attempt_event(account, attempt_id, event_key, outcome, *, source, evi
 
     A success fact must be stored separately first. Unknown/local timeout can
     never authorize re-dispatch, close a live order or open product benefits.
+    Verified close acceptance is provider_close/unknown only; an independent
+    provider_query must confirm a terminal outcome.
     """
     account = _lock_account(account)
     attempt = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=attempt_id)
     order = _get(Order.objects.select_for_update(), pk=attempt.order_id, account=account)
     _identifier(event_key)
-    if (source not in ('local', 'provider_query', 'verified_callback') or
-        outcome not in ('pending', 'unknown', 'succeeded', 'failed', 'cancelled', 'expired')):
+    if (source not in ('local', 'provider_query', 'provider_close', 'verified_callback') or
+        outcome not in ('pending', 'unknown', 'succeeded', 'failed', 'cancelled', 'expired') or
+        (source == 'provider_close' and outcome != 'unknown')):
         raise ValueError('INVALID_PAYMENT_EVENT')
     if ((source == 'local' and (outcome != 'unknown' or evidence_hash != '')) or
         (source != 'local' and (not isinstance(evidence_hash, str) or not re.fullmatch(r'[a-f0-9]{64}', evidence_hash)))):

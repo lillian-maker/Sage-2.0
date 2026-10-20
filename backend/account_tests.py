@@ -133,6 +133,24 @@ class AccountCentreTests(TestCase):
             self.assertFalse(default_storage.exists(name))
             self.assertIsNone(self.client.get('/api/account/profile').json()['avatar_url'])
 
+    def test_avatar_image_cannot_select_another_accounts_private_file(self):
+        from PIL import Image
+        image = BytesIO()
+        Image.new('RGB', (2, 2), 'navy').save(image, 'PNG')
+        response = self.client.post('/api/account/avatar', {'avatar': SimpleUploadedFile(
+            'fixture.png', image.getvalue(), content_type='image/png')})
+        self.assertEqual(response.status_code, 200)
+        current = AccountProfile.objects.get(user=self.user).avatar_name
+        other = Client()
+        other.force_login(get_user_model().objects.create_user(username='avatar-other-fixture'))
+        self.assertEqual(other.get('/api/account/avatar-image', {
+            'user_id': self.user.pk, 'name': current}).status_code, 404)
+        self.assertEqual(other.get('/media/' + current).status_code, 404)
+        owner_response = self.client.get('/api/account/avatar-image')
+        self.assertEqual(owner_response.status_code, 200)
+        self.assertTrue(b''.join(owner_response.streaming_content).startswith(b'\xff\xd8'))
+        self.assertTrue(default_storage.exists(current))
+
     def test_invalid_avatar_does_not_change_profile(self):
         from PIL import Image
         with tempfile.TemporaryDirectory() as directory, override_settings(MEDIA_ROOT=directory):
@@ -503,7 +521,8 @@ class AvatarTransactionTests(TransactionTestCase):
                 self.assertTrue(written.wait(timeout=8));token=self.token();marker=default_storage.path(token+'.lock')
                 with connection.cursor() as cursor:
                     cursor.execute('SELECT pg_backend_pid()');self.assertNotEqual(pid[0],cursor.fetchone()[0])
-                    cursor.execute('SELECT pg_terminate_backend(%s)',[pid[0]]);self.assertTrue(cursor.fetchone()[0])
+                    # A zero timeout acknowledges only the signal, not lock release.
+                    cursor.execute('SELECT pg_terminate_backend(%s, 5000)',[pid[0]]);self.assertTrue(cursor.fetchone()[0])
                 with transaction.atomic():AccountProfile.objects.select_for_update(nowait=True).get(user=self.user)
                 self.assertEqual(cleanup_avatar_files(self.user.pk),1)
                 self.assertTrue(default_storage.exists(token+'avatar.jpg'));self.assertEqual(self.token(),token)
@@ -562,10 +581,14 @@ class AvatarTransactionTests(TransactionTestCase):
 
     def test_hard_exit_after_actual_save_keeps_independently_committed_token(self):
         import os,subprocess,sys
+        from pathlib import Path
         from django.conf import settings
         from django.db import connection
-        self.assertEqual(connection.settings_dict['HOST'],'127.0.0.1')
-        # Only this runner's synthetic loopback DB settings enter the owned child.
+        self.assertTrue(settings.LOCAL)
+        self.assertIn(connection.settings_dict['HOST'],('127.0.0.1','db'))
+        if connection.settings_dict['HOST']=='db':
+            self.assertTrue(Path(self.media).is_relative_to('/app/media'))
+        # Only the runner's loopback or isolated Compose DB enters the owned child.
         env={key:os.environ[key] for key in ('PATH','SAGE_ENV') if key in os.environ}
         for suffix,key in [('NAME','NAME'),('USER','USER'),('PASSWORD','PASSWORD'),('HOST','HOST'),('PORT','PORT')]:
             env['SAGE_DB_'+suffix]=str(connection.settings_dict[key])
@@ -584,7 +607,8 @@ i=BytesIO();Image.new('RGB',(2,2)).save(i,'PNG');save=default_storage.save
 def exit_after_write(name,content):
     save(name,content);os._exit(23)
 with patch('backend.account.default_storage.save',side_effect=exit_after_write):
-    c.post('/api/account/avatar',{'avatar':SimpleUploadedFile('fixture.png',i.getvalue(),content_type='image/png')})
+    response=c.post('/api/account/avatar',{'avatar':SimpleUploadedFile('fixture.png',i.getvalue(),content_type='image/png')})
+    raise AssertionError('Avatar never reached storage.save: HTTP '+str(response.status_code))
 '''.replace('USER_ID',str(self.user.pk))
         child=subprocess.run([sys.executable,'-c',code],cwd=settings.BASE_DIR,env=env,capture_output=True,timeout=15)
         self.assertEqual(child.returncode,23)

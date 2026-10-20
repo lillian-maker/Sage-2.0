@@ -185,7 +185,9 @@ def _finish(request,flow,user,*,new=False):
     _live(flow)
     _invalidate(AuthFlow.objects.filter(pk=flow.pk),timezone.now())
     login(request,user,backend='django.contrib.auth.backends.ModelBackend')
-    register_session(request)
+    record=register_session(request)
+    record.google_verified_at=timezone.now()
+    record.save(update_fields=['google_verified_at'])
     AuditEvent.objects.create(actor=user,action='auth.google_registered' if new else 'auth.google_verified',request_id=request.request_id)
     if expiry<=timezone.now():
         raise ValueError('INVALID_FLOW')
@@ -245,6 +247,11 @@ def callback(request):
             flow.stage = 'bind_proof' if original else 'register'
             flow.save()
             if bound:
+                # Keep the latest verified Google email; the sub and any Sage
+                # email login/recovery identity remain unchanged.
+                if bound.provider_email != claims['email']:
+                    bound.provider_email = claims['email']
+                    bound.save(update_fields=['provider_email'])
                 _finish(request,flow,user)
                 authenticated_here = True
             if not bound:

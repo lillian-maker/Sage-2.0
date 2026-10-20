@@ -64,11 +64,17 @@ class Command(BaseCommand):
                         raise ValueError('INVALID_BILLING_CYCLE')
                 elif row['kind'] != 'credits' or row['billing_cycle'] != '':
                     raise ValueError('INVALID_PRODUCT_KIND')
+                if row['code'] in {'teams', 'enterprise'}:
+                    expected_mode = 'seat_included' if row['code'] == 'teams' else 'shared_included'
+                    if (row['audience'] != 'business' or row['kind'] != 'subscription' or
+                            row['entitlements'].get('resource_mode') != expected_mode):
+                        raise ValueError('INVALID_BUSINESS_RESOURCES')
                 if row['audience'] == 'personal' and row['minimum_seats'] != 1:
                     raise ValueError('INVALID_MINIMUM_SEATS')
                 if row['audience'] == 'business' and row['kind'] == 'subscription':
                     mode = row['entitlements'].get('resource_mode')
-                    if row['minimum_seats'] < 2 or mode not in ('seat_included', 'shared_only') or (mode == 'shared_only' and quantity != 0):
+                    if (mode not in ('seat_included', 'shared_included') or quantity <= 0 or
+                            (mode == 'shared_included' and row['minimum_seats'] < 10)):
                         raise ValueError('INVALID_BUSINESS_RESOURCES')
                 key = (row['code'], row['version'])
                 if key in keys:

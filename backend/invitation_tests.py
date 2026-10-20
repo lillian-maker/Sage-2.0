@@ -282,6 +282,7 @@ class InvitationImportTests(TestCase):
 
 
 @override_settings(INVITATION_CODES_READY=True)
+@override_settings(PASSKEY_RP_ID='sage.example.invalid',PASSKEY_ORIGIN='https://sage.example.invalid')
 class InvitationAdminTests(TestCase):
     base = '/sales/backend/registrationattribution/'
 
@@ -296,6 +297,21 @@ class InvitationAdminTests(TestCase):
 
     def grant(self, *codes):
         self.staff.user_permissions.add(*Permission.objects.filter(content_type__app_label='backend', codename__in=codes))
+        # Fixture proof state only; standard WebAuthn signatures are exercised in security_tests.
+        from .models import AccountPasskey,AccountSession
+        AccountPasskey.objects.get_or_create(user=self.staff,credential_id='admin-fixture-'+str(self.staff.pk),
+            defaults={'public_key':'fixture','label':'Synthetic admin'})
+        self.client.get('/api/account/profile')
+        AccountSession.objects.filter(user=self.staff,session_key=self.client.session.session_key).update(
+            sensitive_verified_at=timezone.now(),sensitive_method='passkey')
+
+    def test_export_requires_fresh_device_confirmation_in_addition_to_permissions(self):
+        from .models import AccountSession
+        self.grant('view_registration_attribution','export_registration_attribution')
+        AccountSession.objects.filter(user=self.staff).update(sensitive_verified_at=None)
+        self.assertEqual(self.client.get(self.base+'export/').status_code,403)
+        AccountSession.objects.filter(user=self.staff).update(sensitive_verified_at=timezone.now()-timedelta(minutes=15))
+        self.assertEqual(self.client.get(self.base+'export/').status_code,403)
 
     def test_independent_view_and_export_permissions(self):
         self.grant('export_registration_attribution')

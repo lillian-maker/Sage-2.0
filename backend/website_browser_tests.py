@@ -84,7 +84,8 @@ class WebsiteBrowserTests(LiveServerTestCase):
 
 
 @override_settings(**dict(PHONE_FIXTURE,LOCAL=True,AUTH_RESEND_SECONDS=0,AUTH_IDENTIFIER_LIMIT=20,
-    SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED=False))
+    ACCOUNT_DELETION_ENABLED=True,ACCOUNT_DELETION_POLICY_VERSION='NONPRODUCTION-FIXTURE-ONLY',
+    ACCOUNT_DELETION_POLICY_REVIEWED_AT='2026-01-01',ACCOUNT_DELETION_MARKER_KEY='synthetic-only-'*6))
 class PhoneWebsiteBrowserTests(LiveServerTestCase):
     host='127.0.0.1'
 
@@ -103,8 +104,9 @@ class PhoneWebsiteBrowserTests(LiveServerTestCase):
         got_request_exception.connect(record_error,weak=False)
         self.addCleanup(lambda:got_request_exception.disconnect(record_error))
         def receipt(client,request):
-            self.assertIn(request.TemplateId,('124','125'))
-            codes.put(request.TemplateParamSet[0])
+            self.assertIn(request.TemplateId,('124','125','126'))
+            if request.TemplateId!='126':
+                codes.put(request.TemplateParamSet[0])
             return Mock(SendStatusSet=[Mock(Code='Ok',SerialNo='fixture',PhoneNumber=request.PhoneNumberSet[0])])
         module=os.environ.get('PLAYWRIGHT_MODULE');self.assertTrue(module and os.path.isdir(module))
         env={key:os.environ[key] for key in ('PATH','HOME','TMPDIR') if key in os.environ}
@@ -127,7 +129,7 @@ class PhoneWebsiteBrowserTests(LiveServerTestCase):
                 if process.poll() is None:process.terminate();process.communicate(timeout=5)
                 for stream in (process.stdin,process.stdout,process.stderr):
                     if stream and not stream.closed:stream.close()
-            self.assertEqual(sms.call_count,3);self.assertEqual(captcha.call_count,4)
+            self.assertEqual(sms.call_count,5);self.assertEqual(captcha.call_count,4)
         user=get_user_model().objects.get();self.assertTrue(user.check_password('Violet!431'));self.assertEqual(user.email,'')
         self.assertEqual(LoginIdentity.objects.get().method,'phone');self.assertEqual(BillingAccount.objects.count(),1)
         self.assertEqual(Membership.objects.get().role,'owner');self.assertEqual(AccountProfile.objects.get().agreement_version,'NONPRODUCTION-FIXTURE-ONLY')

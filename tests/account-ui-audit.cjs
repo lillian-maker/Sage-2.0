@@ -30,7 +30,6 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
   let refundFails = false, refundReason = 'policy_review_required', refundDelay = false, refundWrongAccount = false;
   let refundHistory = [];
   let creditFixture = null;
-  let wrongUsage = false;
   let trialRecord = {eligibility:'available',attempt:null}, trialFails = false, trialReads = 0, delayedTrial = null;
   let heldSelection = null, heldLogout = null, heldAccount = null, sessionReads = 0;
   const cancelPath = `/api/billing/subscriptions/${subscriptionId}/cancel`;
@@ -60,7 +59,6 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     if (path === `/api/billing/purchase-quotes/${lifecycleQuoteId}`) return json({id:lifecycleQuoteId,account_id:state.active_account_id,currency:'CNY',amount_minor:19900,
       expires_at:'2099-01-01T00:00:00Z',can_order:false,order_id:null,unavailable_reason:'CONFIG_INCOMPLETE',
       snapshot:{kind:'subscription',code:'pro',billing_cycle:'monthly',amount_minor:19900,credits_quantity:'731',version:1,seat_quantity:1,entitlements:{benefits:{zh:['Fixture private quote benefit'],en:['Fixture private quote benefit']}}}});
-    if (path === '/api/billing/my-usage') return json({account_id:wrongUsage ? one : state.active_account_id,member:{id:1,user_id:state.user.id,active:true,seat_position:2,shared_limit:'50',shared_used:null,shared_reserved:null},subscription_active:false,period_start:null,period_end:null,can_edit:false});
     if (path === '/api/trial') {
       assert.equal(request.method(),'GET');
       trialReads++;
@@ -300,10 +298,32 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     attemptState = null; orderPhase = 'pending_payment'; withOrder = false;
     checks.push('Unknown payment, paid-pending-delivery, reconciliation and closed states; refresh never writes');
     subscriptionsEnabled = false; await visit('billing.html#subscription'); await textContains('#account-live','尚未接入'); subscriptionsEnabled = true;
-    await visit('billing.html#procurement'); await page.locator('#purchase-company').fill('Fixture company'); await page.locator('#purchase-email').fill('fixture@example.test'); await page.locator('#purchase-requirements').fill('Fixture purchasing request');
-    await page.locator('#procurement-form button[type=submit]').click(); await textContains('#procurement-feedback','服务端接收'); await textContains('#procurement-records','Fixture company');
+    for (const lang of ['', '-en']) {
+      inquiries = [];
+      await visit(`billing${lang}.html#procurement`);
+      assert.equal(await page.locator('#purchase-seats').getAttribute('min'),'1');
+      assert.equal(await page.locator('#purchase-seats').inputValue(),'1');
+      await page.locator('#purchase-company').fill('Fixture company');
+      await page.locator('#purchase-email').fill('fixture@example.test');
+      await page.locator('#purchase-requirements').fill('Fixture purchasing request');
+      const beforeInvalid = writes.length;
+      for (const seats of ['0','-1','1.5','10001']) {
+        await page.locator('#purchase-seats').fill(seats);
+        assert.equal(await page.locator('#purchase-seats').evaluate(input=>input.checkValidity()),false);
+        await page.locator('#procurement-form button[type=submit]').click();
+      }
+      assert.equal(writes.length,beforeInvalid);
+      await page.locator('#purchase-seats').fill('1');
+      await page.locator('#procurement-form button[type=submit]').click();
+      await textContains('#procurement-feedback',lang ? 'received by the server' : '服务端接收');
+      await textContains('#procurement-records','Fixture company');
+      assert.equal(inquiries.length,1); assert.equal(inquiries[0].seats,1);
+      await page.reload(); await textContains('#procurement-records','Fixture company');
+    }
+    checks.push('Bilingual one-person inquiry submits and reloads; zero, negative, fractional and excessive seats do not write');
+    await visit('billing.html#procurement');
     checks.push('Unavailable capability stays explicit; procurement server acknowledgment displayed');
-    await textContains('#procurement-feedback','22222222-2222-4222-8222-222222222222');
+    await textContains('#procurement-records','22222222-2222-4222-8222-222222222222');
     assert.equal(await page.locator('#purchase-company').getAttribute('maxlength'),'160');
     assert.equal(await page.locator('#purchase-requirements').getAttribute('maxlength'),'2000');
     const savedInquiries = inquiries;
@@ -580,17 +600,13 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     state = makeSession(true,two);
     for (const lang of ['', '-en']) {
       await visit(`billing${lang}.html#my-usage`);
-      await textContains('#account-live',lang ? 'Your seat and shared pool' : '本人席位与共享池');
-      await textContains('#account-live',lang ? 'unknown, not zero' : '未知，不表示零');
-      await page.locator('#usage-refresh').click();
-      await textContains('#account-live','50');
+      await textContains('#account-section-title',lang ? 'My bills' : '我的账单');
+      assert.equal(await page.locator('#usage-refresh').count(),0,'Removed member-cap view must not render');
+      assert.equal(await page.locator('.billing-center-sidebar>nav a[href$="#organization"]').count(),1,'Business management is a top-level entry');
+      assert.equal(await page.locator('.billing-management a[href="#my-usage"]').count(),0,'Monthly member caps are removed');
     }
-    wrongUsage = true; await page.locator('#usage-refresh').click();
-    await textContains('#account-live','unknown');
-    assert.equal(await page.locator('#usage-refresh').count(),0);
-    wrongUsage = false;
     assert.equal(writes.length,beforeUsage);
-    checks.push('Own member limits are bilingual, refresh read-only, unknown when expired and reject wrong-account responses');
+    checks.push('Removed member-cap route falls back safely and business management is a top-level settings entry');
     const beforeCredits = writes.length;
     const amounts = {available:'10.125',reserved:'2',frozen:'3',consumed:'4',expired:'5',refunded:'6'};
     creditFixture = {...amounts,batches:[{...amounts,source:'purchased',expires_at:'2026-12-01T00:00:00Z'}]};

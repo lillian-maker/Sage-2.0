@@ -6,7 +6,7 @@
     if(!value||/[\\\u0000-\u0020\u007f]/.test(value)||value.startsWith('//')||/^[a-z][a-z0-9+.-]*:/i.test(value))return home;
     if(['trial','pricing'].includes(value))value=page(value);
     try{const url=new URL(value,location.href),directory=new URL('./',location.href).pathname,base=new URL('../',location.href).pathname;
-      const allowed=['billing','checkout','pricing','trial','profile','team','enterprise','docs','download'].flatMap(name=>[directory+name+'.html',directory+name+'-en.html']);allowed.push(base,base+'index.html',base+'index-en.html',directory+'product.html');
+      const allowed=['billing','checkout','pricing','trial','profile','notifications','team','enterprise','docs','download'].flatMap(name=>[directory+name+'.html',directory+name+'-en.html']);allowed.push(base,base+'index.html',base+'index-en.html',directory+'product.html');
       if(url.origin!==location.origin||!allowed.includes(url.pathname)||/[\\\u0000-\u0020\u007f]/.test(decodeURIComponent(url.pathname)))return home;
       const path=url.pathname===base?base+page('index'):url.pathname.endsWith('/product.html')?url.pathname:url.pathname.replace(/(?:-en)?\.html$/,en?'-en.html':'.html');return path+url.search+url.hash;
     }catch(_){return home;}

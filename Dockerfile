@@ -26,6 +26,7 @@ FROM nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451
 COPY --from=build /app/dist /srv/sage/dist
 COPY --from=build /app/tmp/admin-static /srv/sage/static
 COPY drafts/restricted-deploy/docker-nginx.conf /etc/nginx/nginx.conf
+COPY --chmod=0555 drafts/restricted-deploy/sage-nginx-entrypoint.sh /usr/local/bin/sage-nginx-entrypoint
 USER 101:101
-ENTRYPOINT ["nginx"]
+ENTRYPOINT ["/usr/local/bin/sage-nginx-entrypoint"]
 CMD ["-g", "daemon off;"]

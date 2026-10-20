@@ -12,13 +12,14 @@ from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import DatabaseError, IntegrityError, close_old_connections, transaction
-from django.test import Client, RequestFactory, TestCase, TransactionTestCase, skipUnlessDBFeature
+from django.test import Client, RequestFactory, TestCase, TransactionTestCase, skipUnlessDBFeature, override_settings
 from django.utils import timezone
 
 from .consultations import normalized_fields, purge_record, submit, update_sales
 from .models import Consultation, ConsultationAudit
 
 
+@override_settings(PASSKEY_RP_ID='sage.example.invalid',PASSKEY_ORIGIN='https://sage.example.invalid')
 class ConsultationTests(TestCase):
     def setUp(self):
         self.client = Client(enforce_csrf_checks=True)
@@ -156,6 +157,14 @@ class ConsultationTests(TestCase):
         request = RequestFactory().post('/sales/backend/consultation/')
         request.user = self.sales
         self.assertTrue(model_admin.has_view_permission(request))
+        self.assertEqual(model_admin.purge_personal_information(request,Consultation.objects.all()).status_code,403)
+        from .models import AccountSession,AccountPasskey
+        client=Client();client.force_login(self.sales);client.get('/api/account/profile')
+        request.session=client.session
+        AccountPasskey.objects.create(user=self.sales,credential_id='consultation-admin-fixture',
+            public_key='fixture',label='Synthetic admin')
+        AccountSession.objects.filter(user=self.sales,session_key=request.session.session_key).update(
+            sensitive_verified_at=timezone.now(),sensitive_method='passkey')
         confirmation = model_admin.purge_personal_information(request, Consultation.objects.all())
         self.assertContains(confirmation, 'confirm_purge')
         record.refresh_from_db()
@@ -170,6 +179,13 @@ class ConsultationTests(TestCase):
         client.force_login(self.sales)
         path = f'/sales/backend/consultation/{record.pk}/change/'
         self.assertEqual(client.get(path).status_code, 200)
+        self.assertEqual(client.post(path,{'_save':'Save'}).status_code,403)
+        from .models import AccountSession,AccountPasskey
+        client.get('/api/account/profile')
+        AccountPasskey.objects.create(user=self.sales,credential_id='consultation-admin-fixture',
+            public_key='fixture',label='Synthetic admin')
+        AccountSession.objects.filter(user=self.sales,session_key=client.session.session_key).update(
+            sensitive_verified_at=timezone.now(),sensitive_method='passkey')
         response = client.post(path, {'owner': self.sales.pk, 'status': 'completed',
                                      'notes': 'Internal fixture', 'edit_version': 0, '_save': 'Save'})
         self.assertEqual(response.status_code, 302)

@@ -13,6 +13,7 @@ const root=path.resolve(__dirname,'..');
   if(url.host==='turing.captcha.qcloud.com')return route.fulfill({contentType:'text/javascript',body:'window.TencentCaptcha=function(id,callback){this.show=()=>callback({ret:0,ticket:"fixture-ticket",randstr:"fixture-random"});this.destroy=()=>{}}'});
   if(url.pathname.startsWith('/api/')){
    if(req.method()!=='GET'){assert.equal(req.headers()['x-csrftoken'],'fixture-csrf');writes.push([url.pathname,req.postDataJSON()]);}
+   if(url.pathname==='/api/account/notifications/summary'){assert.equal(req.method(),'GET');assert.equal(url.search,'');if(!authed)return json({error:{code:'AUTH_REQUIRED'}},401);return json({user_id:session().user.id,unread_count:0});}
    if(url.pathname==='/api/auth/session'){reads++;if(failCompleteSession){failCompleteSession=false;return json({error:{code:'SERVICE_UNAVAILABLE'}},503);}return json(session());}
    if(['/api/auth/register/start','/api/auth/password-login','/api/auth/recovery/start'].includes(url.pathname)){const body=req.postDataJSON();assert.equal(body.method,'phone');assert.equal(body.identifier,'+8613800000000');if(mode!=='reset')assert.equal(body.password,'Silver!864');stage='captcha';return json(flow(),201);}
    if(url.pathname==='/api/auth/captcha'){if(mode==='login'){authed=true;return json(session());}stage='code';return json(flow(),201);}

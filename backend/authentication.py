@@ -50,16 +50,16 @@ def captcha_ready():
 
 def registration_ready(method='email'):
     if method == 'phone':
-        from .sms import phone_ready
-        return bool(captcha_ready() and registration_terms_ready() and phone_ready(purpose='registration'))
+        from .sms import sms_auth_ready
+        return bool(captcha_ready() and registration_terms_ready() and sms_auth_ready())
     delivery = email_ready(settings.AUTH_REGISTRATION_SES_TEMPLATE_ID)
     return bool(captcha_ready() and delivery and registration_terms_ready())
 
 
 def recovery_ready(method='email'):
     if method == 'phone':
-        from .sms import phone_ready
-        return phone_ready(purpose='password_reset')
+        from .sms import sms_auth_ready
+        return sms_auth_ready()
     return password_reset_ready()
 
 
@@ -519,6 +519,8 @@ def change_password(request, user, identifier, password, *, expires_at, method='
     AccountSession.objects.filter(user=user, revoked_at__isnull=True).update(revoked_at=now)
     Session.objects.filter(pk__in=keys).delete()
     AuditEvent.objects.create(actor=user, action='auth.password_reset', request_id=request.request_id)
+    from .notifications import record_security_notice
+    record_security_notice(user, 'password-reset:'+str(request.request_id))
     # Includes every DB write and lock wait, not just the expensive hash.
     if expires_at <= timezone.now():
         raise ValueError('INVALID_FLOW')
@@ -554,8 +556,10 @@ def cleanup_auth_data(*, apply=False):
     flows = all_flows.exclude(identifier='',password_hash='',first_name='',last_name='',
         google_state_digest=None,google_nonce_digest='',google_claim='',google_sub='',
         original_identity=None,return_to='',google_intent='')
-    challenges = LoginChallenge.objects.filter(expired).exclude(identifier='',code_digest='')
-    counts = {'flows':flows.count(),'challenges':challenges.count()}
+    challenges = LoginChallenge.objects.filter(expired).exclude(identifier='',code_digest='',password_hash='')
+    from .models import PasskeyChallenge
+    passkeys=PasskeyChallenge.objects.filter(expired)
+    counts = {'flows':flows.count(),'challenges':challenges.count()+passkeys.count()}
     if apply:
         # A cleanup scan must not wait on an in-flight grant's pre-held rows.
         # Include already scrubbed Flow IDs so a previously busy OTP is retried.
@@ -565,12 +569,14 @@ def cleanup_auth_data(*, apply=False):
         challenge_ids = list(challenges.order_by('pk').select_for_update(skip_locked=True,
             of=('self',)).values_list('pk',flat=True))
         challenges = LoginChallenge.objects.filter(pk__in=challenge_ids)
-        counts = {'flows':flows.count(),'challenges':len(challenge_ids)}
+        passkey_ids=list(passkeys.order_by('pk').select_for_update(skip_locked=True).values_list('pk',flat=True))
+        counts = {'flows':flows.count(),'challenges':len(challenge_ids)+len(passkey_ids)}
         flows.update(password_hash='',first_name='',last_name='',identifier='',user=None,
             agreement_version='',agreement_accepted_at=None,
             google_state_digest=None,google_nonce_digest='',google_claim='',google_sub='',
             original_identity=None,return_to='',google_intent='',
             consumed_at=Coalesce('consumed_at',Value(now)))
-        challenges.update(identifier='',code_digest='',password_user=None,
+        challenges.update(identifier='',code_digest='',password_user=None,account=None,password_hash='',
             consumed_at=Coalesce('consumed_at',Value(now)))
+        PasskeyChallenge.objects.filter(pk__in=passkey_ids).delete()
     return counts

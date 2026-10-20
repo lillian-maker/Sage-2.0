@@ -6,21 +6,27 @@ upgrades, prior refunds, expiry disputes and taxes need line-level settlement.
 from calendar import monthrange
 from datetime import datetime
 from decimal import Decimal, DecimalException, Inexact, localcontext
+from fractions import Fraction
 
 
 def billing_policy():
     """Public confirmed rules only; this does not imply connected billing."""
     return {
-        'version': '2026-10-02', 'currency': 'CNY', 'merchant_region': 'CN-Shenzhen',
+        'version': '2026-10-16.2', 'currency': 'CNY', 'merchant_region': 'CN-Shenzhen',
         'trial': {'successful_runs': 1, 'choices': ['voc', 'shopify_diagnosis'],
                   'payment_method_required': False},
         'credits': {'name': 'Sage Credits', 'purchased_valid_months': 12,
                     'subscription_grant': 'monthly', 'rollover': False,
-                    'consume_order': ['earliest_expiry', 'subscription_before_purchased_on_tie']},
+                    'consume_order': ['earliest_expiry', 'subscription_before_purchased_on_tie'],
+                    'business_consume_order': ['own_seat_included', 'business_shared'],
+                    'business_shared_sources': ['subscription', 'purchased'],
+                    'enterprise_included_grant': 'monthly_shared_by_purchased_seats',
+                    'business_uses_personal_credits': False,
+                    'member_shared_limits': False},
         'renewal': {'automatic_retry': False, 'manual_payment_window_days': 3,
                     'grace_entitlements': False},
         'auto_topup': {'audience': 'business', 'default_enabled': False,
-                       'separate_authorization': True},
+                       'separate_authorization': True, 'requires_actual_shared_demand': True},
         'payment_methods': {'independent_replacement': True,
                             'remove_blocks_new_charges': True,
                             'successful_inflight_payment_fulfills': True},
@@ -61,6 +67,47 @@ def annual_refund(paid_minor, original_anchor, requested_at):
     months = sum(month_boundary(original_anchor, offset) > requested_at for offset in range(12))
     # Integer half-up rounding once, never float currency arithmetic.
     return {'months': months, 'amount_minor': (2 * paid_minor * months + 12) // 24}
+
+
+def subscription_change_amounts(current_price_minor, actual_cash_minor, starts_at, ends_at,
+                                quoted_at, new_price_minor, prepaid_minor=0, *, mode='annual_to_annual',
+                                unused_cash_minor=None):
+    """Confirmed upgrade rules: exact elapsed time, one half-up final fen.
+
+    Current catalog credit above unused real cash is a discount, never cash.
+    Future unopened prepayments offset the new price; only their excess is
+    returned. This arithmetic creates no payment, entitlement or refund.
+    """
+    for value in (current_price_minor,actual_cash_minor,new_price_minor,prepaid_minor):
+        if type(value) is not int or value < 0:
+            raise ValueError('INVALID_AMOUNT')
+    for value in (starts_at,ends_at,quoted_at):_aware(value)
+    if not starts_at <= quoted_at < ends_at:
+        raise ValueError('SERVICE_NOT_ACTIVE')
+    def seconds(delta):
+        return Fraction((delta.days*86400+delta.seconds)*1000000+delta.microseconds,1000000)
+    ratio=seconds(ends_at-quoted_at)/seconds(ends_at-starts_at)
+    unused_cash=Fraction(actual_cash_minor)*ratio if unused_cash_minor is None else unused_cash_minor
+    if not isinstance(unused_cash, Fraction) or not 0 <= unused_cash <= actual_cash_minor:
+        raise ValueError('INVALID_AMOUNT')
+    if mode not in ('monthly_to_monthly','monthly_to_annual','annual_to_annual'):
+        raise ValueError('UNSUPPORTED_PLAN_CHANGE')
+    credit=(Fraction(0) if mode=='monthly_to_monthly' else unused_cash if mode=='monthly_to_annual'
+            else max(Fraction(current_price_minor)*ratio,unused_cash))
+    if mode!='monthly_to_monthly' and unused_cash>new_price_minor:
+        raise ValueError('CASH_CREDIT_REQUIRES_REVIEW')
+    prepaid_applied=min(Fraction(prepaid_minor),max(Fraction(0),new_price_minor-credit))
+    half_up=lambda value:(2*value.numerator+value.denominator)//(2*value.denominator)
+    due=half_up(max(Fraction(0),new_price_minor-credit-prepaid_minor))
+    future_refund=half_up(prepaid_minor-prepaid_applied)
+    current_refund=half_up(unused_cash) if mode=='monthly_to_monthly' else 0
+    refund=future_refund+current_refund
+    carried=min(new_price_minor-due,(0 if mode=='monthly_to_monthly' else half_up(unused_cash))+prepaid_minor-future_refund)
+    return {'gross_minor':new_price_minor,'discount_minor':new_price_minor-due,'due_minor':due,
+        'refund_minor':refund,'cash_carried_minor':carried,
+        'promotion_minor':max(0,new_price_minor-due-carried),
+        'current_refund_minor':current_refund,'future_refund_minor':future_refund,'mode':mode,
+        'remaining_ratio':[ratio.numerator,ratio.denominator]}
 
 
 def credits_refund(paid_minor, purchased, unused, reserved=0):

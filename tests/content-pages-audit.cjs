@@ -12,7 +12,9 @@ assert.ok(read('src/pages/site-shell.js').includes("consult.showModal();"));
 assert.ok(read('src/pages/site-shell.js').includes("text('咨询和演示','Consultation and demo')"));
 assert.ok(read('src/pages/site-shell.js').includes("text('提交预约','Submit request')"));
 assert.ok(read('src/index.template.html').includes('<h3>咨询和演示</h3>'));
-assert.ok(read('src/index.template.html').includes('type="submit">提交预约</button>'));
+assert.ok(read('src/index.template.html').includes('type="submit" disabled>提交预约</button>'));
+assert.ok(read('src/index.template.html').includes('<form id="r-contact-form" method="dialog">'), 'No-script native submission must not navigate');
+assert.ok(read('src/pages/site-shell.js').includes('<form method="dialog">'), 'Modal native submission must not transmit form data');
 assert.ok(!read('src/pages/profile.html').includes('src="experience.js"'),'Personal settings must not redirect to billing');
 assert.ok(read('src/pages/profile.html').includes('id="sage-profile-data"'));
 assert.ok(read('src/app.js').includes("const accountLinks=$$('.nav-tools>a[data-account-entry],.mobile-nav>a[data-account-entry]');"),'Homepage account entries must be a collection; a single element aborts globe initialization');
@@ -123,6 +125,35 @@ assert.ok(enterpriseHero.indexOf('<h1>')<enterpriseHero.indexOf('ep-hero-intro')
 assert.ok(read('src/pages/content-pages.js').includes("auth.html?return='"));
 for (const icon of ['person','file-earmark-text','database','diagram-3','people','search','shield-lock','bar-chart']) assert.ok(fs.existsSync(path.join(root,'pages/icons',icon+'.svg')));
 const sharedRoutes=['team','enterprise','docs','pricing','trial','download','checkout','billing','auth','profile'].flatMap(name=>[name,name+'-en']).concat('product');
+const publicNames=new Set(['index','team','enterprise','docs','pricing','download']);
+for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'pages/'+name+'.html')]){
+  const html=read(filename),head=html.split('</head>')[0],english=filename.endsWith('-en.html'),name=path.basename(filename,'.html').replace(/-en$/,'');
+  assert.equal((head.match(/<title>/g)||[]).length,1,filename+': unique title');
+  assert.equal((head.match(/name="description"/g)||[]).length,1,filename+': unique description');
+  const description=head.match(/<meta name="description" content="([^"]+)">/)[1];
+  assert.ok(description.length>20,filename+': meaningful description');
+  if(english)assert.ok(!/[\u4e00-\u9fff]/.test(description),filename+': localized description');
+  assert.equal((head.match(/rel="canonical"/g)||[]).length,1,filename+': unique canonical');
+  assert.ok(head.includes(`<link rel="canonical" href="https://sagegogo.com/${filename}">`),filename+': query-free canonical');
+  assert.equal((head.match(/name="robots"/g)||[]).length,1,filename+': unique indexing policy');
+  assert.ok(head.includes(`<meta name="robots" content="noindex,${publicNames.has(name)?'follow':'nofollow'}">`),filename+': release candidate must remain unindexed');
+  const stem=filename.replace(/-en\.html$/,'.html').replace(/\.html$/,'');
+  if(name!=='product'){
+    assert.equal((head.match(/rel="alternate" hreflang=/g)||[]).length,2,filename+': bilingual head links');
+    for(const [lang,suffix] of [['zh-CN',''],['en','-en']]){
+      const target=stem+suffix+'.html';assert.ok(fs.existsSync(path.join(root,target)),filename+': alternate exists');
+      assert.ok(head.includes(`<link rel="alternate" hreflang="${lang}" href="https://sagegogo.com/${target}">`),filename+': alternate language');
+    }
+  }
+  if(publicNames.has(name)){
+    for(const property of ['og:title','og:description','og:url','og:image','og:image:alt'])assert.equal((head.match(new RegExp('property="'+property+'"','g'))||[]).length,1,filename+': '+property);
+    const image=new URL(head.match(/property="og:image" content="([^"]+)"/)[1]);
+    assert.equal(image.origin,'https://sagegogo.com');assert.ok(fs.existsSync(path.join(root,image.pathname)),filename+': actual share image');
+    assert.ok(head.includes('<meta name="twitter:card" content="summary_large_image">'));
+  }else assert.ok(!head.includes('property="og:'),filename+': no private-page share data');
+}
+assert.ok(!fs.existsSync(path.join(root,'dist/robots.txt')), 'Release flag must not publish a crawler allow policy');
+assert.ok(!fs.existsSync(path.join(root,'dist/sitemap.xml')), 'Indexing samples remain review-only');
 for(const route of sharedRoutes){
   const html=read('pages/'+route+'.html');
   assert.ok(html.includes('content-pages.css'),route+': shared visual foundation');

@@ -244,7 +244,9 @@ with override_settings(BILLING_SALES_ENABLED=True,BILLING_APPROVED_CHANNELS=FIXT
     run(python, ['manage.py', 'migrate', 'backend', 'zero', '--noinput']);
     run(python, ['manage.py', 'migrate', '--noinput']);
     run(python, ['manage.py', 'makemigrations', '--check', '--dry-run']);
-    const suites = ['backend.authentication_tests', 'backend.google_auth_tests', 'backend.tests', 'backend.commerce.tests', 'backend.commerce.subscription_tests', 'backend.commerce.attempt_tests', 'backend.trial_tests', 'backend.email_tests', 'backend.account_tests', 'backend.account_deletion_tests', 'backend.consultation_tests', 'backend.sms_tests', 'backend.billing_session_tests', 'backend.invitation_tests'];
+    const suites = ['backend.authentication_tests', 'backend.google_auth_tests', 'backend.tests', 'backend.commerce.tests', 'backend.commerce.subscription_tests', 'backend.commerce.attempt_tests', 'backend.payment_channel_tests', 'backend.payment_flow_tests', 'backend.alipay_transport_tests', 'backend.wechat_tests', 'backend.trial_tests', 'backend.email_tests', 'backend.account_tests', 'backend.account_deletion_tests', 'backend.consultation_tests', 'backend.sms_tests', 'backend.billing_session_tests', 'backend.invitation_tests'];
+    suites.push('backend.security_tests', 'backend.notification_tests', 'backend.operations_tests',
+      'backend.auth_readiness_tests', 'backend.commerce.refund_tests', 'backend.wechat_flow_tests');
     if (process.env.PLAYWRIGHT_MODULE) suites.push('backend.browser_tests', 'backend.website_browser_tests');
     // The full suite with real browsers exceeded 180s; keep other commands bounded.
     run(python, ['manage.py', 'test', ...suites, '--verbosity', '2'], true, 600000);

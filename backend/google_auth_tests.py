@@ -130,9 +130,59 @@ class GoogleFixture:
 
 @override_settings(**GOOGLE_FIXTURE)
 class GoogleAuthenticationTests(GoogleFixture,TestCase):
+    def test_bound_sub_refreshes_google_email_without_granting_email_login_or_recovery(self):
+        user=get_user_model().objects.create_user(username='google-email-refresh')
+        account=BillingAccount.objects.create(kind='personal',name='Google fixture',personal_owner=user)
+        Membership.objects.create(user=user,account=account,role='owner')
+        identity=LoginIdentity.objects.create(user=user,method='google',identifier='local-google-sub',
+            provider_email='old@example.invalid')
+        original_verified_at=identity.verified_at
+        self.begin();self.callback()
+        result=self.post('google/resume',{})
+        self.assertEqual(result.status_code,200)
+        self.assertEqual(result.json()['session']['user']['id'],str(user.pk))
+        identity.refresh_from_db()
+        self.assertEqual(identity.provider_email,'new@example.invalid')
+        self.assertEqual((identity.user_id,identity.method,identity.identifier),
+            (user.pk,'google','local-google-sub'))
+        self.assertEqual(identity.verified_at,original_verified_at)
+        self.assertFalse(LoginIdentity.objects.filter(user=user,provider_email='old@example.invalid').exists())
+        self.assertEqual(LoginIdentity.objects.get(user=user,provider_email='new@example.invalid').pk,identity.pk)
+        self.assertFalse(LoginIdentity.objects.filter(user=user,method='email').exists())
+        self.assertEqual(self.client.get('/api/account/profile').json()['email'],'new@example.invalid')
+        capabilities=self.client.get('/api/auth/session').json()['capabilities']
+        self.assertFalse(capabilities['password_reset'])
+        self.assertTrue(capabilities['password_managed_by_google'])
+
+    def test_bound_sub_email_refresh_preserves_original_sage_email_identity(self):
+        user,original,_,_=self.original()
+        google=LoginIdentity.objects.create(user=user,method='google',identifier='local-google-sub',
+            provider_email='old@example.invalid')
+        self.claim_changes['email']='updated@example.invalid'
+        self.begin();self.callback()
+        google.refresh_from_db();original.refresh_from_db()
+        self.assertEqual(google.provider_email,'updated@example.invalid')
+        self.assertEqual(original.identifier,'new@example.invalid')
+        self.assertFalse(LoginIdentity.objects.filter(method='email',identifier='updated@example.invalid').exists())
+        self.assertEqual(self.client.get('/api/account/profile').json()['email'],'new@example.invalid')
+        self.assertTrue(self.client.get('/api/auth/session').json()['capabilities']['password_reset'])
+
+    def test_unverified_google_email_does_not_replace_existing_metadata(self):
+        user,_,_,_=self.original()
+        google=LoginIdentity.objects.create(user=user,method='google',identifier='local-google-sub',
+            provider_email='old@example.invalid')
+        self.claim_changes.update(email='unverified@example.invalid',email_verified=False)
+        self.begin();self.callback()
+        google.refresh_from_db()
+        self.assertEqual(google.provider_email,'old@example.invalid')
+        self.assertFalse(self.client.get('/api/auth/session').json()['authenticated'])
+
     def test_r1_google_only_display_email_does_not_grant_profile_password_reset(self):
         flow=self.pending(email='assertion@example.invalid')
         self.assertEqual(self.registration(flow).status_code,200)
+        google_session=AccountSession.objects.get(session_key=self.client.session.session_key)
+        self.assertIsNotNone(google_session.google_verified_at)
+        self.assertLess(abs((timezone.now()-google_session.google_verified_at).total_seconds()),5)
         self.assertFalse(LoginIdentity.objects.filter(method='email').exists())
         self.assertEqual(self.client.get('/api/account/profile').json()['email'],'assertion@example.invalid')
         capabilities=self.client.get('/api/auth/session').json()['capabilities']
@@ -187,10 +237,12 @@ class GoogleAuthenticationTests(GoogleFixture,TestCase):
 
     def test_r1_bound_callback_database_fault_has_no_ghost_session(self):
         user,_,_,_=self.original()
-        LoginIdentity.objects.create(user=user,method='google',identifier='local-google-sub',provider_email='new@example.invalid')
+        google=LoginIdentity.objects.create(user=user,method='google',identifier='local-google-sub',provider_email='old@example.invalid')
         self.begin()
         with patch('backend.google_auth.AuditEvent.objects.create',side_effect=DatabaseError('nonproduction fault')):
             self.callback()
+        google.refresh_from_db()
+        self.assertEqual(google.provider_email,'old@example.invalid')
         self.assertFalse(self.client.get('/api/auth/session').json()['authenticated'])
         self.assertFalse(AccountSession.objects.exists())
 

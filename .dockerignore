@@ -13,6 +13,7 @@
 !drafts/restricted-deploy/docker-entrypoint.py
 !drafts/restricted-deploy/docker-gunicorn.conf.py
 !drafts/restricted-deploy/docker-nginx.conf
+!drafts/restricted-deploy/sage-nginx-entrypoint.sh
 **/.env
 **/.env.*
 **/__pycache__

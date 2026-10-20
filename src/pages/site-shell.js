@@ -3,6 +3,64 @@
  const isHome=document.body.classList.contains('v1'), en=document.documentElement.lang==='en';
  const pageURL=name=>(isHome?'pages/':'')+name+(en?'-en':'')+'.html';
  const text=(zh,english)=>en?english:zh;
+ let notificationUser=null,notificationCount=null,notificationVersion=0;
+ function notificationBell(){
+  document.querySelectorAll('.cp-tools,.r-tools,.nav-tools,.nav-actions').forEach(tools=>{
+   let link=tools.querySelector('.sage-notification-bell');
+   if(!notificationUser){link?.remove();return;}
+   if(!link){link=document.createElement('a');link.className='sage-notification-bell';link.href=pageURL('notifications');link.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M9 21h6"/></svg><span class="sage-unread-count" aria-hidden="true"></span>';tools.prepend(link);}
+   const label=notificationCount===null?text('通知状态无法读取，打开通知中心重试','Notification status unavailable. Open notifications to retry'):text(`通知，${notificationCount}条未读`,`Notifications, ${notificationCount} unread`);
+   link.setAttribute('aria-label',label);link.title=label;
+   const count=link.querySelector('span'),value=notificationCount===null?'?':notificationCount>99?'99+':String(notificationCount);
+   if(count.textContent!==value)count.textContent=value;
+   count.hidden=notificationCount===0;
+  });
+ }
+ async function readNotificationCount(){
+  const user=notificationUser,version=++notificationVersion;notificationCount=null;notificationBell();if(!user)return;
+  try{const response=await fetch('/api/account/notifications/summary',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('NOTIFICATIONS_UNAVAILABLE');const data=await response.json();if(String(data.user_id)!==user||!Number.isSafeInteger(data.unread_count)||data.unread_count<0)throw Error('INVALID_UNREAD_COUNT');if(version===notificationVersion&&user===notificationUser){notificationCount=data.unread_count;notificationBell();}}
+  catch(_){if(version===notificationVersion){notificationCount=null;notificationBell();}}
+ }
+ window.addEventListener('sage:session',event=>{const next=event.detail?.authenticated&&event.detail.user?.id?String(event.detail.user.id):null;if(next!==notificationUser){notificationUser=next;readNotificationCount();}notificationBell();});
+ window.addEventListener('sage:notifications-updated',readNotificationCount);
+ const bytes=value=>Uint8Array.from(atob(value.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(value.length/4)*4,'=')),char=>char.charCodeAt(0));
+ const base64=value=>btoa(String.fromCharCode(...new Uint8Array(value))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+ async function securityRequest(path,body,csrf){
+  const response=await fetch('/api/account/'+path,{method:body===undefined?'GET':'POST',credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json',...(body===undefined?{}:{'Content-Type':'application/json','X-CSRFToken':csrf})},...(body===undefined?{}:{body:JSON.stringify(body)}),signal:AbortSignal.timeout(10000)});
+  if(!response.headers.get('content-type')?.includes('application/json'))throw Error('SECURITY_UNAVAILABLE');const result=await response.json();if(!response.ok)throw Error(result.error?.code||'SECURITY_UNAVAILABLE');return result;
+ }
+ async function passkey(kind,csrf,label){
+  if(!window.isSecureContext||!navigator.credentials)throw Error('PASSKEY_UNAVAILABLE');
+  const data=await securityRequest('passkeys/'+kind+'-options',kind==='registration'?{label}:{},csrf),options=data.public_key;
+  if(typeof data.challenge_id!=='string'||!options||typeof options.challenge!=='string')throw Error('INVALID_PASSKEY_OPTIONS');
+  const publicKey={...options,challenge:bytes(options.challenge)};
+  if(options.user)publicKey.user={...options.user,id:bytes(options.user.id)};
+  for(const field of ['allowCredentials','excludeCredentials'])if(options[field])publicKey[field]=options[field].map(item=>({...item,id:bytes(item.id)}));
+  const credential=kind==='registration'?await navigator.credentials.create({publicKey}):await navigator.credentials.get({publicKey});if(!credential)throw Error('PASSKEY_CANCELLED');
+  const response={};for(const field of ['clientDataJSON','attestationObject','authenticatorData','signature','userHandle'])if(field in credential.response)response[field]=credential.response[field]===null?null:base64(credential.response[field]);
+  if(credential.response.getTransports)response.transports=credential.response.getTransports();
+  const serialized={id:credential.id,rawId:base64(credential.rawId),type:credential.type,response,clientExtensionResults:credential.getClientExtensionResults()};
+  return securityRequest(kind==='registration'?'passkeys/register':'passkeys/verify',{challenge_id:data.challenge_id,credential:serialized},csrf);
+ }
+ window.sageRegisterPasskey=(label,csrf)=>passkey('registration',csrf,label);
+ window.sageConfirmPasskey=async csrf=>{const result=await passkey('authentication',csrf);if(result.method!=='passkey'||!Number.isFinite(Date.parse(result.verified_until))||Date.parse(result.verified_until)<=Date.now()||Date.parse(result.verified_until)>Date.now()+901000)throw Error('VERIFICATION_UNCONFIRMED');return result;};
+ window.sageConfirmSensitive=async(accountId,csrf)=>{
+  const security=await securityRequest('security');
+  if(security.verified_method==='phone'&&security.verified_account_id===accountId&&Date.parse(security.verified_until)>Date.now())return;
+  return new Promise((resolve,reject)=>{
+   const dialog=document.createElement('dialog');dialog.className='profile-deletion-dialog';dialog.setAttribute('aria-labelledby','sensitive-title');
+   dialog.innerHTML=`<h2 id="sensitive-title">${text('确认是你本人操作','Confirm your identity')}</h2><p>${text('请输入账号密码，并通过原手机号短信验证。验证通过后15分钟内有效，仅限当前企业。','Enter your account password and verify your original phone number. Confirmation lasts 15 minutes for this business only.')}</p><form method="dialog"><label>${text('账号密码','Account password')}<input type="password" name="password" autocomplete="current-password" required></label><label>${text('短信验证码','SMS code')}<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6"></label><p role="status"></p><div class="profile-deletion-actions"><button type="button" data-sensitive-send>${text('获取验证码','Send code')}</button><button type="button" data-sensitive-cancel>${text('取消','Cancel')}</button><button type="submit" disabled>${text('验证并继续','Verify and continue')}</button></div></form>`;
+   const form=dialog.querySelector('form'),password=form.querySelector('[name=password]'),code=form.querySelector('[name=code]'),send=form.querySelector('[data-sensitive-send]'),cancel=form.querySelector('[data-sensitive-cancel]'),submit=form.querySelector('[type=submit]'),status=form.querySelector('[role=status]');
+   let challenge=null,busy=false,closed=false,expires=0,resend=0;const timer=setInterval(update,1000),previous=document.activeElement;
+   function update(){send.disabled=busy||Date.now()<resend;cancel.disabled=busy;submit.disabled=busy||!challenge||Date.now()>=expires||!/^\d{6}$/.test(code.value);}
+   function close(error){if(closed)return;closed=true;clearInterval(timer);window.removeEventListener('pagehide',onHide);form.reset();dialog.close();dialog.remove();previous?.focus();if(error)reject(error);else resolve();}
+   const onHide=()=>close(Error('VERIFICATION_CANCELLED'));window.addEventListener('pagehide',onHide,{once:true});
+   cancel.onclick=()=>close(Error('VERIFICATION_CANCELLED'));dialog.addEventListener('cancel',event=>{event.preventDefault();if(!busy)close(Error('VERIFICATION_CANCELLED'));});code.oninput=update;
+   send.onclick=async()=>{if(busy||Date.now()<resend)return;password.disabled=false;password.required=true;if(!password.reportValidity())return;busy=true;update();try{const result=await securityRequest('sensitive-challenges',{account_id:accountId,password:password.value},csrf);password.value='';if(typeof result.challenge_id!=='string'||!Number.isFinite(result.expires_in)||result.expires_in<=0||!Number.isFinite(result.resend_after)||result.resend_after<0)throw Error('INVALID_CHALLENGE');password.required=false;password.disabled=true;challenge=result.challenge_id;expires=Date.now()+result.expires_in*1000;resend=Date.now()+result.resend_after*1000;status.textContent=text('请查看原手机号收到的短信验证码。','Check the SMS code sent to your original phone number.');code.focus();}catch(_){password.value='';status.textContent=text('验证请求未能确认，请核对密码、手机号和服务状态后重试。','The verification request is unconfirmed. Check your password, phone and service status before retrying.');}finally{busy=false;update();}};
+   form.onsubmit=async event=>{event.preventDefault();if(busy||submit.disabled)return;busy=true;update();try{const result=await securityRequest('sensitive-verify',{challenge_id:challenge,code:code.value},csrf);if(result.method!=='phone'||result.account_id!==accountId||!Number.isFinite(Date.parse(result.verified_until))||Date.parse(result.verified_until)<=Date.now()||Date.parse(result.verified_until)>Date.now()+901000)throw Error('INVALID_VERIFICATION');close();}catch(_){code.value='';status.textContent=text('验证未完成，请重新核对验证码。未执行原操作。','Verification is incomplete. Check your code. The original action has not run.');}finally{busy=false;if(dialog.isConnected)update();}};
+   document.body.append(dialog);dialog.showModal();password.focus();update();
+  });
+ };
  window.sagePasswordError=value=>{
   if(typeof value!=='string'||!value)return text('请输入密码。','Enter a password.');
   if(/[^\x21-\x7e]/.test(value))return /\s/.test(value)?text('密码不能包含空格、制表符或换行。','Passwords cannot contain spaces, tabs or line breaks.'):text('密码仅支持英文字母、数字和英文标点，不支持中文或 emoji。','Use English letters, digits and ASCII punctuation only; no Chinese characters or emoji.');
@@ -64,7 +122,7 @@
   consultTrigger=trigger;
   if(!consult){
    consult=document.createElement('dialog');consult.className='sage-consult-dialog';consult.setAttribute('aria-labelledby','sage-consult-title');
-   consult.innerHTML=`<button type="button" class="sage-consult-close" aria-label="${text('关闭','Close')}">×</button><h2 id="sage-consult-title">${text('咨询和演示','Consultation and demo')}</h2><form><label>${text('公司 / 品牌','Company / brand')}<input name="company" required autocomplete="organization" maxlength="100"></label><div class="sage-consult-pair"><label>${text('访客手机号','Phone number')}<input name="phone" type="tel" required autocomplete="tel" maxlength="30"></label><label>${text('工作邮箱（选填）','Work email (optional)')}<input name="email" type="email" autocomplete="email" maxlength="254"></label></div><label>${text('想解决的经营问题','Your business question')}<textarea name="goal" rows="3" required maxlength="2000"></textarea></label><p class="sage-consult-note">${text('联系方式仅用于业务咨询。当前预览未接通接收服务，填写内容不会发送或保存。','Contact details are for business inquiries only. The receiving service is not connected; your input is not sent or saved.')}</p><button type="submit" class="sage-consult-submit">${text('提交预约','Submit request')}</button><p role="status" class="sage-consult-status"></p></form>`;
+   consult.innerHTML=`<button type="button" class="sage-consult-close" aria-label="${text('关闭','Close')}">×</button><h2 id="sage-consult-title">${text('咨询和演示','Consultation and demo')}</h2><form method="dialog"><label>${text('公司 / 品牌','Company / brand')}<input name="company" required autocomplete="organization" maxlength="100"></label><div class="sage-consult-pair"><label>${text('访客手机号','Phone number')}<input name="phone" type="tel" required autocomplete="tel" maxlength="30"></label><label>${text('工作邮箱（选填）','Work email (optional)')}<input name="email" type="email" autocomplete="email" maxlength="254"></label></div><label>${text('想解决的经营问题','Your business question')}<textarea name="goal" rows="3" required maxlength="2000"></textarea></label><p class="sage-consult-note">${text('联系方式仅用于业务咨询。当前预览未接通接收服务，填写内容不会发送或保存。','Contact details are for business inquiries only. The receiving service is not connected; your input is not sent or saved.')}</p><button type="submit" class="sage-consult-submit" disabled>${text('提交预约','Submit request')}</button><p role="status" class="sage-consult-status"></p></form>`;
    document.body.append(consult);
    consult.querySelector('.sage-consult-close').onclick=()=>consult.close();
    consult.addEventListener('click',e=>{if(e.target===consult){const r=consult.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)consult.close();}});
@@ -97,10 +155,12 @@
    }catch(error){status.textContent=error.status===429?text('提交过于频繁，请稍后再试。','Too many requests. Please try again later.'):error.status===400?text('请检查填写内容后重试。','Check your input and try again.'):text('未能确认提交结果，请重试；相同内容不会重复创建申请。','Submission could not be confirmed. Retry with the same details to avoid creating a duplicate request.');}
    finally{busy=false;button.disabled=false;}
   });
+  button.disabled=false;
  }
  const homeConsultation=document.querySelector('#r-contact-form');if(homeConsultation)wireConsultation(homeConsultation);
  document.querySelectorAll('#hero-actions a[href*="download"]').forEach(link=>{link.setAttribute('aria-disabled','true');link.addEventListener('click',event=>event.preventDefault());});
  function alignNavigation(){
+  notificationBell();
   document.querySelectorAll('.sage-account-menu,.nav-account').forEach(wireAccountHover);
   document.querySelectorAll('.cp-nav,.r-nav,.billing-nav').forEach(header=>{
    const links=header.querySelector('.cp-links,#r-menu');if(!links||links.querySelector('.mobile-download'))return;

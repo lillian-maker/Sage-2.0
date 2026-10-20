@@ -91,8 +91,10 @@ AUTH_EMAIL_ENABLED = os.environ.get('SAGE_AUTH_EMAIL_ENABLED') == '1'
 ACCOUNT_DELETION_ENABLED = os.environ.get('SAGE_ACCOUNT_DELETION_ENABLED') == '1'
 ACCOUNT_DELETION_POLICY_VERSION = os.environ.get('SAGE_ACCOUNT_DELETION_POLICY_VERSION', '')
 ACCOUNT_DELETION_POLICY_REVIEWED_AT = os.environ.get('SAGE_ACCOUNT_DELETION_POLICY_REVIEWED_AT', '')
-ACCOUNT_DELETION_RETENTION_DAYS = int(os.environ.get('SAGE_ACCOUNT_DELETION_RETENTION_DAYS', '0'))
-ACCOUNT_DELETION_MARKER_RETENTION_DAYS = int(os.environ.get('SAGE_ACCOUNT_DELETION_MARKER_RETENTION_DAYS', '0'))
+ACCOUNT_DELETION_RETENTION_DAYS = int(os.environ.get('SAGE_ACCOUNT_DELETION_RETENTION_DAYS', '365'))
+ACCOUNT_DELETION_MARKER_RETENTION_DAYS = int(os.environ.get('SAGE_ACCOUNT_DELETION_MARKER_RETENTION_DAYS', '365'))
+# Approved retention is one calendar year; legacy day settings only remain readiness stops.
+ACCOUNT_DELETION_RETENTION_MONTHS = 12
 ACCOUNT_DELETION_MARKER_KEY = os.environ.get('SAGE_ACCOUNT_DELETION_MARKER_KEY', '')
 ACCOUNT_DELETION_SES_TEMPLATE_ID = os.environ.get('SAGE_ACCOUNT_DELETION_SES_TEMPLATE_ID', '')
 AUTH_PASSWORD_SES_TEMPLATE_ID = os.environ.get('SAGE_AUTH_PASSWORD_SES_TEMPLATE_ID', '')
@@ -134,6 +136,19 @@ SMS_PASSWORD_TEMPLATE_ID = os.environ.get('SAGE_SMS_PASSWORD_TEMPLATE_ID', '')
 SMS_PASSWORD_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_PASSWORD_TEMPLATE_APPROVED') == '1'
 SMS_PASSWORD_CHANGED_TEMPLATE_ID = os.environ.get('SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_ID', '')
 SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED') == '1'
+SMS_DELETION_TEMPLATE_ID = os.environ.get('SAGE_SMS_DELETION_TEMPLATE_ID', '')
+SMS_DELETION_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_DELETION_TEMPLATE_APPROVED') == '1'
+SMS_BUSINESS_TEMPLATE_ID = os.environ.get('SAGE_SMS_BUSINESS_TEMPLATE_ID', '')
+SMS_BUSINESS_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_BUSINESS_TEMPLATE_APPROVED') == '1'
+SMS_BINDING_TEMPLATE_ID = os.environ.get('SAGE_SMS_BINDING_TEMPLATE_ID', '')
+SMS_BINDING_TEMPLATE_APPROVED = os.environ.get('SAGE_SMS_BINDING_TEMPLATE_APPROVED') == '1'
+# A production delivery acceptance must be recorded before enabling the five-purpose phone surface.
+SMS_REAL_DELIVERY_VERIFIED = os.environ.get('SAGE_SMS_REAL_DELIVERY_VERIFIED') == '1'
+PASSKEY_RP_ID = os.environ.get('SAGE_PASSKEY_RP_ID', '')
+PASSKEY_ORIGIN = os.environ.get('SAGE_PASSKEY_ORIGIN', '')
+INVOICE_REQUEST_ENABLED = False
+INVOICE_FULFILLMENT_APPROVED = False
+INVOICE_SES_TEMPLATE_ID = ''
 # Only exact configured proxy peers may supply a single, overwritten client-IP header.
 TRUSTED_PROXY_IPS = tuple(filter(None, os.environ.get('SAGE_TRUSTED_PROXY_IPS', '').split(',')))
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -157,13 +172,34 @@ BILLING_SALES_ENABLED = False
 # Independent stop for new renewal dispatches; never gates recorded money or delivery.
 BILLING_RENEWAL_CHARGING_ENABLED = False
 BILLING_APPROVED_CHANNELS = {}
-# D03 quote lifetime awaits approval; no client-supplied expiry or default TTL.
-BILLING_QUOTE_TTL_SECONDS = None
+# Isolated wallet-sheet exercises only; never read from browser input or env.
+BILLING_WALLET_TESTS = {}
+# Local SDK URL signing only; all sandbox identity/key/expiry fields are explicit.
+BILLING_ALIPAY_SANDBOX = {}
+BILLING_WECHAT_NATIVE = {}
+# Approved on 2026-10-16; clients cannot choose their own expiry.
+BILLING_QUOTE_TTL_SECONDS = 600
+BILLING_TOPUP_PRESETS = {}
+NOTIFICATION_DELIVERY_ENABLED = os.environ.get('SAGE_NOTIFICATION_DELIVERY_ENABLED') == '1'
+NOTIFICATION_EMAIL_TEMPLATE_ID = os.environ.get('SAGE_NOTIFICATION_EMAIL_TEMPLATE_ID', '')
+NOTIFICATION_EMAIL_TEMPLATE_APPROVED = os.environ.get('SAGE_NOTIFICATION_EMAIL_TEMPLATE_APPROVED') == '1'
+NOTIFICATION_SMS_TEMPLATE_ID = os.environ.get('SAGE_NOTIFICATION_SMS_TEMPLATE_ID', '')
+NOTIFICATION_SMS_TEMPLATE_APPROVED = os.environ.get('SAGE_NOTIFICATION_SMS_TEMPLATE_APPROVED') == '1'
+NOTIFICATION_SITE_ORIGIN = os.environ.get('SAGE_NOTIFICATION_SITE_ORIGIN', '')
+OPERATIONS_ALERTS_ENABLED = os.environ.get('SAGE_OPERATIONS_ALERTS_ENABLED') == '1'
+OPERATIONS_EMAIL_TEMPLATE_ID = os.environ.get('SAGE_OPERATIONS_EMAIL_TEMPLATE_ID', '')
+OPERATIONS_EMAIL_TEMPLATE_APPROVED = os.environ.get('SAGE_OPERATIONS_EMAIL_TEMPLATE_APPROVED') == '1'
+OPERATIONS_EMAIL_RECIPIENT = os.environ.get('SAGE_OPERATIONS_EMAIL_RECIPIENT', '')
+OPERATIONS_SMS_TEMPLATE_ID = os.environ.get('SAGE_OPERATIONS_SMS_TEMPLATE_ID', '')
+OPERATIONS_SMS_TEMPLATE_APPROVED = os.environ.get('SAGE_OPERATIONS_SMS_TEMPLATE_APPROVED') == '1'
+OPERATIONS_SMS_RECIPIENT = os.environ.get('SAGE_OPERATIONS_SMS_RECIPIENT', '')
 # Versioned, reviewed plain-text documents supplied before sales approval.
 # Each version: {'approved': True, 'zh': {'title': ..., 'paragraphs': [...]}, 'en': ...}.
 BILLING_TERMS_DOCUMENTS = {}
 # D10 eligibility must be confirmed before exposing paid Credits purchases.
 BILLING_CREDITS_PURCHASE_ENABLED = False
+# Extra-seat public sales still require approved products and payment-channel verification.
+BILLING_SEAT_PURCHASE_ENABLED = False
 LOGGING = {'version': 1, 'disable_existing_loggers': False,
            'filters': {'oauth_query': {'()': 'backend.http.OAuthQueryFilter'}},
            'handlers': {'console': {'class': 'logging.StreamHandler'}},

@@ -476,11 +476,25 @@ class AccountTests(TestCase):
         body = {'product_id': str(self.purchase_product().pk), 'seat_quantity': 1,
                 'channel': 'fixture', 'buyer_region': 'CN'}
         self.assertEqual(self.post('/api/billing/purchase-quotes', body).status_code, 503)
-        with override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS):
+        with override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS,
+                               BILLING_QUOTE_TTL_SECONDS=None):
             self.assertEqual(self.post('/api/billing/purchase-quotes', body).status_code, 503)
         with override_settings(BILLING_QUOTE_TTL_SECONDS=300):
             self.assertEqual(self.post('/api/billing/purchase-quotes', {**body, 'amount_minor': 1}).status_code, 422)
         self.assertFalse(Quote.objects.exists())
+
+    def test_approved_quote_default_is_ten_minutes_from_server_time(self):
+        from backend.commerce.tests import FIXTURE_CHANNELS
+        from backend.commerce.models import Quote
+        self.sign_in()
+        with override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS):
+            response = self.post('/api/billing/purchase-quotes', {
+                'product_id': str(self.purchase_product().pk), 'seat_quantity': 1,
+                'channel': 'fixture', 'buyer_region': 'CN'})
+        self.assertEqual(response.status_code, 201)
+        row = Quote.objects.get(pk=response.json()['id'])
+        self.assertGreater((row.expires_at-row.created_at).total_seconds(), 598)
+        self.assertLessEqual((row.expires_at-row.created_at).total_seconds(), 600)
 
     def test_same_quote_different_key_recovers_conflict_before_new_sale_gates(self):
         from backend.commerce.tests import FIXTURE_CHANNELS
@@ -771,10 +785,11 @@ class AccountTests(TestCase):
                     item = self.client.get('/api/billing/purchase-catalog').json()['items'][0]
                     self.assertEqual(item['id'], str(product.pk))
                     self.assertFalse(item['quote_available'])
-                    self.assertEqual(item['unavailable_reason'], 'CONFIG_INCOMPLETE')
+                    reason = 'CREDITS_SUBSCRIPTION_REQUIRED' if enabled else 'CONFIG_INCOMPLETE'
+                    self.assertEqual(item['unavailable_reason'], reason)
                     response = self.post('/api/billing/purchase-quotes', body)
-                    self.assertEqual(response.status_code, 503, response.content)
-                    self.assertEqual(response.json()['error']['code'], 'CONFIG_INCOMPLETE')
+                    self.assertEqual(response.status_code, 422 if enabled else 503, response.content)
+                    self.assertEqual(response.json()['error']['code'], reason)
         self.assertFalse(Quote.objects.exists())
         self.assertFalse(Order.objects.exists())
 
@@ -836,7 +851,7 @@ class AccountTests(TestCase):
 
     def test_purchase_inquiry_is_persisted_scoped_and_duplicate_safe(self):
         self.sign_in()
-        body = {'company': 'Fixture Company', 'seats': 2, 'requirements': '合同采购需求',
+        body = {'company': 'Fixture Company', 'seats': 1, 'requirements': '合同采购需求',
                 'contact_email': 'procurement@example.invalid'}
         one = self.post('/api/billing/purchase-inquiries', body)
         two = self.post('/api/billing/purchase-inquiries', body)
@@ -848,6 +863,19 @@ class AccountTests(TestCase):
         self.session(stranger)
         self.sign_in('stranger@example.invalid', stranger)
         self.assertEqual(stranger.get('/api/billing/purchase-inquiries').json()['items'], [])
+
+    def test_purchase_inquiry_seat_boundaries_do_not_create_invalid_requests(self):
+        self.sign_in()
+        body = {'company': 'Fixture Company', 'seats': 10000,
+                'requirements': 'Contract inquiry only', 'contact_email': 'fixture@example.invalid'}
+        response = self.post('/api/billing/purchase-inquiries', body)
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['seats'], 10000)
+        for seats in (0, -1, 1.5, True, '1', None, 10001):
+            with self.subTest(seats=seats):
+                response = self.post('/api/billing/purchase-inquiries', {**body, 'seats': seats})
+                self.assertEqual(response.status_code, 422)
+        self.assertEqual(PurchaseInquiry.objects.count(), 1)
 
     def test_purchase_inquiry_pagination_and_input_boundaries(self):
         data = self.sign_in()
@@ -959,7 +987,8 @@ class AccountTests(TestCase):
         session.save()
         result = self.client.get('/api/billing/automatic-topup')
         self.assertEqual(result.status_code,200)
-        self.assertEqual(result.json(),{'account_id':str(business.pk),'charging_enabled':False,'authorization':None,'budget':None})
+        self.assertEqual(result.json(),{'account_id':str(business.pk),'charging_enabled':False,
+            'authorization':None,'budget':None,'presets':[],'can_authorize':False})
         self.assertEqual(self.post('/api/billing/automatic-topup',{}).status_code,405)
         self.assertEqual(self.client.get('/api/billing/automatic-topup',HTTP_X_BILLING_ACCOUNT=str(uuid.uuid4())).status_code,409)
         Membership.objects.filter(account=business,user=owner).update(role='member')

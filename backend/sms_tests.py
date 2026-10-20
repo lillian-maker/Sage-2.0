@@ -14,6 +14,20 @@ from .models import LoginChallenge, LoginIdentity
     SMS_SDK_APP_ID='1400000000', SMS_SIGN='Fixture', SMS_TEMPLATE_ID='123',
     SMS_ALLOWED_COUNTRY_CODES=('86',), AUTH_CODE_TTL_SECONDS=300)
 class SmsTransportTests(SimpleTestCase):
+    @override_settings(SMS_BINDING_TEMPLATE_ID='129',SMS_BINDING_TEMPLATE_APPROVED=True)
+    def test_phone_binding_uses_only_its_dedicated_template(self):
+        from .sms import send_code
+        with patch('tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+            client.return_value.SendSms.return_value=Mock(SendStatusSet=[
+                Mock(Code='Ok',SerialNo='fixture-binding',PhoneNumber='+8613800000000')])
+            self.assertEqual(send_code('+8613800000000','123456',purpose='phone_binding'),1)
+            self.assertEqual(client.return_value.SendSms.call_args.args[0].TemplateId,'129')
+            self.assertEqual(client.return_value.SendSms.call_args.args[0].TemplateParamSet,['123456','5'])
+            with override_settings(SMS_BINDING_TEMPLATE_APPROVED=False):
+                with self.assertRaisesMessage(OSError,'SMS_CHANNEL_UNAVAILABLE'):
+                    send_code('+8613800000000','123456',purpose='phone_binding')
+            self.assertEqual(client.return_value.SendSms.call_count,1)
+
     def test_disabled_or_missing_approval_or_config_is_not_ready(self):
         self.assertTrue(phone_ready())
         for settings in ({'AUTH_PHONE_ENABLED': False}, {'SMS_TEMPLATE_APPROVED': False},
@@ -159,3 +173,50 @@ class PhoneLoginTests(TestCase):
             self.assertEqual(self.post('challenges', {'method': 'phone', 'identifier': '+12025550100'}).status_code, 403)
         send.assert_not_called()
         self.assertFalse(LoginChallenge.objects.exists())
+
+
+@override_settings(AUTH_PHONE_ENABLED=True,SMS_REAL_DELIVERY_VERIFIED=True,
+    SMS_SECRET_ID='fixture-id',SMS_SECRET_KEY='fixture-key',SMS_REGION='ap-guangzhou',
+    SMS_SDK_APP_ID='1400000000',SMS_SIGN='Fixture',SMS_ALLOWED_COUNTRY_CODES=('86',))
+class SmsNoticeTransportTests(SimpleTestCase):
+    def test_notice_requires_complete_transport_and_real_delivery_declaration(self):
+        from .sms import send_notice
+        for field,value in (('SMS_REAL_DELIVERY_VERIFIED',False),('SMS_SECRET_KEY',''),
+                ('SMS_REGION','ap-shanghai'),('SMS_ALLOWED_COUNTRY_CODES',()),('SMS_SDK_APP_ID','bad')):
+            with self.subTest(field=field),override_settings(**{field:value}),patch(
+                    'tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+                with self.assertRaisesMessage(OSError,'SMS_CHANNEL_UNAVAILABLE'):
+                    send_notice('+8613800000000','123',['Synthetic'])
+                client.assert_not_called()
+
+    def test_notice_returns_only_matching_provider_acceptance_reference(self):
+        from .sms import send_notice
+        with patch('tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+            client.return_value.SendSms.return_value=Mock(SendStatusSet=[
+                Mock(Code='Ok',SerialNo='synthetic-reference',PhoneNumber='+8613800000000')])
+            self.assertEqual(send_notice('+8613800000000','123',['Synthetic']),'synthetic-reference')
+            request=client.return_value.SendSms.call_args.args[0]
+            self.assertEqual(request.TemplateParamSet,['Synthetic'])
+            self.assertIsNone(client.call_args.args[2].retryer)
+            for status in (Mock(Code='Unknown',SerialNo='',PhoneNumber='+8613800000000'),
+                    Mock(Code='Ok',SerialNo='synthetic-reference',PhoneNumber='+8613900000000')):
+                client.return_value.SendSms.return_value=Mock(SendStatusSet=[status])
+                self.assertEqual(send_notice('+8613800000000','123',['Synthetic']),'')
+
+    def test_notice_unapproved_shape_urls_or_controls_never_reach_sdk(self):
+        from .sms import send_notice
+        for template,parameters in (('bad',[]),('123',['https://example.invalid']),
+                ('123',['www.example.invalid']),('123',['line\nline']),('123',['x'*101])):
+            with self.subTest(template=template),patch('tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+                with self.assertRaisesMessage(ValueError,'INVALID_NOTICE'):
+                    send_notice('+8613800000000',template,parameters)
+                client.assert_not_called()
+
+    def test_notice_provider_error_is_redacted_without_automatic_retry(self):
+        from .sms import send_notice
+        from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+        with patch('tencentcloud.sms.v20210111.sms_client.SmsClient') as client:
+            client.return_value.SendSms.side_effect=TencentCloudSDKException('Unknown','synthetic-private-provider-body')
+            with self.assertRaisesMessage(OSError,'SMS_DELIVERY_FAILED'):
+                send_notice('+8613800000000','123',['Synthetic'])
+            self.assertEqual(client.return_value.SendSms.call_count,1)

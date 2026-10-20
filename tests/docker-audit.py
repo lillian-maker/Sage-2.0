@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Own synthetic Compose project only; never read deployment credentials."""
 import base64
+import gzip
 import hashlib
 import http.client
 from http.cookies import SimpleCookie
@@ -17,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from urllib.parse import unquote
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +52,9 @@ def canonical_constraints(snapshot):
 
 
 def main():
+    if sys.argv[1:] not in ([], ['--nginx-log-only'], ['--nginx-web-only']):
+        print('Usage: docker-audit.py [--nginx-log-only | --nginx-web-only]', file=sys.stderr)
+        return 2
     missing = [str(path.relative_to(ROOT)) for path in (ROOT / 'Dockerfile', COMPOSE)
                if not path.is_file()]
     if missing:
@@ -98,6 +103,10 @@ def main():
     restore_volume_created = False
     failure = None
     homepage_sha256 = None
+    log_privacy = {}
+    log_supervision = {}
+    log_probe_container = project + '-log-probe'
+    log_probe_started = False
 
     def redact(value):
         for private in redactions:
@@ -291,6 +300,257 @@ SELECT 'setting',COALESCE(r.rolname,''),s.setconfig::text FROM pg_db_role_settin
         passed('compose-config')
         compose('build', 'app', 'web', timeout=1200)
         passed('linux-amd64-build')
+
+        # No external interface or provider: exercise the same Nginx log formats
+        # on loopback with no upstream, then a local process that never responds.
+        # TLS/Basic remain covered below by the unmodified production topology.
+        probe_config = (ROOT / 'drafts/restricted-deploy/docker-nginx.conf').read_text()
+        default_server = '    server {\n        listen 8443 ssl default_server;\n        ssl_reject_handshake on;\n    }\n'
+        assert default_server in probe_config, 'Log probe default-server fixture drift'
+        probe_config = probe_config.replace(default_server, '').replace('listen 8443 ssl;', 'listen 8080;')
+        probe_config = '\n'.join(line for line in probe_config.splitlines()
+                                 if not line.strip().startswith(('ssl_', 'auth_basic')))
+        probe_config = probe_config.replace('http://app:8000', 'http://127.0.0.1:8000')
+        probe_config = probe_config.replace('proxy_read_timeout 35s;', 'proxy_read_timeout 1s;')
+        config_path = directory / 'log-probe-nginx.conf'
+        config_path.write_text(probe_config + '\n')
+        config_path.chmod(0o444)
+        probe_arguments = ['docker', 'run', '-d', '--name', log_probe_container, '--network', 'none',
+             '--read-only', '--user', '101:101', '--cap-drop', 'ALL',
+             '--log-driver', 'json-file', '--log-opt', 'max-size=2m', '--log-opt', 'max-file=2',
+             '--security-opt', 'no-new-privileges:true', '--tmpfs', '/tmp:uid=101,gid=101,mode=0700',
+             '--mount', 'type=bind,src=' + str(config_path) + ',dst=/etc/nginx/nginx.conf,readonly',
+             'sage-web:audit-' + token]
+        run(probe_arguments + ['-g', 'daemon off;'])
+        log_probe_started = True
+        try:
+            def saved_probe_logs(*, timestamps=False):
+                logs = run(['docker', 'logs', *(['--timestamps'] if timestamps else []),
+                            log_probe_container], private_output=True)
+                return logs.stdout + logs.stderr
+
+            def probe(name, path, status, *, host='sagegogo.com', variant='plain'):
+                marker = 'synthetic-' + name + '-' + secrets.token_hex(12)
+                redactions.append(marker)
+                query = '?code=' + marker + '&state=' + marker
+                if variant == 'quoted':
+                    query = '?code="' + marker + '&state=' + marker + '"'
+                elif variant == 'encoded':
+                    encoded = ''.join('%%%02X' % ord(char) for char in marker)
+                    query = '?%63ode=' + encoded + '&%73tate=' + encoded
+                elif variant == 'repeated':
+                    query = '?code=' + marker + '&code=' + marker + '&state=&state=' + marker
+                elif variant == 'long':
+                    query += '&padding=' + 'x' * 16000
+                # BusyBox nc closes on stdin EOF before asynchronous proxy errors;
+                # use a real HTTP client that waits for the complete response.
+                code = '''import http.client,sys
+c=http.client.HTTPConnection('127.0.0.1',8080,timeout=5)
+try:
+    c.request('GET',sys.argv[1],headers={'Host':sys.argv[2],'Referer':sys.argv[3]})
+    r=c.getresponse();r.read();print(r.status)
+except http.client.RemoteDisconnected:print('connection-closed')
+finally:c.close()
+'''
+                actual_status = run(['docker', 'run', '--rm', '--network', 'container:' + log_probe_container,
+                                     '--entrypoint', 'python', 'sage-app:audit-' + token,
+                                     '-B', '-c', code, path + query, host,
+                                     'https://untrusted.invalid/private?code=' + marker + '&state=' + marker],
+                                    private_output=True).stdout.strip()
+                assert actual_status == str(status or 'connection-closed'), f'Log probe {name}: expected {status or "connection-closed"}, got {actual_status}'
+                logs = saved_probe_logs()
+                log_privacy[name] = marker not in unquote(logs)
+                if status == 502:
+                    assert 'connect() failed' in logs and 'errno=111' in logs, 'Connection refusal diagnosis lost'
+                elif status == 504:
+                    assert 'upstream timed out' in logs and 'errno=110' in logs, 'Upstream timeout diagnosis lost'
+
+            for _ in range(50):
+                ready = run(['docker', 'exec', log_probe_container,
+                             '/usr/local/bin/sage-nginx-entrypoint', '-t'], check=False, private_output=True)
+                if not ready.returncode:
+                    break
+                time.sleep(.1)
+            else:
+                raise AssertionError('Loopback log probe did not start')
+            probe('disabled_oauth', '/api/auth/google/callback', 403)
+            probe('bad_host', '/health/live', None, host='unapproved.invalid')
+            probe('upstream_refused', '/health/live', 502)
+            callback_gate = 'location = /api/auth/google/callback { return 403; }'
+            assert callback_gate in probe_config, 'OAuth log probe fixture drift'
+            config_path.chmod(0o644)
+            config_path.write_text(probe_config.replace(callback_gate,
+                'location = /api/auth/google/callback { proxy_pass http://127.0.0.1:8000; }') + '\n')
+            config_path.chmod(0o444)
+            run(['docker', 'exec', log_probe_container,
+                 '/usr/local/bin/sage-nginx-entrypoint', '-s', 'reload'], private_output=True)
+            time.sleep(.2)
+            probe('forwarded_oauth_refused', '/api/auth/google/callback', 502)
+            for name, path in (('upstream_timeout', '/health/live'),
+                               ('forwarded_oauth_timeout', '/api/auth/google/callback')):
+                run(['docker', 'exec', '-d', log_probe_container, '/bin/sh', '-c',
+                     'sleep 3 | nc -l -p 8000 > /dev/null'], private_output=True)
+                time.sleep(.2)
+                probe(name, path, 504)
+                time.sleep(2)
+            for variant in ('quoted', 'encoded', 'repeated'):
+                probe('query_' + variant, '/api/auth/google/callback', 502, variant=variant)
+            probe('long_request', '/api/auth/google/callback', 414, variant='long')
+
+            markers = ['synthetic-concurrent-' + secrets.token_hex(12) for _ in range(64)]
+            redactions.extend(markers)
+            concurrent_client = '''import concurrent.futures,http.client,json,sys
+def check(marker):
+    c=http.client.HTTPConnection('127.0.0.1',8080,timeout=10)
+    try:
+        c.request('GET','/api/auth/google/callback?code='+marker+'&state='+marker,
+                  headers={'Host':'sagegogo.com','Referer':'https://untrusted.invalid/?code='+marker})
+        r=c.getresponse();r.read();return r.status
+    finally:c.close()
+with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+    print(json.dumps(list(pool.map(check,sys.argv[1:]))))
+'''
+            statuses = json.loads(run(['docker', 'run', '--rm', '--network', 'container:' + log_probe_container,
+                                      '--entrypoint', 'python', 'sage-app:audit-' + token,
+                                      '-B', '-c', concurrent_client, *markers], private_output=True).stdout)
+            assert statuses == [502] * 64, 'Concurrent log probe response mismatch'
+            logs = unquote(saved_probe_logs())
+            log_privacy['concurrent_64_requests'] = all(marker not in logs for marker in markers)
+
+            # Inject hostile/unknown records into the actual master stderr FIFO,
+            # including a line far longer than Nginx can normally emit. Only
+            # fixed diagnostics may reach the Docker logging driver.
+            marker = 'synthetic-unknown-' + secrets.token_hex(12)
+            numeric_marker = str(secrets.randbelow(900000) + 100000)
+            invalid_errno = str(secrets.randbelow(9000) + 1000)
+            forged_timestamp = str(secrets.randbelow(1000) + 7000) + '/01/01 12:34:56'
+            redactions.extend([marker, numeric_marker])
+            records = ('2026/10/16 20:00:00 [warn] 99#99: ' + marker + ' "request"\n' +
+                       '2026/10/16 20:00:00 [warn] 99#99: unknown context (' + numeric_marker + ': hidden)\n' +
+                       '2026/10/16 20:00:00 [warn] 99#99: connect() failed (' + numeric_marker + ': hidden)\n' +
+                       '2026/10/16 20:00:00 [warn] 99#99: connect() failed (' + invalid_errno + ': hidden)\n' +
+                       forged_timestamp + ' [warn] 77#77: unknown injected path context\n' +
+                       marker + '\x00' + 'x' * 131072 + '\n' +
+                       '2026/10/16 20:00:01 [crit] 99#99: connect() failed (111: Connection refused) ' +
+                       'while connecting to upstream, request: "' + marker + '"\n')
+            run(['docker', 'exec', '-i', log_probe_container, '/bin/sh', '-c',
+                 'cat > /proc/$(cat /tmp/nginx.pid)/fd/2'], data=records, private_output=True)
+            for _ in range(30):
+                logs = saved_probe_logs()
+                if '[crit] connect() failed' in logs:
+                    break
+                time.sleep(.1)
+            else:
+                raise AssertionError('Filter did not flush the synthetic warning')
+            log_privacy['unknown_binary_long_records'] = marker not in logs and numeric_marker not in logs
+            assert 'errno=' + invalid_errno not in logs, 'Untrusted number was accepted as Linux errno'
+            assert '[warn] nginx diagnostic redacted' in logs, 'Unknown warning became silent'
+            assert forged_timestamp not in logs, 'Untrusted input date was copied to the diagnostic prefix'
+            log_privacy['forged_input_date'] = True
+            timestamped_logs = saved_probe_logs(timestamps=True)
+            assert re.search(r'^\d{4}-\d{2}-\d{2}T\S+Z \[crit\] connect\(\) failed', timestamped_logs, re.M), 'Docker receipt timestamp or critical severity was lost'
+            log_supervision['docker_receipt_timestamp_and_fixed_severity'] = True
+            assert 'errno=111' in logs, 'Numeric errno was lost'
+            metadata = run(['docker', 'exec', log_probe_container, '/bin/sh', '-c',
+                            'readlink /proc/$(cat /tmp/nginx.pid)/fd/2; stat -c "%F %a" /tmp/sage-nginx-log.*/error'],
+                           private_output=True).stdout.splitlines()
+            assert len(metadata) == 2 and metadata[0].startswith('/tmp/sage-nginx-log.') and metadata[0].endswith('/error'), 'Nginx stderr bypasses its private channel'
+            assert metadata[1] == 'fifo 600', 'Raw diagnostics are not confined to a private FIFO'
+            log_supervision['raw_stderr_private_fifo'] = True
+
+            active_probe_config = probe_config.replace(callback_gate,
+                'location = /api/auth/google/callback { proxy_pass http://127.0.0.1:8000; }') + '\n'
+            marker = 'synthetic-helper-' + secrets.token_hex(12)
+            redactions.append(marker)
+            config_path.chmod(0o644)
+            config_path.write_text(active_probe_config.replace('events {', 'events { ' + marker + ';'))
+            config_path.chmod(0o444)
+            for option in (['-t'], ['-s', 'reload']):
+                result = run(['docker', 'exec', log_probe_container, '/bin/sh', '-c',
+                              'exec /usr/local/bin/sage-nginx-entrypoint "$@" >/proc/1/fd/1 2>/proc/1/fd/2',
+                              'nginx-helper', *option], check=False, private_output=True)
+                assert result.returncode != 0, 'Invalid helper configuration was accepted'
+            logs = saved_probe_logs()
+            log_privacy['invalid_check_reload_helpers'] = marker not in logs
+            assert 'unknown Nginx configuration directive' in logs, 'Helper configuration diagnosis was lost'
+            config_path.chmod(0o644)
+            config_path.write_text(active_probe_config)
+            config_path.chmod(0o444)
+            run(['docker', 'exec', log_probe_container, '/usr/local/bin/sage-nginx-entrypoint', '-t'], private_output=True)
+            run(['docker', 'exec', log_probe_container, '/usr/local/bin/sage-nginx-entrypoint', '-s', 'reload'], private_output=True)
+            run(['docker', 'kill', '--signal', 'HUP', log_probe_container], private_output=True)
+            time.sleep(.3)
+            probe('after_helper_reload_hup', '/api/auth/google/callback', 502)
+            directories = run(['docker', 'exec', log_probe_container, '/bin/sh', '-c',
+                               'find /tmp -maxdepth 1 -type d -name "sage-nginx-log.*" | wc -l'], private_output=True).stdout.strip()
+            assert directories == '1', 'Finite helper leaked FIFO directories'
+            log_supervision['checks_reload_hup_and_helper_cleanup'] = True
+
+            for signal in ('KILL', 'STOP'):
+                filter_pids = run(['docker', 'exec', log_probe_container, 'pidof', 'awk'], private_output=True).stdout.split()
+                assert len(filter_pids) == 1, 'Unexpected active filter processes'
+                before = time.monotonic()
+                run(['docker', 'exec', log_probe_container, 'kill', '-' + signal, filter_pids[0]], private_output=True)
+                exit_status = run(['docker', 'wait', log_probe_container], timeout=12, private_output=True).stdout.strip()
+                assert exit_status != '0' and time.monotonic() - before < 10, 'Failed filter left Nginx serving'
+                assert 'nginx log protection unavailable; stopping Nginx' in saved_probe_logs(), 'Filter failure had no safe diagnostic'
+                state = json.loads(run(['docker', 'inspect', log_probe_container], private_output=True).stdout)[0]['State']
+                assert not state['Running'] and state['Pid'] == 0, 'Stopped container retained its Nginx process'
+                log_supervision['filter_sig' + signal.lower() + '_stops_nginx'] = True
+                run(['docker', 'start', log_probe_container], private_output=True)
+                time.sleep(.3)
+                probe('after_filter_' + signal.lower() + '_restart', '/api/auth/google/callback', 502)
+
+            run(['docker', 'kill', '--signal', 'TERM', log_probe_container], private_output=True)
+            assert run(['docker', 'wait', log_probe_container], timeout=12, private_output=True).stdout.strip() == '0', 'SIGTERM was not a clean shutdown'
+            log_supervision['sigterm_clean_shutdown'] = True
+            run(['docker', 'rm', log_probe_container], private_output=True)
+            log_probe_started = False
+            marker = 'synthetic-startup-' + secrets.token_hex(12)
+            redactions.append(marker)
+            run(probe_arguments + ['-c', '/tmp/' + marker])
+            log_probe_started = True
+            assert run(['docker', 'wait', log_probe_container], timeout=12, private_output=True).stdout.strip() != '0', 'Missing startup configuration was accepted'
+            logs = saved_probe_logs()
+            log_privacy['invalid_startup_path'] = marker not in logs
+            assert 'open() failed' in logs and 'errno=2' in logs, 'Startup file error diagnosis was lost'
+            log_supervision['startup_failure_safe_and_nonzero'] = True
+            assert all(log_privacy.values()), 'Nginx saved synthetic OAuth query values in Docker logs'
+            # Error-log privacy is an explicit finding, never a reason to suppress
+            # useful errors or silently enable the production OAuth callback.
+            print(json.dumps({'stage': 'nginx-error-log-query-matrix',
+                              'status': 'completed-with-findings' if not all(log_privacy.values()) else 'passed',
+                              'query_absent': log_privacy,
+                              'supervision': log_supervision,
+                              'production_oauth_gate': 'unchanged-403'}), flush=True)
+            checked.append('isolated-nginx-error-log-query-matrix-completed')
+        finally:
+            run(['docker', 'rm', '-f', log_probe_container])
+            log_probe_started = False
+        if '--nginx-log-only' in sys.argv:
+            return 0
+        if '--nginx-web-only' in sys.argv:
+            # The output-format-only follow-up needs the real Compose web,
+            # TLS and health helper, without rerunning unrelated PG/avatar work.
+            started = True
+            compose('up', '-d', '--no-deps', '--wait', 'web', timeout=90)
+            web = compose('ps', '-q', 'web').stdout.strip()
+            details = json.loads(run(['docker', 'inspect', web], private_output=True).stdout)[0]
+            assert details['State']['Health']['Status'] == 'healthy', 'Compose web health helper failed'
+            assert details['Config']['Entrypoint'] == ['/usr/local/bin/sage-nginx-entrypoint'], 'Compose bypassed the protected entrypoint'
+            assert details['Config']['Healthcheck']['Test'] == ['CMD', '/usr/local/bin/sage-nginx-entrypoint', '-t'], 'Healthcheck bypassed the protected helper'
+            assert details['HostConfig']['ReadonlyRootfs'] and details['Config']['User'] == '101:101', 'Web runtime isolation changed'
+            assert details['HostConfig']['LogConfig']['Type'] == 'json-file', 'Unexpected log driver'
+            assert request('/')[0] == 200 and request('/', auth=False)[0] == 401, 'Real TLS/Basic web startup failed'
+            assert request('/api/auth/google/callback?code=closed-fixture&state=closed-fixture')[0] == 403, 'Production callback gate changed'
+            compose('exec', '-T', 'web', '/usr/local/bin/sage-nginx-entrypoint', '-t', private_output=True)
+            compose('exec', '-T', 'web', '/usr/local/bin/sage-nginx-entrypoint', '-s', 'reload', private_output=True)
+            assert request('/')[0] == 200, 'Compose web reload failed'
+            compose('restart', 'web', timeout=30)
+            compose('up', '-d', '--no-deps', '--wait', 'web', timeout=90)
+            assert request('/')[0] == 200, 'Compose web restart failed'
+            passed('protected-web-compose-tls-healthcheck-reload-restart')
+            return 0
         started = True
         compose('up', '-d', '--wait', 'db', timeout=180)
         compose('run', '--rm', 'migrate', 'python', 'manage.py', 'check', '--deploy', '--fail-level', 'ERROR')
@@ -386,6 +646,17 @@ print('RUNTIME_NO_DDL_OK')
         for path in ('/index.html', '/index-en.html', '/health/live', '/health/ready'):
             assert request(path)[0] == 200, 'Expected authenticated HTTPS endpoint unavailable'
         homepage = request('/index.html')[2]
+        compressed_status, compressed_headers, compressed_homepage = request('/index.html', headers={'Accept-Encoding': 'gzip'})
+        compressed_headers = {key.lower(): value for key, value in compressed_headers}
+        assert compressed_status == 200 and compressed_headers.get('content-encoding') == 'gzip', 'Static HTML compression absent'
+        assert gzip.decompress(compressed_homepage) == homepage, 'Compressed homepage content changed'
+        assert 'accept-encoding' in compressed_headers.get('vary', '').lower(), 'Compression Vary absent'
+        assert compressed_headers.get('cache-control') == 'no-cache', 'Unversioned HTML cache policy changed'
+        static_status, static_headers, _ = request('/index.html')
+        static_headers = {key.lower(): value for key, value in static_headers}
+        assert static_status == 200 and static_headers.get('cache-control') == 'no-cache' and static_headers.get('etag'), 'Static cache revalidation absent'
+        assert request('/index.html', headers={'If-None-Match': static_headers['etag']})[0] == 304, 'Static ETag revalidation failed'
+        passed('static-gzip-content-identity-vary-and-etag-revalidation')
         image_homepage = run(['docker', 'exec', containers['web'], 'cat', '/srv/sage/dist/index.html'], binary=True).stdout
         homepage_sha256 = hashlib.sha256(homepage).hexdigest()
         assert homepage_sha256 == hashlib.sha256(image_homepage).hexdigest(), 'HTTPS homepage differs from freshly built web image'
@@ -411,8 +682,11 @@ print('RUNTIME_NO_DDL_OK')
             raise AssertionError('Unexpected SNI accepted')
         passed('https-basic-auth-host-sni-and-private-paths')
 
-        status, response_headers, body = request('/api/auth/session')
+        status, response_headers, body = request('/api/auth/session', headers={'Accept-Encoding': 'gzip'})
         assert status == 200, 'Anonymous session unavailable'
+        session_headers = {key.lower(): value for key, value in response_headers}
+        assert 'content-encoding' not in session_headers, 'Private API response compressed'
+        assert session_headers.get('cache-control') == 'no-store', 'Private API response permits caching'
         session = json.loads(body)
         assert session['authenticated'] is False and session['user'] is None, 'Unexpected authenticated fixture'
         assert all(not session['capabilities'][key] for key in ('email_login','phone_login','password_login','password_reset','email_registration','phone_registration','google_login','google_registration','captcha')), 'Real authentication capability enabled'
@@ -498,6 +772,45 @@ print('ACTUAL_MEDIA_VOLUME_FLOCK_OK')
         app_shell(flock_code)
         passed('actual-media-volume-independent-process-flock')
 
+        # Reuse the real transaction/failure tests against a separate synthetic DB
+        # and this audit's actual avatar volume. Never enable the running app gate.
+        psql(containers['db'], 'CREATE DATABASE sage_avatar_audit OWNER sage_migrate TEMPLATE template0;')
+        avatar_arguments = ['run', '--rm', '--no-deps', '-e', 'SAGE_ENV=test',
+                            '-e', 'DJANGO_SETTINGS_MODULE=backend.settings',
+                            '-e', 'SAGE_DB_NAME=sage_avatar_audit', '-e', 'SAGE_MEDIA_ROOT=/app/media',
+                            '--volume', project + '_avatars:/app/media', 'migrate']
+        try:
+            compose(*avatar_arguments, 'python', 'manage.py', 'migrate', '--noinput')
+            compose(*avatar_arguments, 'python', '-B', '-c', r'''
+import django, tempfile
+from pathlib import Path
+django.setup()
+from django.conf import settings
+from django.db import connections
+from django.test.runner import DiscoverRunner
+assert settings.LOCAL and settings.DATABASES['default']['NAME']=='sage_avatar_audit'
+assert str(settings.MEDIA_ROOT)=='/app/media' and not settings.AVATAR_LOCAL_FLOCK_VERIFIED
+tempfile.tempdir='/app/media'
+from backend.account_tests import AccountCentreTests
+labels=['backend.account_tests.AvatarTransactionTests']
+labels += ['backend.account_tests.AccountCentreTests.'+name for name in dir(AccountCentreTests)
+           if name.startswith('test_') and ('avatar' in name or 'cleanup' in name)]
+runner=DiscoverRunner(verbosity=2)
+runner.setup_test_environment()
+try:
+    result=runner.run_suite(runner.build_suite(labels))
+    assert result.wasSuccessful() and not result.skipped
+    assert not list(Path('/app/media').glob('sage-avatar-*'))
+finally:
+    connections.close_all()
+    runner.teardown_test_environment()
+print('MOUNTED_VOLUME_AVATAR_FAULT_MATRIX_OK')
+''', timeout=240)
+        finally:
+            psql(containers['db'], 'DROP DATABASE sage_avatar_audit WITH (FORCE);')
+        app_shell('from django.conf import settings; assert not settings.AVATAR_LOCAL_FLOCK_VERIFIED; print("AVATAR_RUNNING_APP_GATE_STILL_CLOSED")')
+        passed('mounted-volume-avatar-upload-cleanup-complete-fault-matrix')
+
         before_restart = fingerprint(containers['db'])
         compose('restart', 'db', 'app', 'web', timeout=120)
         last_readiness = None
@@ -571,6 +884,11 @@ print('ACTUAL_MEDIA_VOLUME_FLOCK_OK')
                 pass
     finally:
         cleanup_failures = []
+        if log_probe_started:
+            try:
+                run(['docker', 'rm', '-f', log_probe_container])
+            except Exception:
+                cleanup_failures.append('log-probe-container')
         if restore_started:
             try:
                 run(['docker', 'rm', '-f', restore_container])
@@ -593,12 +911,17 @@ print('ACTUAL_MEDIA_VOLUME_FLOCK_OK')
         (directory / 'ca.key').unlink(missing_ok=True)
         archive_path = directory / 'synthetic-preview.dump'
         archive_path.unlink(missing_ok=True)
-        summary = {'status': 'failed' if failure else 'passed', 'project': project,
+        open_findings = (['nginx-error-log-query-privacy']
+                         if log_privacy and not all(log_privacy.values()) else [])
+        summary = {'status': 'failed' if failure else 'passed-with-findings' if open_findings else 'passed', 'project': project,
                    'checks': checked, 'failure': failure, 'cleanup_failures': cleanup_failures,
                    'homepage_sha256': homepage_sha256,
+                   'log_query_absent': log_privacy,
+                   'nginx_log_supervision': log_supervision,
+                   'open_findings': open_findings,
                    'evidence': str(directory), 'scope': 'local synthetic Linux/amd64 containers; no provider call',
-                   'not_covered': ['real providers and cloud deployment', 'full avatar upload/cleanup fault matrix',
-                                   'OAuth-enabled upstream exception log matrix', 'restored role password authentication',
+                   'not_covered': ['real providers and cloud deployment',
+                                   'cloud OAuth error-log deployment', 'restored role password authentication',
                                    'off-host or point-in-time recovery']}
         (directory / 'summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n')
         print(json.dumps(summary, ensure_ascii=False), flush=True)

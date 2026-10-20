@@ -2,6 +2,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const read = name => fs.readFileSync(new URL('../' + name, 'file://' + __filename), 'utf8');
 const shell = read('src/pages/site-shell.js');
+const notificationSource=read('src/pages/notifications.js'),notificationTypes=read('backend/commerce/models.py').split('class BillingNotification(models.Model):')[1].match(/TYPES = \(([\s\S]*?)\)\n/)[1].match(/'([a-z_]+)'/g).map(value=>value.slice(1,-1)),notificationLabels=notificationSource.match(/const labels=(\{[^\n]+\});/)[1];
+for(const english of [false,true]){const labels=require('node:vm').runInNewContext('('+notificationLabels+')',{t:(zh,en)=>english?en:zh});for(const type of notificationTypes)assert.ok(typeof labels[type]==='string'&&labels[type].trim(),`Notification type ${type} requires an explicit ${english?'English':'Chinese'} label`);}
+assert.ok(notificationSource.includes('Account notification: type unrecognized'),'Unknown future notification types remain explicit');
 assert.ok(shell.includes("menu.addEventListener('pointerenter'"), 'Account menus open on mouse hover');
 assert.ok(!shell.includes("link.textContent='咨询和演示'"), 'Shared shell must not rewrite download links into consultation');
 const language=read('src/language-switch.html');
@@ -27,7 +30,9 @@ assert.ok(shell.includes("receipt_id"), 'Do not display success without a saved 
 assert.ok(!read('src/app.js').includes("$('#r-contact-form').addEventListener('submit'"), 'Homepage must use the shared submission path');
 const profile = read('src/pages/profile.js');
 for (const route of ['/api/account/profile','/api/account/sessions','/api/account/preferences']) assert.ok(profile.includes(route), route);
-assert.ok(profile.includes('示例数据 · 不产生实际扣费'));
+assert.ok(profile.includes('/api/account/usage?offset='), 'Personal usage reads real authorized metadata');
+assert.ok(!profile.includes('20 / 100'), 'Example balances must not be displayed as personal usage');
+assert.ok(profile.includes('/api/billing/organization/usage?'), 'Business usage exposes metadata only');
 assert.ok(profile.includes("navigator.clipboard.writeText"));
 assert.ok(profile.includes("other_sessions:true"));
 for (const route of ['/api/account/deletion-eligibility','/api/account/deletion-challenges','/api/account/delete']) assert.ok(profile.includes(route), route);

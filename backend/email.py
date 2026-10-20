@@ -49,6 +49,19 @@ def send_deletion_code(identifier, code):
 
 @sensitive_variables()
 def _send_code(identifier, code, template_id, subject):
+    return int(bool(_send_template(identifier, {} if code is None else {'code': code}, template_id, subject)))
+
+
+@sensitive_variables()
+def send_notice(identifier, template_id, parameters):
+    from .views import email_ready
+    if settings.AUTH_EMAIL_TRANSPORT != 'ses' or not email_ready(template_id):
+        raise OSError('EMAIL_CHANNEL_UNAVAILABLE')
+    return _send_template(identifier, parameters, template_id, 'Sage 账户通知 / Account notice')
+
+
+@sensitive_variables()
+def _send_template(identifier, parameters, template_id, subject):
     http = HttpProfile()
     http.endpoint = 'ses.tencentcloudapi.com'
     http.reqTimeout = 10
@@ -60,10 +73,11 @@ def _send_code(identifier, code, template_id, subject):
         'FromEmailAddress': settings.DEFAULT_FROM_EMAIL, 'Destination': [identifier],
         'Subject': subject, 'TriggerType': 1,
         'Template': {'TemplateID': int(template_id),
-                     'TemplateData': json.dumps({} if code is None else {'code': code})}}))
+                     'TemplateData': json.dumps(parameters)}}))
     try:
         result = client.SendEmail(request)
     except TencentCloudSDKException:
         # Provider bodies may contain identifiers. Never propagate or log them.
         raise OSError('EMAIL_DELIVERY_FAILED') from None
-    return 1 if result.MessageId else 0
+    reference = getattr(result, 'MessageId', None)
+    return reference if isinstance(reference, str) and 0 < len(reference) <= 128 else ''

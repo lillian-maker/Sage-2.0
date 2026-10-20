@@ -17,6 +17,7 @@ Sage，53个数字员工组建完整的经营组织。结论有证据，执行�
 洞察 · 决策 · 执行	Insight · Decisions · Execution
 你的<span class="hero-team-emphasis">出海 AI 团队</span>	Your <span class="hero-team-emphasis">AI Team for Global Commerce</span>
 53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	53 digital employees. One complete business organization. Evidence-backed decisions. Human-authorized execution.
+正在读取通知…	Loading notifications…
 跳转到正文	Skip to content
 主导航	Main navigation
 Sage 首页	Sage home
@@ -986,7 +987,7 @@ def translate(text):
     return pattern.sub(lambda match: pairs[match.group()], text).replace('。', '.').replace('，', ', ').replace('、', ', ').replace('：', ': ')
 
 def english_links(text):
-    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile)\.html', r'\1-en.html', text)
+    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile|notifications)\.html', r'\1-en.html', text)
 
 def language_dropdown(html, page, english=False):
     label = 'Select language' if english else '选择语言'
@@ -1047,7 +1048,7 @@ def build_localized_pages(root):
     titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'下载 Sage','product':'产品方案'}
     scripts = {'team':['catalog-data','team-page'], 'enterprise':['info-pages'], 'pricing':['info-pages'], 'product':['catalog-data','catalog']}
     for path in source.glob('*.js'):
-        if path.stem in {'billing', 'auth', 'profile', 'docs-page', 'docs-articles-en'}:
+        if path.stem in {'billing', 'auth', 'profile', 'notifications', 'docs-page', 'docs-articles-en'}:
             continue  # Account and billing use explicit bilingual copy, not substring translation.
         if path.stem == 'catalog':
             continue  # Unreleased product-design route; not linked from English navigation.
@@ -1121,9 +1122,9 @@ def build_localized_pages(root):
             continue
         en = english_links(translate(html)).replace('lang="zh-CN"','lang="en"')
         en = re.sub(r'src="([\w-]+)\.js"',r'src="\1-en.js"',en)
-        if path.stem == 'profile':
-            en = en.replace('src="profile-en.js"', 'src="profile.js"')
-            for chinese, english in [('个人设置','Personal settings'),('个人信息','Personal information'),('用量明细','Usage details'),('我的账单','My bills'),('返回官网','Back to website'),('正在读取账户资料…','Loading account data…')]:
+        if path.stem in {'profile', 'notifications'}:
+            en = en.replace(f'src="{path.stem}-en.js"', f'src="{path.stem}.js"')
+            for chinese, english in [('安全设置','Security'),('企业管理','Business management'),('通知','Notifications'),('正在读取通知…','Loading notifications…'),('个人设置','Personal settings'),('个人信息','Personal information'),('用量明细','Usage details'),('我的账单','My bills'),('返回官网','Back to website'),('正在读取账户资料…','Loading account data…')]:
                 en = en.replace(chinese, english)
         en = en.replace(f'href="{path.stem}-en.html">English',f'href="{path.stem}.html" lang="zh-CN">中文')
         (destination / (path.stem + '-en.html')).write_text(language_dropdown(en, path.stem, True),encoding='utf-8')

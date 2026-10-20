@@ -404,7 +404,7 @@ def inquiries(request, member):
             'next_offset': offset+50 if offset+50 < total else None,
             'items': [inquiry_dict(item) for item in rows[offset:offset+50]]})
     data = payload(request, ('company', 'seats', 'requirements', 'contact_email'))
-    if (type(data['seats']) is not int or not 2 <= data['seats'] <= 10000 or
+    if (type(data['seats']) is not int or not 1 <= data['seats'] <= 10000 or
             not isinstance(data['company'], str) or not 1 <= len(data['company'].strip()) <= 160 or
             not isinstance(data['requirements'], str) or not 1 <= len(data['requirements'].strip()) <= 2000):
         raise ValueError('INVALID_REQUEST')
@@ -434,7 +434,8 @@ def api(request, path):
     # Financial mutations and device revocation share one real session-row
     # lock. Keep it until existing business transactions commit; do not wrap
     # reads, anonymous forms or OTP delivery in this transaction.
-    if request.method == 'POST' and path.startswith('billing/') and request.user.is_authenticated:
+    if request.method == 'POST' and (path.startswith('billing/') or
+            path == 'account/business-invitations/accept') and request.user.is_authenticated:
         from .account import register_session, _lock_current
         try:
             with transaction.atomic():
@@ -443,13 +444,20 @@ def api(request, path):
                 # Offboarding and financial mutations serialize on the same
                 # account before checking membership, including procurement.
                 selected = request.session.get('active_account_id')
-                if selected and path != 'billing/accounts/select':
+                if selected and path.startswith('billing/') and path != 'billing/accounts/select':
                     # A request can cache its session before a concurrent
                     # selection commits. Never authorize a write from that cache.
                     if request.session.load().get('active_account_id') != selected:
                         return error(request,'ACCOUNT_CHANGED',409,'当前计费账户已改变，请刷新确认后重新操作。')
                     BillingAccount.objects.select_for_update().filter(pk=selected).first()
-                return _api_request(request, path)
+                result = _api_request(request, path)
+            if isinstance(result, dict) and 'payment_dispatch' in result:
+                from .payments import finish_payment
+                return finish_payment(request, result)
+            if isinstance(result, dict) and 'payment_query' in result:
+                from .payments import finish_payment_query
+                return finish_payment_query(request, result)
+            return result
         except DatabaseError:
             logger.error('api_database_unavailable request_id=%s', request.request_id)
             return error(request, 'DATABASE_UNAVAILABLE', 503)
@@ -477,13 +485,30 @@ def _api_request(request, path):
         'auth/google/bind-password': ('POST',), 'auth/google/bind-code/start': ('POST',),
         'auth/google/bind-code/verify': ('POST',), 'auth/google/bind': ('POST',),
         'consultations': ('POST',),
+        'account/notifications/summary': ('GET',), 'account/notifications': ('GET',),
+        'account/notifications/read': ('POST',), 'account/usage': ('GET',),
+        'account/business-invitations': ('GET',), 'account/business-invitations/accept': ('POST',),
+        'account/security': ('GET',),
+        'account/passkeys/registration-options': ('POST',), 'account/passkeys/register': ('POST',),
+        'account/passkeys/authentication-options': ('POST',), 'account/passkeys/verify': ('POST',),
+        'account/passkeys/remove': ('POST',), 'account/sensitive-challenges': ('POST',),
+        'account/passkeys/backup-codes': ('POST',), 'account/passkeys/recover': ('POST',),
+        'account/sensitive-verify': ('POST',),
+        'account/phone/challenges': ('POST',), 'account/phone/verify': ('POST',),
+        'account/invoices': ('GET', 'POST'), 'account/invoices/handle': ('POST',),
         'billing/account': ('GET',), 'billing/catalog': ('GET',),
         'billing/orders': ('GET', 'POST'), 'billing/purchase-inquiries': ('GET', 'POST'),
         'billing/subscriptions': ('GET',), 'billing/organization': ('GET',),
+        'billing/organization/usage': ('GET',),
         'billing/organization/members/remove': ('POST',),
+        'billing/organization/members/role': ('POST',),
+        'billing/organization/seats/assignment': ('POST',),
+        'billing/organization/invitations': ('GET', 'POST'),
+        'billing/organization/invitations/revoke': ('POST',),
         'billing/payment-methods': ('GET',), 'billing/notifications': ('GET',),
         'billing/credits/transactions': ('GET',), 'billing/organization-history': ('GET',),
         'billing/automatic-topup': ('GET',),
+        'billing/automatic-topup/disable': ('POST',),
         'trial': ('GET',),
         'billing/my-usage': ('GET',),
         'billing/purchase-quotes': ('POST',),
@@ -491,10 +516,18 @@ def _api_request(request, path):
     }
     methods = routes.get(path)
     if path.startswith('billing/orders/'):
-        methods = ('GET',)
+        methods = ('POST',) if path.endswith(('/pay', '/payment-status')) else ('GET',)
     if path.startswith('billing/purchase-quotes/'):
         methods = ('GET',)
     if re.fullmatch(r'billing/subscriptions/[^/]+/cancel', path):
+        methods = ('POST',)
+    if re.fullmatch(r'billing/subscriptions/[^/]+/(change-quotes|changes|refunds|seat-quotes|seat-purchases|seat-reduction-quotes|seat-reductions)', path):
+        methods = ('POST',)
+    if re.fullmatch(r'billing/subscriptions/[^/]+/(change-options|refund-assessment|change-quotes/[^/]+|seat-quotes/[^/]+|seat-reduction-quotes/[^/]+)', path):
+        methods = ('GET',)
+    if re.fullmatch(r'billing/refunds/[^/]+', path):
+        methods = ('GET',)
+    if re.fullmatch(r'billing/orders/[^/]+/refunds', path):
         methods = ('POST',)
     if methods and request.method not in methods:
         result = error(request, 'METHOD_NOT_ALLOWED', 405)
@@ -553,8 +586,25 @@ def _api_request(request, path):
             return error(request, 'CHANNEL_UNAVAILABLE', 503)
         if not request.user.is_authenticated:
             return error(request, 'AUTH_REQUIRED', 401, '请先登录。')
+        if path in ('account/business-invitations', 'account/business-invitations/accept'):
+            from .commerce import subscriptions
+            if request.method == 'GET':
+                raw_offset = request.GET.get('offset', '0')
+                if (set(request.GET)-{'offset'} or len(request.GET.getlist('offset')) > 1 or
+                        not re.fullmatch(r'[0-9]{1,9}', raw_offset)):
+                    raise ValueError('INVALID_REQUEST')
+                return JsonResponse(subscriptions.business_invitations(recipient=request.user, offset=int(raw_offset)))
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            data = payload(request, ('invitation_id', 'confirm'))
+            if data['confirm'] is not True:
+                raise ValueError('INVALID_REQUEST')
+            return JsonResponse(subscriptions.accept_business_invitation(request.user, data['invitation_id']))
         if path.startswith('account/'):
             try:
+                if path.startswith('account/notifications') or path == 'account/usage':
+                    from .notifications import dispatch as notification_dispatch
+                    return notification_dispatch(request, path)
                 result = dispatch(request, path)
             except OSError:
                 logger.error('account_storage_unavailable request_id=%s', request.request_id)
@@ -586,14 +636,147 @@ def _api_request(request, path):
             return inquiries(request, member)
         from .commerce import billing as commerce
         from .commerce import subscriptions
+        matched_reduction = re.fullmatch(r'billing/subscriptions/([^/]+)/(seat-reduction-quotes|seat-reductions|seat-reduction-quotes/[^/]+)', path)
+        if matched_reduction:
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            subscription_id, action = matched_reduction.groups()
+            if action.startswith('seat-reduction-quotes/'):
+                return JsonResponse(subscriptions.seat_reduction_detail(member.account, request.user, subscription_id, action.split('/')[-1]))
+            if not settings.BILLING_SEAT_PURCHASE_ENABLED:
+                return error(request, 'SEAT_PURCHASE_UNAVAILABLE', 503)
+            if action == 'seat-reduction-quotes':
+                data = payload(request, ('seat_ids',))
+                return JsonResponse(subscriptions.seat_reduction_quote(member.account, request.user, subscription_id,
+                    data['seat_ids'], request_key=request.headers.get('Idempotency-Key', '')), status=201)
+            data = payload(request, ('quote_id', 'confirm'))
+            if data['confirm'] is not True:
+                raise ValueError('INVALID_REQUEST')
+            from .account import require_sensitive
+            require_sensitive(request, member.account)
+            return JsonResponse(subscriptions.confirm_seat_reduction(member.account, request.user, subscription_id,
+                data['quote_id'], request_key=request.headers.get('Idempotency-Key', '')), status=201)
+        matched_seats = re.fullmatch(r'billing/subscriptions/([^/]+)/(seat-quotes|seat-purchases|seat-quotes/[^/]+)', path)
+        if matched_seats:
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            subscription_id, action = matched_seats.groups()
+            if action.startswith('seat-quotes/'):
+                return JsonResponse(subscriptions.seat_purchase_detail(member.account, request.user,
+                    subscription_id, action.split('/')[-1]))
+            if not settings.BILLING_SEAT_PURCHASE_ENABLED:
+                return error(request, 'SEAT_PURCHASE_UNAVAILABLE', 503)
+            if action == 'seat-quotes':
+                data = payload(request, ('quantity',), optional=('scope', 'cover_seat_ids'))
+                return JsonResponse(subscriptions.seat_purchase_quote(member.account, request.user,
+                    subscription_id, request_key=request.headers.get('Idempotency-Key', ''), **data), status=201)
+            data = payload(request, ('quote_id', 'agreement_acceptance'))
+            from .account import require_sensitive
+            require_sensitive(request, member.account)
+            return JsonResponse(subscriptions.confirm_seat_purchase(member.account, request.user,
+                subscription_id, data['quote_id'], agreement_acceptance=data['agreement_acceptance'],
+                request_key=request.headers.get('Idempotency-Key', '')), status=201)
+        matched_change = re.fullmatch(r'billing/subscriptions/([^/]+)/(change-options|change-quotes|changes|refund-assessment|refunds|change-quotes/[^/]+)', path)
+        if matched_change:
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            subscription_id, action = matched_change.groups()
+            if action == 'change-options':
+                return JsonResponse(subscriptions.subscription_change_options(member.account, request.user, subscription_id))
+            if action == 'change-quotes':
+                data = payload(request, ('product_id',))
+                return JsonResponse(subscriptions.subscription_change_quote(member.account, request.user,
+                    subscription_id, data['product_id'], request_key=request.headers.get('Idempotency-Key', '')), status=201)
+            if action.startswith('change-quotes/'):
+                return JsonResponse(subscriptions.subscription_change_detail(member.account, request.user,
+                    subscription_id, action.split('/')[-1]))
+            if action == 'changes':
+                data = payload(request, ('quote_id', 'agreement_acceptance'))
+                if member.account.kind == 'business':
+                    from .account import require_sensitive
+                    require_sensitive(request, member.account)
+                return JsonResponse(subscriptions.confirm_subscription_change(member.account, request.user,
+                    subscription_id, data['quote_id'], agreement_acceptance=data['agreement_acceptance'],
+                    request_key=request.headers.get('Idempotency-Key', '')), status=201)
+            from .commerce import refunds
+            if action == 'refund-assessment':
+                return JsonResponse(refunds.service_refund_assessment(member.account, request.user, subscription_id))
+            data = payload(request, ('request_key', 'confirm'))
+            if data['confirm'] is not True:
+                raise ValueError('INVALID_REQUEST')
+            if member.account.kind == 'business':
+                from .account import require_sensitive
+                require_sensitive(request, member.account)
+            return JsonResponse(refunds.request_service_refund(member.account, request.user,
+                subscription_id, data['request_key']), status=201)
+        if re.fullmatch(r'billing/refunds/[^/]+', path):
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            from .commerce.models import ServiceRefund, CreditRefund
+            from .commerce.refunds import refund_data
+            try:
+                refund_id = uuid.UUID(path.split('/')[-1])
+            except (ValueError, TypeError, AttributeError) as exc:
+                raise ValueError('NOT_FOUND') from exc
+            refund = ServiceRefund.objects.filter(account=member.account, pk=refund_id).first()
+            if refund:
+                return JsonResponse(refund_data(refund))
+            item = commerce._get(CreditRefund.objects, payment__order__account=member.account, pk=refund_id)
+            return JsonResponse({'id': str(item.pk), 'status': 'refunded' if item.state == 'refunded' else
+                'terminated' if item.state == 'released' else item.review_state,
+                'amount_minor': str(item.amount_minor), 'currency': 'CNY'})
+        if path in ('billing/organization/invitations', 'billing/organization/invitations/revoke'):
+            if request.method == 'GET':
+                raw_offset = request.GET.get('offset', '0')
+                if (set(request.GET)-{'offset'} or len(request.GET.getlist('offset')) > 1 or
+                        not re.fullmatch(r'[0-9]{1,9}', raw_offset)):
+                    raise ValueError('INVALID_REQUEST')
+                return JsonResponse(subscriptions.business_invitations(member.account, actor=request.user, offset=int(raw_offset)))
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            from .account import require_sensitive
+            require_sensitive(request, member.account)
+            if path.endswith('/revoke'):
+                data = payload(request, ('invitation_id', 'confirm'))
+                if data['confirm'] is not True:
+                    raise ValueError('INVALID_REQUEST')
+                return JsonResponse(subscriptions.revoke_business_invitation(member.account, request.user, data['invitation_id']))
+            data = payload(request, ('method', 'identifier', 'role', 'paid', 'request_key'))
+            return JsonResponse(subscriptions.create_business_invitation(member.account, request.user, **data), status=201)
+        if path in ('billing/organization/members/role', 'billing/organization/seats/assignment'):
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            from .account import require_sensitive
+            require_sensitive(request, member.account)
+            fields = ('membership_id', 'role', 'expected_version', 'request_key', 'confirm') if path.endswith('/role') else (
+                'seat_id', 'membership_id', 'expected_version', 'request_key', 'confirm')
+            data = payload(request, fields)
+            if data.pop('confirm') is not True:
+                raise ValueError('INVALID_REQUEST')
+            if path.endswith('/role'):
+                result = subscriptions.change_member_role(member.account, request.user, **data)
+            else:
+                result = {'account_id':str(member.account_id), **subscriptions.assign_seat(member.account, request.user, **data)}
+            return JsonResponse(result)
         if path == 'billing/organization/members/remove':
             if request.GET:
                 raise ValueError('INVALID_REQUEST')
             data = payload(request, ('membership_id', 'request_key', 'confirm'))
             if data['confirm'] is not True or type(data['membership_id']) is not int or data['membership_id'] < 1:
                 raise ValueError('INVALID_REQUEST')
+            from .account import require_sensitive
+            require_sensitive(request, member.account)
             return JsonResponse(subscriptions.remove_member(member.account,request.user,
                 data['membership_id'],request_key=data['request_key'],request_id=request.request_id))
+        if path == 'billing/organization/usage':
+            raw_member, raw_offset = request.GET.get('membership_id', ''), request.GET.get('offset', '0')
+            if (set(request.GET)-{'membership_id', 'offset'} or
+                    any(len(request.GET.getlist(key)) > 1 for key in request.GET) or
+                    not re.fullmatch(r'[1-9][0-9]{0,9}', raw_member) or
+                    not re.fullmatch(r'[0-9]{1,9}', raw_offset)):
+                raise ValueError('INVALID_REQUEST')
+            return JsonResponse(commerce.shared_task_usage(member.account, request.user,
+                membership_id=int(raw_member), offset=int(raw_offset)))
         if path == 'billing/purchase-catalog':
             if request.GET:
                 raise ValueError('INVALID_REQUEST')
@@ -627,6 +810,15 @@ def _api_request(request, path):
                 raise ValueError('INVALID_REQUEST')
             return JsonResponse(subscriptions.organization_summary(member.account,viewer=request.user))
         if path == 'billing/automatic-topup':
+            return JsonResponse({**subscriptions.automatic_topup_summary(member.account),
+                'presets': subscriptions.topup_presets(member.account), 'can_authorize': False})
+        if path == 'billing/automatic-topup/disable':
+            data = payload(request, ('authorization_id', 'confirm'))
+            if request.GET or data['confirm'] is not True or member.account.kind != 'business':
+                raise ValueError('INVALID_REQUEST')
+            # Stopping future charges needs no new payment consent or SMS delivery.
+            # The original in-flight payment and provider revocation still need confirmation.
+            subscriptions.request_topup_revocation(member.account, request.user, data['authorization_id'])
             return JsonResponse(subscriptions.automatic_topup_summary(member.account))
         if path == 'billing/payment-methods':
             raw_offset = request.GET.get('offset','0')
@@ -638,9 +830,14 @@ def _api_request(request, path):
             if not re.fullmatch(r'\d{1,9}',raw_offset):
                 raise ValueError('INVALID_REQUEST')
             result = subscriptions.organization_summary(member.account,offset=int(raw_offset),admin_actor=request.user)
+            next_items = (result.get('next_paid_period') or {}).get('uncovered_seat_items', [])
+            next_members = dict(Membership.objects.filter(account=member.account,
+                pk__in=[item['membership_id'] for item in next_items if item['membership_id']]).values_list('pk', 'user_id'))
+            for item in next_items:
+                item['user_id'] = next_members.get(item['membership_id'])
             identities = {item.user_id:item for item in LoginIdentity.objects.filter(
-                user_id__in=[item['user_id'] for item in result['members']]).order_by('-id')}
-            for item in result['members']:
+                user_id__in=[item['user_id'] for item in result['members']+next_items]).order_by('-id')}
+            for item in result['members']+next_items:
                 identity = identities.get(item.pop('user_id'))
                 item['masked_identifier'] = ''
                 if identity:
@@ -703,12 +900,71 @@ def _api_request(request, path):
         if path.startswith('billing/orders/'):
             try:
                 assessment = re.fullmatch(r'billing/orders/([^/]+)/refund-assessment',path)
-                order_id = uuid.UUID(assessment.group(1) if assessment else path.split('/')[-1])
+                payment = re.fullmatch(r'billing/orders/([^/]+)/pay',path)
+                payment_status = re.fullmatch(r'billing/orders/([^/]+)/payment-status',path)
+                wallet = re.fullmatch(r'billing/orders/([^/]+)/wallet-test',path)
+                refund_request = re.fullmatch(r'billing/orders/([^/]+)/refunds',path)
+                matched = payment or payment_status or assessment or wallet or refund_request
+                order_id = uuid.UUID(matched.group(1) if matched else path.split('/')[-1])
             except (ValueError, TypeError, AttributeError) as exc:
                 raise ValueError('NOT_FOUND') from exc
+            if payment:
+                from .payments import start_payment
+                return start_payment(request, order_id)
+            if payment_status:
+                from .payments import start_payment_query
+                return start_payment_query(request, order_id)
+            if refund_request:
+                data = payload(request, ('request_key', 'confirm'))
+                if data['confirm'] is not True:
+                    raise ValueError('INVALID_REQUEST')
+                if member.account.kind == 'business':
+                    from .account import require_sensitive
+                    require_sensitive(request, member.account)
+                from .commerce.refunds import request_credit_refund
+                return JsonResponse(request_credit_refund(member.account, request.user, order_id,
+                    data['request_key']), status=201)
+            if wallet:
+                if request.GET:
+                    raise ValueError('INVALID_REQUEST')
+                if not expected_account:
+                    return error(request, 'ACCOUNT_CHANGED', 409)
+                order = commerce.Order.objects.filter(account=member.account, pk=order_id).first()
+                if not order:
+                    raise ValueError('NOT_FOUND')
+                configuration = settings.BILLING_WALLET_TESTS
+                if (settings.ENVIRONMENT != 'test' or not isinstance(configuration, dict) or
+                        order.status != 'pending_payment' or order.paid_at or
+                        order.currency != 'CNY' or order.amount_minor <= 0 or
+                        commerce.PaymentAttempt.objects.filter(order=order).exists()):
+                    return error(request, 'CHANNEL_UNAVAILABLE', 503)
+                tests = []
+                for channel in ('google_pay', 'apple_pay'):
+                    enabled = configuration.get(channel)
+                    if not isinstance(enabled, dict) or enabled.get('enabled') is not True:
+                        continue
+                    data = {'environment': 'TEST', 'channel': channel, 'currency': 'CNY',
+                        'amount_minor': str(order.amount_minor), 'billing_cycle': order.snapshot.get('billing_cycle', ''),
+                        'account_id': str(member.account_id), 'order_id': str(order.pk)}
+                    country = enabled.get('country_code')
+                    if channel == 'apple_pay' and isinstance(country, str) and re.fullmatch(r'[A-Z]{2}', country):
+                        data['country_code'] = country
+                    tests.append(data)
+                return JsonResponse({'wallet_tests': tests}) if tests else error(request, 'CHANNEL_UNAVAILABLE', 503)
             if assessment:
-                return JsonResponse(commerce.credit_refund_assessment(member.account,order_id))
-            return JsonResponse(commerce.order_detail(member.account, order_id))
+                result = commerce.credit_refund_assessment(member.account,order_id)
+                result['can_submit'] = bool(result['status'] == 'assessment_ready' and result.get('reference_minor') and
+                    int(result['reference_minor']) > 0)
+                return JsonResponse(result)
+            result = commerce.order_detail(member.account, order_id)
+            from .payments import payment_start_capability, payment_qr
+            capability = payment_start_capability(member.account, order_id)
+            if capability:
+                result['payment_start'] = capability
+            qr = payment_qr(member.account, order_id)
+            if qr:
+                result['payment_qr'] = qr
+            return JsonResponse(result)
         if path.startswith('billing/'):
             return error(request, 'FEATURE_UNAVAILABLE', 503, '该功能尚未开放，不会产生扣款或变更。')
         return error(request, 'NOT_FOUND', 404)
@@ -721,6 +977,27 @@ def _api_request(request, path):
         if (path in ('auth/captcha','auth/register/verify') or path in ('auth/google/register','auth/google/bind')) and request.user.is_authenticated:
             logout(request)
         code = str(exc)
+        if code in ('INVITATION_UNAVAILABLE', 'INVITATION_ALREADY_PENDING', 'MEMBER_ALREADY_EXISTS',
+                'NO_AVAILABLE_SEAT', 'SEAT_RESERVED_FOR_INVITATION', 'TASK_SETTLEMENT_REQUIRED',
+                'SEAT_CHANGED', 'MEMBER_ROLE_CHANGED', 'SEAT_NOT_RELEASABLE', 'SEAT_COVERAGE_CHANGED',
+                'MEMBER_ALREADY_SEATED', 'SEAT_LOCKED_UNTIL_NEXT_SERVICE_MONTH', 'NEXT_PAID_PERIOD_REQUIRED'):
+            return error(request, code, 409)
+        if code == 'SUBSCRIPTION_EXPIRED':
+            return error(request, code, 422)
+        if code == 'SENSITIVE_CONFIRMATION_REQUIRED':
+            return error(request, code, 403, '请先完成身份确认，再重新操作。')
+        if code == 'OWNER_ROLE_PROTECTED':
+            return error(request, code, 403)
+        if code in ('QUOTE_EXPIRED', 'SOURCE_SUBSCRIPTION_CHANGED', 'REFUND_ALREADY_REQUESTED',
+                'SUBSCRIPTION_ALREADY_CHANGED', 'PAYMENT_RECONCILIATION_REQUIRED', 'UPGRADE_NOT_AVAILABLE',
+                'REFUND_PENDING', 'REFUND_REVIEW_REQUIRED'):
+            return error(request, code, 409)
+        if code == 'CURRENT_PRICE_REQUIRED':
+            return error(request, code, 503)
+        if code in ('SERVICE_NOT_ACTIVE', 'CREDITS_SUBSCRIPTION_REQUIRED', 'ANNUAL_REFUND_ONLY', 'NO_REFUNDABLE_SERVICE', 'FUTURE_CREDITS_REQUIRE_REVIEW',
+                'REFUND_NOT_ELIGIBLE', 'INVALID_IDEMPOTENCY_KEY', 'MINIMUM_SEATS_REQUIRED', 'INVALID_SEAT_VERSION',
+                'BUSINESS_PLAN_SWITCH_NOT_SUPPORTED'):
+            return error(request, code, 422)
         permitted = {'INVALID_REQUEST', 'INVALID_IDENTIFIER', 'INVALID_CODE', 'INVALID_JSON',
                      'INVALID_BODY_SIZE', 'JSON_REQUIRED', 'CATALOG_INVALID', 'CONFIG_INCOMPLETE',
                      'NOT_FOUND', 'INVALID_IDEMPOTENCY_KEY', 'IDEMPOTENCY_CONFLICT',
@@ -729,6 +1006,9 @@ def _api_request(request, path):
         permitted.update(('INVALID_SEATS', 'TERMS_UNAVAILABLE', 'MEMBER_ALREADY_REMOVED', 'OWNER_REMOVAL_FORBIDDEN'))
         permitted.add('INVALID_PASSWORD')
         permitted.add('INVALID_FLOW')
+        permitted.update(('PAYMENT_EXPIRED', 'PAYMENT_INTENT_CONFLICT', 'ORDER_STATE_CONFLICT'))
+        if code in ('PAYMENT_EXPIRED', 'PAYMENT_INTENT_CONFLICT', 'ORDER_STATE_CONFLICT'):
+            return error(request, code, 409)
         if code in ('GOOGLE_CONFLICT','GOOGLE_REJECTED'):
             return error(request,code,409 if code=='GOOGLE_CONFLICT' else 422)
         if code == 'INVALID_INVITATION_CODE':

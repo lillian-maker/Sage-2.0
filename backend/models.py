@@ -1,7 +1,7 @@
 import uuid
 
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 
 class BillingAccount(models.Model):
@@ -18,7 +18,36 @@ class BillingAccount(models.Model):
             models.Q(kind='business', personal_owner__isnull=True)), name='billing_account_owner_kind')]
 
 
+def _invalidate_membership_invitations(before):
+    """Persist lost invitation authority so later promotion cannot revive it."""
+    from .commerce.models import BusinessInvitation
+    current = {row['id']:row for row in Membership.objects.filter(pk__in=before).values('id', 'role', 'is_active')}
+    for pk, old in before.items():
+        row = current.get(pk)
+        if not row or not old['is_active'] or old['role'] not in ('owner', 'billing_admin'):
+            continue
+        invitations = BusinessInvitation.objects.filter(creator_id=pk, state='pending')
+        if not row['is_active'] or row['role'] not in ('owner', 'billing_admin'):
+            invitations.update(state='invalidated')
+        elif old['role'] == 'owner' and row['role'] != 'owner':
+            invitations.filter(role='billing_admin').update(state='invalidated')
+
+
+class MembershipQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        if not {'role', 'is_active'}.intersection(kwargs):
+            return super().update(**kwargs)
+        with transaction.atomic():
+            accounts = list(self.values_list('account_id', flat=True))
+            list(BillingAccount.objects.filter(pk__in=accounts).order_by('pk').select_for_update())
+            before = {row['id']:row for row in self.values('id', 'role', 'is_active')}
+            result = super().update(**kwargs)
+            _invalidate_membership_invitations(before)
+            return result
+
+
 class Membership(models.Model):
+    objects = MembershipQuerySet.as_manager()
     account = models.ForeignKey(BillingAccount, on_delete=models.PROTECT)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     role = models.CharField(max_length=20, choices=[('owner', 'owner'),
@@ -27,6 +56,17 @@ class Membership(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['account', 'user'], name='billing_membership_unique')]
+
+    def save(self, *args, **kwargs):
+        if self._state.adding or (kwargs.get('update_fields') is not None and
+                not {'role', 'is_active'}.intersection(kwargs['update_fields'])):
+            return super().save(*args, **kwargs)
+        with transaction.atomic():
+            BillingAccount.objects.select_for_update().get(pk=self.account_id)
+            before = {row['id']:row for row in type(self).objects.filter(pk=self.pk).values('id', 'role', 'is_active')}
+            result = super().save(*args, **kwargs)
+            _invalidate_membership_invitations(before)
+            return result
 
 
 class LoginIdentity(models.Model):
@@ -45,7 +85,8 @@ class LoginChallenge(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     purpose = models.CharField(max_length=20, default='login',
         choices=[('login', 'login'), ('password_reset', 'password_reset'), ('registration', 'registration'),
-            ('google_bind','google_bind')])
+            ('google_bind','google_bind'), ('business_sensitive','business_sensitive'), ('phone_binding','phone_binding')])
+    account = models.ForeignKey(BillingAccount, null=True, on_delete=models.PROTECT, related_name='+')
     password_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True,
         on_delete=models.SET_NULL, related_name='+')
     method = models.CharField(max_length=10)
@@ -57,6 +98,7 @@ class LoginChallenge(models.Model):
     delivered = models.BooleanField(default=False)
     consumed_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    password_hash = models.CharField(max_length=128, blank=True)
 
 
 class AuthThrottle(models.Model):
@@ -271,6 +313,50 @@ class AccountSession(models.Model):
     ip = models.GenericIPAddressField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     revoked_at = models.DateTimeField(null=True)
+    sensitive_verified_at = models.DateTimeField(null=True)
+    sensitive_method = models.CharField(max_length=16, blank=True)
+    sensitive_account_id = models.UUIDField(null=True)
+    google_verified_at = models.DateTimeField(null=True)
+
+
+class AccountPasskey(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    credential_id = models.TextField(unique=True)
+    public_key = models.TextField()
+    sign_count = models.PositiveBigIntegerField(default=0)
+    label = models.CharField(max_length=80)
+    synced = models.BooleanField(default=False)
+    backed_up = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    revoked_at = models.DateTimeField(null=True)
+
+
+class PasskeyChallenge(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    purpose = models.CharField(max_length=16)
+    challenge = models.TextField()
+    session_digest = models.CharField(max_length=64)
+    label = models.CharField(max_length=80, blank=True)
+    expires_at = models.DateTimeField()
+    consumed_at = models.DateTimeField(null=True)
+
+
+class PasskeyRecovery(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    authorized_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True)
+    session_digest = models.CharField(max_length=64, default='')
+
+
+class PasskeyRecoveryCode(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    digest = models.CharField(max_length=64)
+    consumed_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user', 'digest'], name='passkey_recovery_code_unique')]
 
 
 class MemberRemovalQuerySet(models.QuerySet):
@@ -287,7 +373,7 @@ class MemberRemovalQuerySet(models.QuerySet):
 class MemberRemoval(models.Model):
     objects = MemberRemovalQuerySet.as_manager()
     account = models.ForeignKey(BillingAccount, on_delete=models.PROTECT)
-    membership = models.OneToOneField(Membership, on_delete=models.PROTECT)
+    membership = models.ForeignKey(Membership, on_delete=models.PROTECT)
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     request_key = models.CharField(max_length=64)
     handoff_pending = models.BooleanField(default=False)
@@ -318,6 +404,8 @@ class AccountDeletionChallenge(models.Model):
     delivered = models.BooleanField(default=False)
     attempts = models.PositiveSmallIntegerField(default=0)
     consumed_at = models.DateTimeField(null=True)
+    method = models.CharField(max_length=10, default='email')
+    password_digest = models.CharField(max_length=64, blank=True)
 
 
 class TrialIdentityMarker(models.Model):
@@ -337,8 +425,8 @@ class AccountDeletionRequest(models.Model):
     policy_version = models.CharField(max_length=80)
     blockers = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
-    first_response_due_at = models.DateTimeField()
-    completion_due_at = models.DateTimeField()
+    first_response_due_at = models.DateTimeField(null=True)
+    completion_due_at = models.DateTimeField(null=True)
     first_responded_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     retain_until = models.DateTimeField()
@@ -396,3 +484,60 @@ class ConsultationAudit(models.Model):
     action = models.CharField(max_length=40)
     request_id = models.UUIDField(default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class InvoiceRequest(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey(BillingAccount, on_delete=models.PROTECT)
+    order = models.ForeignKey('commerce.Order', on_delete=models.PROTECT)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+    recipient_email = models.EmailField(max_length=254)
+    title = models.CharField(max_length=200)
+    tax_number = models.CharField(max_length=32, blank=True)
+    status = models.CharField(max_length=20, default='requested', choices=[
+        ('requested','待受理'), ('accepted','已受理'), ('needs_information','待补充'),
+        ('issued','已开具'), ('sending','发送中'), ('sent','渠道已接受'),
+        ('failed','发送失败'), ('unknown','发送结果待核实')])
+    request_key = models.CharField(max_length=64)
+    request_hash = models.CharField(max_length=64)
+    invoice_reference = models.CharField(max_length=128, blank=True)
+    provider_reference = models.CharField(max_length=128, blank=True)
+    handled_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        permissions = [('manage_invoice', '受理和处理发票申请')]
+        constraints = [models.UniqueConstraint(fields=['account','request_key'], name='invoice_request_unique'),
+                       models.UniqueConstraint(fields=['order'], name='invoice_order_unique')]
+
+
+class InvoiceAudit(models.Model):
+    request = models.ForeignKey(InvoiceRequest, on_delete=models.PROTECT)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    action = models.CharField(max_length=24)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class NotificationRead(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    notification = models.ForeignKey('commerce.BillingNotification', on_delete=models.PROTECT)
+    read_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user','notification'], name='notification_read_unique')]
+
+
+class NotificationDelivery(models.Model):
+    notification = models.ForeignKey('commerce.BillingNotification', on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    channel = models.CharField(max_length=8, choices=[('email','email'),('sms','sms')])
+    state = models.CharField(max_length=12, default='pending', choices=[
+        (value,value) for value in ('pending','sending','sent','delivered','failed','unknown')])
+    provider_reference = models.CharField(max_length=128, blank=True)
+    attempted_at = models.DateTimeField(null=True)
+    confirmed_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['notification','user','channel'], name='notification_delivery_unique')]
