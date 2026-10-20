@@ -768,7 +768,10 @@ async function alipaySandboxAudit(browser) {
       assert.equal(await teamsCard.locator('.business-benefits,.plan-pending').count(),0,'Approved business product replaces the entire reference block');
       assert.ok((await teamsCard.locator('.plan-benefits').innerText()).includes(language?'Isolated benefits, not for sale.':'隔离测试权益，不销售。'));
       assert.equal(await page.locator('.plan').filter({has:page.locator('[data-plan-link="enterprise"]')}).locator('.plan-pending dd').count(),3,'Unapproved Enterprise stays pending');
-      await page.locator('#pricing-seats').fill('3');
+      assert.equal(await page.locator('#pricing-seats,.seat-selector').count(),0);
+      assert.equal(await page.locator('.plan-grid.business > .plan').count(),2);
+      const enterpriseCard=page.locator('.plan').filter({has:page.locator('[data-plan-link="enterprise"]')});
+      assert.equal(await enterpriseCard.getByRole('link',{name:language?'Contact sales':'联系销售',exact:true}).getAttribute('href'),`billing${language}.html#procurement`,'Sales inquiry remains independent of active subscription management');
       for(const link of await page.locator('[data-plan-link]').all())assert.ok((await link.getAttribute('href')).includes('billing')&&(await link.getAttribute('href')).includes('#subscription'));
       business=false;
       mode='delayed';await page.goto(`${base}/pages/pricing${language}.html?audit=delayed`);

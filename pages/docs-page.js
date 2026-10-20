@@ -232,11 +232,12 @@
   const toggle = root.querySelector('#sd-directory-toggle');
   const directory = root.querySelector('#sd-directory');
   let active = 'what-is-sage';
+  let submittedQuery = '';
   const escape = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const articleURL = slug => '?article=' + encodeURIComponent(slug);
   const block = item => typeof item === 'string' ? '<p>' + escape(item) + '</p>' : '<' + (item.ordered ? 'ol' : 'ul') + '>' + item.list.map(text => '<li>' + escape(text) + '</li>').join('') + '</' + (item.ordered ? 'ol' : 'ul') + '>';
   function renderDirectory() {
-    const query = search.value.trim().toLocaleLowerCase();
+    const query = submittedQuery;
     const results = articles.filter(article => JSON.stringify(article).toLocaleLowerCase().includes(query));
     const groups = [...new Set(articles.map(article => article[1]))];
     chaptersEl.innerHTML = results.length ? groups.map(group => {
@@ -287,9 +288,20 @@
     history.pushState(null,'',url.pathname + url.search + url.hash);
     renderArticle(true);
   });
-  root.querySelector('#sd-search-form').addEventListener('submit',event => event.preventDefault());
-  search.addEventListener('input',renderDirectory);
-  root.querySelector('#sd-search-clear').addEventListener('click',() => { search.value=''; renderDirectory(); search.focus(); });
+  root.querySelector('#sd-search-form').addEventListener('submit',event => {
+    event.preventDefault();
+    submittedQuery = search.value.trim().toLocaleLowerCase();
+    renderDirectory();
+  });
+  search.addEventListener('keydown',event => { if (event.key === 'Enter' && event.isComposing) event.preventDefault(); });
+  document.addEventListener('keydown',event => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      if (getComputedStyle(directory).display === 'none') toggle.click();
+      search.focus();
+      search.select();
+    }
+  });
   toggle.addEventListener('click',() => {
     const open = !directory.classList.contains('open');
     directory.classList.toggle('open',open);

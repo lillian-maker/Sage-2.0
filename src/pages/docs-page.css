@@ -1,10 +1,10 @@
 .sage-docs{--sd-ink:#26323e;--sd-body:#526071;--sd-line:#e5eaf0;--sd-accent:#2869a6;background:#fff;color:var(--sd-body);font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
 .sd-layout{display:grid;grid-template-columns:248px minmax(0,1fr) 192px;max-width:1440px;margin:0 auto;min-height:calc(100vh - 88px)}
 .sd-directory{border-right:1px solid var(--sd-line);padding:28px 18px 48px 24px;position:sticky;top:88px;height:calc(100vh - 88px);overflow-y:auto;scrollbar-width:thin}
-.sd-directory label{display:block;font-size:13px;font-weight:500;margin-bottom:8px;color:var(--sd-ink)}
-.sd-search-box{display:flex;border:1px solid var(--sd-line);border-radius:7px;background:#f7f9fb;align-items:center}
-.sd-search-box input{width:100%;min-width:0;border:0;background:transparent;padding:12px 8px;font:inherit;font-size:13px;color:var(--sd-ink)}
-.sd-search-box button{border:0;background:none;font:inherit;font-size:12px;color:var(--sd-accent);padding:12px 8px;cursor:pointer}
+.sd-directory label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.sd-search-box{display:flex;gap:10px;padding:0 12px;border:1px solid #dfe3e9;border-radius:12px;background:#fff;align-items:center;color:#788598}
+.sd-search-box input{width:100%;min-width:0;border:0;background:transparent;padding:13px 0;font:inherit;font-size:14px;color:var(--sd-ink);outline:none}
+.sd-search-box input::placeholder{color:#8995a7;opacity:1}.sd-search-box svg,.sd-search-box kbd{flex-shrink:0}.sd-search-box kbd{font:inherit;font-size:12px;color:#8995a7;white-space:nowrap}.sd-search-box:focus-within{border-color:var(--sd-accent);box-shadow:0 0 0 2px #39639718}.sage-docs .sd-search-box input:focus-visible{outline:none}
 .sd-search-status{font-size:12px;margin:8px 0;min-height:18px}
 .sd-directory details{margin:14px 0}.sd-directory summary{font-size:14px;font-weight:500;color:var(--sd-ink);cursor:pointer;padding:8px 4px;list-style:none;display:flex;justify-content:space-between;gap:8px}.sd-directory summary:after{content:"⌄";color:#8290a0}.sd-directory details:not([open]) summary:after{content:"›"}.sd-directory summary::-webkit-details-marker{display:none}
 .sd-directory a{display:block;font-size:13px;line-height:1.6;padding:8px 12px;text-decoration:none;color:#627083;border-radius:5px;overflow-wrap:anywhere}.sd-directory a:hover{background:#f5f7fa;color:var(--sd-ink)}.sd-directory a[aria-current=page]{background:#e8f0f8;color:#28649b;font-weight:500}
@@ -18,8 +18,8 @@
 @media(max-width:1050px){.sd-layout{grid-template-columns:224px minmax(0,1fr)}.sd-toc{display:none}}
 @media(max-width:900px){.sd-mobile-tools{display:block;border-bottom:1px solid var(--sd-line);padding:14px 20px}.sd-mobile-tools button{border:1px solid #dce5ed;border-radius:6px;color:var(--sd-ink);background:#f7f9fb;font:inherit;font-size:14px;padding:12px 16px;cursor:pointer}.sd-layout{display:block}.sd-directory{position:static;height:auto;max-height:60vh;border-bottom:1px solid var(--sd-line);border-right:0;padding:18px 20px;display:none}.sd-directory.open{display:block}.sd-article{padding:26px 24px 64px;max-width:800px;margin:auto}.sd-article h1{font-size:30px}.sd-breadcrumb{margin-bottom:20px}}
 @media(max-width:420px){.sd-article{padding-left:18px;padding-right:18px}.sd-article h1{font-size:28px}.sd-article h2{font-size:21px}.sd-related div{display:block}.sd-related a{display:block}}
-.sd-search-box button{white-space:nowrap;flex-shrink:0;min-width:42px}.sd-article{max-width:800px}
+.sd-article{max-width:800px}
 .sd-breadcrumb,.sd-lead,.sd-note,.sd-toc nav a{color:#657487}
-.sage-docs{--sd-ink:#202b38;--sd-body:#526171;--sd-line:#e4e9ef;--sd-accent:#396397}.sd-directory a[aria-current=page]{background:#edf3f9;color:#396397}.sd-search-box{background:#f4f7fb}.sd-article:focus-visible{outline:2px solid #396397;outline-offset:-4px}
+.sage-docs{--sd-ink:#202b38;--sd-body:#526171;--sd-line:#e4e9ef;--sd-accent:#396397}.sd-directory a[aria-current=page]{background:#edf3f9;color:#396397}.sd-article:focus-visible{outline:2px solid #396397;outline-offset:-4px}
 .sd-directory,.sd-toc{top:var(--site-nav-height,88px);max-height:calc(100vh - var(--site-nav-height,88px))}.sd-directory{height:calc(100vh - var(--site-nav-height,88px))}.sd-mobile-tools button{border-radius:8px}.sd-article p,.sd-article li{font-size:16px}
 @media(max-width:900px){.sd-directory{height:auto;max-height:60vh}}

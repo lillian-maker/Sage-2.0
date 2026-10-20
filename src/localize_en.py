@@ -950,6 +950,7 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 让企业数据、业务知识与 AI 能力，真正服务于你的团队与业务。	Put company data, business knowledge and AI capabilities to work for your team.
 文档目录	Documentation contents
 搜索文档	Search documentation
+placeholder="搜索"	placeholder="Search"
 搜索标题或正文	Search titles or content
 清空搜索	Clear search
 清空	Clear
