@@ -21,6 +21,12 @@ const zhLiteral=fs.readFileSync(path.join(root,'src/pages/docs-page.js'),'utf8')
   }
  }
  const plain=await browser.newPage({javaScriptEnabled:false});await plain.route('**/*',fulfill);
+ for(const language of ['', '-en'])for(const width of [320,768,1440]){
+  await page.setViewportSize({width,height:1000});await page.goto(`http://127.0.0.1/pages/docs${language}.html?article=plans`);await page.locator('#sd-article h1').waitFor();
+  const copy=await page.locator('#sd-article').innerText();
+  for(const text of language?['Teams: starts at 1 paid seat','Enterprise: starts at 10 paid seats','without rollover, including on annual plans','never use employees’ private Credits','no per-member cap','available balance']:['Teams：1 个付费名额起购','Enterprise：10 个付费名额起购','年付也逐月发放','不扣员工私人点数','不设置成员各自的共享点数使用上限','可用余额约束'])assert.ok(copy.includes(text),text);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`plans/${language}/${width}`);
+ }
  for(const language of ['', '-en']){await plain.goto('http://127.0.0.1/pages/docs'+language+'.html');assert.equal(await plain.locator('#sd-article noscript details').count(),40);await plain.locator('#doc-readable-refunds summary').click();assert.ok(await plain.locator('#doc-readable-refunds').isVisible());const text=await plain.locator('#doc-readable-refunds').textContent(),expected=(language?context.window.SAGE_DOCS_EN:zhArticles).find(article=>article[0]==='refunds');for(const section of expected[4])for(const paragraph of section)assert.ok(text.includes(paragraph),'Complete refund paragraph must remain readable without JavaScript');if(language)assert.ok(!/[\u4e00-\u9fff]/.test(await plain.locator('#sd-article').textContent()));}await plain.close();
  assert.deepEqual(errors,[]);console.log('Bilingual browser rendering passed: all 40 articles, invalid address, search, 50 employees, 6 phases and 3 viewport widths');
  }finally{await browser.close();}

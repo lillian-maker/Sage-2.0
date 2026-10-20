@@ -723,7 +723,7 @@ async function alipaySandboxAudit(browser) {
         if(endpoint==='/api/billing/accounts/select'){active=request.postDataJSON().account_id;return json(session());}
         assert.equal(request.method(),'GET');
         if(endpoint==='/api/billing/catalog')return route.fallback();
-        if(endpoint==='/api/billing/purchase-catalog')return json({account_id:active,currency:'CNY',items:[{...item,quote_available:mode!=='pending'}]});
+        if(endpoint==='/api/billing/purchase-catalog')return json({account_id:active,currency:'CNY',items:[{...item,...(business?{code:'teams',audience:'business'}:{}),quote_available:mode!=='pending'}]});
         if(endpoint==='/api/billing/subscriptions'){
           const data=subscriptions().map(value=>({...value,plan_code:business?'teams':value.plan_code}));
           if(mode==='delayed'&&active===account)await new Promise(resolve=>{release=resolve;});
@@ -764,6 +764,10 @@ async function alipaySandboxAudit(browser) {
       await page.goto(`${base}/pages/pricing${language}.html?audience=business&audit=seat-change`);
       await page.locator('#pricing-subscription-status[data-ready="true"]').waitFor();
       assert.equal(await page.locator('[data-plan-link="teams"]').innerText(),language?'Current plan':'当前方案');
+      const teamsCard=page.locator('.plan').filter({has:page.locator('[data-plan-link="teams"]')});
+      assert.equal(await teamsCard.locator('.business-benefits,.plan-pending').count(),0,'Approved business product replaces the entire reference block');
+      assert.ok((await teamsCard.locator('.plan-benefits').innerText()).includes(language?'Isolated benefits, not for sale.':'隔离测试权益，不销售。'));
+      assert.equal(await page.locator('.plan').filter({has:page.locator('[data-plan-link="enterprise"]')}).locator('.plan-pending dd').count(),3,'Unapproved Enterprise stays pending');
       await page.locator('#pricing-seats').fill('3');
       for(const link of await page.locator('[data-plan-link]').all())assert.ok((await link.getAttribute('href')).includes('billing')&&(await link.getAttribute('href')).includes('#subscription'));
       business=false;

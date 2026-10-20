@@ -127,6 +127,15 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
         assert.equal(await enterprise.getAttribute('aria-disabled'), String(count < 10));
         assert.equal((await enterprise.getAttribute('href')) !== null, count >= 10);
         assert.match(await page.locator('#pricing-seat-help').innerText(), lang ? /Teams starts at 1 seat; Enterprise starts at 10/ : /Teams 1 席起，Enterprise 10 席起/);
+        for (const code of ['teams','enterprise']) {
+          const card=page.locator('.plan').filter({has:page.locator(`[data-plan-link="${code}"]`)});
+          assert.equal(await card.locator('.business-benefits').count(),1);
+          assert.deepEqual(await card.locator('.plan-pending dd').allTextContents(),Array(3).fill(lang?'Pending':'待定'));
+          assert.equal(await card.locator('.plan-pending .ui-icon').count(),0);
+          assert.ok((await card.locator('.plan-includes').innerText()).includes(code==='teams'?(lang?'Individual included Credits':'套餐点数按成员使用'):(lang?'Shared included Credits':'套餐点数全员共享')));
+          assert.ok((await card.locator('ul').innerText()).includes(lang?'Company-purchased add-on Credits are shared':'企业加购点数由成员共享'));
+          assert.ok((await card.locator('.plan-release-note').innerText()).includes(lang?'never use private Credits':'不扣员工私人点数'));
+        }
       }
       for (const count of [1,10,9]) {
         await page.locator('#pricing-seats').fill(String(count));
@@ -144,8 +153,10 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
         assert.equal(await page.locator('#checkout-seats').inputValue(), String(count));
         assert.equal(await page.locator('#checkout-seats').getAttribute('min'), plan === 'enterprise' ? '10' : '1');
         assert.equal(await page.locator('#quote-amount').innerText(), '—', 'Unpriced plans cannot become payable');
+        assert.deepEqual(await page.locator('.business-benefits .plan-pending dd').allTextContents(),Array(3).fill(lang?'Pending':'待定'));
+        assert.ok((await page.locator('.business-benefits').innerText()).includes(lang?'available balance':'可用余额'));
         if (plan === 'enterprise') {
-          assert.ok((await page.locator('.order-lines').innerText()).includes(lang ? 'Shared monthly allowance pending' : '每月共享额度待公布'));
+          assert.equal(await page.locator('.business-benefits .plan-includes').innerText(),lang?'Shared included Credits':'套餐点数全员共享');
           await page.locator('#checkout-seats').fill('9');
           assert.equal(await page.locator('#checkout-seats').getAttribute('aria-invalid'), 'true');
           assert.equal(await page.locator('#quote-refresh').isDisabled(), true);
@@ -225,6 +236,13 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
           await page.waitForFunction(() => [...document.images].every(img => img.complete && img.naturalWidth > 0));
           report.layouts.push(`${route}${lang}:${width}`);
         }
+      }
+      for (const width of [320,768,1440]) {
+        await page.setViewportSize({width,height:1000});
+        await visit(`pricing${lang}.html`, '?audience=business&seats=10');
+        await page.locator('main *').evaluateAll(nodes=>{const sizes=nodes.map(node=>parseFloat(getComputedStyle(node).fontSize));nodes.forEach((node,i)=>node.style.fontSize=`${sizes[i]*2}px`);});
+        await noOverflow(`business-pricing${lang}:${width}:200%`);
+        report.text_scaling.push(`business-pricing${lang}:${width}px text-size 200%`);
       }
       for (const width of [320,1440]) for (const section of ['subscription','credits','credits-ledger','orders','invoices','payment-methods','procurement']) {
         await page.setViewportSize({width,height:1000});
