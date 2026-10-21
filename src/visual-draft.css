@@ -79,3 +79,10 @@ body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--su
 .v1 .nav .brand{font-size:25px;font-weight:600;gap:10px;letter-spacing:-1px}
 .v1 .nav .brand svg{width:29px;height:29px}
 @media(max-width:900px){.v1 .nav .brand{font-size:23px}}
+
+/* Ribbon/star lockup: light lettering in the hero, ink lettering on white. */
+.v1 .brand img.sage-logo{display:block;width:112px;height:36px;object-fit:contain;max-width:none}
+.v1 .nav .brand .sage-logo-light{display:none}
+.v1 .nav.nav-light .brand .sage-logo-dark{display:none}
+.v1 .nav.nav-light .brand .sage-logo-light{display:block}
+@media(max-width:600px){.v1 .brand img.sage-logo{width:96px;height:32px}}
