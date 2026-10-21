@@ -282,5 +282,5 @@ body[data-auth-page] #auth-reset-link{display:block;color:#396397}
 @media(max-width:380px){body:not(.v1) :is(.cp-tools,.r-tools,.nav-actions),.v1 .nav-tools{gap:8px}.sage-account-menu summary,.page-profile .sage-account-menu summary{max-width:60px}.nav-account summary span{max-width:44px;overflow:hidden;text-overflow:ellipsis}}
 
 /* Full lockups retain their natural proportions instead of the old square icon. */
-.cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{display:block;width:112px;height:36px;object-fit:contain;max-width:none;filter:none}
-@media(max-width:600px){.cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{width:96px;height:32px}}
+.cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{display:block;width:112px;height:49px;object-fit:contain;max-width:none;filter:none}
+@media(max-width:600px){.cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{width:96px;height:42px}}
