@@ -18,6 +18,8 @@ BLOCKS = {
 }
 ASSETS = {
     "favicon.svg": "image/svg+xml",
+    "brand/sage-logo-website.svg": "image/svg+xml",
+    "brand/sage-logo-product.svg": "image/svg+xml",
     "earth-texture.png": "image/png",
 }
 
@@ -111,8 +113,9 @@ def build():
     html = html.replace("</style>", read_text("src/sage-content.css") + "</style>")
     for filename, mime_type in ASSETS.items():
         token = "{{WORLD_PILOT_ASSET:" + filename + "}}"
-        if html.count(token) != 1:
-            raise ValueError(f"Expected exactly one asset reference: {filename}")
+        expected = 2 if filename == "brand/sage-logo-product.svg" else 1
+        if html.count(token) != expected:
+            raise ValueError(f"Expected {expected} asset references: {filename}")
         encoded = base64.b64encode((ROOT / "assets" / filename).read_bytes()).decode("ascii")
         html = html.replace(token, f"data:{mime_type};base64,{encoded}")
     if "{{WORLD_PILOT_" in html:
@@ -138,6 +141,7 @@ def build():
         shutil.copytree(ROOT / 'assets/people', output / 'assets/people', dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns('*.json'))
         shutil.copy2(ROOT / 'assets/favicon.svg', output / 'assets/favicon.svg')
+        shutil.copytree(ROOT / 'assets/brand', output / 'assets/brand', dirs_exist_ok=True)
     print(f"Built {destination.name} ({destination.stat().st_size:,} bytes)")
 
 if __name__ == "__main__":
