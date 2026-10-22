@@ -4,7 +4,7 @@
 
 ## App UI 设计交付 · 2026-10-22
 
-App 界面开发先读 [统一交付入口](docs/SAGE_APP_UI_HANDOFF.md)，再读 [UI Kit 接入说明](drafts/sage-app-ui-kit-20261022/README.md)与[设计规范](drafts/sage-app-ui-kit-20261022/DESIGN_SPEC.md)。提供 18 张亮色/纯黑页面稿、38 类组件及 HTML 片段、32 个图标、53 张当前头像、设计变量及本地交互契约；[整包下载](drafts/sage-app-ui-kit-20261022.zip)。这是待验收的 UI 交付，没有升级 App 或部署官网。后续维护该目录须先读上述说明。
+App 界面开发先读 [统一交付入口](docs/SAGE_APP_UI_HANDOFF.md)，再读 [UI Kit 接入说明](drafts/sage-app-ui-kit-20261022/README.md)与[设计规范](drafts/sage-app-ui-kit-20261022/DESIGN_SPEC.md)。专家页按用户最新选择只保留四列。提供 16 张亮色/纯黑页面稿、38 类组件及 HTML 片段、32 个图标、53 张当前头像、设计变量及本地交互契约；[整包下载](drafts/sage-app-ui-kit-20261022.zip)。这是待验收的 UI 交付，没有升级 App 或部署官网。后续维护该目录须先读上述说明。
 
 ## 品牌资源 · 2026-10-21
 

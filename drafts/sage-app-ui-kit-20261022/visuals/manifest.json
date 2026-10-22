@@ -240,46 +240,6 @@
       "method": "browser-measured native SVG, not screenshot"
     },
     {
-      "name": "experts-3-dark",
-      "source": "checks/layout-experts-3-dark.json",
-      "file": "experts-3-dark.png",
-      "size": 919577,
-      "hash": "c26786d85dac2548e3a692b5d8dda6d231fe1da6afdea03101893c61d06dc1cc",
-      "metadata": {
-        "format": "png",
-        "width": 3200,
-        "height": 2048,
-        "channels": 4,
-        "density": 144
-      },
-      "svg": {
-        "file": "experts-3-dark.svg",
-        "size": 2954495,
-        "hash": "052b8f95fccf3a613afcd4fe6bb73cbc7f82a4b98b7081a4f81566e5a1b7fc0a"
-      },
-      "method": "browser-measured native SVG, not screenshot"
-    },
-    {
-      "name": "experts-3-light",
-      "source": "checks/layout-experts-3-light.json",
-      "file": "experts-3-light.png",
-      "size": 847797,
-      "hash": "039af615e73766b085654d9105b8aca1239e388484de2318cdede9fdbb3272be",
-      "metadata": {
-        "format": "png",
-        "width": 3200,
-        "height": 2048,
-        "channels": 4,
-        "density": 144
-      },
-      "svg": {
-        "file": "experts-3-light.svg",
-        "size": 2954419,
-        "hash": "e8936ef905b135b1b1198b402eac853b04e33d424ff369f42d09add760d24f31"
-      },
-      "method": "browser-measured native SVG, not screenshot"
-    },
-    {
       "name": "experts-4-dark",
       "source": "checks/layout-experts-4-dark.json",
       "file": "experts-4-dark.png",

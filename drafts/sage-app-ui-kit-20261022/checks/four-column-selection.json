@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-22",
+  "scope": "Local browser UI check; legacy columns=3 URL renders four-column desktop design",
+  "viewport": [
+    1600,
+    1024
+  ],
+  "columns": "4",
+  "grid": "303.724px 303.724px 303.724px 303.733px",
+  "overflow": false,
+  "threeColumnControl": false,
+  "allImages": true,
+  "cards": [
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    },
+    {
+      "overflow": false,
+      "titleOverflow": false
+    }
+  ]
+}

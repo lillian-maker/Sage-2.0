@@ -16,7 +16,7 @@ scope: 当前 Sage 桌面 App 的双主题视觉与可复用 Web 组件；真实
 
 | 内容 | 入口 |
 | --- | --- |
-| 18 张双主题页面图 | [visuals/index.html](visuals/index.html) |
+| 16 张双主题页面图 | [visuals/index.html](visuals/index.html) |
 | 38 类组件与可复制 HTML | [index.html](index.html) |
 | 浅色产品页 | [app.html?view=experts&theme=light](app.html?view=experts&theme=light) |
 | 纯黑产品页 | [app.html?view=experts&theme=dark](app.html?view=experts&theme=dark) |
@@ -109,11 +109,10 @@ python3 -m http.server 8915 --bind 127.0.0.1
 
 ## 双主题页面稿
 
-页面组合共 9 种状态，浅色与纯黑各一套，已导出 **18 张 3200×2048 PNG**，并保留 SVG 与布局测量数据；逐图文件与哈希见 [visuals/manifest.json](visuals/manifest.json)。
+页面组合共 8 种状态，浅色与纯黑各一套，已导出 **16 张 3200×2048 PNG**，并保留 SVG 与布局测量数据；逐图文件与哈希见 [visuals/manifest.json](visuals/manifest.json)。专家目录按用户最新决定仅保留四列设计。
 
 | 页面/状态 | 浅色 | 纯黑 |
 | --- | --- | --- |
-| 专家目录 · 三列 | [预览](app.html?view=experts&columns=3&theme=light) | [预览](app.html?view=experts&columns=3&theme=dark) |
 | 专家目录 · 四列 | [预览](app.html?view=experts&columns=4&theme=light) | [预览](app.html?view=experts&columns=4&theme=dark) |
 | 员工资料 | [预览](app.html?view=profile&employee=MGMT-CEO&theme=light) | [预览](app.html?view=profile&employee=MGMT-CEO&theme=dark) |
 | 对话工作台 | [预览](app.html?view=chat&employee=MGMT-CEO&theme=light) | [预览](app.html?view=chat&employee=MGMT-CEO&theme=dark) |
@@ -123,7 +122,7 @@ python3 -m http.server 8915 --bind 127.0.0.1
 | 账号菜单 | [预览](app.html?view=experts&overlay=account&theme=light) | [预览](app.html?view=experts&overlay=account&theme=dark) |
 | 关于 Sage | [预览](app.html?view=experts&overlay=about&theme=light) | [预览](app.html?view=experts&overlay=about&theme=dark) |
 
-`capture=1` 是固定 1600×1024 导出画布，隐藏评审工具栏；日常交互预览不使用此参数。三/四列选项受窗口可用宽度约束，窄窗会减少列数。页面稿与组件源码使用同一套共享样式。
+`capture=1` 是固定 1600×1024 导出画布，隐藏评审工具栏；日常交互预览不使用此参数。桌面专家目录统一四列，取消列数切换；小于 1280px 时为两列，小于 640px 时为单列，不提供三列方案。页面稿与组件源码使用同一套共享样式。
 
 ## 原生 DOM API
 

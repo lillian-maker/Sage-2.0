@@ -11,17 +11,6 @@
     "grid": "315.998px 316.007px 316.007px 316.007px"
   },
   {
-    "name": "experts-3-light",
-    "theme": "light",
-    "viewport": [
-      1600,
-      1024
-    ],
-    "images": true,
-    "cards": 8,
-    "grid": "426.667px 426.675px 426.675px"
-  },
-  {
     "name": "profile-light",
     "theme": "light",
     "viewport": [
@@ -108,17 +97,6 @@
     "images": true,
     "cards": 8,
     "grid": "315.998px 316.007px 316.007px 316.007px"
-  },
-  {
-    "name": "experts-3-dark",
-    "theme": "dark",
-    "viewport": [
-      1600,
-      1024
-    ],
-    "images": true,
-    "cards": 8,
-    "grid": "426.667px 426.675px 426.675px"
   },
   {
     "name": "profile-dark",
