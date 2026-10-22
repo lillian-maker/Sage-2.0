@@ -1,8 +1,15 @@
 {
-  "source": "https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-046.webp",
-  "commit": "2e676da87999c88fbc70baae9eb5dbf72c2b757e",
-  "assetType": "original-static-avatar",
   "id": "AGT-046",
-  "sha256": "d00083f02a02e6a7535467a23e82318363417e175b34a4d0e2becf7365f4561c"
+  "name": "清源",
+  "role": "数据工程与质量",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "e3d9a4e68fce9cc28a39051f2f257346db70ea7ba1e6125bd4e1accff736331e",
+  "sha256": "430c956a51ab5f3d4f5817fdcba64a1ea9cbf7234b38c9fbf15aff671a15b99a",
+  "width": 512,
+  "height": 512,
+  "bytes": 29032,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-046.webp"
 }
-

@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-023.webp; fictional digital employee AGT-023 自航. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:02.991Z"
+  "id": "AGT-023",
+  "name": "自航",
+  "role": "独立站经营与转化",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "ef878bca266948c191ada658f221bc2edea920031bcff8a0ed1514527f1a8427",
+  "sha256": "03265fd563619f52981c135a1d5e0525009f9ec9bafe64cb83ab71452dd94b2f",
+  "width": 512,
+  "height": 512,
+  "bytes": 22904,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-023.webp"
 }

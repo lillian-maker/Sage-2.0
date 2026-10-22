@@ -1,8 +1,15 @@
 {
-  "source": "https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-027.webp",
-  "commit": "2e676da87999c88fbc70baae9eb5dbf72c2b757e",
-  "assetType": "original-static-avatar",
   "id": "AGT-027",
-  "sha256": "7ba7962baf8dde52ffd6242f744ad6d762eac6353586aeb93ae1f85ae1137716"
+  "name": "守店",
+  "role": "店铺账号健康与规则",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "75dddb0aba461d9d2740a94429ee273a02b3ad93b3d1b00a7f93b8d60d0595a6",
+  "sha256": "37954860c647b35b4e04ece45a3a3743540e17908551c53201eca589f6526059",
+  "width": 512,
+  "height": 512,
+  "bytes": 28718,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-027.webp"
 }
-

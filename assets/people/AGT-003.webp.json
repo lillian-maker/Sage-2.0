@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-003.webp; fictional digital employee AGT-003 明镜. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:02.859Z"
+  "id": "AGT-003",
+  "name": "明镜",
+  "role": "经营分析与决策支持",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "def60e446f11b4c6fe94cde53b454dcdb672157d451c0b73bb7cdb9b9ab0c926",
+  "sha256": "7a79a16174a97c0f69a2f91b920075a0eb899743f879ff2e1e9397252aa36385",
+  "width": 512,
+  "height": 512,
+  "bytes": 43210,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-003.webp"
 }

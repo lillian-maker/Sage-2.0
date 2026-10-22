@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-032.webp; fictional digital employee AGT-032 点火. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:03.042Z"
+  "id": "AGT-032",
+  "name": "点火",
+  "role": "效果广告投放",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "59718b6feadecc4a7f9a7d0c8b87ee5b5966a0eb5a597e8616f5cb9d058c6327",
+  "sha256": "3dec02315f183c59383fd77d31e28d7e7e0f1dd4e0f9c399b27a9f37f626ae49",
+  "width": 512,
+  "height": 512,
+  "bytes": 27466,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-032.webp"
 }

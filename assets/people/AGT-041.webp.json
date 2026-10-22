@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-041.webp; fictional digital employee AGT-041 守金. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:03.095Z"
+  "id": "AGT-041",
+  "name": "守金",
+  "role": "经营财务与资金",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "8a53415d543491f3eb58c9f7daf9b28c71d4de12f92fd089c3398788642d39dc",
+  "sha256": "e8560810be38e98e807d7def34c72c503f3e772c9c953d348a66e84645344e1a",
+  "width": 512,
+  "height": 512,
+  "bytes": 22382,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-041.webp"
 }
