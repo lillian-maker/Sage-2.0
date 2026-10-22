@@ -1,0 +1,70 @@
+{
+  "aboutOpen": {
+    "accountClosed": true,
+    "center": 711.1111450195312,
+    "open": true,
+    "viewport": 711
+  },
+  "aboutReturn": {
+    "closed": true,
+    "focusAccount": true,
+    "focusVisible": true
+  },
+  "system": {
+    "focusAccount": true,
+    "link": "app.html?view=profile&columns=4&theme=system&auth=signed-in",
+    "preference": "system"
+  },
+  "components": {
+    "allImages": true,
+    "bodyBg": "rgb(0, 0, 0)",
+    "buttonSize": "14px",
+    "count": 38,
+    "pageWidth": 1422,
+    "scrollWidth": 1422,
+    "theme": "dark"
+  },
+  "copy": {
+    "status": "HTML 已复制",
+    "exact": true
+  },
+  "menuKeyboard": {
+    "focused": "按岗位排序",
+    "open": true
+  },
+  "controls": {
+    "checkbox": true,
+    "select": "按员工姓名",
+    "switch": true,
+    "tab": "管理身份 3"
+  },
+  "dialog": {
+    "focus": "关闭交办说明",
+    "open": true,
+    "closed": true
+  },
+  "avatars": {
+    "anonymous": "true",
+    "count": 53,
+    "loaded": true,
+    "metadataHidden": "hidden",
+    "size": 31.99652862548828
+  },
+  "search": {
+    "value": "天时",
+    "visible": [
+      "MGMT-CEO"
+    ]
+  },
+  "empty": true,
+  "create": "暂未开放\n\n可先与内置专家对话。",
+  "narrowApp": {
+    "columns": "384.67px",
+    "scroll": 416,
+    "width": 416
+  },
+  "narrowAvatars": {
+    "scroll": 1422,
+    "width": 1422
+  }
+}

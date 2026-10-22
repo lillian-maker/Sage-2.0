@@ -1,0 +1,31 @@
+// Portable static handoff checks. Browser evidence lives in checks/browser-interactions.json.
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const base=__dirname,fail=m=>{throw new Error(m)},sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const read=f=>fs.readFileSync(path.join(base,f)),json=f=>JSON.parse(read(f));
+const catalog=JSON.parse(read('index.html').toString().split('const catalog=')[1].split(';\nconst categories=')[0]);
+const inventory=json('components.json');
+if(catalog.length!==38||inventory.count!==38||new Set(catalog.map(x=>x.id)).size!==38)fail('Component count/identity mismatch');
+const ids=new Set();
+for(const c of catalog){
+ if(!read('snippets/'+c.id+'.html').toString().endsWith(c.sample+'\n'))fail('Stale snippet: '+c.id);
+ for(const m of c.sample.matchAll(/\bid="([^"]+)"/g)){if(ids.has(m[1]))fail('Duplicate sample ID: '+m[1]);ids.add(m[1])}
+ if(/class="[^"]*\bkit-/.test(c.sample))fail('Nonportable sample class: '+c.id);
+ const expected=inventory.components.find(x=>x.id===c.id);if(!expected||expected.selector!==c.selector||JSON.stringify(expected.variants)!==JSON.stringify(c.variants))fail('Stale inventory '+c.id);
+}
+const symbols=[...read('icons.svg').toString().matchAll(/<symbol id="([^"]+)"/g)].map(m=>m[1]);if(symbols.length!==32||new Set(symbols).size!==32)fail('Expected 32 unique icons');
+for(const c of catalog)for(const m of c.sample.matchAll(/icons.svg#([\w-]+)/g))if(!symbols.includes(m[1]))fail('Missing sample icon '+m[1]);
+const avatarManifest=json('assets/avatars/manifest.json');if(avatarManifest.avatars.length!==53||new Set(avatarManifest.avatars.map(x=>x.id)).size!==53)fail('Expected 53 unique avatars');
+for(const a of avatarManifest.avatars)if(sha(read(a.path))!==a.sha256)fail('Avatar bytes changed: '+a.id);
+const employeeText=read('employees.js').toString();const people=JSON.parse(employeeText.split('window.SAGE_EMPLOYEES = ')[1].trim().replace(/;$/,''));
+if(people.length!==53||people.filter(x=>x.mission).length!==8||people.filter(x=>x.mission===null).length!==45)fail('Employee/copy scope mismatch');
+for(const p of people){const a=avatarManifest.avatars.find(x=>x.id===p.id);if(!a||a.name!==p.name||a.role!==p.role||a.sha256!==p.sha256)fail('Employee identity mismatch '+p.id)}
+const files=[];function walk(dir){for(const ent of fs.readdirSync(dir,{withFileTypes:true})){const f=path.join(dir,ent.name);if(ent.isDirectory())walk(f);else files.push(path.relative(base,f))}}walk(base);
+for(const f of files.filter(f=>/\.(?:html|js|cjs|css|json|md)$/.test(f))){const s=read(f).toString();if(/\/Users\/|file:\/\/\/|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY/.test(s))fail('Private local data marker in '+f);if(/(?:^|\/)\.env(?:\.|$)/.test(f))fail('Environment file in handoff');if(f.endsWith('.js')||f.endsWith('.cjs'))new Function(s);if(f.endsWith('.html'))for(const m of s.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))if(m[1].trim())new Function(m[1])}
+const broken=[];for(const f of ['README.md','DESIGN_SPEC.md','index.html','app.html','avatars.html','visuals/index.html']){const s=read(f).toString(),refs=f.endsWith('.md')?[...s.matchAll(/\]\(([^)]+)\)/g)].map(m=>m[1]):[...s.matchAll(/(?:href|src)="([^"<>]+)"/g)].map(m=>m[1]);for(let href of refs){href=href.split(/[?#]/)[0];if(!href||href.startsWith('http')||href.includes("'")||href.includes('+'))continue;const target=path.resolve(path.dirname(path.join(base,f)),decodeURIComponent(href));if(!fs.existsSync(target))broken.push({file:f,target:href})}}if(broken.length)fail('Broken local links '+JSON.stringify(broken));
+const tokens=json('tokens.json');const luminance=hex=>{const rgb=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722};
+const contrast=(a,b)=>{const [x,y]=[luminance(a),luminance(b)].sort((a,b)=>a-b);return(y+.05)/(x+.05)};const contrastChecks=[];
+for(const [theme,c]of Object.entries(tokens.themes)){for(const [fg,bg]of [['text','page'],['textSecondary','surface'],['textMuted','surface'],['menuText','popover'],['actionText','action'],['actionText','actionHover'],['actionText','actionPressed'],['actionText','brandAction'],['actionText','brandActionHover'],['tagText','tag'],['success','successBg'],['danger','dangerBg'],['warning','warningBg'],['info','infoBg']]){const ratio=contrast(c[fg],c[bg]);if(ratio<4.5)fail('Low text contrast '+theme+' '+fg+'/'+bg);contrastChecks.push({theme,fg,bg,ratio:+ratio.toFixed(2)})}if(c.page!==(theme==='dark'?'#000000':'#FFFFFF')||c.actionText!=='#14243A')fail('Theme baseline changed');}
+const crcTable=Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++)n=n&1?0xEDB88320^(n>>>1):n>>>1;return n>>>0});function crc(bytes){let n=0xFFFFFFFF;for(const b of bytes)n=crcTable[(n^b)&255]^(n>>>8);return(n^0xFFFFFFFF)>>>0}
+const visuals=json('visuals/manifest.json');if(visuals.entries.length!==18)fail('Expected 18 page visuals');for(const v of visuals.entries){const b=read('visuals/'+v.file);if(sha(b)!==v.hash||b.readUInt32BE(16)!==3200||b.readUInt32BE(20)!==2048)fail('Visual mismatch '+v.name);for(let at=8;at<b.length;){const size=b.readUInt32BE(at);if(crc(b.subarray(at+4,at+8+size))!==b.readUInt32BE(at+8+size))fail('PNG CRC '+v.name);at+=size+12}const svg=read('visuals/'+v.svg.file).toString();const svgIds=[...svg.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);if(new Set(svgIds).size!==svgIds.length)fail('Duplicate SVG IDs '+v.name);}
+const result={date:'2026-10-22',scope:'Static UI handoff and local browser demonstrations; no actual App or website deployment',passed:true,components:38,snippets:38,icons:32,avatars:53,reviewedMissions:8,unreviewedMissions:45,pageVisuals:18,visualDimensions:[3200,2048],textContrastPairs:contrastChecks.length,minimumTextContrast:Math.min(...contrastChecks.map(x=>x.ratio)),localLinks:'passed',syntax:'passed',pngCrc:'passed',assetBytes:'passed',browserEvidence:'checks/browser-interactions.json',notVerified:['Actual App framework integration','Native SwiftUI/Flutter components','Production auth/task/chat services','53-person anonymous recognition with users']};
+fs.writeFileSync(path.join(base,'checks/validation.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));

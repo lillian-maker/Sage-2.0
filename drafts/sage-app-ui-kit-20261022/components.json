@@ -1,0 +1,472 @@
+{
+  "name": "Sage UI Kit",
+  "edition": "0.1",
+  "date": "2026-10-22",
+  "scope": "当前 Sage App 设计规范覆盖的 38 类组件；不宣称覆盖未来所有模块；业务接口由实际 App 接入。",
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "iconCount": 32,
+  "count": 38,
+  "components": [
+    {
+      "id": "button",
+      "name": "按钮",
+      "category": "基础与操作",
+      "selector": ".sg-button",
+      "variants": [
+        "default",
+        "hover",
+        "pressed",
+        "focus",
+        "loading",
+        "disabled",
+        "primary",
+        "secondary",
+        "text",
+        "danger"
+      ],
+      "description": "对话采用满宽轻蓝胶囊；深浅主题的文字始终使用 #14243A。"
+    },
+    {
+      "id": "icon-button",
+      "name": "图标按钮",
+      "category": "基础与操作",
+      "selector": ".sg-icon-button",
+      "variants": [
+        "default",
+        "hover",
+        "disabled"
+      ],
+      "description": "图形 20px，命中区至少 40×40px；纯图标操作必须有名称。"
+    },
+    {
+      "id": "icons",
+      "name": "线性图标",
+      "category": "基础与操作",
+      "selector": ".sg-icon",
+      "variants": [
+        "20px",
+        "17px-chat",
+        "24px-viewBox"
+      ],
+      "description": "完整展示 icons.svg 的 32 个 symbol。统一 24×24 viewBox、1.6px 描边与圆角端点。",
+      "assetCount": 32
+    },
+    {
+      "id": "avatar",
+      "name": "员工头像",
+      "category": "基础与操作",
+      "selector": ".sg-avatar",
+      "variants": [
+        "32",
+        "48",
+        "64",
+        "88",
+        "128"
+      ],
+      "description": "复用当前已发布 512px WebP，未重新修图。缩放不能替代 32 / 48 / 64px 匿名辨识评审。"
+    },
+    {
+      "id": "tags",
+      "name": "工作风格标签",
+      "category": "基础与操作",
+      "selector": ".sg-tag",
+      "variants": [
+        "default",
+        "wrapping"
+      ],
+      "description": "标签描述工作风格，不能充当能力评分或认证。"
+    },
+    {
+      "id": "badge",
+      "name": "状态标记",
+      "category": "基础与操作",
+      "selector": ".sg-badge",
+      "variants": [
+        "neutral",
+        "info",
+        "warning",
+        "danger"
+      ],
+      "description": "状态同时使用文字；不为员工添加虚构在线或已认证标记。"
+    },
+    {
+      "id": "input",
+      "name": "单行输入",
+      "category": "输入",
+      "selector": ".sg-input",
+      "variants": [
+        "default",
+        "focus",
+        "error",
+        "disabled"
+      ],
+      "description": "默认高 42px。标签、帮助和错误均有明确关联；错误保留输入内容。"
+    },
+    {
+      "id": "textarea",
+      "name": "多行输入",
+      "category": "输入",
+      "selector": ".sg-textarea",
+      "variants": [
+        "default",
+        "disabled"
+      ],
+      "description": "适用于任务目标、约束和补充说明；不限制自然表达。"
+    },
+    {
+      "id": "select",
+      "name": "下拉选择",
+      "category": "输入",
+      "selector": ".sg-select",
+      "variants": [
+        "default",
+        "disabled"
+      ],
+      "description": "常规少量选择使用原生 select，保留键盘与系统可访问性。"
+    },
+    {
+      "id": "checkbox",
+      "name": "复选框",
+      "category": "输入",
+      "selector": ".sg-checkbox",
+      "variants": [
+        "unchecked",
+        "checked",
+        "disabled"
+      ],
+      "description": "用于可多选的项目；点击整行标签均应生效。"
+    },
+    {
+      "id": "radio",
+      "name": "单选框",
+      "category": "输入",
+      "selector": ".sg-radio",
+      "variants": [
+        "unchecked",
+        "checked",
+        "disabled"
+      ],
+      "description": "互斥选项使用同一 name；不把单选制作成多个独立开关。"
+    },
+    {
+      "id": "switch",
+      "name": "开关",
+      "category": "输入",
+      "selector": ".sg-switch",
+      "variants": [
+        "off",
+        "on",
+        "disabled"
+      ],
+      "description": "用于立即生效的二元偏好；有清楚标签和键盘焦点。"
+    },
+    {
+      "id": "search",
+      "name": "搜索框",
+      "category": "输入",
+      "selector": ".sg-input-wrap",
+      "variants": [
+        "default",
+        "clearable",
+        "empty-result"
+      ],
+      "description": "文案固定为“搜索名称、岗位或使命”；真实搜索接入由业务层负责。"
+    },
+    {
+      "id": "tabs",
+      "name": "筛选与标签页",
+      "category": "导航",
+      "selector": ".sg-tabs",
+      "variants": [
+        "default",
+        "selected",
+        "keyboard"
+      ],
+      "description": "选中状态同时用填色与字重区分。左右方向键切换可用选项。"
+    },
+    {
+      "id": "navigation",
+      "name": "侧栏导航",
+      "category": "导航",
+      "selector": ".sg-nav-item",
+      "variants": [
+        "default",
+        "selected",
+        "disabled"
+      ],
+      "description": "44px 行高、20px 图标。专家使用人物＋小星芒。"
+    },
+    {
+      "id": "breadcrumbs",
+      "name": "面包屑",
+      "category": "导航",
+      "selector": ".sg-breadcrumbs",
+      "variants": [
+        "default",
+        "current"
+      ],
+      "description": "用于资料等二级页面，最后一级标记当前页面。"
+    },
+    {
+      "id": "pagination",
+      "name": "分页",
+      "category": "导航",
+      "selector": ".sg-pagination",
+      "variants": [
+        "default",
+        "current",
+        "disabled"
+      ],
+      "description": "按钮命中区至少 40px；与数据翻页分开，目录示例只展示状态。"
+    },
+    {
+      "id": "menu",
+      "name": "下拉菜单",
+      "category": "导航",
+      "selector": ".sg-menu",
+      "variants": [
+        "closed",
+        "open",
+        "disabled",
+        "keyboard"
+      ],
+      "description": "通过 data-menu-toggle 关联浮层；Esc 或外部点击关闭。"
+    },
+    {
+      "id": "card",
+      "name": "基础卡片",
+      "category": "内容",
+      "selector": ".sg-card",
+      "variants": [
+        "default",
+        "sectioned"
+      ],
+      "description": "以 1px 边框分层；避免给每个卡片叠加重阴影。"
+    },
+    {
+      "id": "employee-card",
+      "name": "数字员工卡片",
+      "category": "内容",
+      "selector": ".sg-employee-card",
+      "variants": [
+        "default",
+        "hover",
+        "long-content"
+      ],
+      "description": "职位突出、姓名次之，完整使命常规字重，唯一主动作是“对话”。"
+    },
+    {
+      "id": "table",
+      "name": "数据表格",
+      "category": "内容",
+      "selector": ".sg-table",
+      "variants": [
+        "default",
+        "overflow"
+      ],
+      "description": "表头与正文清晰分层；窄窗口横向滚动，不压缩关键文字。"
+    },
+    {
+      "id": "accordion",
+      "name": "折叠面板",
+      "category": "内容",
+      "selector": ".sg-accordion",
+      "variants": [
+        "closed",
+        "open"
+      ],
+      "description": "使用原生 details / summary，标题可聚焦，内容保留完整。"
+    },
+    {
+      "id": "attachment",
+      "name": "附件条目",
+      "category": "内容",
+      "selector": ".sg-attachment",
+      "variants": [
+        "default",
+        "removable"
+      ],
+      "description": "文件图标、名称、大小与移除操作分层；不伪造真实上传结果。"
+    },
+    {
+      "id": "alert",
+      "name": "就地提示",
+      "category": "反馈",
+      "selector": ".sg-alert",
+      "variants": [
+        "info",
+        "success",
+        "warning",
+        "danger"
+      ],
+      "description": "需要保留的信息使用就地提示。颜色、图标和文字共同表达状态。"
+    },
+    {
+      "id": "toast",
+      "name": "轻提示",
+      "category": "反馈",
+      "selector": ".sg-toast",
+      "variants": [
+        "info",
+        "success",
+        "danger"
+      ],
+      "description": "只承载短暂非关键反馈；重要错误使用就地提示。"
+    },
+    {
+      "id": "progress",
+      "name": "进度条",
+      "category": "反馈",
+      "selector": ".sg-progress",
+      "variants": [
+        "determinate",
+        "indeterminate"
+      ],
+      "description": "进度必须来自真实状态。这里的 60% 仅为组件外观示例。"
+    },
+    {
+      "id": "skeleton",
+      "name": "骨架占位",
+      "category": "反馈",
+      "selector": ".sg-skeleton",
+      "variants": [
+        "avatar",
+        "line",
+        "block"
+      ],
+      "description": "等待真实内容时保留结构，不显示伪造员工姓名和状态。"
+    },
+    {
+      "id": "empty",
+      "name": "空结果",
+      "category": "反馈",
+      "selector": ".sg-empty",
+      "variants": [
+        "search-empty",
+        "first-use"
+      ],
+      "description": "解释当前空白，并给出一个明确的下一步。"
+    },
+    {
+      "id": "error-state",
+      "name": "错误状态",
+      "category": "反馈",
+      "selector": ".sg-error-state",
+      "variants": [
+        "recoverable",
+        "retry"
+      ],
+      "description": "保留用户内容，说明发生了什么，并提供恢复入口。"
+    },
+    {
+      "id": "tooltip",
+      "name": "悬停说明",
+      "category": "浮层",
+      "selector": ".sg-tooltip",
+      "variants": [
+        "hover",
+        "focus"
+      ],
+      "description": "辅助说明可通过悬停和键盘焦点查看，不能承载唯一的关键信息。"
+    },
+    {
+      "id": "popover",
+      "name": "锚定说明",
+      "category": "浮层",
+      "selector": ".sg-popover",
+      "variants": [
+        "closed",
+        "open",
+        "keyboard"
+      ],
+      "description": "新建专家外观为灰态，点击仅解释能力边界，不执行创建。"
+    },
+    {
+      "id": "dialog",
+      "name": "通用弹窗",
+      "category": "浮层",
+      "selector": ".sg-dialog",
+      "variants": [
+        "closed",
+        "open",
+        "escape",
+        "backdrop"
+      ],
+      "description": "原生 dialog 提供模态焦点约束。关闭后焦点返回入口。"
+    },
+    {
+      "id": "about",
+      "name": "关于 Sage",
+      "category": "浮层",
+      "selector": ".sg-about",
+      "variants": [
+        "light",
+        "dark",
+        "version-unknown"
+      ],
+      "description": "使用正式图形。版本、构建与日期未知时用破折号；检查更新禁用。"
+    },
+    {
+      "id": "message",
+      "name": "对话消息",
+      "category": "协作",
+      "selector": ".sg-message",
+      "variants": [
+        "user",
+        "assistant",
+        "working"
+      ],
+      "description": "用户内容与员工回复有层次；长回复用中性底，明确标为设计示例。"
+    },
+    {
+      "id": "composer",
+      "name": "对话输入区",
+      "category": "协作",
+      "selector": ".sg-composer",
+      "variants": [
+        "empty",
+        "typing",
+        "sending"
+      ],
+      "description": "输入、附件和发送分层；业务层负责真实提交与状态。"
+    },
+    {
+      "id": "login",
+      "name": "登录与注册",
+      "category": "协作",
+      "selector": ".sg-login",
+      "variants": [
+        "login",
+        "register",
+        "validation"
+      ],
+      "description": "使用当前品牌色与输入样式。示例提交仅演示状态，不发送账号信息。"
+    },
+    {
+      "id": "account",
+      "name": "账号与菜单",
+      "category": "协作",
+      "selector": ".sg-account",
+      "variants": [
+        "signed-out",
+        "signed-in",
+        "menu-open"
+      ],
+      "description": "账号顶部无右箭头，菜单没有设置；菜单主文字 15px / 500。"
+    },
+    {
+      "id": "trial",
+      "name": "试用提示条",
+      "category": "协作",
+      "selector": ".sg-trial",
+      "variants": [
+        "light",
+        "dark"
+      ],
+      "description": "保留真实边界文案，不能把本地身份与授权展示为生产安全保证。"
+    }
+  ]
+}

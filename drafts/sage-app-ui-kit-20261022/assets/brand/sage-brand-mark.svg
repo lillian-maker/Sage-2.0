@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 6 130 168" width="72" height="93" fill="none"><defs>
+    <linearGradient id="ribbon-body" x1="19" y1="55" x2="133" y2="193" gradientUnits="userSpaceOnUse"><stop stop-color="#AEC8E2"/><stop offset="1" stop-color="#7396BC"/></linearGradient>
+    <linearGradient id="ribbon-upper" x1="61" y1="89" x2="117" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#396397"/><stop offset="1" stop-color="#7396BC"/></linearGradient>
+    <linearGradient id="ribbon-fold" x1="68" y1="94" x2="96" y2="146" gradientUnits="userSpaceOnUse"><stop stop-color="#7396BC"/><stop offset="1" stop-color="#396397"/></linearGradient>
+    <linearGradient id="ribbon-lower" x1="17" y1="207" x2="99" y2="151" gradientUnits="userSpaceOnUse"><stop stop-color="#7396BC"/><stop offset="1" stop-color="#396397"/></linearGradient>
+  </defs><g transform="translate(2 10) scale(.771 .72)">
+    <path fill="url(#ribbon-body)" d="M101 27C72 32 38 49 18 72C3 89 3 108 20 121C35 133 58 141 79 147C54 157 28 164 12 176C-7 189-3 209 16 217C39 227 85 213 117 194C142 179 151 160 139 143C128 126 104 112 63 95C85 85 111 76 125 61C143 42 132 22 101 27Z"/>
+    <path fill="url(#ribbon-upper)" d="M101 27C87 29 76 33 65 39C43 52 34 69 43 82C47 88 54 92 63 95C85 85 111 76 125 61C143 42 132 22 101 27Z"/>
+    <path fill="url(#ribbon-fold)" d="M63 95C84 103 107 112 117 120C124 133 106 145 79 147C85 136 57 109 63 95Z"/>
+    <path fill="url(#ribbon-lower)" d="M79 147C105 153 120 165 112 183C104 201 76 212 45 219C33 222 23 220 16 217C-3 209-7 189 12 176C28 164 54 157 79 147Z"/>
+    <path fill="#7396BC" d="M144 0C148 15 150 18 165 22C150 26 148 29 144 44C140 29 138 26 123 22C138 18 140 15 144 0Z"/>
+  </g></svg>

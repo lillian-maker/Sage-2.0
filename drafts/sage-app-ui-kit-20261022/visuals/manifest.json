@@ -1,0 +1,701 @@
+{
+  "generatedAt": "2026-10-22T11:37:17.854Z",
+  "method": "browser-measured native SVG, not screenshot",
+  "density": 144,
+  "hashAlgorithm": "sha256",
+  "rasterMethod": "Source WebP decoded losslessly to in-memory PNG for SVG rendering; decoded RGBA pixel hashes match; source WebP files unchanged; no face or image edits",
+  "rasterAssets": [
+    {
+      "source": "assets/avatars/MGMT-CEO.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "40c04079c42ca7bfe95d5f62ad5885a5de83989d6bac6802bcc3060d4a44d784",
+      "embeddedHash": "4663afb316adb5d9db24ba95ccc492fe4dfc20580087bdcaa5de89391ab1269c",
+      "decodedPixelHash": "2268b3dc1ec9c1c9fce426cba4a57a033c091be00082238a8e21d29f4b8992c2",
+      "cachedPixelHash": "2268b3dc1ec9c1c9fce426cba4a57a033c091be00082238a8e21d29f4b8992c2",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/MGMT-CGO.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "e3cdd3334870587a6afa3d5cc2445a45316c8a9cda78b6d9b7b3ee189fe9b4de",
+      "embeddedHash": "5128861c19c59dc5ee57a31e3bfac94ad47b183b35a7583f503ade7d2f66e6d2",
+      "decodedPixelHash": "687b1bdfd088b808a16ad1685fdb4018858276edd4e18865e58fc786d3789145",
+      "cachedPixelHash": "687b1bdfd088b808a16ad1685fdb4018858276edd4e18865e58fc786d3789145",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/MGMT-CGOV.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "93b1b893cea6323bbe35d15874578d913a6660e03dd913794b9691f4f3ab2e01",
+      "embeddedHash": "e25c5100f5c2d8e09f0b21e49df4a5c047a24e1b9d1fd14f149c91352f389296",
+      "decodedPixelHash": "d2a85206c74a0bfa07413cc8a0de2621646b2f12d26577965ad5d45484196f3c",
+      "cachedPixelHash": "d2a85206c74a0bfa07413cc8a0de2621646b2f12d26577965ad5d45484196f3c",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/AGT-001.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "43673aa08a6fbb6204b21eeefddad67e1e957358773e342ac8127bf9a96efe34",
+      "embeddedHash": "8148b46b07775d9b435cf96cfec7686bea4b2bf777915ca9c96ce488ced5b9cf",
+      "decodedPixelHash": "32ed94c4c868607816e2a05023e414ca99b5bd7be71329a9f91dc68ef312ef84",
+      "cachedPixelHash": "32ed94c4c868607816e2a05023e414ca99b5bd7be71329a9f91dc68ef312ef84",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/AGT-004.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "23877bdcafbb63c7a551756cb204af745f75207a7d27e52c767fd10918bdcd15",
+      "embeddedHash": "c47314758cafb67de6ca3f29864a951a0a66b6452fc758f645708c14cfe71abd",
+      "decodedPixelHash": "ccca545cb1667d1cafa6df6de8f9a8b6856d17cc3678c91823db619d8f0c45ad",
+      "cachedPixelHash": "ccca545cb1667d1cafa6df6de8f9a8b6856d17cc3678c91823db619d8f0c45ad",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/AGT-003.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "7a79a16174a97c0f69a2f91b920075a0eb899743f879ff2e1e9397252aa36385",
+      "embeddedHash": "0dcdf6f9e283f41f0cc3d219c5ae1625d4954b8749152e8685f71f90e5d20ff8",
+      "decodedPixelHash": "de424a266a92ddf61c73217d020a6846e15d77e1e0ab2c54c01c8819979dec00",
+      "cachedPixelHash": "de424a266a92ddf61c73217d020a6846e15d77e1e0ab2c54c01c8819979dec00",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/AGT-002.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "5558cc9b84e0e7af29ea9d5df4a9018da6ed1ef85e13ef55d7d18937aca5bf26",
+      "embeddedHash": "f7d3b9dd288840e2df431ddd7e245db39066eedde78d4d0789d2e2453116b636",
+      "decodedPixelHash": "4814332b67ea53b9a8d0a690a48d21b0b2c4eb1c9d30c5a8d03cb2117b6ad1e1",
+      "cachedPixelHash": "4814332b67ea53b9a8d0a690a48d21b0b2c4eb1c9d30c5a8d03cb2117b6ad1e1",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    },
+    {
+      "source": "assets/avatars/AGT-005.webp",
+      "sourceFormat": "webp",
+      "embeddedFormat": "png",
+      "sourceHash": "408026ce2f55672c63d411db259fb163f8eaa60b66102fec58a1e720d889a637",
+      "embeddedHash": "91fa7412e10414bdecd06917a858fe0fc7c25ba8b8d6ea36487abe2874b30211",
+      "decodedPixelHash": "a05847caf65839584aaf7e247987c7c4a0a0ebfc70326bc4c638124214332088",
+      "cachedPixelHash": "a05847caf65839584aaf7e247987c7c4a0a0ebfc70326bc4c638124214332088",
+      "pixelFormat": "RGBA8",
+      "width": 512,
+      "height": 512,
+      "channels": 4,
+      "losslessPixelMatch": true
+    }
+  ],
+  "entries": [
+    {
+      "name": "about-dark",
+      "source": "checks/layout-about-dark.json",
+      "file": "about-dark.png",
+      "size": 645040,
+      "hash": "8eb306b16e5bdc9c28ff01f133d32875fcd8ebf8994593fe078b5b434be0bad3",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "about-dark.svg",
+        "size": 2971446,
+        "hash": "528d1a8a7d6400a7f9e6db8e0190a63dbd0ef31f4f6d15c0724cc993ec3a48bc"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "about-light",
+      "source": "checks/layout-about-light.json",
+      "file": "about-light.png",
+      "size": 665342,
+      "hash": "e9a49b2424fbbcf4c1ef68cc535d6493049e873d027f6292c6f0a82595a9748b",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "about-light.svg",
+        "size": 2971339,
+        "hash": "f24fe087651a490869a2104b6ff683c881deb19c3e6793f17019eccb1efe83b8"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "account-menu-dark",
+      "source": "checks/layout-account-menu-dark.json",
+      "file": "account-menu-dark.png",
+      "size": 990703,
+      "hash": "df401010aef39e55d41a1ff18fb9915a7f3a22c2f76949c81c0d000d47cb5c43",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "account-menu-dark.svg",
+        "size": 2973364,
+        "hash": "6d69252a981befeb295e8cfd86e09d7c1e14b7ec09fccc949ec24deb00b5fbd3"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "account-menu-light",
+      "source": "checks/layout-account-menu-light.json",
+      "file": "account-menu-light.png",
+      "size": 932659,
+      "hash": "32e183478b7a7ff3a12bf21c2af15b85d2f3449ac8535cb98e35d2b8b22786dd",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "account-menu-light.svg",
+        "size": 2973226,
+        "hash": "1eb4551158d24e42e4421fa4fa8c0fc5046b7c59db8c7acf9702284ece76ad4b"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "chat-dark",
+      "source": "checks/layout-chat-dark.json",
+      "file": "chat-dark.png",
+      "size": 375009,
+      "hash": "63a876063d346606e0f4221706d7a810a44e2a1dc358db9e0210d4e6c37aec82",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "chat-dark.svg",
+        "size": 754647,
+        "hash": "e7c3123ae9fe44cb59c174b29c5a4b9c88b0bce1cad5d7623bf6c59d275ef609"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "chat-light",
+      "source": "checks/layout-chat-light.json",
+      "file": "chat-light.png",
+      "size": 291458,
+      "hash": "f9abadc315dbb76191c21858165bee02865b608af1e299ca09612ce3b1a47190",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "chat-light.svg",
+        "size": 754573,
+        "hash": "a8356f500a2dc8f874b5bd1ab5a70c60a85f158460de5f2a53267841d313bc64"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "experts-3-dark",
+      "source": "checks/layout-experts-3-dark.json",
+      "file": "experts-3-dark.png",
+      "size": 919577,
+      "hash": "c26786d85dac2548e3a692b5d8dda6d231fe1da6afdea03101893c61d06dc1cc",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "experts-3-dark.svg",
+        "size": 2954495,
+        "hash": "052b8f95fccf3a613afcd4fe6bb73cbc7f82a4b98b7081a4f81566e5a1b7fc0a"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "experts-3-light",
+      "source": "checks/layout-experts-3-light.json",
+      "file": "experts-3-light.png",
+      "size": 847797,
+      "hash": "039af615e73766b085654d9105b8aca1239e388484de2318cdede9fdbb3272be",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "experts-3-light.svg",
+        "size": 2954419,
+        "hash": "e8936ef905b135b1b1198b402eac853b04e33d424ff369f42d09add760d24f31"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "experts-4-dark",
+      "source": "checks/layout-experts-4-dark.json",
+      "file": "experts-4-dark.png",
+      "size": 992750,
+      "hash": "149acac462299e538c639f3bd237174d0f90b7ef9ad06f8572f9dee5659451b6",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "experts-4-dark.svg",
+        "size": 2964962,
+        "hash": "cb6b3ac2940b4f5690c00c271e55d264488d321c2c81fc00fc95c5aa3ec0752e"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "experts-4-light",
+      "source": "checks/layout-experts-4-light.json",
+      "file": "experts-4-light.png",
+      "size": 930581,
+      "hash": "14299f79884bcf58a146fbbd6f9db12f945e60f695f70856509833640ed6e581",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "experts-4-light.svg",
+        "size": 2964864,
+        "hash": "b1ac8bc022f06ade8438660161d13a5368c44527682bde24d38131a56881b648"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "guest-experts-dark",
+      "source": "checks/layout-guest-experts-dark.json",
+      "file": "guest-experts-dark.png",
+      "size": 1003376,
+      "hash": "4705f72e7599eeb00f0e594827591081dd3043c155bd01cb23778e907439d756",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "guest-experts-dark.svg",
+        "size": 2966679,
+        "hash": "1dbb7faa48eeaa8a95c64b14363dcc47a00747b875234eadc26dcd968df79b9c"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "guest-experts-light",
+      "source": "checks/layout-guest-experts-light.json",
+      "file": "guest-experts-light.png",
+      "size": 941627,
+      "hash": "aba0cb298bfbeb1af8f0c145218480fee905426cb5c53374551ec8496f1ba8c4",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "guest-experts-light.svg",
+        "size": 2966559,
+        "hash": "8557b3a9575d50a8a9e962d16d3af11c49510e9b0c1bed38dff71bf8eae64232"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "profile-dark",
+      "source": "checks/layout-profile-dark.json",
+      "file": "profile-dark.png",
+      "size": 498152,
+      "hash": "88cc89d95f777764ce58a83910022be310fd0b433a8ed923ec5be78b65542ba6",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "profile-dark.svg",
+        "size": 396099,
+        "hash": "835a76bf684fb28bb9464b86f13b2827ed4f0e900a5422856e319459d97ce643"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "profile-light",
+      "source": "checks/layout-profile-light.json",
+      "file": "profile-light.png",
+      "size": 427428,
+      "hash": "6982054f7e2d524f8ea89f10c46a27f4147536fd909b2864a36675e71e08322f",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "profile-light.svg",
+        "size": 396017,
+        "hash": "fc68ad802eec26aabdbb505555178aa681dfacbbee99dd4f776da9bb92494530"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "signin-dark",
+      "source": "checks/layout-signin-dark.json",
+      "file": "signin-dark.png",
+      "size": 290366,
+      "hash": "9cf05b95f7444003b623d85e4e53c77e94c0149dccc69310340f38a27159ebd4",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "signin-dark.svg",
+        "size": 28372,
+        "hash": "2e474b7583e250dc1dcf131036aa3d51a0bac7ec81df90228160e0dcdcbf11bc"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "signin-light",
+      "source": "checks/layout-signin-light.json",
+      "file": "signin-light.png",
+      "size": 205568,
+      "hash": "806f15b4e7e95ecd2d278bae6e71849ba575ef1d8e9f1120e1538fb3355f21ae",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "signin-light.svg",
+        "size": 28289,
+        "hash": "eb476111672e540cf7afbd6d2341c1c133e6451aaf5fd9771671669320b3fd4f"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "task-dark",
+      "source": "checks/layout-task-dark.json",
+      "file": "task-dark.png",
+      "size": 379310,
+      "hash": "cc4a1f4bfe1cd394d34f52a4003092026e0e6c931870870b811a60622c35e0bd",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "task-dark.svg",
+        "size": 1088348,
+        "hash": "2b0f0c640b070bb434e95d303dfd308fec7d0475ee1ce8030714ba64a083884c"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    },
+    {
+      "name": "task-light",
+      "source": "checks/layout-task-light.json",
+      "file": "task-light.png",
+      "size": 293275,
+      "hash": "c833a207e8430ea5e9f5601c35ac9b116f36c85d133fec5d2afcdb04f48845ae",
+      "metadata": {
+        "format": "png",
+        "width": 3200,
+        "height": 2048,
+        "channels": 4,
+        "density": 144
+      },
+      "svg": {
+        "file": "task-light.svg",
+        "size": 1088269,
+        "hash": "0dc728a319dd2cf21542c7e7d60d1a27988d0a04a7e5a1f1615303c042f1005f"
+      },
+      "method": "browser-measured native SVG, not screenshot"
+    }
+  ],
+  "sourceAvatars": {
+    "count": 53,
+    "allBytesUnchanged": true,
+    "files": [
+      {
+        "file": "assets/avatars/AGT-001.webp",
+        "hash": "43673aa08a6fbb6204b21eeefddad67e1e957358773e342ac8127bf9a96efe34"
+      },
+      {
+        "file": "assets/avatars/AGT-002.webp",
+        "hash": "5558cc9b84e0e7af29ea9d5df4a9018da6ed1ef85e13ef55d7d18937aca5bf26"
+      },
+      {
+        "file": "assets/avatars/AGT-003.webp",
+        "hash": "7a79a16174a97c0f69a2f91b920075a0eb899743f879ff2e1e9397252aa36385"
+      },
+      {
+        "file": "assets/avatars/AGT-004.webp",
+        "hash": "23877bdcafbb63c7a551756cb204af745f75207a7d27e52c767fd10918bdcd15"
+      },
+      {
+        "file": "assets/avatars/AGT-005.webp",
+        "hash": "408026ce2f55672c63d411db259fb163f8eaa60b66102fec58a1e720d889a637"
+      },
+      {
+        "file": "assets/avatars/AGT-006.webp",
+        "hash": "43bdf28d336eb831beade995e592c86c40f142bef99ebf99fa66f510370bcb53"
+      },
+      {
+        "file": "assets/avatars/AGT-007.webp",
+        "hash": "fae3aa91938209ff59c913c485cb6f366d387644e8e6c895d54c617cec0906a7"
+      },
+      {
+        "file": "assets/avatars/AGT-008.webp",
+        "hash": "24dd70206ee56ee91287fb08da92c35b12a35b270de74da9c9254fda6e01df75"
+      },
+      {
+        "file": "assets/avatars/AGT-009.webp",
+        "hash": "94fe85d8632750d0cbeb5f1e034e034bd43bb2b3f49c1bea8c7ccfdad99e9e87"
+      },
+      {
+        "file": "assets/avatars/AGT-010.webp",
+        "hash": "b825c46efcd131a714807f86b84e6cf29264dc34d8c24e459c3fec7703d30d79"
+      },
+      {
+        "file": "assets/avatars/AGT-011.webp",
+        "hash": "5754f7eadaa89898fcea6b867fb9d6070f46885228a5fdd5cfb9715e12e7aa9c"
+      },
+      {
+        "file": "assets/avatars/AGT-012.webp",
+        "hash": "3d5da3363f1bf7c4bc713e5cb8d87efaf7723077ec19822a0381932fa8e8dc0b"
+      },
+      {
+        "file": "assets/avatars/AGT-013.webp",
+        "hash": "6d4e6a5399d49cd05c4941637419215fb295f2c7172cd53595fadcacb55ec95d"
+      },
+      {
+        "file": "assets/avatars/AGT-014.webp",
+        "hash": "3d2de58f5a833590d39642a5cca673e4780cffc54e3e755aba2362864cc49e2c"
+      },
+      {
+        "file": "assets/avatars/AGT-015.webp",
+        "hash": "9da5a8ad4106277bd3d9a0b38a6b3d2f3d58f0ad8f9af5a538b153d7a00ff9e9"
+      },
+      {
+        "file": "assets/avatars/AGT-016.webp",
+        "hash": "8bceb6c40bd534cfeeb0693ac6fa990008e2c6aded4634bb57af7793e330a1ab"
+      },
+      {
+        "file": "assets/avatars/AGT-017.webp",
+        "hash": "9b0659e6e2b2fbec6cc9f95e061e86bd79c30aa7f78c3bec49b785eac38024ce"
+      },
+      {
+        "file": "assets/avatars/AGT-018.webp",
+        "hash": "88e78a248cd37c377219b67096e58b18967fbc40106644c4be49802cd3287588"
+      },
+      {
+        "file": "assets/avatars/AGT-019.webp",
+        "hash": "700ae78b1f289155d03b5b17a607d9d1abb280e6346a481612d2592bc600acce"
+      },
+      {
+        "file": "assets/avatars/AGT-020.webp",
+        "hash": "b46e48d72bcf3194445d3693b661160bd5dda2c19f1db01c3dd3c186446d68a0"
+      },
+      {
+        "file": "assets/avatars/AGT-021.webp",
+        "hash": "3f36b2f5921e851f10372f1973525b8326d868f88c535288e6e9707ba833eb3b"
+      },
+      {
+        "file": "assets/avatars/AGT-022.webp",
+        "hash": "2f100397f2281d94aaaefc6eddd6f66e452cc7d5c8d72a8ba423e20f2629279d"
+      },
+      {
+        "file": "assets/avatars/AGT-023.webp",
+        "hash": "03265fd563619f52981c135a1d5e0525009f9ec9bafe64cb83ab71452dd94b2f"
+      },
+      {
+        "file": "assets/avatars/AGT-024.webp",
+        "hash": "0e197669012e2e337dc813e50ec4d45c0a45ec9d7a9115895ea32e81b8e9d38d"
+      },
+      {
+        "file": "assets/avatars/AGT-025.webp",
+        "hash": "c4294f4174fd30e27521b9136e00e45c757528436a19d97ee060f061a87bf541"
+      },
+      {
+        "file": "assets/avatars/AGT-026.webp",
+        "hash": "3fa76ba32c3a3c40fdf05ed2309244094017c60ec274feff89b3a842f3ec07b5"
+      },
+      {
+        "file": "assets/avatars/AGT-027.webp",
+        "hash": "37954860c647b35b4e04ece45a3a3743540e17908551c53201eca589f6526059"
+      },
+      {
+        "file": "assets/avatars/AGT-028.webp",
+        "hash": "d2ccdf77f3fcd827cae6c1f07abf05206357c4a3727005e815a5038016f87327"
+      },
+      {
+        "file": "assets/avatars/AGT-029.webp",
+        "hash": "40fda256a09899da9caec3792bfa887a4edb35efeb835d2c5b0fdf9bedcec5b0"
+      },
+      {
+        "file": "assets/avatars/AGT-030.webp",
+        "hash": "3b908e1028ad3a697a673f582a549e6ba54566f0860879eb7b2cd002622bab8d"
+      },
+      {
+        "file": "assets/avatars/AGT-031.webp",
+        "hash": "28729210ebeeba1af91626285c140dfa64909a4c924348381db272cd18e6d8a1"
+      },
+      {
+        "file": "assets/avatars/AGT-032.webp",
+        "hash": "3dec02315f183c59383fd77d31e28d7e7e0f1dd4e0f9c399b27a9f37f626ae49"
+      },
+      {
+        "file": "assets/avatars/AGT-033.webp",
+        "hash": "5ae8612bdcd1fa2b79047e05dd61246f8e5463026cfe8d21af57f1a26d85a39f"
+      },
+      {
+        "file": "assets/avatars/AGT-034.webp",
+        "hash": "9ea9b65775d4dad95ee5ba07a625cfb4fc0c178f857829909a6b0e7ee0418b53"
+      },
+      {
+        "file": "assets/avatars/AGT-035.webp",
+        "hash": "52d00b3d0bb564c5a7820739f117317dc8b9173c08ab93e6696fd160065db409"
+      },
+      {
+        "file": "assets/avatars/AGT-036.webp",
+        "hash": "de9083b7cdf8f27b83f6625c98671597020bb7baeb2e8dafa10d1b67784a257a"
+      },
+      {
+        "file": "assets/avatars/AGT-037.webp",
+        "hash": "d14c2b53e50aba2c0646b67b62d8b3d271a5aadad0b2c2883469bdf6b37acc67"
+      },
+      {
+        "file": "assets/avatars/AGT-038.webp",
+        "hash": "3ce882e46ec9a03ecaf6998fd08955f8ef050ecf097090949772612ffe9b8e49"
+      },
+      {
+        "file": "assets/avatars/AGT-039.webp",
+        "hash": "d16ee838bdd2e19adf28b29499b15dc7371d8f9f2cd1269ec3ec994e9c2e06d6"
+      },
+      {
+        "file": "assets/avatars/AGT-040.webp",
+        "hash": "64e9d6ac9203be04dd72140c8a601548a91c9f13c92717724840c575edb58847"
+      },
+      {
+        "file": "assets/avatars/AGT-041.webp",
+        "hash": "e8560810be38e98e807d7def34c72c503f3e772c9c953d348a66e84645344e1a"
+      },
+      {
+        "file": "assets/avatars/AGT-042.webp",
+        "hash": "bfbb88a16306be67e9b0cfcfdec7dbb92417f11fb45005d30e8bc9c3c395f480"
+      },
+      {
+        "file": "assets/avatars/AGT-043.webp",
+        "hash": "74eed94dbb93714981917c0bcefb72aadeb7c902b9efcb11e0aa33e8bf6b14a1"
+      },
+      {
+        "file": "assets/avatars/AGT-044.webp",
+        "hash": "1c32ebf49e1819a753f57d48e97e829a93e82317e40deba1eb394a7374bdc3be"
+      },
+      {
+        "file": "assets/avatars/AGT-045.webp",
+        "hash": "1f1a22b530a1d4cb2b368c48a6e2cf396cbf939eacbf1f73d8ba3a9b93fa13ba"
+      },
+      {
+        "file": "assets/avatars/AGT-046.webp",
+        "hash": "430c956a51ab5f3d4f5817fdcba64a1ea9cbf7234b38c9fbf15aff671a15b99a"
+      },
+      {
+        "file": "assets/avatars/AGT-047.webp",
+        "hash": "521b3e43fd042b07a6ad2a0bd55873e5ef8554518aea227c088c13e8e98f1183"
+      },
+      {
+        "file": "assets/avatars/AGT-048.webp",
+        "hash": "8405650c8a6264c46601f0a971f79f4770f0b99d1f2e7caf0b428d41f53c0f63"
+      },
+      {
+        "file": "assets/avatars/AGT-049.webp",
+        "hash": "e7421784ca33d42df60c10786d39873063fec54198055dd594961d0db01d56fa"
+      },
+      {
+        "file": "assets/avatars/AGT-050.webp",
+        "hash": "7362b97d62b0e29318827691a2e3594fabd8222ae92291232bb2f42ae213083b"
+      },
+      {
+        "file": "assets/avatars/MGMT-CEO.webp",
+        "hash": "40c04079c42ca7bfe95d5f62ad5885a5de83989d6bac6802bcc3060d4a44d784"
+      },
+      {
+        "file": "assets/avatars/MGMT-CGO.webp",
+        "hash": "e3cdd3334870587a6afa3d5cc2445a45316c8a9cda78b6d9b7b3ee189fe9b4de"
+      },
+      {
+        "file": "assets/avatars/MGMT-CGOV.webp",
+        "hash": "93b1b893cea6323bbe35d15874578d913a6660e03dd913794b9691f4f3ab2e01"
+      }
+    ]
+  }
+}

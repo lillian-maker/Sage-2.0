@@ -2,6 +2,10 @@
 
 独立中英文官网，并承接 WorldPilot 数字员工设计素材；不替代已有 Sage 仓库。
 
+## App UI 设计交付 · 2026-10-22
+
+App 界面开发先读 [统一交付入口](docs/SAGE_APP_UI_HANDOFF.md)，再读 [UI Kit 接入说明](drafts/sage-app-ui-kit-20261022/README.md)与[设计规范](drafts/sage-app-ui-kit-20261022/DESIGN_SPEC.md)。提供 18 张亮色/纯黑页面稿、38 类组件及 HTML 片段、32 个图标、53 张当前头像、设计变量及本地交互契约；[整包下载](drafts/sage-app-ui-kit-20261022.zip)。这是待验收的 UI 交付，没有升级 App 或部署官网。后续维护该目录须先读上述说明。
+
 ## 品牌资源 · 2026-10-21
 
 Logo 后续维护先读 [`assets/brand/README.md`](assets/brand/README.md)。当前使用用户回传的曲面 S＋星芒＋完整 Sage 组合：深色首屏用官网浅字版，浅色界面及滚动白底导航用产品深字版；浏览器图标同步纯图形。修改源文件后运行 release 构建，不直接维护生成页。
