@@ -11,7 +11,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Goals and resource allocation decisions",
       "domain": "Business and organization",
-      "avatar": "../assets/people/AGT-001.webp"
+      "avatar": "../assets/people/AGT-001.webp?v=43673aa08a6f"
     },
     {
       "id": "AGT-002",
@@ -20,7 +20,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Orchestration rationale and autonomous-workflow exceptions",
       "domain": "Business and organization",
-      "avatar": "../assets/people/AGT-002.webp"
+      "avatar": "../assets/people/AGT-002.webp?v=5558cc9b84e0"
     },
     {
       "id": "AGT-003",
@@ -29,7 +29,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Source-backed business analysis",
       "domain": "Business and organization",
-      "avatar": "../assets/people/AGT-003.webp"
+      "avatar": "../assets/people/AGT-003.webp?v=7a79a16174a9"
     },
     {
       "id": "AGT-004",
@@ -38,7 +38,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Capability matrix and organizational recommendations",
       "domain": "Business and organization",
-      "avatar": "../assets/people/AGT-004.webp"
+      "avatar": "../assets/people/AGT-004.webp?v=23877bdcafbb"
     },
     {
       "id": "AGT-005",
@@ -47,7 +47,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Review and remediation checklist",
       "domain": "Business and organization",
-      "avatar": "../assets/people/AGT-005.webp"
+      "avatar": "../assets/people/AGT-005.webp?v=408026ce2f55"
     },
     {
       "id": "AGT-006",
@@ -56,7 +56,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Customer-needs evidence and issue map",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-006.webp"
+      "avatar": "../assets/people/AGT-006.webp?v=43bdf28d336e"
     },
     {
       "id": "AGT-007",
@@ -65,7 +65,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Opportunity evidence and counterevidence",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-007.webp"
+      "avatar": "../assets/people/AGT-007.webp?v=fae3aa919382"
     },
     {
       "id": "AGT-008",
@@ -74,7 +74,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "New-product portfolio and continue-or-stop recommendations",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-008.webp"
+      "avatar": "../assets/people/AGT-008.webp?v=24dd70206ee5"
     },
     {
       "id": "AGT-009",
@@ -83,7 +83,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Product definition and business case",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-009.webp"
+      "avatar": "../assets/people/AGT-009.webp?v=94fe85d86327"
     },
     {
       "id": "AGT-010",
@@ -92,7 +92,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Design and experience validation plan",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-010.webp"
+      "avatar": "../assets/people/AGT-010.webp?v=b825c46efcd1"
     },
     {
       "id": "AGT-011",
@@ -101,7 +101,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Technical risks and engineering validation checklist",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-011.webp"
+      "avatar": "../assets/people/AGT-011.webp?v=5754f7eadaa8"
     },
     {
       "id": "AGT-012",
@@ -110,7 +110,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Software proposal and validation evidence",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-012.webp"
+      "avatar": "../assets/people/AGT-012.webp?v=3d5da3363f1b"
     },
     {
       "id": "AGT-013",
@@ -119,7 +119,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Validation report and defect-resolution records",
       "domain": "Product and innovation",
-      "avatar": "../assets/people/AGT-013.webp"
+      "avatar": "../assets/people/AGT-013.webp?v=6d4e6a5399d4"
     },
     {
       "id": "AGT-014",
@@ -128,7 +128,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Supplier capabilities and risk profile",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-014.webp"
+      "avatar": "../assets/people/AGT-014.webp?v=3d2de58f5a83"
     },
     {
       "id": "AGT-015",
@@ -137,7 +137,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Procurement recommendations and delivery exceptions",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-015.webp"
+      "avatar": "../assets/people/AGT-015.webp?v=9da5a8ad4106"
     },
     {
       "id": "AGT-016",
@@ -146,7 +146,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Replenishment plan and forecast intervals",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-016.webp"
+      "avatar": "../assets/people/AGT-016.webp?v=8bceb6c40bd5"
     },
     {
       "id": "AGT-017",
@@ -155,7 +155,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Inventory risks and resolution plan",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-017.webp"
+      "avatar": "../assets/people/AGT-017.webp?v=9b0659e6e2b2"
     },
     {
       "id": "AGT-018",
@@ -164,7 +164,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Quality incidents and corrective actions",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-018.webp"
+      "avatar": "../assets/people/AGT-018.webp?v=88e78a248cd3"
     },
     {
       "id": "AGT-019",
@@ -173,7 +173,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Transport plan and exception handling",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-019.webp"
+      "avatar": "../assets/people/AGT-019.webp?v=700ae78b1f28"
     },
     {
       "id": "AGT-020",
@@ -182,7 +182,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Fulfillment and returns records",
       "domain": "Supply and fulfillment",
-      "avatar": "../assets/people/AGT-020.webp"
+      "avatar": "../assets/people/AGT-020.webp?v=b46e48d72bcf"
     },
     {
       "id": "AGT-021",
@@ -191,7 +191,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Amazon workflow action plan",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-021.webp"
+      "avatar": "../assets/people/AGT-021.webp?v=3f36b2f5921e"
     },
     {
       "id": "AGT-022",
@@ -200,7 +200,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Listing and search improvement plan",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-022.webp"
+      "avatar": "../assets/people/AGT-022.webp?v=2f100397f228"
     },
     {
       "id": "AGT-023",
@@ -209,7 +209,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "DTC operations and experiment plan",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-023.webp"
+      "avatar": "../assets/people/AGT-023.webp?v=03265fd56361"
     },
     {
       "id": "AGT-024",
@@ -218,7 +218,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "New-channel entry and validation plan",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-024.webp"
+      "avatar": "../assets/people/AGT-024.webp?v=0e197669012e"
     },
     {
       "id": "AGT-025",
@@ -227,7 +227,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Channel opportunities and partnership recommendations",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-025.webp"
+      "avatar": "../assets/people/AGT-025.webp?v=c4294f4174fd"
     },
     {
       "id": "AGT-026",
@@ -236,7 +236,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Pricing and promotion decisions",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-026.webp"
+      "avatar": "../assets/people/AGT-026.webp?v=3fa76ba32c3a"
     },
     {
       "id": "AGT-027",
@@ -245,7 +245,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Account health and remediation recommendations",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-027.webp"
+      "avatar": "../assets/people/AGT-027.webp?v=37954860c647"
     },
     {
       "id": "AGT-028",
@@ -254,7 +254,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Localized content and market differences",
       "domain": "Channel operations",
-      "avatar": "../assets/people/AGT-028.webp"
+      "avatar": "../assets/people/AGT-028.webp?v=d2ccdf77f3fc"
     },
     {
       "id": "AGT-029",
@@ -263,7 +263,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Brand principles and communications plan",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-029.webp"
+      "avatar": "../assets/people/AGT-029.webp?v=40fda256a098"
     },
     {
       "id": "AGT-030",
@@ -272,7 +272,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Content plan and evidence references",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-030.webp"
+      "avatar": "../assets/people/AGT-030.webp?v=3b908e1028ad"
     },
     {
       "id": "AGT-031",
@@ -281,7 +281,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Versioned channel creative assets",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-031.webp"
+      "avatar": "../assets/people/AGT-031.webp?v=28729210ebee"
     },
     {
       "id": "AGT-032",
@@ -290,7 +290,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Advertising actions and performance report",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-032.webp"
+      "avatar": "../assets/people/AGT-032.webp?v=3dec02315f18"
     },
     {
       "id": "AGT-033",
@@ -299,7 +299,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Partner candidates and attribution evidence",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-033.webp"
+      "avatar": "../assets/people/AGT-033.webp?v=5ae8612bdcd1"
     },
     {
       "id": "AGT-034",
@@ -308,7 +308,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Customer engagement plan and experiment results",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-034.webp"
+      "avatar": "../assets/people/AGT-034.webp?v=9ea9b65775d4"
     },
     {
       "id": "AGT-035",
@@ -317,7 +317,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Experiment protocol and continue-or-stop decision",
       "domain": "Brand and growth",
-      "avatar": "../assets/people/AGT-035.webp"
+      "avatar": "../assets/people/AGT-035.webp?v=52d00b3d0bb5"
     },
     {
       "id": "AGT-036",
@@ -326,7 +326,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Evidence-backed presales responses and leads",
       "domain": "Service and experience",
-      "avatar": "../assets/people/AGT-036.webp"
+      "avatar": "../assets/people/AGT-036.webp?v=de9083b7cdf8"
     },
     {
       "id": "AGT-037",
@@ -335,7 +335,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Complaint cases and recovery recommendations",
       "domain": "Service and experience",
-      "avatar": "../assets/people/AGT-037.webp"
+      "avatar": "../assets/people/AGT-037.webp?v=d14c2b53e50a"
     },
     {
       "id": "AGT-038",
@@ -344,7 +344,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Experience issues and root-cause hypotheses",
       "domain": "Service and experience",
-      "avatar": "../assets/people/AGT-038.webp"
+      "avatar": "../assets/people/AGT-038.webp?v=3ce882e46ec9"
     },
     {
       "id": "AGT-039",
@@ -353,7 +353,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Educational content and service feedback",
       "domain": "Service and experience",
-      "avatar": "../assets/people/AGT-039.webp"
+      "avatar": "../assets/people/AGT-039.webp?v=d16ee838bdd2"
     },
     {
       "id": "AGT-040",
@@ -362,7 +362,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Reconciliation statement and discrepancy resolution",
       "domain": "Finance and compliance",
-      "avatar": "../assets/people/AGT-040.webp"
+      "avatar": "../assets/people/AGT-040.webp?v=64e9d6ac9203"
     },
     {
       "id": "AGT-041",
@@ -371,7 +371,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Cash and resource constraints",
       "domain": "Finance and compliance",
-      "avatar": "../assets/people/AGT-041.webp"
+      "avatar": "../assets/people/AGT-041.webp?v=e8560810be38"
     },
     {
       "id": "AGT-042",
@@ -380,7 +380,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Tax and legal-entity checklist",
       "domain": "Finance and compliance",
-      "avatar": "../assets/people/AGT-042.webp"
+      "avatar": "../assets/people/AGT-042.webp?v=bfbb88a16306"
     },
     {
       "id": "AGT-043",
@@ -389,7 +389,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Legal risks and recommended responses",
       "domain": "Finance and compliance",
-      "avatar": "../assets/people/AGT-043.webp"
+      "avatar": "../assets/people/AGT-043.webp?v=74eed94dbb93"
     },
     {
       "id": "AGT-044",
@@ -398,7 +398,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Compliance matrix and evidence gaps",
       "domain": "Finance and compliance",
-      "avatar": "../assets/people/AGT-044.webp"
+      "avatar": "../assets/people/AGT-044.webp?v=1c32ebf49e18"
     },
     {
       "id": "AGT-045",
@@ -407,7 +407,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Data definitions and object relationship contracts",
       "domain": "Data and AI operations",
-      "avatar": "../assets/people/AGT-045.webp"
+      "avatar": "../assets/people/AGT-045.webp?v=1f1a22b530a1"
     },
     {
       "id": "AGT-046",
@@ -416,7 +416,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Data deliverables with quality status",
       "domain": "Data and AI operations",
-      "avatar": "../assets/people/AGT-046.webp"
+      "avatar": "../assets/people/AGT-046.webp?v=430c956a51ab"
     },
     {
       "id": "AGT-047",
@@ -425,7 +425,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Tool capabilities and acceptance package",
       "domain": "Data and AI operations",
-      "avatar": "../assets/people/AGT-047.webp"
+      "avatar": "../assets/people/AGT-047.webp?v=521b3e43fd04"
     },
     {
       "id": "AGT-048",
@@ -434,7 +434,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Capability versions and evaluation records",
       "domain": "Data and AI operations",
-      "avatar": "../assets/people/AGT-048.webp"
+      "avatar": "../assets/people/AGT-048.webp?v=8405650c8a62"
     },
     {
       "id": "AGT-049",
@@ -443,7 +443,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Runtime status and recovery evidence",
       "domain": "Data and AI operations",
-      "avatar": "../assets/people/AGT-049.webp"
+      "avatar": "../assets/people/AGT-049.webp?v=e7421784ca33"
     },
     {
       "id": "AGT-050",
@@ -452,7 +452,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Permission matrix and access evidence",
       "domain": "Data and AI operations",
-      "avatar": "../assets/people/AGT-050.webp"
+      "avatar": "../assets/people/AGT-050.webp?v=7362b97d62b0"
     }
   ],
   "scenes": [

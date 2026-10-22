@@ -1,0 +1,15 @@
+{
+  "id": "MGMT-CGO",
+  "name": "地利",
+  "role": "首席增长官 CGO",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "58f697f476e21860a5998f85f5fb290472532d043545e60e87512ad68d648da0",
+  "sha256": "e3cdd3334870587a6afa3d5cc2445a45316c8a9cda78b6d9b7b3ee189fe9b4de",
+  "width": 512,
+  "height": 512,
+  "bytes": 29640,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/MGMT-CGO.webp"
+}

@@ -789,6 +789,9 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 53 个数字员工的组织设计，包含 3 个管理职能与 50 个专业岗位。	The design includes 53 digital employees: 3 management functions and 50 specialist roles.
 岗位配置与协作范围随具体经营问题确定，不以头像数量衡量专业性。	Role combinations and collaboration depend on the question. Avatar count is not a measure of expertise.
 管理职能	Management functions
+首席执行官 CEO	Chief Executive Officer · CEO
+首席增长官 CGO	Chief Growth Officer · CGO
+首席治理官 CGOV	Chief Governance Officer · CGOV
 天时	Tianshi
 地利	Dili
 人和	Renhe

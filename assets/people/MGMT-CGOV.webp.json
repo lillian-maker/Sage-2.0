@@ -1,0 +1,15 @@
+{
+  "id": "MGMT-CGOV",
+  "name": "人和",
+  "role": "首席治理官 CGOV",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "8ef91fecd93b52eecb1ae6e22cda3f8dac1922c5df230bd770cbfec86102baf0",
+  "sha256": "93b1b893cea6323bbe35d15874578d913a6660e03dd913794b9691f4f3ab2e01",
+  "width": 512,
+  "height": 512,
+  "bytes": 24008,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/MGMT-CGOV.webp"
+}

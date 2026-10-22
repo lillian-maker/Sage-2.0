@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-002.webp; fictional digital employee AGT-002 枢衡. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:02.830Z"
+  "id": "AGT-002",
+  "name": "枢衡",
+  "role": "场景自主编排与异常协调",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "c8935e5d285c51ed3abe51bb920cf0ebb8c463f40c2520b7bf2fbd9154b51b84",
+  "sha256": "5558cc9b84e0e7af29ea9d5df4a9018da6ed1ef85e13ef55d7d18937aca5bf26",
+  "width": 512,
+  "height": 512,
+  "bytes": 24466,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-002.webp"
 }

@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-007.webp; fictional digital employee AGT-007 望野. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:02.913Z"
+  "id": "AGT-007",
+  "name": "望野",
+  "role": "市场竞争与机会研究",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "2db64c50cf279a3c3c530a38d2bd749a0eeea2cf08ef84caefb0ef60a11631d1",
+  "sha256": "fae3aa91938209ff59c913c485cb6f366d387644e8e6c895d54c617cec0906a7",
+  "width": 512,
+  "height": 512,
+  "bytes": 25928,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-007.webp"
 }

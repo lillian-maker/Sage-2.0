@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-001.webp; fictional digital employee AGT-001 衡远. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:02.802Z"
+  "id": "AGT-001",
+  "name": "衡远",
+  "role": "经营目标与资源统筹",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "cf7d1f42894ca576fb568628673c51ff6a9034780f008471d10694c0621b7d20",
+  "sha256": "43673aa08a6fbb6204b21eeefddad67e1e957358773e342ac8127bf9a96efe34",
+  "width": 512,
+  "height": 512,
+  "bytes": 30984,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-001.webp"
 }

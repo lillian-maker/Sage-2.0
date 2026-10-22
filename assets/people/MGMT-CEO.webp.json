@@ -1,0 +1,15 @@
+{
+  "id": "MGMT-CEO",
+  "name": "天时",
+  "role": "首席执行官 CEO",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "b3feae58a6433ecd33e2e85d2a3becfef8e284987afd9e39990372711a459181",
+  "sha256": "40c04079c42ca7bfe95d5f62ad5885a5de83989d6bac6802bcc3060d4a44d784",
+  "width": 512,
+  "height": 512,
+  "bytes": 31692,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/MGMT-CEO.webp"
+}

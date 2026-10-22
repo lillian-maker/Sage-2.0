@@ -26,6 +26,10 @@ Logo 后续维护先读 [`assets/brand/README.md`](assets/brand/README.md)。当
 
 ## 数字员工设计素材
 
+2026-10-22 官网头像已更新为当前 53 位原创数字员工：50 位岗位头像沿用 `AGT-001`—`AGT-050` 映射；团队页补齐天时、地利、人和三位管理头像，职位同步为 CEO、CGO、CGOV。天时沿用已确认面部身份并换正式西装，知人为女性、绘影无耳机。当前官网资源以 `assets/people/` 及其 `provenance.json` 为准；历史 `digital-employees/` 的102人素材保留追溯，不作为最新官网头像来源。
+
+后续头像维护先核对 `assets/people/provenance.json` 的 ID、姓名、职位和原图 SHA256，再导出512px WebP；不要按文件顺序猜身份。首页通过构建内嵌，二级页图片地址带内容哈希以更新缓存。只从 `src/` 修改并运行 release 构建，中英团队页须一起核对。App 页面本轮仍为待确认视觉稿。
+
 完整素材保存在 [`digital-employees/`](digital-employees/README.md)，包含 102 位数字员工的深浅色头像、原始生成图、七种 WebP 尺寸、提示词、岗位数据、资源清单和展示组件。通过 `digital-employees/WorldPilot_Youth_Avatars.html` 预览。原始文件名和设计来源保持不变，不改写历史身份或岗位定义；新增 50 人的业务域与岗位配置状态以素材包说明为准。
 
 2026-10-01 从 `lillian-maker/WorldPilot` 的 `2e676da87999c88fbc70baae9eb5dbf72c2b757e` 迁入 `digital-employees/` 全目录（1,971 个文件），逐文件 Git blob 校验一致，并核对头像清单哈希与尺寸资源字节数。后续维护素材前同时阅读该目录 README。官网现有内嵌头像和业务配置不受迁移影响。

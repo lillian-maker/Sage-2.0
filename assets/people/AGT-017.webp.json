@@ -1,4 +1,15 @@
 {
-  "prompt": "Source asset reused unchanged from https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-017.webp; fictional digital employee AGT-017 衡仓. Original bytes preserved.",
-  "createdAt": "2026-09-24T06:10:02.965Z"
+  "id": "AGT-017",
+  "name": "衡仓",
+  "role": "库存与商品生命周期",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "b027b91e4c09c84988ad38a49f68589f50339af59e57f34e7204732af94e419b",
+  "sha256": "9b0659e6e2b2fbec6cc9f95e061e86bd79c30aa7f78c3bec49b785eac38024ce",
+  "width": 512,
+  "height": 512,
+  "bytes": 35952,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-017.webp"
 }

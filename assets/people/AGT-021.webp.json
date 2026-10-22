@@ -1,8 +1,15 @@
 {
-  "source": "https://raw.githubusercontent.com/lillian-maker/WorldPilot/2e676da87999c88fbc70baae9eb5dbf72c2b757e/digital-employees/assets/light/256/AGT-021.webp",
-  "commit": "2e676da87999c88fbc70baae9eb5dbf72c2b757e",
-  "assetType": "original-static-avatar",
   "id": "AGT-021",
-  "sha256": "27de41121c071844dd69caf68c9b6704cb5b13eb824b15dd1386357c49d33bcb"
+  "name": "北辰",
+  "role": "Amazon 业务经营",
+  "assetType": "fictional-digital-employee-avatar",
+  "updatedAt": "2026-10-22",
+  "source": "Sage approved avatar collection 2026-10-22",
+  "sourceSha256": "1a9f7dddb5b3161ef42d56d2c1ac3033473fb86b475920db8a400bda6ce1e123",
+  "sha256": "3f36b2f5921e851f10372f1973525b8326d868f88c535288e6e9707ba833eb3b",
+  "width": 512,
+  "height": 512,
+  "bytes": 30038,
+  "processing": "Resize and WebP export only; no face retouch or crop",
+  "localPath": "assets/people/AGT-021.webp"
 }
-
