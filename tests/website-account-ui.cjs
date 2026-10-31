@@ -47,6 +47,7 @@ const source=name=>fs.readFileSync(path.join(__dirname,'../src/pages',name),'utf
   const name=path.basename(url.pathname);if(['profile.js','auth.js','site-shell.js'].includes(name))return route.fulfill({contentType:'text/javascript',body:source(name)});
   if(['redesign.css','experience.css','content-pages.css','billing.css','auth.css'].includes(name))return route.fulfill({contentType:'text/css',body:source(name)});
   if(name==='google-color.png')return route.fulfill({contentType:'image/png',body:fs.readFileSync(path.join(__dirname,'../src/pages/icons',name))});
+  if(url.pathname==='/assets/brand/sage-logo-product.svg')return route.fulfill({contentType:'image/svg+xml',body:fs.readFileSync(path.join(__dirname,'../dist/assets/brand/sage-logo-product.svg'))});
   if(url.pathname.includes('/icons/')&&name.endsWith('.svg'))return route.fulfill({contentType:'image/svg+xml',body:fs.readFileSync(path.join(__dirname,'../src/pages/icons',name))});
   if(name==='favicon.svg')return route.fulfill({contentType:'image/svg+xml',body:fs.readFileSync(path.join(__dirname,'../assets/favicon.svg'))});
   return route.fulfill({status:200,body:''});

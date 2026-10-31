@@ -16,6 +16,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--strict', action='store_true', help='Exit nonzero for missing stage-two configuration.')
+        parser.add_argument('--scope', choices=('all', 'email'), default='all',
+                            help='Check all login configuration or the email/password flow only.')
 
     def handle(self, *args, **options):
         try:
@@ -37,14 +39,24 @@ class Command(BaseCommand):
             'google_bind_email': bind_email_ready(),
             'google_callback_host': callback_host_matches,
         }
+        if options['scope'] == 'email':
+            email_checks = ('captcha', 'email_transport', 'legal_approval_declared',
+                            'email_registration', 'password_login', 'password_recovery',
+                            'password_change_notification')
+            checks = {name: checks[name] for name in email_checks}
         blockers = [name for name, ready in checks.items() if not ready]
-        self.stdout.write(json.dumps({
+        report = {
             'evidence': 'configuration_only', 'external_requests': 0, 'database_access': False,
             'configuration_ready': not blockers, 'ready_for_public_launch': False,
             'checks': checks, 'blockers': blockers,
             'unverified': ['legal_content_and_approval', 'captcha_challenge_and_server_verification',
                 'provider_template_approval', 'mailbox_delivery_and_recovery', 'google_real_account_flows',
                 'https_routes_and_cookies', 'native_password_manager'],
-        }, indent=2))
+        }
+        if options['scope'] == 'email':
+            report['scope'] = 'email'
+            report['out_of_scope'] = ['google_sign_in_and_binding', 'phone', 'account_deletion',
+                                      'non_auth_notifications']
+        self.stdout.write(json.dumps(report, indent=2))
         if options['strict'] and blockers:
             raise CommandError('Authentication configuration is incomplete; see named blockers above.')

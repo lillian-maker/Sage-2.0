@@ -621,6 +621,21 @@ async function alipaySandboxAudit(browser) {
       for (const width of [320,390,768,1440]) {
         await page.setViewportSize({width,height:1000});
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`${language} ${width}`);
+        if (width <= 390) {
+          const controls = ['#r-menu-toggle', '.sage-notification-bell', '.sage-language-toggle', '.nav-account summary'];
+          const boxes = [];
+          for (const selector of controls) {
+            const control = page.locator(selector);
+            const box = await control.boundingBox();
+            assert.ok(box && box.width >= 44 && box.height >= 44, `${language} ${width} ${selector} visible size`);
+            assert.ok(box.x >= 0 && box.x + box.width <= width + 1, `${language} ${width} ${selector} in viewport`);
+            await control.click({trial:true});
+            boxes.push(box);
+          }
+          boxes.sort((a,b)=>a.x-b.x);
+          for (let i=1;i<boxes.length;i++) assert.ok(boxes[i-1].x+boxes[i-1].width<=boxes[i].x+1, `${language} ${width} navigation controls overlap`);
+          assert.ok((await page.locator('.nav-account summary').textContent()).trim(), `${language} ${width} account name`);
+        }
         await page.locator('main *').evaluateAll(nodes=>{ const sizes=nodes.map(el=>parseFloat(getComputedStyle(el).fontSize));nodes.forEach((el,i)=>el.style.fontSize=`${sizes[i]*2}px`); });
         assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`${language} ${width} 200% text`);
         await page.locator('main *').evaluateAll(nodes=>nodes.forEach(el=>el.style.removeProperty('font-size')));

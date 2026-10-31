@@ -34,7 +34,7 @@ const ids = new Set(catalog.people.map(p=>p.id));
 let stages = 0;
 for (const person of catalog.people) {
   assert.ok(catalog.domains.includes(person.domain));
-  const filename = path.resolve(root, 'pages', person.avatar);
+  const filename = path.resolve(root, 'pages', person.avatar.split(/[?#]/)[0]);
   const image = fs.readFileSync(filename);
   assert.equal(image.toString('ascii',0,4),'RIFF', person.id);
   assert.equal(image.toString('ascii',8,12),'WEBP', person.id);
