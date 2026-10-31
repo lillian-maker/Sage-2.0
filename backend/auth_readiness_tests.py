@@ -126,3 +126,45 @@ class AuthReadinessTests(SimpleTestCase):
         with override_settings(AUTH_EMAIL_TRANSPORT='smtp', EMAIL_HOST='fixture.invalid'):
             report = self.report()
         self.assertIn('password_change_notification', report['blockers'])
+
+    def test_email_scope_does_not_require_google_but_all_still_does(self):
+        with override_settings(AUTH_GOOGLE_ENABLED=False, GOOGLE_CLIENT_SECRET='',
+                               AUTH_GOOGLE_BIND_SES_TEMPLATE_ID=''):
+            with self.assertRaisesMessage(CommandError, 'Authentication configuration is incomplete'):
+                self.report(strict=True)
+            report = self.report(scope='email', strict=True)
+        self.assertEqual(report['scope'], 'email')
+        self.assertEqual(report['blockers'], [])
+        self.assertTrue(report['configuration_ready'])
+        self.assertFalse(report['ready_for_public_launch'])
+        self.assertIn('account_deletion', report['out_of_scope'])
+        self.assertIn('non_auth_notifications', report['out_of_scope'])
+        self.assertNotIn('google_login', report['checks'])
+
+    def test_email_scope_strict_fails_for_each_email_dependency(self):
+        for setting, value, expected in (
+                ('AUTH_CAPTCHA_ENABLED', False, 'captcha'),
+                ('CAPTCHA_SECRET_KEY', '', 'captcha'),
+                ('AUTH_EMAIL_ENABLED', False, 'email_transport'),
+                ('SES_SECRET_KEY', '', 'email_transport'),
+                ('SES_REGION', 'fixture-invalid-region', 'email_transport'),
+                ('AUTH_REGISTRATION_TERMS_READY', False, 'legal_approval_declared'),
+                ('AUTH_REGISTRATION_SES_TEMPLATE_ID', '', 'email_registration'),
+                ('AUTH_PASSWORD_SES_TEMPLATE_ID', '', 'password_recovery'),
+                ('AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID', '', 'password_change_notification')):
+            with self.subTest(setting=setting), override_settings(**{setting: value}):
+                report = self.report(scope='email')
+                self.assertFalse(report['configuration_ready'])
+                self.assertIn(expected, report['blockers'])
+                with self.assertRaisesMessage(CommandError, 'Authentication configuration is incomplete'):
+                    self.report(scope='email', strict=True)
+
+    def test_email_scope_output_is_redacted_and_independent_of_db_or_network(self):
+        report = self.report(scope='email', strict=True)
+        self.assertEqual(report['evidence'], 'configuration_only')
+        self.assertEqual(report['external_requests'], 0)
+        self.assertFalse(report['database_access'])
+        self.assertIn('mailbox_delivery_and_recovery', report['unverified'])
+        output = json.dumps(report)
+        for value in ('fixture', 'example.invalid', 'sender@', 'captcha-secret', 'google-secret'):
+            self.assertNotIn(value, output)

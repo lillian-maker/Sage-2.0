@@ -10,7 +10,23 @@ const zhLiteral=fs.readFileSync(path.join(root,'src/pages/docs-page.js'),'utf8')
  await page.route('**/*',fulfill);
  for(const article of context.window.SAGE_DOCS_EN){await page.goto('http://127.0.0.1/pages/docs-en.html?article='+article[0]);await page.locator('#sd-article h1').waitFor();assert.equal(await page.locator('#sd-article h1').textContent(),article[2]);assert.ok(!/[\u4e00-\u9fff]/.test(await page.locator('#sd-article').textContent()),article[0]);assert.equal(await page.locator('#sd-article>section:not(.sd-related)').count(),article[4].length);}
  await page.goto('http://127.0.0.1/pages/docs-en.html?article=does-not-exist');await page.getByRole('heading',{name:'Document not found',exact:true}).waitFor();assert.equal(await page.locator('#sd-article h1').textContent(),'Document not found');
- await page.goto('http://127.0.0.1/pages/docs-en.html?article=refunds');await page.locator('#sd-search').fill('authorization');await page.locator('#sd-search-status').filter({hasText:'matching documents'}).waitFor();assert.ok(await page.locator('#sd-chapters a').count()>0);
+ for(const language of ['', '-en'])for(const width of [1440,320]){
+  await page.setViewportSize({width,height:1000});await page.goto(`http://127.0.0.1/pages/docs${language}.html?article=refunds`);await page.locator('#sd-article h1').waitFor();
+  const search=page.locator('#sd-search'),links=page.locator('#sd-chapters a'),status=page.locator('#sd-search-status');
+  await page.keyboard.press('Control+k');assert.equal(await search.evaluate(el=>el===document.activeElement),true);
+  assert.equal(await search.getAttribute('placeholder'),language?'Search':'搜索');
+  assert.equal(await page.locator('.sd-search-box svg').count(),1);assert.equal(await page.locator('.sd-search-box kbd').innerText(),'⌘K');
+  assert.equal(await page.locator('.sd-search-box').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)');
+  const initial=await links.count();assert.equal(initial,40);
+  await search.fill(language?'authorization':'授权');assert.equal(await links.count(),initial);assert.equal(await status.textContent(),'');
+  await search.press('Enter');assert.ok(await links.count()>0);assert.ok(await links.count()<initial);assert.ok(await status.textContent());
+  const confirmed=await links.count();await search.fill('zzzz-no-matching-document');assert.equal(await links.count(),confirmed);
+  await search.press('Enter');assert.equal(await links.count(),0);assert.ok(await page.locator('.sd-empty').isVisible());
+  await search.fill('');assert.equal(await links.count(),0);await search.press('Enter');assert.equal(await links.count(),initial);assert.equal(await status.textContent(),'');
+  await page.locator('#sd-article').focus();await page.keyboard.press('Meta+k');assert.equal(await search.evaluate(el=>el===document.activeElement),true);
+  if(width===320){assert.equal(await page.locator('#sd-directory-toggle').getAttribute('aria-expanded'),'true');await search.press('Escape');assert.equal(await page.locator('#sd-directory-toggle').getAttribute('aria-expanded'),'false');}
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,`search/${language}/${width}`);
+ }
  for(const width of [1440,768,320]){
   await page.setViewportSize({width,height:1000});
   for(const name of ['team','enterprise','docs']){

@@ -120,13 +120,16 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
     for (const lang of ['', '-en']) {
       for (const count of [1,9,10,11]) {
         await visit(`pricing${lang}.html`, `?audience=business&seats=${count}`);
-        assert.equal(await page.locator('#pricing-seats').inputValue(), String(count));
-        assert.equal(await page.locator('#pricing-seats').getAttribute('min'), '1');
-        assert.equal(await page.locator('[data-plan-link="teams"]').getAttribute('aria-disabled'), 'false');
+        assert.equal(await page.locator('#pricing-seats,.seat-selector').count(), 0, 'Seat quantity belongs in checkout, not the plan comparison');
+        assert.equal(await page.locator('.plan-grid.business > .plan').count(), 2, 'Business pricing has Teams and Enterprise only');
+        assert.equal(new URL(await page.locator('[data-plan-link="teams"]').getAttribute('href'), page.url()).searchParams.get('seats'), String(count));
         const enterprise = page.locator('[data-plan-link="enterprise"]');
-        assert.equal(await enterprise.getAttribute('aria-disabled'), String(count < 10));
-        assert.equal((await enterprise.getAttribute('href')) !== null, count >= 10);
-        assert.match(await page.locator('#pricing-seat-help').innerText(), lang ? /Teams starts at 1 seat; Enterprise starts at 10/ : /Teams 1 席起，Enterprise 10 席起/);
+        assert.equal(new URL(await enterprise.getAttribute('href'), page.url()).searchParams.get('seats'), String(Math.max(count,10)), 'Enterprise entry starts at its minimum seat quantity');
+        const enterpriseCard=page.locator('.plan').filter({has:enterprise});
+        assert.equal(await enterpriseCard.locator('.plan-actions a').count(), 2, 'Enterprise review and sales actions share one card');
+        const sales=enterpriseCard.getByRole('link',{name:lang?'Contact sales':'联系销售',exact:true});
+        assert.equal(await sales.getAttribute('href'),`billing${lang}.html#procurement`);
+        assert.deepEqual(await page.locator('.segmented').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).borderTopWidth)),['0px','0px'], 'Both pricing toggles are borderless');
         for (const code of ['teams','enterprise']) {
           const card=page.locator('.plan').filter({has:page.locator(`[data-plan-link="${code}"]`)});
           assert.equal(await card.locator('.business-benefits').count(),1);
@@ -136,12 +139,6 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
           assert.ok((await card.locator('ul').innerText()).includes(lang?'Company-purchased add-on Credits are shared':'企业加购点数由成员共享'));
           assert.ok((await card.locator('.plan-release-note').innerText()).includes(lang?'never use private Credits':'不扣员工私人点数'));
         }
-      }
-      for (const count of [1,10,9]) {
-        await page.locator('#pricing-seats').fill(String(count));
-        assert.equal(await page.locator('#pricing-seats').getAttribute('aria-invalid'), 'false');
-        assert.equal(await page.locator('[data-plan-link="teams"]').getAttribute('aria-disabled'), 'false');
-        assert.equal((await page.locator('[data-plan-link="enterprise"]').getAttribute('href')) !== null, count >= 10);
       }
       for (const count of [1,9]) {
         await visit(`checkout${lang}.html`, `?plan=enterprise&seats=${count}`);
@@ -191,22 +188,21 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
       await page.reload(); await page.waitForSelector('.plan');
       assert.equal(await page.locator('[data-cycle="annual"]').getAttribute('aria-pressed'), 'true');
       await page.locator('[data-audience="business"]').click();
-      assert.equal(await page.locator('.plan').count(), 3);
-      await page.locator('#pricing-seats').fill('3');
-      await page.waitForURL(url => url.searchParams.get('seats') === '3');
-      assert.equal(new URL(page.url()).searchParams.get('seats'), '3');
-      await page.locator('#pricing-seats').fill('0');
-      assert.equal(await page.locator('#pricing-seats').getAttribute('aria-invalid'), 'true');
-      assert.equal(await page.locator('[data-plan-link][href]').count(), 0);
-      await page.locator('#pricing-seats').fill('3');
+      assert.equal(await page.locator('.plan').count(), 2);
+      assert.equal(await page.locator('#pricing-seats').count(), 0);
       await page.locator('[data-plan-link="teams"]').click();
       await settledQuote(); await blockedPayment();
-      assert.equal(await page.locator('#checkout-seats').inputValue(), '3');
+      assert.equal(await page.locator('#checkout-seats').inputValue(), '1');
       assert.equal(await page.locator('#quote-amount').innerText(), '—');
+      await page.locator('#checkout-seats').fill('0');
+      assert.equal(await page.locator('#checkout-seats').getAttribute('aria-invalid'), 'true');
+      assert.equal(await page.locator('#quote-refresh').isDisabled(), true);
       await page.locator('#checkout-seats').fill('4');
       await page.locator('.plan-return').click();
-      await page.waitForSelector('#pricing-seats');
-      assert.equal(await page.locator('#pricing-seats').inputValue(), '4');
+      await page.waitForSelector('[data-plan-link="teams"]');
+      assert.equal(await page.locator('#pricing-seats').count(), 0);
+      assert.equal(new URL(page.url()).searchParams.get('seats'), '4');
+      assert.equal(new URL(await page.locator('[data-plan-link="teams"]').getAttribute('href'), page.url()).searchParams.get('seats'), '4');
       assert.equal(await page.locator('[data-cycle="annual"]').getAttribute('aria-pressed'), 'true');
       await page.locator('[data-audience="personal"]').click();
       await page.locator('[data-cycle="monthly"]').click();

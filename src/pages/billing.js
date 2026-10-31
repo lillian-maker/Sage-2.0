@@ -231,7 +231,7 @@
   }
   function pricing() {
     document.title = t('价格 · Sage','Pricing · Sage');
-    shell(`<header class="page-heading pricing-heading"><span class="eyebrow">SAGE MEMBERSHIP</span><h1>${t('选择适合你的 Sage 计划','Choose your Sage plan')}</h1><p>${t('从个人经营到企业协作，选择适合你的方案与使用节奏','Find the right plan for individual work or business collaboration.')}</p><div class="segmented audience-control" role="group" aria-label="${t('方案类型','Plan type')}"><button data-audience="personal" aria-pressed="${audience === 'personal'}">${t('个人版','Personal')}</button><button data-audience="business" aria-pressed="${audience === 'business'}">${t('企业版','Business')}</button></div></header><section id="pricing-subscription-status" class="policy-block" aria-live="polite"></section><div class="controls"><h2>${audience === 'personal' ? t('个人方案','Personal plans') : t('企业方案','Business plans')}</h2><div class="segmented" role="group" aria-label="${t('付费周期','Billing cycle')}"><button data-cycle="monthly" aria-pressed="${cycle === 'monthly'}">${t('连续包月','Monthly renewal')}</button><button data-cycle="annual" aria-pressed="${cycle === 'annual'}">${t('连续包年','Annual renewal')}</button></div></div>${audience === 'business' ? `<div class="seat-selector"><label for="pricing-seats">${t('真人席位数量','Human seats')}</label><input id="pricing-seats" type="number" min="1" max="10000" step="1" value="${seats}" inputmode="numeric" aria-describedby="pricing-seat-help pricing-seat-error"><p id="pricing-seat-help">${t('Teams 1 席起，Enterprise 10 席起；按购买的名额上限安排员工。企业价格与完整权益尚未公布，当前不接受付款。','Teams starts at 1 seat; Enterprise starts at 10. Assign members within the purchased capacity. Business prices and full benefits are pending; no payment is accepted.')}</p><p id="pricing-seat-error" class="field-error" role="status"></p></div>` : ''}<div id="plans" class="plan-grid ${audience === 'business' ? 'business' : ''}" aria-live="polite"></div><p class="notice">${icon('info-circle')}${boundary}</p><section class="credits-entry"><div>${icon('wallet2')}<div><h2>${t('按需加购 Sage Credits','Buy additional Sage Credits')}</h2><p>${t('每笔购买独立有效 12 个月，不改变订阅周期','Each purchase lasts 12 months and does not change your subscription term.')}</p></div></div><a class="button" href="${page('billing')}#credits">${t('了解加购','Explore add-ons')}</a></section>${faqs()}`);
+    shell(`<header class="page-heading pricing-heading"><span class="eyebrow">SAGE MEMBERSHIP</span><h1>${t('选择适合你的 Sage 计划','Choose your Sage plan')}</h1><p>${t('从个人经营到企业协作，选择适合你的方案与使用节奏','Find the right plan for individual work or business collaboration.')}</p><div class="segmented audience-control" role="group" aria-label="${t('方案类型','Plan type')}"><button data-audience="personal" aria-pressed="${audience === 'personal'}">${t('个人版','Personal')}</button><button data-audience="business" aria-pressed="${audience === 'business'}">${t('企业版','Business')}</button></div></header><section id="pricing-subscription-status" class="policy-block" aria-live="polite"></section><div class="controls"><h2>${audience === 'personal' ? t('个人方案','Personal plans') : t('企业方案','Business plans')}</h2><div class="segmented" role="group" aria-label="${t('付费周期','Billing cycle')}"><button data-cycle="monthly" aria-pressed="${cycle === 'monthly'}">${t('连续包月','Monthly renewal')}</button><button data-cycle="annual" aria-pressed="${cycle === 'annual'}">${t('连续包年','Annual renewal')}</button></div></div><div id="plans" class="plan-grid ${audience === 'business' ? 'business' : ''}" aria-live="polite"></div><p class="notice">${icon('info-circle')}${boundary}</p><section class="credits-entry"><div>${icon('wallet2')}<div><h2>${t('按需加购 Sage Credits','Buy additional Sage Credits')}</h2><p>${t('每笔购买独立有效 12 个月，不改变订阅周期','Each purchase lasts 12 months and does not change your subscription term.')}</p></div></div><a class="button" href="${page('billing')}#credits">${t('了解加购','Explore add-ons')}</a></section>${faqs()}`);
     for (const button of document.querySelectorAll('[data-audience]')) button.onclick = () => { audience = button.dataset.audience; history.replaceState(null, '', selectionURL('pricing')); pricing(); document.querySelector(`[data-audience="${audience}"]`).focus(); };
     for (const button of document.querySelectorAll('[data-cycle]')) button.onclick = () => { cycle = button.dataset.cycle; history.replaceState(null, '', selectionURL('pricing')); pricing(); document.querySelector(`[data-cycle="${cycle}"]`).focus(); };
     const descriptions = {
@@ -246,15 +246,15 @@
       const trial = p.code === 'trial', price = trial ? 0 : p[`${cycle}_amount_minor`];
       const priced = Number.isSafeInteger(price) && price >= 0;
       const features = [t('VOC 机会洞察 / Shopify 店铺诊断二选一','Choose VOC insights or a Shopify diagnosis'),t('仅一次成功体验；当前可查看示例','One successful trial; examples are currently available'),t('无需银行卡，不自动转付费','No card required. No automatic paid conversion')];
-      return `<article class="plan"><div class="plan-top"><h2>${escape(trial ? t('体验版','Trial') : p.name)}</h2>${p.code === 'pro' ? `<span class="tag">${t('日常经营','Everyday work')}</span>` : ''}</div><p class="plan-description">${descriptions[p.code] || ''}</p><div class="price ${priced ? '' : 'pending'}">${priced ? amountMarkup(price) : t('价格待定','Price pending')}${trial || !priced ? '' : `<small>/${p.audience === 'business' ? t('席位/','seat/') : ''}${cycle === 'annual' ? t('年','year') : t('月','month')}</small>`}</div><p class="price-note">${trial ? t('不绑定支付方式','No payment method required') : priced ? t('参考价 · 正式价格待定','Reference only · Final price pending') : t('未定价，不接受付款','Not priced. No payment accepted.')}</p>${trial ? `<a class="button" href="${page('trial')}">${t('查看体验示例','Explore trial examples')}</a>` : `<a class="button ${priced ? 'primary' : ''}" data-plan-link="${escape(p.code)}" data-minimum-seats="${p.minimum_seats}" href="${escape(selectionURL('checkout', {plan:p.code}))}">${t('查看方案','Review plan')}</a>`}${trial ? `<div class="plan-benefits"><ul>${features.map(f => `<li>${icon('check2')}<span>${f}</span></li>`).join('')}</ul></div>` : p.audience === 'personal' ? personalBenefits(p.code) : businessBenefits(p)}</article>`;
-    }).join('') + (audience === 'business' ? `<article class="plan"><div class="plan-top"><h2>${t('合同采购','Contract')}</h2></div><p class="plan-description">${t('按企业需求约定席位、资源与服务。','Agree seats, resources and services for your business.')}</p><div class="price pending">${t('联系销售','Custom quote')}</div><p class="price-note">${t('对公转账 · 财务核验到账后开通','Corporate transfer · Access after verified receipt')}</p><a class="button primary" href="${page('billing')}#procurement">${t('查看采购说明','View procurement details')}</a><ul><li>${t('1 人也可提交采购咨询','Purchasing inquiries welcome from 1 person')}</li><li>${t('合同明确含税金额与服务期','Tax-inclusive amount and service term in contract')}</li><li>${t('对公采购不自动续费','Contract purchases do not renew automatically')}</li></ul></article>` : '');
+      return `<article class="plan"><div class="plan-top"><h2>${escape(trial ? t('体验版','Trial') : p.name)}</h2>${p.code === 'pro' ? `<span class="tag">${t('日常经营','Everyday work')}</span>` : ''}</div><p class="plan-description">${descriptions[p.code] || ''}</p><div class="price ${priced ? '' : 'pending'}">${priced ? amountMarkup(price) : t('价格待定','Price pending')}${trial || !priced ? '' : `<small>/${p.audience === 'business' ? t('席位/','seat/') : ''}${cycle === 'annual' ? t('年','year') : t('月','month')}</small>`}</div><p class="price-note">${trial ? t('不绑定支付方式','No payment method required') : priced ? t('参考价 · 正式价格待定','Reference only · Final price pending') : t('未定价，不接受付款','Not priced. No payment accepted.')}</p><div class="plan-actions">${trial ? `<a class="button" href="${page('trial')}">${t('查看体验示例','Explore trial examples')}</a>` : `<a class="button ${priced || p.audience === 'business' ? 'primary' : ''}" data-plan-link="${escape(p.code)}" data-minimum-seats="${p.minimum_seats}" href="${escape(selectionURL('checkout', {plan:p.code, seats:p.audience === 'business' ? Math.max(seats,p.minimum_seats) : 1}))}">${t('查看方案','Review plan')}</a>`}${p.code === 'enterprise' ? `<a class="button" href="${page('billing')}#procurement">${t('联系销售','Contact sales')}</a>` : ''}</div>${trial ? `<div class="plan-benefits"><ul>${features.map(f => `<li>${icon('check2')}<span>${f}</span></li>`).join('')}</ul></div>` : p.audience === 'personal' ? personalBenefits(p.code) : businessBenefits(p)}</article>`;
+    }).join('');
     if (purchaseCatalog && purchaseCatalog.account_id === session?.active_account_id) {
       for (const link of document.querySelectorAll('[data-plan-link]')) {
         const product = purchaseCatalog.items.find(item=>item.code === link.dataset.planLink && item.billing_cycle === cycle && item.audience === audience && item.quote_available === true);
         const benefits = product?.entitlements?.benefits?.[en ? 'en' : 'zh'];
         if (!product || typeof product.unit_amount_minor !== 'string' || !/^\d+$/.test(product.unit_amount_minor) || !Array.isArray(benefits) || !benefits.length || benefits.some(text=>typeof text !== 'string')) continue;
         link.dataset.purchaseProduct = product.id;
-        link.href = `${page('checkout')}?${new URLSearchParams({product:product.id,seats:String(audience === 'business' ? seats : 1)})}`;
+        link.href = `${page('checkout')}?${new URLSearchParams({product:product.id,seats:String(audience === 'business' ? Math.max(seats,Number(link.dataset.minimumSeats)) : 1)})}`;
         link.textContent = t('订阅','Subscribe');
         const card = link.closest('.plan');
         card.querySelector('.price').innerHTML = `${amountMarkup(product.unit_amount_minor)}<small>/${audience === 'business' ? t('席位/','seat/') : ''}${cycle === 'annual' ? t('年','year') : t('月','month')}</small>`;
@@ -266,8 +266,6 @@
       if (document.querySelector('[data-purchase-product]')) {
         const notice = document.querySelector('.notice');
         notice.replaceChildren(document.createTextNode(t('已批准方案可获取报价并创建订单。创建订单不会扣款，支付与续费授权尚未接通。其他方案仍为参考信息。','Approved plans support quotes and order creation, without charging you. Payment and renewal authorization are not connected. Other plans remain reference information.')));
-        const help = document.querySelector('#pricing-seat-help');
-        if (help) help.textContent=t('Teams 1 席起，Enterprise 10 席起。已批准商品以正式报价为准；创建订单不等于付款或开通。','Teams starts at 1 seat; Enterprise starts at 10. Approved products use the confirmed quote; creating an order does not mean payment or activation.');
       }
     }
     const subscriptionStatus = document.querySelector('#pricing-subscription-status');
@@ -300,27 +298,6 @@
         subscriptionStatus.innerHTML = `<h2>${t('当前账户的订阅','Subscriptions for this account')}</h2>` + (records.length ? `<ul class="record-list">${records.map(item=>`<li><strong>Sage ${escape(names[item.plan_code] || item.plan_code)} · ${item.billing_cycle === 'annual' ? t('连续包年','Annual renewal') : t('连续包月','Monthly renewal')}</strong><span>${status[item.status]} · ${renewal(item)}</span><small>${t('已付服务截止','Paid service through')} ${item.prepaid_through === null ? unknown() : dateLabel(item.prepaid_through)}</small></li>`).join('')}</ul>` : `<p>${t('未查询到当前账户的订阅记录。','No subscription records were returned for this account.')}</p>`) + `<p class="checkout-note">${note}</p><a class="button" href="${page('billing')}#subscription">${t('管理订阅与账单','Manage subscriptions and billing')}</a>`;
       }
     } else subscriptionStatus.remove();
-    const input = document.querySelector('#pricing-seats');
-    const updateSeatSelection = (updateLocation = false) => {
-      if (!input) return;
-      const valid = input.validity.valid && /^[0-9]+$/.test(input.value);
-      input.setAttribute('aria-invalid', String(!valid));
-      document.querySelector('#pricing-seat-error').textContent = valid ? '' : t('请输入 1 至 10,000 的整数席位数；Enterprise 至少 10 席。','Enter a whole number from 1 to 10,000; Enterprise requires at least 10 seats.');
-      if (valid) seats = Number(input.value);
-      for (const link of document.querySelectorAll('[data-plan-link]')) {
-        if (link.dataset.subscriptionManaged) continue;
-        const eligible = valid && seats >= Number(link.dataset.minimumSeats);
-        link.setAttribute('aria-disabled', String(!eligible));
-        if (eligible) link.href = link.dataset.purchaseProduct ? `${page('checkout')}?${new URLSearchParams({product:link.dataset.purchaseProduct,seats:String(seats)})}` : selectionURL('checkout', {plan:link.dataset.planLink});
-        else link.removeAttribute('href');
-      }
-      if (valid && updateLocation) {
-        history.replaceState(null, '', selectionURL('pricing'));
-        document.dispatchEvent(new Event('sage:location-updated'));
-      }
-    };
-    updateSeatSelection();
-    if (input) input.addEventListener('input', () => updateSeatSelection(true));
   }
 
   async function checkout() {

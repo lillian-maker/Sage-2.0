@@ -1,0 +1,32 @@
+# Explicit opt-in after preparing auth_credentials.json outside the repository.
+# Append after compose.yaml (and compose.offline.yaml for offline deployment).
+# The JSON contains only existing SAGE_* credential names accepted by the entrypoint.
+# On the target Linux host: owner 10001:10001, mode 0400, private parent mode 0700.
+# Check actual container-visible ownership/readability; Compose does not remap them.
+# Non-secret values below are supplied through the operator's environment.
+# This overlay does not enable authentication, supplier egress or Google callbacks.
+services:
+  app:
+    environment:
+      SAGE_AUTH_EMAIL_TRANSPORT: ses
+      SAGE_SES_REGION: ${SAGE_SES_REGION:-}
+      SAGE_EMAIL_FROM: ${SAGE_EMAIL_FROM:-}
+      SAGE_CAPTCHA_APP_ID: ${SAGE_CAPTCHA_APP_ID:-}
+      SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID: ${SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID:-}
+      SAGE_AUTH_PASSWORD_SES_TEMPLATE_ID: ${SAGE_AUTH_PASSWORD_SES_TEMPLATE_ID:-}
+      SAGE_AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID: ${SAGE_AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID:-}
+      SAGE_AUTH_GOOGLE_BIND_SES_TEMPLATE_ID: ${SAGE_AUTH_GOOGLE_BIND_SES_TEMPLATE_ID:-}
+      SAGE_GOOGLE_CLIENT_ID: ${SAGE_GOOGLE_CLIENT_ID:-}
+      SAGE_GOOGLE_REDIRECT_URI: ${SAGE_GOOGLE_REDIRECT_URI:-}
+      SAGE_AUTH_REGISTRATION_TERMS_VERSION: ${SAGE_AUTH_REGISTRATION_TERMS_VERSION:-}
+      SAGE_AUTH_REGISTRATION_TERMS_URL: ${SAGE_AUTH_REGISTRATION_TERMS_URL:-}
+      SAGE_AUTH_REGISTRATION_PRIVACY_URL: ${SAGE_AUTH_REGISTRATION_PRIVACY_URL:-}
+      SAGE_AUTH_REGISTRATION_TERMS_READY: "0"
+      SAGE_GOOGLE_BRAND_READY: "0"
+    secrets:
+      - source: auth_credentials
+        target: auth_credentials.json
+
+secrets:
+  auth_credentials:
+    file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/auth_credentials.json"

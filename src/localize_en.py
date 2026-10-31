@@ -790,8 +790,6 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 岗位配置与协作范围随具体经营问题确定，不以头像数量衡量专业性。	Role combinations and collaboration depend on the question. Avatar count is not a measure of expertise.
 管理职能	Management functions
 首席执行官 CEO	Chief Executive Officer · CEO
-首席增长官 CGO	Chief Growth Officer · CGO
-首席治理官 CGOV	Chief Governance Officer · CGOV
 天时	Tianshi
 地利	Dili
 人和	Renhe
@@ -953,6 +951,7 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 让企业数据、业务知识与 AI 能力，真正服务于你的团队与业务。	Put company data, business knowledge and AI capabilities to work for your team.
 文档目录	Documentation contents
 搜索文档	Search documentation
+placeholder="搜索"	placeholder="Search"
 搜索标题或正文	Search titles or content
 清空搜索	Clear search
 清空	Clear
