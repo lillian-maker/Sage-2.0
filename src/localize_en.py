@@ -14,6 +14,84 @@ COPY = r"""
 下载	Download
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
+什么是 Sage	What is Sage
+适用人群与使用边界	Who it is for and usage boundaries
+提交任务与查看成果	Submit tasks and review results
+注册与登录	Sign up and sign in
+第一次使用 Sage？按这个顺序读	New to Sage? Read in this order
+四篇文章，从了解产品到提交第一个任务。	Four articles, from understanding the product to submitting your first task.
+按你要做的事查找	Find what you need to do
+了解产品定位、服务范围和使用边界。	Learn the product positioning, scope and usage boundaries.
+先判断问题是否适合，再准备具体任务。	Check whether a question fits before preparing a task.
+验证身份后，再进入个人或企业计费账户。	Verify your identity, then enter a personal or business billing account.
+让输入、结果和下一步都可以核对。	Keep inputs, results and next steps verifiable.
+选择经营场景	Choose a workflow
+九个入口分别对应哪些经营问题	Which business question each of the nine entries covers
+了解数字员工	Meet the digital employees
+岗位职责、工作方法与授权	Responsibilities, methods and authorization
+管理授权	Manage authorization
+授权范围、撤回与外部动作	Scope, withdrawal and external actions
+订阅与计费	Plans and billing
+套餐、Credits 与计费周期	Plans, Credits and billing cycles
+管理企业成员	Manage business members
+管理员、成员与真人席位	Admins, members and human seats
+遇到问题	Troubleshooting
+付款、余额与任务异常的处理	Payment, balance and task issues
+一个任务，一支团队，	One task, one team,
+一条看得见的执行路径	one execution path you can see
+Sage 为每个任务指定唯一的主责专家，按需组建协作与复核专家。计划、依据、授权和成果，都在你眼前推进。	Sage gives every task a single lead specialist and brings in contributors and reviewers as needed. Plans, evidence, authorizations and results all move forward in front of you.
+界面示意：一个内容审核任务的执行计划	Interface illustration: the execution plan of a content review task
+执行计划 · 5 位专家	Execution plan · 5 specialists
+界面示意 · 示例任务	Interface illustration · Sample task
+审核新品详情页的品牌表述、平台规则与合规风险	Review a new product page for brand wording, platform rules and compliance risk
+协作	Contributor
+合规风险判断	Compliance risk
+品牌表述核对	Brand wording
+平台规则核对	Platform rules
+素材修改建议	Creative fixes
+进行中	In progress
+已完成	Done
+等待上游	Waiting
+需你授权	Needs your authorization
+发布修改后的商品详情	Publish the revised product page
+闭环执行	Closed loop
+能力深度	Capability depth
+岗位目录	Role directory
+四种角色，责任从不含糊	Four roles, never an unclear owner
+没有合适的细分专家时，由 Sage 助手担任主责；它与其他专家一样受可调用性与授权约束。	When no specialist fits, Sage Assistant becomes the lead, under the same availability and authorization checks as every specialist.
+主责专家	Lead specialist
+协作专家	Contributing specialists
+复核专家	Reviewers
+你	You
+七步闭环，你在关键处拍板	A seven-step loop, with you deciding at the key moments
+每一步都可以查看、可以干预。	Every step can be inspected and adjusted.
+你确认	You confirm
+你决定	You decide
+你验收	You accept
+组队与编排	Assemble and orchestrate
+方案参数：默认最多 3 位专家同时工作，每一步最多重试 2 次，整个任务最多重新规划 3 次，以正式版本为准。	Design parameters: up to 3 specialists work at once, each step retries at most twice and a task replans at most 3 times; the released version prevails.
+越用，越懂你的业务	The more you use it, the better it knows your business
+事实沉淀	Facts that stay
+协作进化	Collaboration that improves
+流程复用	Workflows you reuse
+50 个专业岗位，覆盖出海经营全链路	50 specialist roles across the whole global commerce chain
+3 位管理者统筹方向，岗位分布在经营、产品、供应、渠道、品牌、服务、财务与数据 8 个专业域。	Three leaders set direction; roles span eight domains: business, product, supply, channels, brand, service, finance and data.
+从一个经营问题开始	Start with one business question
+协作机制、闭环执行与三张图依据 Sage App 产品设计，相关能力随 App 版本逐步开放。	Collaboration roles, the closed loop and the three graphs follow the Sage app product design; capabilities open with app releases.
+每个任务开始前有且只有一位主责：理解目标、拆解步骤、组织协作并交付。系统自动推荐，你可以随时切换。	Each task has exactly one lead before it starts: it understands the goal, breaks down the steps, organizes collaboration and delivers. Sage recommends one and you can switch at any time.
+在主责之下接受明确的子目标，并行推进；子结果由主责引用汇总，不会被当作独立完成或直接对外发布。	They take clear sub-goals under the lead and work in parallel; the lead cites and combines their results, which are never treated as finished on their own or published directly.
+关键结论交叉检查：数字由清账核对，合规结论由安界把关，整体由守衡或求证独立复核。	Key conclusions are cross-checked: numbers by Qingzhang, compliance by Anjie, and the whole by Shouheng or Qiuzheng as independent reviewers.
+提出目标与约束，确认计划，批准受控动作，验收成果。每次批准只覆盖确认卡上的对象、动作、范围和时效。	You set goals and constraints, confirm the plan, approve controlled actions and accept results. Each approval covers only the targets, actions, scope and time on the confirmation card.
+在专家图谱上选出主责与协作专家，把步骤编排成有依赖关系的执行图。	Pick the lead and contributors on the specialist graph and orchestrate the steps into an execution graph with dependencies.
+没有依赖的步骤同时推进，每一步只拿到与它相关、且有权访问的知识。	Independent steps run at the same time, and each sees only the knowledge it needs and may access.
+只在失败处局部重做；连续多轮没有进展时暂停，交给你决定。	Only failed steps are redone; after several rounds without progress, Sage pauses and hands the decision to you.
+成果附带出处交你验收；验收后的事实写回知识图谱。	Results arrive with sources for your acceptance; accepted facts flow back to the knowledge graph.
+专家之间的常见交接、上下游与复核关系。用于组队：简单任务不拉很多人，关键结论一定有人复核。	Common handoffs, upstream and downstream work, and review relationships between specialists. Used to assemble teams: simple tasks stay small, and key conclusions always get a reviewer.
+每项技能都有前置条件与产出。执行前先编排成执行图，并检查所需连接与授权；某项技能失败时换用可替代技能。	Every skill has preconditions and outputs. Steps are orchestrated into an execution graph and checked for connections and authorizations first; a failed skill is replaced by an alternative.
+品牌、商品、市场、渠道、竞品与法规等经营实体，带生效时间、出处与访问权限，为每一步提供依据并提示矛盾。	Business entities such as brands, products, markets, channels, competitors and regulations, with effective dates, sources and access rights, grounding each step and flagging conflicts.
+验收后的新事实带出处写回知识图谱，下一个任务直接引用。	Newly accepted facts flow back to the knowledge graph with their sources, ready for the next task.
+每次合作的验收结果回写专家与技能之间的关系，组队越来越准。	The outcome of every collaboration updates the links between specialists and skills, so teams get assembled more accurately.
+跑通的执行图可以存为 Playbook，下次一键复用，或交给自动化定期运行。	A proven execution graph can be saved as a Playbook, reused in one step or run on a schedule by automation.
 经营场景	Business workflows
 数字员工	Digital employees
 企业级架构	Enterprise architecture
@@ -30,14 +108,7 @@ COPY = r"""
 主责专家牵头，按“专家 × 技能 × 知识”编译执行图，并行执行、交叉校验。	A lead specialist compiles an execution graph of specialist × skill × knowledge, runs steps in parallel and cross-checks them.
 业务规则、指标口径、流程约束与知识图谱，每条事实带出处、时间与权限。	Business rules, metric definitions, process constraints and a knowledge graph; every fact carries its source, time and access rights.
 ERP、CRM、HR 等业务系统与文档、报表，通过标准连接按授权读取。	Business systems such as ERP, CRM and HR, plus documents and reports, read through standard connections with authorization.
-Sage 文档中心	Sage documentation
-产品规则、经营场景与订阅说明，一处查清	Product rules, business workflows and subscriptions in one place
-常用文档	Popular docs
-注册、登录与首次体验	Sign-up, sign-in and your first trial
-九个入口与八条核心经营流	Nine entries and eight core workflows
 岗位职责、方法与授权	Roles, methods and authorization
-帮助与规则	Help and rules
-常见问题与平台规则	FAQ and platform rules
 一支为出海经营而生的	An AI organization built
 AI 组织	for global commerce
 按岗位分工，按方法工作，按授权行动。	Organized by role, working by method, acting only with authorization.

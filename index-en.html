@@ -1110,17 +1110,15 @@ body[data-auth-page] #auth-reset-link{display:block;color:#396397}
 /* Pricing: the purchase status is read before the reference prices. */
 .pricing-page .notice{margin:0 0 20px;padding:12px 16px;border:1px solid #e4e9ef;border-top:1px solid #e4e9ef;border-radius:10px;background:#f4f7fb;color:#202b38;font-size:14px;line-height:1.6}
 .pricing-page .plan-pending dd{background:none;border:0;padding:0;color:#63758a;font-size:12px}
-/* "AI 科技新星" bands: the homepage night sky carried into content pages. */
-.cp-dark{position:relative;isolation:isolate;color:#f4f7fb;background:radial-gradient(ellipse at 78% 12%,#2c4f7c55,transparent 52%),radial-gradient(ellipse at 18% 88%,#24406a40,transparent 55%),#050912;overflow:hidden}
-.cp-dark::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;background-image:radial-gradient(circle at 12px 40px,#dbe9ff 0 1px,transparent 1.6px),radial-gradient(circle at 180px 120px,#dbe9ff99 0 .8px,transparent 1.4px),radial-gradient(circle at 300px 30px,#dbe9ff80 0 .7px,transparent 1.3px);background-size:340px 220px,420px 260px,520px 300px}
-.cp-dark::after{content:"";position:absolute;left:50%;top:-30%;width:70%;height:60%;transform:translateX(-50%);z-index:-1;background:radial-gradient(closest-side,#4f86c633,transparent);pointer-events:none}
+/* Night-sky band: identical recipe to the homepage hero (base #030408, two faint tints, fine stars, no glow). */
+.cp-dark{position:relative;isolation:isolate;color:#f4f7fb;background:radial-gradient(ellipse at 72% 18%,#25426835,transparent 48%),radial-gradient(ellipse at 34% 78%,#25355230,transparent 50%),#030408;overflow:hidden}
+.cp-dark::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.85;background-image:radial-gradient(circle at 1px 387px,rgba(224,236,255,.95) 0 1.45px,transparent 2.45px),radial-gradient(circle at 203px 249px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px),radial-gradient(circle at 468px 122px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px),radial-gradient(circle at 389px 433px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px),radial-gradient(circle at 615px 339px,rgba(224,236,255,.65) 0 .95px,transparent 1.95px),radial-gradient(circle at 138px 196px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px);background-size:640px 480px}
 .cp-dark :is(h1,h2,h3,dt,strong){color:#f4f7fb}
 .cp-dark :is(p,dd,li,span){color:#aab8ca}
 .cp-dark .cp-link{color:#cfe0f5}
-.cp-gradient-text{background:linear-gradient(92deg,#ffffff 0%,#b9d4f3 45%,#6fa3dc 100%);-webkit-background-clip:text;background-clip:text;color:transparent!important}
 /* Pricing heading as a night-sky band. */
-.pricing-page .pricing-heading{position:relative;isolation:isolate;margin:0 calc(50% - 50vw) 40px;padding:88px 24px 64px;color:#f4f7fb;background:radial-gradient(ellipse at 78% 12%,#2c4f7c55,transparent 52%),radial-gradient(ellipse at 18% 88%,#24406a40,transparent 55%),#050912}
-.pricing-page .pricing-heading h1{background:linear-gradient(92deg,#fff,#b9d4f3 55%,#6fa3dc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pricing-page .pricing-heading{position:relative;isolation:isolate;margin:0 calc(50% - 50vw) 40px;padding:88px 24px 64px;color:#f4f7fb;background:radial-gradient(ellipse at 72% 18%,#25426835,transparent 48%),radial-gradient(ellipse at 34% 78%,#25355230,transparent 50%),#030408}
+.pricing-page .pricing-heading h1{color:#f4f7fb}
 .pricing-page .pricing-heading p,.pricing-page .pricing-heading .eyebrow{color:#aab8ca}
 .pricing-page .pricing-heading .segmented{background:#ffffff14;border-color:#ffffff26}
 .pricing-page .pricing-heading .segmented button{color:#cfe0f5}
@@ -1814,7 +1812,7 @@ window.SAGE_CATALOG = {
       "owner": "AGT-008",
       "input": "类目/Product scope, 消费者与市场Evidence, 来源及样本限制；后续阶段需要可验证的工程, 样品和准入资料.",
       "boundary": "单人编码, 小样本不能输出市场占比；无样品/安全资料停在Opportunities验证, 不生成“已准入”；法律或产品风险不Approve不得发布.",
-      "script": "0–8 选择经批准脱敏的 VOC 范围；8–20 一条反馈拆成舒适正向与稳定性顾虑；20–30 加入反证并切情境；30–42 生成“待验证Opportunities”卡；42–52 团队视图展示Tinglan交付Evidence, Tuoxin/Dingxing接受并定义验证；52–60 展示未完成的样品/准入门槛.不得用快进暗示已完成真实实验.",
+      "script": "0–8 选择经批准脱敏的 VOC 范围；8–20 一条反馈拆成舒适正向与稳定性顾虑；20–30 加入反证并切情境；30–42 生成“待验证Opportunities”卡；42–52 团队视图展示Tinglan交付Evidence, Tuoxin/Dingxing接受并定义验证；52–60 展示未完成的样品/准入门槛.不得用快进暗示Done真实实验.",
       "steps": [
         {
           "label": "Evidence入池",
@@ -2114,7 +2112,7 @@ window.SAGE_CATALOG = {
       "title": "Customer journey and retention",
       "product": "客户旅程修复台",
       "deliverables": ["客户旅程事件", "旅程Problem diagnosis", "跨域体验修复包", "客户触达回执", "体验学习记录"],
-      "question": "客户在哪里遇到问题, 如何修复体验？",
+      "question": "客户在哪里Troubleshooting, 如何修复体验？",
       "output": "Customer recovery and retention plan",
       "owner": "AGT-034",
       "input": "去重客户事件, Authorization范围内的售前/售后/退货/CRM/反馈；Personal details最小化处理.",
@@ -2315,7 +2313,7 @@ window.SAGE_CATALOG = {
       "owner": "AGT-018",
       "input": "权威事件信号, 影响对象, 风险等级, 已有Evidence；未证实告警进入待验证, 不直接触发破坏性操作.",
       "boundary": "不确定状态先冻结相关高风险动作；超时不当失败盲重试；撤回动作本身也需要权限与可行性证明.",
-      "script": "0–10 展开已脱敏的事件信号；10–20 选影响范围和Immediate safeguards；20–32 切协作看Zhishou与Independent review；32–42 查看回执/未决项；42–50 对照恢复条件, 未满足时停在冻结而非绿色完成.",
+      "script": "0–10 展开已脱敏的事件信号；10–20 选影响范围和Immediate safeguards；20–32 切Contributor看Zhishou与Independent review；32–42 查看回执/未决项；42–50 对照恢复条件, 未满足时停在冻结而非绿色完成.",
       "steps": [
         {
           "label": "权威信号",
@@ -2687,7 +2685,7 @@ window.SAGE_CATALOG = {
   if(security.verified_method==='phone'&&security.verified_account_id===accountId&&Date.parse(security.verified_until)>Date.now())return;
   return new Promise((resolve,reject)=>{
    const dialog=document.createElement('dialog');dialog.className='profile-deletion-dialog';dialog.setAttribute('aria-labelledby','sensitive-title');
-   dialog.innerHTML=`<h2 id="sensitive-title">${text('确认是你本人操作','Confirm your identity')}</h2><p>${text('请输入账号密码, 并Approve原手机号短信验证.验证Approve后15分钟内有效, 仅限当前企业.','Enter your account password and verify your original phone number. Confirmation lasts 15 minutes for this business only.')}</p><form method="dialog"><label>${text('账号密码','Account password')}<input type="password" name="password" autocomplete="current-password" required></label><label>${text('短信Verification code','SMS code')}<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6"></label><p role="status"></p><div class="profile-deletion-actions"><button type="button" data-sensitive-send>${text('Request code','Send code')}</button><button type="button" data-sensitive-cancel>${text('取消','Cancel')}</button><button type="submit" disabled>${text('验证并Continue','Verify and continue')}</button></div></form>`;
+   dialog.innerHTML=`<h2 id="sensitive-title">${text('确认是You本人操作','Confirm your identity')}</h2><p>${text('请输入账号密码, 并Approve原手机号短信验证.验证Approve后15分钟内有效, 仅限当前企业.','Enter your account password and verify your original phone number. Confirmation lasts 15 minutes for this business only.')}</p><form method="dialog"><label>${text('账号密码','Account password')}<input type="password" name="password" autocomplete="current-password" required></label><label>${text('短信Verification code','SMS code')}<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6"></label><p role="status"></p><div class="profile-deletion-actions"><button type="button" data-sensitive-send>${text('Request code','Send code')}</button><button type="button" data-sensitive-cancel>${text('取消','Cancel')}</button><button type="submit" disabled>${text('验证并Continue','Verify and continue')}</button></div></form>`;
    const form=dialog.querySelector('form'),password=form.querySelector('[name=password]'),code=form.querySelector('[name=code]'),send=form.querySelector('[data-sensitive-send]'),cancel=form.querySelector('[data-sensitive-cancel]'),submit=form.querySelector('[type=submit]'),status=form.querySelector('[role=status]');
    let challenge=null,busy=false,closed=false,expires=0,resend=0;const timer=setInterval(update,1000),previous=document.activeElement;
    function update(){send.disabled=busy||Date.now()<resend;cancel.disabled=busy;submit.disabled=busy||!challenge||Date.now()>=expires||!/^\d{6}$/.test(code.value);}

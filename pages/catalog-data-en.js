@@ -567,7 +567,7 @@ window.SAGE_CATALOG = {
       "owner": "AGT-008",
       "input": "类目/Product scope, 消费者与市场Evidence, 来源及样本限制；后续阶段需要可验证的工程, 样品和准入资料.",
       "boundary": "单人编码, 小样本不能输出市场占比；无样品/安全资料停在Opportunities验证, 不生成“已准入”；法律或产品风险不Approve不得发布.",
-      "script": "0–8 选择经批准脱敏的 VOC 范围；8–20 一条反馈拆成舒适正向与稳定性顾虑；20–30 加入反证并切情境；30–42 生成“待验证Opportunities”卡；42–52 团队视图展示Tinglan交付Evidence, Tuoxin/Dingxing接受并定义验证；52–60 展示未完成的样品/准入门槛.不得用快进暗示已完成真实实验.",
+      "script": "0–8 选择经批准脱敏的 VOC 范围；8–20 一条反馈拆成舒适正向与稳定性顾虑；20–30 加入反证并切情境；30–42 生成“待验证Opportunities”卡；42–52 团队视图展示Tinglan交付Evidence, Tuoxin/Dingxing接受并定义验证；52–60 展示未完成的样品/准入门槛.不得用快进暗示Done真实实验.",
       "steps": [
         {
           "label": "Evidence入池",
@@ -867,7 +867,7 @@ window.SAGE_CATALOG = {
       "title": "Customer journey and retention",
       "product": "客户旅程修复台",
       "deliverables": ["客户旅程事件", "旅程Problem diagnosis", "跨域体验修复包", "客户触达回执", "体验学习记录"],
-      "question": "客户在哪里遇到问题, 如何修复体验？",
+      "question": "客户在哪里Troubleshooting, 如何修复体验？",
       "output": "Customer recovery and retention plan",
       "owner": "AGT-034",
       "input": "去重客户事件, Authorization范围内的售前/售后/退货/CRM/反馈；Personal details最小化处理.",
@@ -1068,7 +1068,7 @@ window.SAGE_CATALOG = {
       "owner": "AGT-018",
       "input": "权威事件信号, 影响对象, 风险等级, 已有Evidence；未证实告警进入待验证, 不直接触发破坏性操作.",
       "boundary": "不确定状态先冻结相关高风险动作；超时不当失败盲重试；撤回动作本身也需要权限与可行性证明.",
-      "script": "0–10 展开已脱敏的事件信号；10–20 选影响范围和Immediate safeguards；20–32 切协作看Zhishou与Independent review；32–42 查看回执/未决项；42–50 对照恢复条件, 未满足时停在冻结而非绿色完成.",
+      "script": "0–10 展开已脱敏的事件信号；10–20 选影响范围和Immediate safeguards；20–32 切Contributor看Zhishou与Independent review；32–42 查看回执/未决项；42–50 对照恢复条件, 未满足时停在冻结而非绿色完成.",
       "steps": [
         {
           "label": "权威信号",

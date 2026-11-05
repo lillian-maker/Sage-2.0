@@ -311,5 +311,9 @@
   });
   root.addEventListener('keydown',event => { if (event.key === 'Escape' && directory.classList.contains('open')) { closeDirectory(); toggle.focus(); } });
   window.addEventListener('popstate',() => renderArticle(true));
+  // The reading path belongs to the docs landing; once a reader opens an article it steps aside.
+  const startGuide = document.querySelector('.sd-start');
+  const syncStart = () => { if (startGuide) startGuide.hidden = new URL(location.href).searchParams.has('article'); };
+  syncStart(); window.addEventListener('popstate', syncStart); document.addEventListener('click', () => requestAnimationFrame(syncStart));
   renderArticle(false);
 })();
