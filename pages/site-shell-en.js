@@ -158,12 +158,28 @@
   button.disabled=false;
  }
  const homeConsultation=document.querySelector('#r-contact-form');if(homeConsultation)wireConsultation(homeConsultation);
+ let toast,toastTimer;
+ function hideToast(){toast?.classList.remove('is-visible');}
+ function announceApp(trigger){
+  if(!toast){toast=document.createElement('div');toast.className='sage-toast';toast.setAttribute('role','status');toast.setAttribute('aria-live','polite');document.body.append(toast);}
+  toast.classList.remove('is-visible');toast.style.left='0px';toast.textContent=text('Sage App Coming soon, 敬请期待.','The Sage app is coming soon.');
+  const rect=trigger.getBoundingClientRect(),width=toast.offsetWidth,height=toast.offsetHeight,center=rect.left+rect.width/2;
+  const left=Math.max(16,Math.min(innerWidth-16-width,center-width/2)),below=rect.bottom+12+height<=innerHeight;
+  toast.dataset.placement=below?'bottom':'top';toast.style.left=left+'px';toast.style.top=(below?rect.bottom+12:rect.top-12-height)+'px';
+  toast.style.setProperty('--arrow',Math.max(14,Math.min(width-14,center-left))+'px');
+  requestAnimationFrame(()=>toast.classList.add('is-visible'));
+  clearTimeout(toastTimer);toastTimer=setTimeout(hideToast,3000);
+ }
+ // Until an installer ships, download entries explain the upcoming app; the link remains the no-script fallback.
+ document.addEventListener('click',event=>{const trigger=event.target.closest('[data-app-soon]');if(trigger){event.preventDefault();announceApp(trigger);}else hideToast();});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')hideToast();});
+ addEventListener('scroll',hideToast,{passive:true});
  function alignNavigation(){
   notificationBell();
   document.querySelectorAll('.sage-account-menu,.nav-account').forEach(wireAccountHover);
   document.querySelectorAll('.cp-nav,.r-nav,.billing-nav').forEach(header=>{
    const links=header.querySelector('.cp-links,#r-menu');if(!links||links.querySelector('.mobile-download'))return;
-   const download=document.createElement('span');download.className='mobile-download app-soon';download.setAttribute('aria-disabled','true');download.textContent=text('App coming soon','App coming soon');links.append(download);
+   const download=document.createElement('a');download.className='mobile-download';download.href=pageURL('download');download.dataset.appSoon='';download.textContent=text('Download','Download');links.append(download);
   });
   document.querySelectorAll('.cp-menu,#r-menu-toggle').forEach(button=>{if(button.dataset.iconReady)return;button.dataset.iconReady='true';button.setAttribute('aria-label',document.documentElement.lang==='en'?'Open navigation menu':'Open navigation menu');button.innerHTML='<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg>';});
   document.querySelectorAll('.cp-tools,.r-tools,.nav-actions').forEach(tools=>{const language=tools.closest('header')?.querySelector('.sage-language');if(language&&tools.firstElementChild!==language)tools.prepend(language);});
@@ -179,10 +195,5 @@
  function close(){document.querySelector('#r-menu')?.classList.remove('open');document.querySelector('#r-menu-toggle')?.setAttribute('aria-expanded','false');}
  document.addEventListener('click',e=>{const menu=document.querySelector('#r-menu'),toggle=document.querySelector('#r-menu-toggle');if(!menu||!toggle)return;if(e.target.closest('#r-menu-toggle')){const open=!menu.classList.contains('open');menu.classList.toggle('open',open);toggle.setAttribute('aria-expanded',String(open));}else if(e.target.closest('#r-menu a')||!e.target.closest('.r-nav,.billing-nav'))close();});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('#r-menu')?.classList.contains('open')){close();document.querySelector('#r-menu-toggle').focus();}});
- const language=document.querySelector('#r-language'),status=document.querySelector('#language-status');
- language?.addEventListener('click',()=>{location.href=location.pathname.replace('-en.html','.html')+location.search+location.hash;});
- const dialog=document.querySelector('#site-dialog');
- document.querySelectorAll('[data-legal]').forEach(b=>b.addEventListener('click',()=>{document.querySelector('#site-dialog-title').textContent=b.dataset.legal==='privacy'?'隐私说明':'使用条款';document.querySelector('#site-dialog-copy').textContent='当前为本地产品预览, 不接入认证, 支付, 店铺或销售服务.正式条款与隐私政策将在真实服务开放前提供.演示成果只在当前浏览器会话留存, 请勿提交敏感资料.';dialog.showModal();}));
- dialog?.querySelector('.dialog-close')?.addEventListener('click',()=>dialog.close());
  document.addEventListener('error',e=>{if(e.target instanceof HTMLImageElement){e.target.classList.add('image-unavailable');e.target.alt=e.target.alt||'头像暂不可用';}},true);
 })();

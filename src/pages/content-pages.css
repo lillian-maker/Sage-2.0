@@ -287,15 +287,38 @@ body[data-auth-page] #auth-reset-link{display:block;color:#396397}
 /* Full lockups retain their natural proportions instead of the old square icon. */
 .cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{display:block;width:112px;height:49px;object-fit:contain;max-width:none;filter:none}
 @media(max-width:600px){.cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{width:96px;height:42px}}
-/* App release status replaces download entries until an installer ships. */
-.app-soon{cursor:default;user-select:none}
-.v1 .nav .btn.app-soon,.v1 .nav .btn.app-soon:hover{background:transparent;color:#c4d0dc;border:1px solid #ffffff33;box-shadow:none}
-.v1 .nav.nav-light .btn.app-soon,.v1 .nav.nav-light .btn.app-soon:hover{color:#526171;border-color:#d5dde6}
-.v1 .mobile-nav .app-soon{color:var(--muted)}
-body:not(.v1) :is(.cp-consult,.r-button,.button,.mobile-download).app-soon,body:not(.v1) :is(.cp-consult,.r-button,.button,.mobile-download).app-soon:hover{background:transparent!important;color:#526171!important;border:1px solid #d5dde6!important;box-shadow:none!important}
-body:not(.v1) :is(.cp-links,#r-menu) .mobile-download.app-soon{border:0!important;color:#8090a3!important}
+/* Download entries stay visible; until an installer ships they announce the upcoming app. */
+.sage-toast{position:fixed;z-index:1000;max-width:min(320px,calc(100vw - 32px));padding:12px 16px;border-radius:10px;background:#14243a;color:#fff;font:500 14px/1.5 Arial,"PingFang SC","Microsoft YaHei",sans-serif;box-shadow:0 12px 32px #14243a33;opacity:0;transform:translateY(-4px);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.sage-toast.is-visible{opacity:1;transform:none}
+.sage-toast::before{content:"";position:absolute;top:-5px;left:var(--arrow,50%);width:10px;height:10px;margin-left:-5px;background:inherit;transform:rotate(45deg)}
+.sage-toast[data-placement=top]::before{top:auto;bottom:-5px}
+@media(prefers-reduced-motion:reduce){.sage-toast{transition:none}}
 /* Operator and ICP filing, injected into every static footer by build.py. */
 :is(.footer,.cp-footer,.r-footer,.trial-footer){flex-wrap:wrap}
 .sage-legal{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 16px;margin:8px 0 0;font-size:12px;line-height:1.7;color:#657487}
 .sage-legal a{color:inherit;text-decoration:none}
 .sage-legal a:hover{text-decoration:underline}
+/* Privacy policy and terms: long-form reading layout. */
+.legal-page{width:min(760px,calc(100% - 48px));margin:0 auto;padding:72px 0 96px;color:#202b38}
+.legal-kicker{margin:0 0 12px;font-size:13px;font-weight:600;letter-spacing:.08em;color:#396397}
+.legal-head h1{margin:0;font-size:clamp(32px,4vw,44px);line-height:1.25;letter-spacing:-.02em}
+.legal-meta{margin:14px 0 28px;font-size:13px;color:#657487}
+.legal-page p,.legal-page li{font-size:15px;line-height:1.85;color:#3b4858}
+.legal-page strong{color:#202b38}
+.legal-page a{color:#396397}
+.legal-toc{margin:32px 0 8px;padding:20px 24px;border:1px solid #e4e9ef;border-radius:12px;background:#f4f7fb}
+.legal-toc ol{margin:0;padding-left:20px;columns:2;column-gap:32px}
+.legal-toc li{font-size:14px;line-height:2}
+.legal-toc a{text-decoration:none}
+.legal-toc a:hover{text-decoration:underline}
+.legal-page section{padding-top:28px;scroll-margin-top:100px}
+.legal-page h2{margin:24px 0 12px;font-size:22px;line-height:1.4}
+.legal-page h3{margin:22px 0 8px;font-size:16px;line-height:1.5}
+.legal-page ul{padding-left:20px}
+.legal-table{overflow-x:auto;margin:16px 0}
+.legal-table table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+.legal-table th,.legal-table td{padding:12px 14px;border-bottom:1px solid #e4e9ef;text-align:left;vertical-align:top;line-height:1.7}
+.legal-table th{background:#f4f7fb;font-weight:600;color:#202b38}
+@media(max-width:600px){.legal-page{padding:44px 0 64px}.legal-toc ol{columns:1}}
+/* The menu download entry duplicates the toolbar button on desktop. */
+@media(min-width:1181px){body:not(.v1) :is(.cp-links,#r-menu) .mobile-download{display:none}}

@@ -55,11 +55,11 @@ assert.equal(slugs.length,40);
 assert.equal(new Set(slugs).size,40);
 for (const slug of ['gmv-growth','new-product','supply-delivery','market-entry','customer-journey','data-tools','major-events','business-review','shopify']) assert.ok(slugs.includes(slug));
 for (const name of ['team','enterprise','docs']) {
-  const fragment = read(`src/pages/${name}.html`), built = read(`pages/${name}.html`);
+  const unversioned=text=>text.replace(/\?v=[a-f0-9]{12}/g,''),fragment = read(`src/pages/${name}.html`), built = read(`pages/${name}.html`);
   if(name==='docs'){
-    for(const part of fragment.split('{{SAGE_DOCS_STATIC}}'))assert.ok(built.includes(part),`${name}: build must preserve the source around generated static articles`);
+    for(const part of fragment.split('{{SAGE_DOCS_STATIC}}'))assert.ok(unversioned(built).includes(unversioned(part)),`${name}: build must preserve the source around generated static articles`);
     assert.equal((built.match(/id="doc-readable-/g)||[]).length,40,'All document bodies must be readable without JavaScript');
-  }else assert.ok(built.includes(fragment),`${name}: build must include current source`);
+  }else{assert.ok(unversioned(built).includes(unversioned(fragment)),`${name}: build must include current source (content-hash versions aside)`);}
   assert.ok(built.includes('class="content-site'));
   assert.ok(built.includes(`href="${name}.html" aria-current="page"`));
   assert.ok(!built.includes('认证、支付与真实任务尚未接入'));
@@ -93,7 +93,7 @@ assert.ok(read('src/pages/ai-team.css').includes('.at-professional-visual::after
 for(const home of ['index.html','index-en.html'])assert.ok(read(home).includes('data-theme="dark"'),'Homepage hero keeps its approved dark background');
 const homePalette=read('src/visual-draft.css');
 assert.ok(homePalette.includes('.v1 .btn.primary{background:#396397;color:#fff;'),'Launch primary buttons use brand blue');
-assert.ok(homePalette.includes('.v1 .btn.primary:hover{background:#2f5585}'));
+assert.ok(homePalette.includes('.v1 .btn.primary:hover,.v1 .btn.primary:focus-visible{background:#2f5585;color:#fff;'),'Primary hover keeps white text on brand blue');
 assert.ok(!homePalette.includes('body.v1[data-theme=light] .hero{background:#fff}'),'Do not override the approved hero background');
 assert.ok(!teamHero.includes('at-orbit'));
 assert.ok(!read('src/pages/team.html').includes('经营工作'));
@@ -104,7 +104,7 @@ assert.ok(read('src/pages/ai-team.css').includes('repeat(var(--staff-count),minm
 for(const note of ['工程方法参考','以上为业务判断示例','外部工程资料不代表'])assert.ok(!read('src/pages/team.html').includes(note),note);
 for(const note of ['企业实施结构示意，非实时操作界面','以上为实施与交付结构示意'])assert.ok(!read('src/pages/enterprise.html').includes(note),note);
 for(const removed of ['at-work-scene','at-domain-grid','data-person='])assert.ok(!read('src/pages/team.html').includes(removed),removed);
-for(const content of ['职责决定问题的问法','方法不能只靠临场发挥','复核需要不同的检查职责','不需要团队的，保持简单','如何判断 AI 团队真的帮上了忙'])assert.ok(read('src/pages/team.html').includes(content),content);
+for(const content of ['职责决定问题的问法','方法可复用，结果才稳定','复核需要不同的检查职责','不需要团队的，保持简单','如何判断 AI 团队真的帮上了忙'])assert.ok(read('src/pages/team.html').includes(content),content);
 assert.ok(!teamHero.includes('assets/people/'),'Hero must show work, not an employee roster');
 for(const removed of ['at-toolbar','at-scene-tools','id="at-status"','id="at-search"'])assert.ok(!read('src/pages/team.html').includes(removed),removed);
 assert.ok(!read('src/pages/ai-team.js').includes('at-ensemble-left'));

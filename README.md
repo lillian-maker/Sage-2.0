@@ -7,14 +7,18 @@
 ICP 备案已通过（粤ICP备2026173751号，深圳市众妙之门科技有限公司），本轮把官网从"产品预览"整理为可公开上线的版本；真实支付、注册登录和 App 安装包仍在推进，相关页面的服务端状态提示保持原样。用户已确认：
 
 - 所有静态页脚由 `build.py` 注入运营主体与 ICP 备案号（链接工信部备案系统），账单类页面在 `billing.js` 页脚同步展示；英文页保留中文法定名称与备案号。
-- 去掉"本地产品预览/未接通"一类对外文案；全部"下载"入口改为不可点击的"App 即将上线"，首屏主按钮改为"咨询和演示"（首页滚动到表单，其他页打开共享弹窗）。下载页改为即将上线说明。
-- 首屏、各节标题按方案 A 重写；两个空白录屏占位替换为"看见 Sage 如何工作"三步说明和按 8 个专业域聚合的员工概览（构建时由 `src/data/sage-catalog.js` 生成）。导航"产品"改为链接首页 `#product`。
+- 去掉"本地产品预览/未接通"一类对外文案。下载按钮保留，点击（`data-app-soon`）弹出"Sage App 即将上线，敬请期待"，不跳转；未启用脚本时仍进入下载页的即将上线说明。
+- 首屏、各节标题按方案 A 重写；两个空白录屏占位替换为"看见 Sage 如何工作"App 演示视频（三段章节可点击跳转）和按 8 个专业域聚合的员工概览（构建时由 `src/data/sage-catalog.js` 生成）。导航"产品"改为链接首页 `#product`。
+- 演示视频 `assets/video/sage-app-demo.mp4` 由 `tools/app-demo-video/render.cjs` 从 Sage App 视觉稿 v5（`drafts/sage-app-redesign-20261103` 的 49/33/32/28 号画面）合成；视觉稿定稿或改版后重新运行脚本即可。章节起点（0 / 6.7 / 19.2 秒）与首页步骤列表的 `data-start` 一致。只在进入视口时播放，减少动态效果时不自动播放，并提供暂停按钮。
 - 团队页管理职位统一为首席增长官 CGO、首席治理官 CGOV，与 App 一致。
 - 主按钮由浅蓝 `#AEC8E2` 改为品牌蓝 `#396397` 白字，悬停 `#2F5585`。
 - 首页、AI 团队、企业服务、文档（中英）开放收录，其余页面维持 `noindex`；首页 canonical 为站点根 `/`，补 `x-default`、`robots.txt`、`sitemap.xml` 与 `assets/og/sage-share.jpg` 分享图。
 - 首页不再内嵌头像和地球贴图：HTML 由 5.78MB 降到约 0.35MB，头像/贴图改为带内容哈希的 WebP 外链，头像在页面空闲时预取。团队与企业插图改为 WebP。经确认删除的未引用素材与旧数据见对应提交说明。
 
-上线部署仍需另行处理：`drafts/restricted-deploy/docker-nginx.conf` 当前对 `/api/consultations` 返回 403，公开收集咨询前需放行；静态资源仍为 `expires -1`，带哈希的资源可改为长缓存。隐私政策与服务条款未发布前注册保持关闭，Apple 开发者与 App Store 审核也需要可访问的隐私政策地址。
+- 法律文件：`src/legal/` 下的中英文隐私政策与服务条款构建为 `pages/privacy(-en).html`、`pages/terms(-en).html`，所有页脚都有入口。运营主体、联系邮箱 privacy@sagegogo.com、腾讯云与 Google 登录、大模型服务商（泛称，承诺不用于训练）由用户确认。发布前建议律师审阅。注册仍由 `SAGE_AUTH_REGISTRATION_TERMS_READY` 控制；审阅后在部署环境设置 `SAGE_AUTH_REGISTRATION_TERMS_VERSION=2026-11-05`、`SAGE_AUTH_REGISTRATION_TERMS_URL=https://sagegogo.com/pages/terms.html`、`SAGE_AUTH_REGISTRATION_PRIVACY_URL=https://sagegogo.com/pages/privacy.html` 再打开开关。
+- 网关（`drafts/restricted-deploy/docker-nginx.conf`）：全站公开，去掉预览口令；咨询接口放行到后端（后端自带按 IP 与会话的限流和幂等）；销售后台 `/sales/` 仍保留网关口令作为第二道门。缓存：带 `?v=` 内容哈希的 CSS/JS/图片/视频缓存一年（immutable），未带版本的图片缓存一天，HTML、`robots.txt`、`sitemap.xml` 每次协商（ETag）。构建同时为二级页图片加内容哈希。`tests/docker-audit.py` 已同步这些断言。
+
+上线部署仍需另行处理：宿主机仍只在 `127.0.0.1:9443` 发布容器，公网 443 入口、安全组与证书按原部署计划另行开放。隐私政策写明服务器访问日志保存不少于六个月（《网络安全法》要求），而 Docker 日志目前按大小轮转，需要配置满足六个月的日志留存。
 
 ## App UI 设计交付 · 2026-10-22
 

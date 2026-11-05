@@ -24,11 +24,16 @@ ASSETS = {
 }
 SITE_URL = 'https://sagegogo.com/'
 # Indexed launch pages; pricing, download and account routes stay out of search results.
-INDEXED_PAGES = ('index', 'team', 'enterprise', 'docs')
+INDEXED_PAGES = ('index', 'team', 'enterprise', 'docs', 'privacy', 'terms')
 LEGAL_ENTITY = '深圳市众妙之门科技有限公司'
 ICP_LICENSE = '粤ICP备2026173751号'
-LEGAL_LINE = (f'<p class="sage-legal"><span lang="zh-CN">© 2026 {LEGAL_ENTITY}</span>'
-              f'<a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" lang="zh-CN">{ICP_LICENSE}</a></p>')
+
+def legal_line(prefix='', english=False):
+    suffix = '-en' if english else ''
+    privacy, terms = ('Privacy Policy', 'Terms of Service') if english else ('隐私政策', '服务条款')
+    return (f'<p class="sage-legal"><a href="{prefix}privacy{suffix}.html">{privacy}</a><a href="{prefix}terms{suffix}.html">{terms}</a>'
+            f'<span lang="zh-CN">© 2026 {LEGAL_ENTITY}</span>'
+            f'<a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" lang="zh-CN">{ICP_LICENSE}</a></p>')
 SHARE_IMAGE = SITE_URL + 'assets/og/sage-share.jpg'
 
 def read_text(relative_path):
@@ -50,12 +55,14 @@ def page_metadata(html, name, english=False):
         'billing': ('管理 Sage 账户、订阅与账单。账户资料仅在验证身份后展示。', 'Manage Sage accounts, subscriptions and billing. Account data requires identity verification.'),
         'checkout': ('确认购买前，核对 Sage 订阅方案、价格与订单信息。', 'Check your Sage plan, price and order details before you confirm a purchase.'),
         'product': ('Sage 产品方案预览。具体开放能力以产品内说明为准。', 'Sage product design preview. Available capabilities follow product disclosures.'),
+        'privacy': ('Sage 隐私政策：我们收集哪些个人信息、如何使用与保护，以及你如何行使个人信息权利。', 'Sage Privacy Policy: what personal information we collect, how we use and protect it, and how to exercise your rights.'),
+        'terms': ('Sage 服务条款：账户、使用规范、AI 生成内容、付费服务与责任等使用 Sage 的约定。', 'Sage Terms of Service: accounts, acceptable use, AI-generated content, paid services and liability.'),
     }
     description = descriptions[name][int(english)]
     title = re.search(r'<title>(.*?)</title>', html, re.S)[1]
     chinese_url, english_url = page_urls(name)
     url = english_url if english else chinese_url
-    public = name in {'index', 'team', 'enterprise', 'docs', 'pricing', 'download'}
+    public = name in {'index', 'team', 'enterprise', 'docs', 'pricing', 'download', 'privacy', 'terms'}
     robots = 'index,follow' if name in INDEXED_PAGES else f'noindex,{"follow" if public else "nofollow"}'
     tags = [f'<meta name="description" content="{escape(description, quote=True)}">',
             f'<meta name="robots" content="{robots}">',
@@ -80,24 +87,24 @@ def page_urls(name):
         return SITE_URL, SITE_URL + 'index-en.html'
     return SITE_URL + f'pages/{name}.html', SITE_URL + f'pages/{name}-en.html'
 
-def add_legal_line(html):
-    """Show the operator and ICP filing in every static footer, after localization."""
+def add_legal_line(html, prefix='', english=False):
+    """Show legal links, the operator and ICP filing in every static footer, after localization."""
     if 'class="sage-legal"' in html or '</footer>' not in html:
         return html
-    return html.replace('</footer>', LEGAL_LINE + '</footer>', 1)
+    return html.replace('</footer>', legal_line(prefix, english) + '</footer>', 1)
 
 def asset_version(relative_path):
     return sha256((ROOT / relative_path).read_bytes()).hexdigest()[:12]
 
 def version_homepage_assets(html):
-    """Load portraits and the globe texture as cacheable files instead of inline data."""
+    """Load portraits, the globe texture and the App demo as cacheable versioned files."""
     def versioned(match):
         path = match[1]
         data = (ROOT / path).read_bytes()
-        if data[:4] != b'RIFF' or data[8:12] != b'WEBP':
+        if path.endswith('.webp') and (data[:4] != b'RIFF' or data[8:12] != b'WEBP'):
             raise ValueError(f"Invalid WebP asset: {path}")
         return f'{path}?v={asset_version(path)}'
-    return re.sub(r'(assets/(?:people/[\w-]+|earth-texture)\.webp)(?!\?v=)', versioned, html)
+    return re.sub(r'(assets/(?:(?:people/[\w-]+|earth-texture)\.webp|video/[\w-]+\.(?:mp4|jpg)))(?!\?v=)', versioned, html)
 
 def team_domains():
     """Render the homepage domain overview from the approved employee catalog."""
@@ -154,7 +161,11 @@ def unify_page_shells():
         html = re.sub(r'((?:src|href)=")([\w-]+\.(?:css|js))(?:\?v=[a-f0-9]+)?(")',
                       lambda m: m[1] + m[2] + '?v=' + sha256((path.parent / m[2]).read_bytes()).hexdigest()[:12] + m[3]
                       if (path.parent / m[2]).is_file() else m[0], html)
-        path.write_text(add_legal_line(page_metadata(html, name, english)), encoding='utf-8')
+        # Content-hash local images too, so the gateway can cache every versioned file for a year.
+        html = re.sub(r'(src=")((?:\.\./)?(?:icons|assets)/[\w/.-]+\.(?:webp|png|jpe?g|svg))(?:\?v=[a-f0-9]+)?(")',
+                      lambda m: m[1] + m[2] + '?v=' + sha256((path.parent / m[2]).read_bytes()).hexdigest()[:12] + m[3]
+                      if (path.parent / m[2]).is_file() else m[0], html)
+        path.write_text(add_legal_line(page_metadata(html, name, english), english=english), encoding='utf-8')
 
 def build():
     html = read_text("src/index.template.html")
@@ -187,9 +198,9 @@ def build():
     if draft:
         html = html.replace("<title>Sage · 你的出海 AI 团队</title>", "<title>Sage · 商务科技配色视觉稿</title>")
     destination = ROOT / ("visual-draft.html" if draft else "index.html")
-    destination.write_bytes(add_legal_line(page_metadata(language_dropdown(html, 'index'), 'index')).encode("utf-8"))
+    destination.write_bytes(add_legal_line(page_metadata(language_dropdown(html, 'index'), 'index'), 'pages/').encode("utf-8"))
     if not draft:
-        (ROOT / 'index-en.html').write_text(add_legal_line(page_metadata(language_dropdown(english_homepage(html), 'index', True), 'index', True)), encoding='utf-8')
+        (ROOT / 'index-en.html').write_text(add_legal_line(page_metadata(language_dropdown(english_homepage(html), 'index', True), 'index', True), 'pages/', True), encoding='utf-8')
         write_search_files(ROOT)
     if '--release' in sys.argv:
         output = ROOT / 'dist'
@@ -202,6 +213,7 @@ def build():
         shutil.copy2(ROOT / 'assets/favicon.svg', output / 'assets/favicon.svg')
         shutil.copy2(ROOT / 'assets/earth-texture.webp', output / 'assets/earth-texture.webp')
         shutil.copytree(ROOT / 'assets/og', output / 'assets/og', dirs_exist_ok=True)
+        shutil.copytree(ROOT / 'assets/video', output / 'assets/video', dirs_exist_ok=True)
         for entry in ('robots.txt', 'sitemap.xml'):
             shutil.copy2(ROOT / entry, output / entry)
         shutil.copytree(ROOT / 'assets/brand', output / 'assets/brand', dirs_exist_ok=True)

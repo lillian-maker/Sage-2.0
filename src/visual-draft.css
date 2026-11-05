@@ -40,8 +40,8 @@ body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--su
 .v1 .btn{background:#fff;color:#202b38;border-color:#e4e9ef}
 .v1 .btn:hover{background:#edf3f9}
 .v1 .btn.primary{background:#396397;color:#fff;border-color:transparent;box-shadow:0 4px 14px #1b3a6526}
-.v1 .btn.primary:hover{background:#2f5585}
-.v1 .btn.primary:active{background:#284a74}
+.v1 .btn.primary:hover,.v1 .btn.primary:focus-visible{background:#2f5585;color:#fff;filter:none}
+.v1 .btn.primary:active{background:#284a74;color:#fff;filter:none}
 .v1 .btn:focus-visible{outline:2px solid #396397;outline-offset:4px}
 .v1{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
 .v1 .nav{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:88px;padding:0 max(28px,calc((100vw - 1344px)/2));gap:24px}

@@ -12,8 +12,15 @@ from pathlib import Path
 
 COPY = r"""
 下载	Download
-Sage App 即将上线	Sage app coming soon
-App 即将上线	App coming soon
+下载 Sage	Download Sage
+隐私政策	Privacy Policy
+Sage App 界面演示：提出问题、确认计划、编排与授权、验收成果	Sage app demo: ask a question, confirm the plan, orchestrate and authorize, accept the result
+Sage App 界面演示	Sage app demo
+播放演示	Play demo
+播放：提出经营问题	Play: Ask a business question
+播放：专业岗位接力	Play: Specialists work in relay
+播放：交付可核验的成果	Play: Receive verifiable deliverables
+服务条款	Terms of Service
 把出海经营决策<br>交给<span class="hero-team-emphasis">你的 AI 团队</span>	Hand your global commerce decisions to <span class="hero-team-emphasis">your AI team</span>
 选品、渠道、补货、合规——53 位专业数字员工分头研究、交叉复核，交给你有出处的结论。每一步执行，都等你批准。	Product selection, channels, replenishment, compliance: 53 specialist digital employees research in parallel and review each other's work, then hand you conclusions with their sources. Nothing is executed without your approval.
 看见 Sage 如何工作	See how Sage works
@@ -740,45 +747,45 @@ CONTENT_COPY = r"""
 管理账户与订阅	Manage your account and subscription
 我的账户	My account
 从专业岗位，到有序协作	From specialist roles to coordinated collaboration
-不是让更多 AI 给出更多答案，	Not more AI producing more answers,
-而是让不同专业共同看清，一项经营决策是否成立。	but different disciplines testing whether a business decision stands up.
+让不同专业一起看清，	Different specialists look together
+一项经营决策是否成立、是否值得投入。	at whether a business decision holds up and is worth the investment.
 人与 AI 数字员工共同讨论业务方案，背景中的更多团队成员在不同工作位协作	People and AI digital employees discuss a business proposal, with more teams collaborating across the workspace
 专业性，落实在判断的方法与标准里	Professional judgment starts with methods and standards
 Agent、Skills 与 MCP 是实现手段。对业务而言，更重要的是它们支持什么判断、留下什么依据。	Agents, Skills and MCP are implementation tools. What matters to the business is the judgment they support and the evidence they preserve.
 职责决定问题的问法	Responsibilities shape the questions
 专业岗位不仅有角色名称，还要明确要解决的决策、允许使用的资料、必须检查的约束与交付标准。机会研究先问证据是否成立；商业判断再问成立后是否值得投入。	A specialist role needs more than a name: it defines the decision, permitted information, required constraint checks and deliverable standards. Opportunity research first tests the evidence; commercial judgment then asks whether the supported opportunity merits investment.
-同一个模型可以承担不同岗位，但岗位身份本身不证明专业能力。能力要在具体任务中接受验收。	One model may serve different roles, but a role label does not prove expertise. Capability must be evaluated on specific tasks.
-方法不能只靠临场发挥	Methods must be repeatable
-Skills 将可复用的分析步骤、判断规则和成果要求交给岗位。VOC 研究不能只归类情绪，还应核对样本、需求频次、现有替代方案与反证；经营分析不能只读增长率，还应核对口径与约束。	Skills give roles reusable analytical steps, judgment rules and output requirements. VOC research checks samples, demand frequency, alternatives and contrary evidence, not just sentiment. Business analysis checks definitions and constraints, not just growth rates.
-方法需要版本、适用条件和测试样本。更新一段提示词，不等于改善了业务判断。	Methods need versions, applicability conditions and test samples. Editing a prompt does not itself improve business judgment.
+每个岗位的能力，都要在具体任务中接受验收，而不只靠一个角色名称。	Every role earns its place through acceptance on real tasks, not through a title alone.
+方法可复用，结果才稳定	Reusable methods, reliable results
+Skills 将可复用的分析步骤、判断规则和成果要求交给岗位。VOC 研究在归类情绪之外，还会核对样本、需求频次、现有替代方案与反证；经营分析在增长率之外，还会核对口径与约束。	Skills give roles reusable analytical steps, judgment rules and output requirements. VOC research checks samples, demand frequency, alternatives and contrary evidence, not just sentiment. Business analysis checks definitions and constraints, not just growth rates.
+每套方法都有版本、适用条件和测试样本，改进要在相同样本上验证。	Every method has a version, conditions of use and test samples, and each improvement is verified on the same samples.
 先理解这家企业，再讨论行业经验	Understand the company before applying industry knowledge
 品牌定位、目标市场、渠道、商品结构、资金约束与历史决策共同构成业务上下文。通用行业知识无法替代这些条件；同一建议，对不同品牌可能有相反的结果。	Positioning, markets, channels, product mix, financial constraints and prior decisions form the business context. General industry knowledge cannot replace these conditions; the same recommendation may have opposite effects for different brands.
 共享上下文要保留资料来源、时间和权限，并把事实、推断与缺失信息分开，避免把过期经验当成当前事实。	Shared context preserves sources, dates and permissions, separating facts, inferences and missing information so outdated experience is not mistaken for current evidence.
-工具提供依据，而不是授予权力	Tools provide evidence, not authority
+工具提供依据，权限另行授予	Tools provide evidence; authority is granted separately
 MCP 用于规范工具与数据连接。查询记录、执行计算、检索资料，让判断能够接触可核对的业务依据，而不是仅依赖模型记忆。	MCP standardizes tool and data connections. Record queries, calculations and retrieval ground judgments in checkable business evidence rather than model memory alone.
-连接成功不代表数据准确，也不代表可以改价、采购或发布。访问权限、执行授权与真实结果必须分别确认。	A successful connection does not prove data accuracy or authorize price changes, procurement or publishing. Access, execution permission and actual results must be confirmed separately.
+数据准确性、访问权限、执行授权与真实结果分别确认；改价、采购或发布，都需要你单独授权。	Data accuracy, access, execution permission and actual results are each confirmed separately; price changes, purchases and publishing each need your explicit authorization.
 交接的是可使用的成果	Handoff work that others can use
-研究岗位不能只交一份长报告。下一岗位需要知道：证据来自哪里，覆盖什么范围，哪些假设未验证，什么条件下才能继续决策。	A research role cannot hand over only a long report. The next role needs to know where evidence comes from, what it covers, which assumptions remain untested and when the decision can proceed.
+每次交接都写明下一岗位需要的信息：证据来自哪里，覆盖什么范围，哪些假设未验证，什么条件下才能继续决策。	Every handoff tells the next role what it needs: where the evidence comes from, what it covers, which assumptions remain untested and when the decision can proceed.
 交接标准决定成果能否被复用。清晰的来源、约束与未决问题，比更多聊天记录更重要。	Handoff standards determine reusability. Clear sources, constraints and unresolved questions matter more than a longer chat history.
 复核需要不同的检查职责	Review needs a distinct checking responsibility
-让另一个 AI 重复问同一个问题，并不等于独立复核。复核岗位应检查来源、计算、遗漏条件、反例和授权范围，并有能力提出退回或需要补证。	Asking another AI the same question is not independent review. Reviewers check sources, calculations, missing conditions, counterexamples and authorization, and can return work or request more evidence.
-多岗位也可能共享同一种偏差。重要结论仍需外部证据、确定性校验和人工判断共同支持。	Multiple roles can share the same bias. Important conclusions still need external evidence, deterministic checks and human judgment.
-判断与业务执行不是同一权限	Judgment and execution require different authority
+复核岗位承担独立的检查职责：核对来源、计算、遗漏条件、反例和授权范围，并可以退回成果或要求补证。	Reviewers carry their own checking duties: they verify sources, calculations, missing conditions, counterexamples and authorization, and can return work or request more evidence.
+重要结论还会结合外部证据、确定性校验和人工判断共同确认。	Important conclusions are also confirmed with external evidence, deterministic checks and human judgment.
+建议与执行，分开授权	Advice and execution are authorized separately
 提出方案、批准方案、执行动作和确认完成，分别承担不同责任。涉及资金、公开发布或外部系统变更时，应明确负责人、预算和可撤回条件。	Proposing, approving, executing and confirming completion have distinct responsibilities. Financial actions, publishing and external system changes require an owner, budget and revocation conditions.
-AI 的建议不能代替企业授权；工具返回成功，也不能直接证明经营目标已经实现。	AI advice does not replace company authorization. A successful tool response does not prove that a business goal has been achieved.
+AI 提出建议，企业做出授权；经营目标是否实现，以真实的业务结果为准。	AI proposes, the business authorizes, and real business results show whether a goal was met.
 专业能力必须能被反复检验	Expertise must withstand repeated evaluation
-任务验收应覆盖事实正确性、计算口径、证据充分性、约束遵守与交接可用性。版本变化后，需要在相同任务上比较，不能用一次顺利演示证明稳定。	Acceptance checks factual accuracy, calculation definitions, sufficient evidence, constraints and usable handoffs. Compare versions on the same tasks; one successful demonstration does not establish reliability.
-评估结果支持方法改进，不支持“绝不出错”或“保证增长”的承诺。	Evaluation informs method improvements, not promises of zero errors or guaranteed growth.
-团队的意义，不是意见更多	A team is not about more opinions
-而是让判断经得起不同专业的追问	It is about judgments that withstand cross-disciplinary scrutiny
+任务验收应覆盖事实正确性、计算口径、证据充分性、约束遵守与交接可用性。版本变化后，在相同任务上重新比较，用持续的结果说明稳定性。	Acceptance checks factual accuracy, calculation definitions, sufficient evidence, constraints and usable handoffs. After each version change, the same tasks are compared again so reliability rests on sustained results.
+评估结果用于持续改进方法，让每一次升级都有据可查。	Evaluation drives continuous method improvement, so every upgrade is backed by evidence.
+让每个判断	Every judgment
+经得起不同专业的追问	stands up to cross-disciplinary scrutiny
 需要协作的，是相互影响的判断	Collaborate where judgments influence one another
 当需求证据、产品可行性、利润条件与进入风险相互牵制时，分专业研究能保持各自的检查深度。汇总时不应抹平分歧，而应指出结论依赖哪些条件、缺什么证据、由谁确认。	When demand evidence, product feasibility, profitability and entry risks constrain one another, specialist research maintains depth. Synthesis should preserve disagreement, identify conditions and evidence gaps, and name the person who must confirm them.
 岗位按问题组织，不是让全部员工同时运行。研究可以并行，依赖同一结论的工作则需要明确接收条件。	Organize roles around the question, not run every employee at once. Research may proceed in parallel; dependent work needs explicit acceptance conditions.
 不需要团队的，保持简单	Keep simple work simple
 明确的字段校验、计算、单次检索或短文案任务，可以用规则、工具或单个岗位完成。只有增加协作能够改善覆盖范围、复核质量或交接可靠性时，才值得承担额外耗时与 Sage Credits 消耗。	Field validation, calculations, a single retrieval or short copy may need only a rule, tool or one role. Extra time and Sage Credits are worthwhile only when collaboration improves coverage, review quality or handoff reliability.
-团队数量不等于结果质量。Sage 的组织设计应服务于任务，而不是为了展示更多 Agent。	Team size is not output quality. Sage’s organization design serves the task rather than showcasing more agents.
+Sage 按任务组建团队，用最合适的岗位组合完成工作。	Sage builds each team around the task, with the combination of roles that fits it best.
 如何判断 AI 团队真的帮上了忙	How to judge whether an AI team helped
-不要只看报告是否完整，要看它是否支持下一项真实决策。	Look beyond report completeness: does it support the next real decision?
+好的成果，能直接支持下一项真实决策。	Good work directly supports the next real decision.
 依据可核对	Checkable evidence
 关键结论能找到来源、时间、计算口径与适用范围；不能确认的信息明确保留。	Key conclusions identify sources, time, calculation definitions and applicability. Unconfirmed information remains explicitly unresolved.
 取舍说得清	Clear trade-offs
@@ -786,10 +793,10 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 成果能接手	Usable handoffs
 下一位负责人知道需要验证什么、谁来确认、接收什么成果，而不需要重新研究全部背景。	The next owner knows what to validate, who confirms it and what to receive without researching the whole background again.
 边界不混淆	Distinct boundaries
-分析完成、方案批准、执行完成与经营改善分别有证据，不用一份报告替代业务结果。	Analysis, approval, execution and business improvement each need their own evidence. A report is not a substitute for business outcomes.
+分析完成、方案批准、执行完成与经营改善，分别有证据可查。	Analysis, approval, execution and business improvement each have their own evidence.
 组织有分工，职责有依据	Defined roles, grounded responsibilities
 53 个数字员工的组织设计，包含 3 个管理职能与 50 个专业岗位。	The design includes 53 digital employees: 3 management functions and 50 specialist roles.
-岗位配置与协作范围随具体经营问题确定，不以头像数量衡量专业性。	Role combinations and collaboration depend on the question. Avatar count is not a measure of expertise.
+岗位配置与协作范围，随具体经营问题确定。	Role combinations and the scope of collaboration depend on the business question.
 管理职能	Management functions
 首席执行官 CEO	Chief Executive Officer · CEO
 天时	Tianshi
@@ -805,7 +812,7 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 了解企业服务 →	Explore enterprise services →
 先明确需要做什么决策，再确定需要哪些专业与依据。	Define the decision first, then the expertise and evidence it requires.
 数字员工目录暂未加载，请刷新重试。	The digital employee directory could not be loaded. Refresh to retry.
-让 AI 理解业务，而不只是做工具	Let AI understand the business, not just supply tools
+让 AI 读懂你的业务，而不只是一个工具	Let AI understand your business, not just act as a tool
 从标准 Sage 开始。	Start with standard Sage.
 把企业特有的数据、知识、流程与系统，转化为可交付的能力。	Turn company-specific data, knowledge, processes and systems into deliverable capabilities.
 01 / 企业依据	01 / Business evidence
@@ -991,7 +998,7 @@ def translate(text):
     return pattern.sub(lambda match: pairs[match.group()], text).replace('。', '.').replace('，', ', ').replace('、', ', ').replace('：', ': ')
 
 def english_links(text):
-    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile|notifications)\.html', r'\1-en.html', text)
+    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile|notifications|privacy|terms)\.html', r'\1-en.html', text)
 
 def language_dropdown(html, page, english=False):
     label = 'Select language' if english else '选择语言'
@@ -1046,10 +1053,43 @@ def static_documentation(source, english=False):
         return markup
     return '<h1>' + escape(articles[0][2]) + '</h1>' + body(articles[0]) + '<noscript>' + ''.join('<details id="doc-readable-' + article[0] + '"><summary>' + escape(article[2]) + '</summary>' + body(article) + '</details>' for article in articles) + '</noscript>'
 
+def write_content_page(source, destination, name, html, titles, english_body=None):
+    """Wrap a content fragment in the shared content-page shell and emit both languages."""
+    css = {'team':'ai-team', 'enterprise':'enterprise-page', 'docs':'docs-page'}.get(name)
+    dependencies = ['catalog-data', 'ai-team'] if name == 'team' else [css] if css else []
+    assets = ['content-pages.css'] + ([css + '.css'] if css else []) + [item + '.js' for item in ['content-pages'] + dependencies]
+    versions = {item: sha256((source / item).read_bytes()).hexdigest()[:12] for item in assets}
+    styles = ''.join(f'<link rel="stylesheet" href="{item}.css?v={versions[item + ".css"]}">' for item in ['content-pages'] + ([css] if css else []))
+    js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
+    items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
+    nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
+    header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="download.html" data-app-soon>下载</a></div></header>'
+    footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div></footer>'
+    document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
+    (destination / (name + '.html')).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
+    localized = english_links(translate(document.replace(html, '{{SAGE_ENGLISH_BODY}}') if english_body else document)).replace('lang="zh-CN"', 'lang="en"')
+    if english_body:
+        localized = localized.replace('{{SAGE_ENGLISH_BODY}}', english_body)
+    localized = re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="Explore Sage specialist roles, enterprise implementation and product usage rules.">', localized)
+    localized = localized.replace('lang="en" aria-label="Switch language">中文 ⌄', 'lang="zh-CN" aria-label="Switch language">English ⌄')
+    localized = localized.replace(f'href="{name}-en.html" lang="zh-CN" aria-label="Switch language">English ⌄', f'href="{name}.html" lang="zh-CN" aria-label="Switch to Chinese">Chinese ⌄')
+    for item in ['content-pages'] + dependencies:
+        if item != 'docs-page':
+            localized = localized.replace(f'src="{item}.js', f'src="{item}-en.js')
+    if name == 'docs':
+        localized = localized.replace('<script src="docs-page.js', '<script src="docs-articles-en.js" defer></script><script src="docs-page.js')
+        localized = localized.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source, True))
+    # Fail closed rather than publish mixed-language content from an old page.
+    # The operator's registered Chinese name is kept verbatim inside lang="zh-CN" spans.
+    untranslated = re.findall(r'[\u4e00-\u9fff]+', re.sub(r'<span lang="zh-CN">[^<]*</span>', '', localized))
+    if untranslated:
+        raise ValueError(f'{name}: English content remains untranslated: {sorted(set(untranslated))}')
+    (destination / (name + '-en.html')).write_text(localized, encoding='utf-8')
+
 def build_localized_pages(root):
     """Wrap legacy page fragments and emit reviewed English routes and scripts."""
     source, destination = root / 'src/pages', root / 'pages'
-    titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'Sage App','product':'产品方案'}
+    titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'Sage App','product':'产品方案','privacy':'隐私政策','terms':'服务条款'}
     scripts = {'team':['catalog-data','team-page'], 'enterprise':['info-pages'], 'pricing':['info-pages'], 'product':['catalog-data','catalog']}
     for path in source.glob('*.js'):
         if path.stem in {'billing', 'auth', 'profile', 'notifications', 'docs-page', 'docs-articles-en'}:
@@ -1057,41 +1097,11 @@ def build_localized_pages(root):
         if path.stem == 'catalog':
             continue  # Unreleased product-design route; not linked from English navigation.
         code = english_links(translate(path.read_text(encoding='utf-8')))
-        if path.stem == 'site-shell':
-            code = re.sub(r"language\?\.addEventListener\('click',\(\)=>\{.*?\}\);", "language?.addEventListener('click',()=>{location.href=location.pathname.replace('-en.html','.html')+location.search+location.hash;});", code)
         (destination / (path.stem + '-en.js')).write_text(code, encoding='utf-8')
     for path in source.glob('*.html'):
         html = path.read_text(encoding='utf-8')
         if path.stem in {'team', 'enterprise', 'docs'}:
-            # Both languages use the same approved structure and reviewed full copy.
-            name = path.stem
-            css = {'team':'ai-team', 'enterprise':'enterprise-page', 'docs':'docs-page'}[name]
-            dependencies = ['catalog-data', 'ai-team'] if name == 'team' else [css]
-            assets = ['content-pages.css', css + '.css'] + [item + '.js' for item in ['content-pages'] + dependencies]
-            versions = {item: sha256((source / item).read_bytes()).hexdigest()[:12] for item in assets}
-            styles = ''.join(f'<link rel="stylesheet" href="{item}.css?v={versions[item + ".css"]}">' for item in ['content-pages', css])
-            js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
-            items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
-            nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
-            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><span class="cp-consult app-soon" role="button" aria-disabled="true">App 即将上线</span></div></header>'
-            footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div></footer>'
-            document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
-            (destination / path.name).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
-            localized = english_links(translate(document)).replace('lang="zh-CN"', 'lang="en"')
-            localized = re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="Explore Sage specialist roles, enterprise implementation and product usage rules.">', localized)
-            localized = localized.replace('lang="en" aria-label="Switch language">中文 ⌄', 'lang="zh-CN" aria-label="Switch language">English ⌄')
-            localized = localized.replace(f'href="{name}-en.html" lang="zh-CN" aria-label="Switch language">English ⌄', f'href="{name}.html" lang="zh-CN" aria-label="Switch to Chinese">Chinese ⌄')
-            for item in ['content-pages'] + dependencies:
-                if item != 'docs-page':
-                    localized = localized.replace(f'src="{item}.js', f'src="{item}-en.js')
-            if name == 'docs':
-                localized = localized.replace('<script src="docs-page.js', '<script src="docs-articles-en.js" defer></script><script src="docs-page.js')
-                localized = localized.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source, True))
-            # Fail closed rather than publish mixed-language content from an old page.
-            untranslated = re.findall(r'[\u4e00-\u9fff]+', localized)
-            if untranslated:
-                raise ValueError(f'{name}: English content remains untranslated: {sorted(set(untranslated))}')
-            (destination / (name + '-en.html')).write_text(localized, encoding='utf-8')
+            write_content_page(source, destination, path.stem, html, titles)
             continue
         if path.stem == 'auth':
             (destination / path.name).write_text(html, encoding='utf-8')
@@ -1111,7 +1121,7 @@ def build_localized_pages(root):
         if '<!doctype' not in html.lower():
             styles = ''.join(f'<link rel="stylesheet" href="{name}.css">' for name in ['redesign','pages','catalog','team-page','info-pages'])
             nav = '<nav id="r-menu" class="r-links" aria-label="主导航"><a href="../index.html#product">产品</a><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav>'
-            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><span class="r-button small app-soon" role="button" aria-disabled="true">App 即将上线</span></div></header>'
+            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="download.html" data-app-soon>下载</a></div></header>'
             footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p></footer>'
             js = ''.join(f'<script src="{name}.js" defer></script>' for name in scripts.get(path.stem,[]) + ['site-shell'])
             layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
@@ -1132,3 +1142,8 @@ def build_localized_pages(root):
                 en = en.replace(chinese, english)
         en = en.replace(f'href="{path.stem}-en.html">English',f'href="{path.stem}.html" lang="zh-CN">中文')
         (destination / (path.stem + '-en.html')).write_text(language_dropdown(en, path.stem, True),encoding='utf-8')
+    # Legal documents keep separately reviewed Chinese and English bodies.
+    for name in ('privacy', 'terms'):
+        legal = root / 'src/legal'
+        write_content_page(source, destination, name, (legal / f'{name}.zh.html').read_text(encoding='utf-8'), titles,
+                           (legal / f'{name}.en.html').read_text(encoding='utf-8'))

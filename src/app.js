@@ -219,4 +219,21 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
 }
 
 
+// App demo: plays only while visible, never under reduced motion, and the visitor can always pause it.
+(function workDemo(){
+ const video=document.querySelector('#work-video'),toggle=document.querySelector('#work-video-toggle'),steps=[...document.querySelectorAll('#work-steps li')];if(!video||!toggle)return;
+ const motion=matchMedia('(prefers-reduced-motion: reduce)');
+ const en=document.documentElement.lang==='en',starts=steps.map(step=>Number(step.dataset.start));
+ let userPaused=false,inView=false;
+ function label(){const playing=!video.paused;toggle.setAttribute('aria-pressed',String(playing));toggle.querySelector('.work-video-label').textContent=playing?(en?'Pause demo':'暂停演示'):(en?'Play demo':'播放演示');toggle.classList.toggle('is-playing',playing);}
+ function play(){video.preload='auto';const attempt=video.play();if(attempt)attempt.catch(()=>{});}
+ function chapter(){let index=0;starts.forEach((start,i)=>{if(video.currentTime>=start)index=i;});steps.forEach((step,i)=>step.classList.toggle('is-active',i===index));}
+ video.addEventListener('play',label);video.addEventListener('pause',label);video.addEventListener('timeupdate',chapter);
+ toggle.addEventListener('click',()=>{if(video.paused){userPaused=false;play();}else{userPaused=true;video.pause();}});
+ steps.forEach((step,i)=>step.querySelector('.work-step-seek').addEventListener('click',()=>{video.currentTime=starts[i];chapter();userPaused=false;play();}));
+ new IntersectionObserver(entries=>entries.forEach(entry=>{inView=entry.isIntersecting;if(inView&&!userPaused&&!motion.matches)play();else if(!inView)video.pause();}),{threshold:.4}).observe(video);
+ motion.addEventListener?.('change',()=>{if(motion.matches)video.pause();else if(inView&&!userPaused)play();});
+ chapter();label();
+})();
+
 initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mobile-nav').hidden){$('#mobile-nav').hidden=true;const toggle=document.querySelector('.menu-toggle');toggle.setAttribute('aria-expanded','false');toggle.focus();}});document.addEventListener('click',e=>{if(!e.target.closest('.nav,#mobile-nav')){$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');}});})();

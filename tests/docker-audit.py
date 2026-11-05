@@ -541,7 +541,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
             assert details['Config']['Healthcheck']['Test'] == ['CMD', '/usr/local/bin/sage-nginx-entrypoint', '-t'], 'Healthcheck bypassed the protected helper'
             assert details['HostConfig']['ReadonlyRootfs'] and details['Config']['User'] == '101:101', 'Web runtime isolation changed'
             assert details['HostConfig']['LogConfig']['Type'] == 'json-file', 'Unexpected log driver'
-            assert request('/')[0] == 200 and request('/', auth=False)[0] == 401, 'Real TLS/Basic web startup failed'
+            assert request('/', auth=False)[0] == 200 and request('/sales/', auth=False)[0] == 401, 'Real TLS public web or sales gate startup failed'
             assert request('/api/auth/google/callback?code=closed-fixture&state=closed-fixture')[0] == 403, 'Production callback gate changed'
             compose('exec', '-T', 'web', '/usr/local/bin/sage-nginx-entrypoint', '-t', private_output=True)
             compose('exec', '-T', 'web', '/usr/local/bin/sage-nginx-entrypoint', '-s', 'reload', private_output=True)
@@ -641,8 +641,10 @@ print('RUNTIME_NO_DDL_OK')
         app_shell("from django.db import connection; c=connection.cursor(); c.execute('DROP TABLE public.audit_default_permissions'); print('DEFAULT_ACL_PROBE_REMOVED')", service='migrate')
         passed('runtime-role-and-owner-default-permissions')
 
-        assert request('/index.html', auth=False)[0] == 401, 'Missing gateway Basic authentication accepted'
-        assert request('/index.html', headers={'Authorization': 'Basic ' + base64.b64encode(b'audit:wrong').decode()})[0] == 401, 'Incorrect gateway Basic authentication accepted'
+        # The launch site is public; only the sales back office keeps the gateway password.
+        assert request('/index.html', auth=False)[0] == 200, 'Public homepage still requires gateway authentication'
+        assert request('/sales/', auth=False)[0] == 401, 'Sales back office lost its gateway password'
+        assert request('/sales/', headers={'Authorization': 'Basic ' + base64.b64encode(b'audit:wrong').decode()})[0] == 401, 'Incorrect sales gateway password accepted'
         for path in ('/index.html', '/index-en.html', '/health/live', '/health/ready'):
             assert request(path)[0] == 200, 'Expected authenticated HTTPS endpoint unavailable'
         homepage = request('/index.html')[2]
@@ -656,7 +658,14 @@ print('RUNTIME_NO_DDL_OK')
         static_headers = {key.lower(): value for key, value in static_headers}
         assert static_status == 200 and static_headers.get('cache-control') == 'no-cache' and static_headers.get('etag'), 'Static cache revalidation absent'
         assert request('/index.html', headers={'If-None-Match': static_headers['etag']})[0] == 304, 'Static ETag revalidation failed'
-        passed('static-gzip-content-identity-vary-and-etag-revalidation')
+        versioned = re.search(rb'assets/earth-texture\.webp\?v=[a-f0-9]{12}', homepage)
+        assert versioned, 'Versioned globe texture reference absent'
+        asset_headers = {key.lower(): value for key, value in request('/' + versioned.group().decode())[1]}
+        assert asset_headers.get('cache-control') == 'public, max-age=31536000, immutable', 'Hashed asset is not cached long-term'
+        plain_headers = {key.lower(): value for key, value in request('/assets/og/sage-share.jpg')[1]}
+        assert plain_headers.get('cache-control') == 'public, max-age=86400', 'Unversioned image cache policy changed'
+        assert {key.lower(): value for key, value in request('/robots.txt')[1]}.get('cache-control') == 'no-cache', 'Search policy must revalidate'
+        passed('static-gzip-content-identity-vary-etag-and-asset-cache-policy')
         image_homepage = run(['docker', 'exec', containers['web'], 'cat', '/srv/sage/dist/index.html'], binary=True).stdout
         homepage_sha256 = hashlib.sha256(homepage).hexdigest()
         assert homepage_sha256 == hashlib.sha256(image_homepage).hexdigest(), 'HTTPS homepage differs from freshly built web image'
@@ -704,10 +713,10 @@ print('RUNTIME_NO_DDL_OK')
         assert request('/api/auth/logout', method='POST', body='{}', headers={'Cookie': cookie_header, 'Content-Type': 'application/json'})[0] == 403, 'Missing CSRF accepted'
         assert request('/api/auth/cancel', method='POST', body='{}', headers=headers)[0] in (200, 400, 422), 'Valid CSRF rejected'
         consultation = json.dumps({'company': 'Synthetic audit', 'email': 'audit@example.invalid',
-                                   'phone': '+8613800000000', 'question': 'Synthetic restricted preview check'})
-        status = request('/api/consultations', method='POST', body=consultation,
-                         headers={**headers, 'Idempotency-Key': 'synthetic-docker-audit'})[0]
-        assert status == 403, 'Preview-disabled consultation was not blocked by gateway'
+                                   'phone': '+8613800000000', 'question': 'Synthetic public consultation check'})
+        status, _, body = request('/api/consultations', method='POST', body=consultation,
+                                  headers={**headers, 'Idempotency-Key': 'synthetic-docker-audit'})
+        assert status == 201 and json.loads(body).get('receipt_id'), 'Public consultation was not accepted through the gateway'
         assert request('/api/auth/google/callback?code=SYNTHETIC_CALLBACK_MARKER&state=SYNTHETIC_CALLBACK_MARKER', headers=headers)[0] == 403, 'Preview-disabled OAuth callback was not blocked by gateway'
         assert request('/api/account/avatar-image', headers={'Cookie': cookie_header})[0] == 401, 'Anonymous private avatar accessible'
         app_shell("from django.contrib.auth import get_user_model; from django.contrib.sessions.models import Session; from backend.models import Consultation,ConsultationAudit; from backend.commerce.models import Order,PaymentFact; assert get_user_model().objects.count()==0; assert Consultation.objects.count()==0; assert ConsultationAudit.objects.count()==0; assert Order.objects.count()==0; assert PaymentFact.objects.count()==0; assert Session.objects.count()==1; print('ONLY_ANONYMOUS_SESSION_WRITE_OK')")

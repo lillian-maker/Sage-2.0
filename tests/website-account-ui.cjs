@@ -113,7 +113,8 @@ const source=name=>fs.readFileSync(path.join(__dirname,'../src/pages',name),'utf
  const languagePanel=await languageMenu.boundingBox(),languageToggle=await page.locator('.sage-language-toggle').boundingBox();
  await page.mouse.move(languagePanel.x+languagePanel.width/2,(languageToggle.y+languageToggle.height+languagePanel.y)/2);assert.equal(await languageMenu.isVisible(),true,'Language hover menu stays open across its gap');
  await page.mouse.move(0,0);await languageMenu.waitFor({state:'hidden'});await page.locator('.sage-language-toggle').focus();await page.keyboard.press('ArrowDown');assert.equal(await languageMenu.isVisible(),true);await page.keyboard.press('Escape');assert.equal(await languageMenu.isVisible(),false);
- assert.equal(await page.locator('.r-tools>.r-button.small').getAttribute('aria-disabled'),'true');assert.equal(await page.locator('.r-tools>.r-button.small').textContent(),'App 即将上线');
+ assert.equal(await page.locator('.r-tools>.r-button.small').getAttribute('href'),'download.html');assert.equal(await page.locator('.r-tools>.r-button.small').textContent(),'下载');
+ {const before=page.url();await page.locator('.r-tools>.r-button.small').click();await page.locator('.sage-toast.is-visible').waitFor();assert.equal(await page.locator('.sage-toast').textContent(),'Sage App 即将上线，敬请期待。');assert.equal(page.url(),before,'Download announces the upcoming app instead of navigating');await page.keyboard.press('Escape');await page.locator('.sage-toast.is-visible').waitFor({state:'hidden'});}
  await page.locator('input[autocomplete=nickname]').fill('Updated fixture');await page.locator('input[autocomplete=nickname]').press('Enter');await page.getByText('名称已保存。').waitFor();assert.equal(profile.display_name,'Updated fixture');
  await page.locator('input[role=switch]').check();await page.getByText('通知偏好已保存。').waitFor();assert.equal(prefs.product_updates,true);
  await page.getByRole('button',{name:'下一页',exact:true}).click();await page.getByRole('cell',{name:'Safari',exact:true}).waitFor();assert.equal(await page.locator('.profile-sessions tbody tr').count(),2);
@@ -147,7 +148,7 @@ const source=name=>fs.readFileSync(path.join(__dirname,'../src/pages',name),'utf
   await page.setViewportSize({width,height:1413});await page.goto(`http://127.0.0.1/pages/profile${lang}.html`);await page.locator('input[role=switch]').waitFor();
   assert.equal(await page.getByText(lang?'Back to website':'返回官网',{exact:true}).count(),0);
   assert.equal(await page.locator('#r-menu a:not(.mobile-download)').count(),5);assert.equal(await page.locator('#r-menu .mobile-download').count(),1);assert.equal(await page.locator('input[role=switch]').isChecked(),true);
-  assert.equal(await page.locator('#r-menu .mobile-download').getAttribute('aria-disabled'),'true');assert.equal(await page.locator('#r-menu .mobile-download').textContent(),lang?'App coming soon':'App 即将上线');
+  assert.equal(await page.locator('#r-menu .mobile-download').getAttribute('href'),`download${lang}.html`);assert.equal(await page.locator('#r-menu .mobile-download').textContent(),lang?'Download':'下载');
   if(width===320){await page.locator('#r-menu-toggle').click();assert.equal(await page.locator('#r-menu .mobile-download').isVisible(),true);await page.keyboard.press('Escape');}
   if(width===1440)assert.equal(await page.locator('#r-menu .mobile-download').isVisible(),false);
   await page.getByRole('button',{name:lang?'Next page':'下一页',exact:true}).click();await page.getByRole('cell',{name:'Safari',exact:true}).waitFor();
