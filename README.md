@@ -4,6 +4,8 @@
 
 ## 官网上线优化 · 2026-11-05
 
+上线前剩余工作（状态、影响、优先级、依赖与验证方式）以 [`docs/WEBSITE_LAUNCH_READINESS.md`](docs/WEBSITE_LAUNCH_READINESS.md) 为准；演示视频的不足、补充方案与依赖见 [`tools/app-demo-video/README.md`](tools/app-demo-video/README.md)。
+
 ICP 备案已通过（粤ICP备2026173751号，深圳市众妙之门科技有限公司），本轮把官网从"产品预览"整理为可公开上线的版本；真实支付、注册登录和 App 安装包仍在推进，相关页面的服务端状态提示保持原样。用户已确认：
 
 - 所有静态页脚由 `build.py` 注入运营主体与 ICP 备案号（链接工信部备案系统），账单类页面在 `billing.js` 页脚同步展示；英文页保留中文法定名称与备案号。

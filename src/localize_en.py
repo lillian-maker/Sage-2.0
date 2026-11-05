@@ -15,6 +15,7 @@ COPY = r"""
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
 Sage App 界面演示：提出问题、确认计划、编排与授权、验收成果	Sage app demo: ask a question, confirm the plan, orchestrate and authorize, accept the result
+Sage App 界面演示 · 示例数据	Sage app demo · Sample data
 Sage App 界面演示	Sage app demo
 播放演示	Play demo
 播放：提出经营问题	Play: Ask a business question
@@ -797,6 +798,7 @@ Sage 按任务组建团队，用最合适的岗位组合完成工作。	Sage bui
 组织有分工，职责有依据	Defined roles, grounded responsibilities
 53 个数字员工的组织设计，包含 3 个管理职能与 50 个专业岗位。	The design includes 53 digital employees: 3 management functions and 50 specialist roles.
 岗位配置与协作范围，随具体经营问题确定。	Role combinations and the scope of collaboration depend on the business question.
+各岗位的开放范围以 Sage App 正式版本为准。	Which roles are available follows the released Sage app.
 管理职能	Management functions
 首席执行官 CEO	Chief Executive Officer · CEO
 天时	Tianshi

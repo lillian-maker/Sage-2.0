@@ -322,3 +322,10 @@ body[data-auth-page] #auth-reset-link{display:block;color:#396397}
 @media(max-width:600px){.legal-page{padding:44px 0 64px}.legal-toc ol{columns:1}}
 /* The menu download entry duplicates the toolbar button on desktop. */
 @media(min-width:1181px){body:not(.v1) :is(.cp-links,#r-menu) .mobile-download{display:none}}
+
+/* Text for assistive technology only. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* WCAG 2.5.8: keep footer and inline arrow links at least 24px tall. */
+:is(.footer,.cp-footer,.r-footer,.trial-footer) a,.cp-link,.sd-content a.sd-more,.sd-toc-help a{display:inline-flex;align-items:center;min-height:24px}
+/* Pricing: the purchase status is read before the reference prices. */
+.pricing-page .notice{margin:0 0 20px;padding:12px 16px;border:1px solid #e4e9ef;border-top:1px solid #e4e9ef;border-radius:10px;background:#f4f7fb;color:#202b38;font-size:14px;line-height:1.6}
