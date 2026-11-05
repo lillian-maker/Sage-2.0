@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-22T11:37:17.854Z",
+  "generatedAt": "2026-11-05T15:24:42.006Z",
   "method": "browser-measured native SVG, not screenshot",
   "density": 144,
   "hashAlgorithm": "sha256",
@@ -9,10 +9,10 @@
       "source": "assets/avatars/MGMT-CEO.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "40c04079c42ca7bfe95d5f62ad5885a5de83989d6bac6802bcc3060d4a44d784",
-      "embeddedHash": "4663afb316adb5d9db24ba95ccc492fe4dfc20580087bdcaa5de89391ab1269c",
-      "decodedPixelHash": "2268b3dc1ec9c1c9fce426cba4a57a033c091be00082238a8e21d29f4b8992c2",
-      "cachedPixelHash": "2268b3dc1ec9c1c9fce426cba4a57a033c091be00082238a8e21d29f4b8992c2",
+      "sourceHash": "09f0fa137b413466621dfcb6348c06a8e6f907801b09c6a2a2f5cacf69684e29",
+      "embeddedHash": "f9fca5abc7ad491890e8f0410263983da18ba15a5f1db63567da3f9462ddbd54",
+      "decodedPixelHash": "8f9e0c0037fee9d652727280a49d2efd004004d725626ef9415bd47cfb749543",
+      "cachedPixelHash": "8f9e0c0037fee9d652727280a49d2efd004004d725626ef9415bd47cfb749543",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -23,10 +23,10 @@
       "source": "assets/avatars/MGMT-CGO.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "e3cdd3334870587a6afa3d5cc2445a45316c8a9cda78b6d9b7b3ee189fe9b4de",
-      "embeddedHash": "5128861c19c59dc5ee57a31e3bfac94ad47b183b35a7583f503ade7d2f66e6d2",
-      "decodedPixelHash": "687b1bdfd088b808a16ad1685fdb4018858276edd4e18865e58fc786d3789145",
-      "cachedPixelHash": "687b1bdfd088b808a16ad1685fdb4018858276edd4e18865e58fc786d3789145",
+      "sourceHash": "56eec49ebd818512a6601d4a3c8df099468f9053c4e3bff6a7638df842b21b4c",
+      "embeddedHash": "34973d767f0e3b275beab3521d35a94f805c5fb97540cee4058b6eba4b2e17a3",
+      "decodedPixelHash": "e317635257472cf4658b1c71228f3189fe3a75b95fcc0f178585d92c26fac3f5",
+      "cachedPixelHash": "e317635257472cf4658b1c71228f3189fe3a75b95fcc0f178585d92c26fac3f5",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -37,10 +37,10 @@
       "source": "assets/avatars/MGMT-CGOV.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "93b1b893cea6323bbe35d15874578d913a6660e03dd913794b9691f4f3ab2e01",
-      "embeddedHash": "e25c5100f5c2d8e09f0b21e49df4a5c047a24e1b9d1fd14f149c91352f389296",
-      "decodedPixelHash": "d2a85206c74a0bfa07413cc8a0de2621646b2f12d26577965ad5d45484196f3c",
-      "cachedPixelHash": "d2a85206c74a0bfa07413cc8a0de2621646b2f12d26577965ad5d45484196f3c",
+      "sourceHash": "5df5592a62fd2fc742d3932699a0ba44ef5cabc109d56179e2f28ce0c33d6721",
+      "embeddedHash": "64a401d86b0dc524b17f0710d1ee27f88baf6546c656a8e4a3053d8a28133602",
+      "decodedPixelHash": "aee89a26ad1f6100824ca2cb190c2f6aaf6840373cebb1aa28a6c1bd25576199",
+      "cachedPixelHash": "aee89a26ad1f6100824ca2cb190c2f6aaf6840373cebb1aa28a6c1bd25576199",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -51,10 +51,10 @@
       "source": "assets/avatars/AGT-001.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "43673aa08a6fbb6204b21eeefddad67e1e957358773e342ac8127bf9a96efe34",
-      "embeddedHash": "8148b46b07775d9b435cf96cfec7686bea4b2bf777915ca9c96ce488ced5b9cf",
-      "decodedPixelHash": "32ed94c4c868607816e2a05023e414ca99b5bd7be71329a9f91dc68ef312ef84",
-      "cachedPixelHash": "32ed94c4c868607816e2a05023e414ca99b5bd7be71329a9f91dc68ef312ef84",
+      "sourceHash": "007284a076c58c929be3bfc4664853774b6f973539b57cd10001406f39e2efb2",
+      "embeddedHash": "85c8d78ef7c251829ec209300b0330b1351ef011bf0116189bdd3becb25203f0",
+      "decodedPixelHash": "663f4277acdb8b1de2a748047dc4e4a820798dafa10e4f180d15a28177169d3c",
+      "cachedPixelHash": "663f4277acdb8b1de2a748047dc4e4a820798dafa10e4f180d15a28177169d3c",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -65,10 +65,10 @@
       "source": "assets/avatars/AGT-004.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "23877bdcafbb63c7a551756cb204af745f75207a7d27e52c767fd10918bdcd15",
-      "embeddedHash": "c47314758cafb67de6ca3f29864a951a0a66b6452fc758f645708c14cfe71abd",
-      "decodedPixelHash": "ccca545cb1667d1cafa6df6de8f9a8b6856d17cc3678c91823db619d8f0c45ad",
-      "cachedPixelHash": "ccca545cb1667d1cafa6df6de8f9a8b6856d17cc3678c91823db619d8f0c45ad",
+      "sourceHash": "3c2ef6084a8c5e56568184140a11287b71776fdf3945bd26dc0105c69fc3ffba",
+      "embeddedHash": "17d04085b5e8dee9484e19b4d2e1927da284fac83743e5ea909446adab5c09b6",
+      "decodedPixelHash": "3677d6faea9a52c5c1e40b5f929cf4a523ce6c370fbef61832a249699ad0e1e4",
+      "cachedPixelHash": "3677d6faea9a52c5c1e40b5f929cf4a523ce6c370fbef61832a249699ad0e1e4",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -79,10 +79,10 @@
       "source": "assets/avatars/AGT-003.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "7a79a16174a97c0f69a2f91b920075a0eb899743f879ff2e1e9397252aa36385",
-      "embeddedHash": "0dcdf6f9e283f41f0cc3d219c5ae1625d4954b8749152e8685f71f90e5d20ff8",
-      "decodedPixelHash": "de424a266a92ddf61c73217d020a6846e15d77e1e0ab2c54c01c8819979dec00",
-      "cachedPixelHash": "de424a266a92ddf61c73217d020a6846e15d77e1e0ab2c54c01c8819979dec00",
+      "sourceHash": "d16663f3af8d115a2b0b0ca2615fcb2ee3f332bb761a73f844433ae4bf256ce8",
+      "embeddedHash": "9d093bbc7713a4b66887fd1fb3531defc30faca2bba24264f40d88323b4f07b4",
+      "decodedPixelHash": "e2c93722fa75b54e4547568059274416aaca616f79ae16a5c0fe0850739b0833",
+      "cachedPixelHash": "e2c93722fa75b54e4547568059274416aaca616f79ae16a5c0fe0850739b0833",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -93,10 +93,10 @@
       "source": "assets/avatars/AGT-002.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "5558cc9b84e0e7af29ea9d5df4a9018da6ed1ef85e13ef55d7d18937aca5bf26",
-      "embeddedHash": "f7d3b9dd288840e2df431ddd7e245db39066eedde78d4d0789d2e2453116b636",
-      "decodedPixelHash": "4814332b67ea53b9a8d0a690a48d21b0b2c4eb1c9d30c5a8d03cb2117b6ad1e1",
-      "cachedPixelHash": "4814332b67ea53b9a8d0a690a48d21b0b2c4eb1c9d30c5a8d03cb2117b6ad1e1",
+      "sourceHash": "1539518087a41b2cc13ab58d20236820f185e5cbbb61a425ff198367a181d885",
+      "embeddedHash": "92b258f1c87f1d007e3b13d811c8b6700fdbb040b3d19f9a5c3bd68e419c5a88",
+      "decodedPixelHash": "839236948e7fd04c9333513155ec2c84057a33de7b347a90fc8de9727522de8b",
+      "cachedPixelHash": "839236948e7fd04c9333513155ec2c84057a33de7b347a90fc8de9727522de8b",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -107,10 +107,10 @@
       "source": "assets/avatars/AGT-005.webp",
       "sourceFormat": "webp",
       "embeddedFormat": "png",
-      "sourceHash": "408026ce2f55672c63d411db259fb163f8eaa60b66102fec58a1e720d889a637",
-      "embeddedHash": "91fa7412e10414bdecd06917a858fe0fc7c25ba8b8d6ea36487abe2874b30211",
-      "decodedPixelHash": "a05847caf65839584aaf7e247987c7c4a0a0ebfc70326bc4c638124214332088",
-      "cachedPixelHash": "a05847caf65839584aaf7e247987c7c4a0a0ebfc70326bc4c638124214332088",
+      "sourceHash": "3695e9b9d700515fc24915810bf451b76c27ebc6048b0df09b18c6954170620f",
+      "embeddedHash": "31a04e2265e86a8810c7b3e9071f1956bfea528fc840d5aec139bd00610c4059",
+      "decodedPixelHash": "af7e0563736cbf01898276b87293624203fedd9d94a9703938f3d31cc17f241f",
+      "cachedPixelHash": "af7e0563736cbf01898276b87293624203fedd9d94a9703938f3d31cc17f241f",
       "pixelFormat": "RGBA8",
       "width": 512,
       "height": 512,
@@ -123,8 +123,8 @@
       "name": "about-dark",
       "source": "checks/layout-about-dark.json",
       "file": "about-dark.png",
-      "size": 645040,
-      "hash": "8eb306b16e5bdc9c28ff01f133d32875fcd8ebf8994593fe078b5b434be0bad3",
+      "size": 529552,
+      "hash": "ddd68a648d4b2ca703bfa4a2f165685d388392be94d63b895e9f0ee261d1984f",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -134,8 +134,8 @@
       },
       "svg": {
         "file": "about-dark.svg",
-        "size": 2971446,
-        "hash": "528d1a8a7d6400a7f9e6db8e0190a63dbd0ef31f4f6d15c0724cc993ec3a48bc"
+        "size": 2571994,
+        "hash": "cb7e63bd6aaf6cbc1f3a18c84c5ebb0e192404d51f9fddff5e6293867e4e61ae"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -143,8 +143,8 @@
       "name": "about-light",
       "source": "checks/layout-about-light.json",
       "file": "about-light.png",
-      "size": 665342,
-      "hash": "e9a49b2424fbbcf4c1ef68cc535d6493049e873d027f6292c6f0a82595a9748b",
+      "size": 561816,
+      "hash": "16a540fba2ffa45c0cb9ce6b0576cd8008395f5f71d10fa61ebff88b9d838cc2",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -154,8 +154,8 @@
       },
       "svg": {
         "file": "about-light.svg",
-        "size": 2971339,
-        "hash": "f24fe087651a490869a2104b6ff683c881deb19c3e6793f17019eccb1efe83b8"
+        "size": 2571887,
+        "hash": "46a9578d0e28cad37ab164a7d8c367a3967b8fd00e533598ba21a37e493bd425"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -163,8 +163,8 @@
       "name": "account-menu-dark",
       "source": "checks/layout-account-menu-dark.json",
       "file": "account-menu-dark.png",
-      "size": 990703,
-      "hash": "df401010aef39e55d41a1ff18fb9915a7f3a22c2f76949c81c0d000d47cb5c43",
+      "size": 835644,
+      "hash": "53dd0b8d55f5d8fee7825cd2b3af75ee942bfcf47ab93342019a2c8ce1df0689",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -174,8 +174,8 @@
       },
       "svg": {
         "file": "account-menu-dark.svg",
-        "size": 2973364,
-        "hash": "6d69252a981befeb295e8cfd86e09d7c1e14b7ec09fccc949ec24deb00b5fbd3"
+        "size": 2573912,
+        "hash": "cb46490c5bbd2d1c76d7875e9a5b1dc2ada25b72c548d8dd47d8f8c5956c01ff"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -183,8 +183,8 @@
       "name": "account-menu-light",
       "source": "checks/layout-account-menu-light.json",
       "file": "account-menu-light.png",
-      "size": 932659,
-      "hash": "32e183478b7a7ff3a12bf21c2af15b85d2f3449ac8535cb98e35d2b8b22786dd",
+      "size": 841986,
+      "hash": "11a0bf9c450c74dcad1301cb1cfed22fa92efbc60881b12525aaf4098c2358fa",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -194,8 +194,8 @@
       },
       "svg": {
         "file": "account-menu-light.svg",
-        "size": 2973226,
-        "hash": "1eb4551158d24e42e4421fa4fa8c0fc5046b7c59db8c7acf9702284ece76ad4b"
+        "size": 2573774,
+        "hash": "dd0824be0ce0b12aad67fa4a373689f6d34720e74454d4b89e9daae1e9fec677"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -203,8 +203,8 @@
       "name": "chat-dark",
       "source": "checks/layout-chat-dark.json",
       "file": "chat-dark.png",
-      "size": 375009,
-      "hash": "63a876063d346606e0f4221706d7a810a44e2a1dc358db9e0210d4e6c37aec82",
+      "size": 268625,
+      "hash": "4dea92df4a3c0545b9bdf4ef5c278d5e47722a5c7629f8ae70452ac5d58c8fce",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -214,8 +214,8 @@
       },
       "svg": {
         "file": "chat-dark.svg",
-        "size": 754647,
-        "hash": "e7c3123ae9fe44cb59c174b29c5a4b9c88b0bce1cad5d7623bf6c59d275ef609"
+        "size": 606815,
+        "hash": "18f04003537138cee0703ba5d0946d8e83e4f643a7f941efd20ec25bb3a4d2e3"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -223,8 +223,8 @@
       "name": "chat-light",
       "source": "checks/layout-chat-light.json",
       "file": "chat-light.png",
-      "size": 291458,
-      "hash": "f9abadc315dbb76191c21858165bee02865b608af1e299ca09612ce3b1a47190",
+      "size": 265252,
+      "hash": "6bcb9bc76fb86af16ee454224a6c6e17c7823af56bb422f33a07225bffeac10e",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -234,8 +234,8 @@
       },
       "svg": {
         "file": "chat-light.svg",
-        "size": 754573,
-        "hash": "a8356f500a2dc8f874b5bd1ab5a70c60a85f158460de5f2a53267841d313bc64"
+        "size": 606741,
+        "hash": "a32052f58163f01ca3ee0941a560bf652eda54b4f14b6f88eeb2aadf83c909d7"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -243,8 +243,8 @@
       "name": "experts-4-dark",
       "source": "checks/layout-experts-4-dark.json",
       "file": "experts-4-dark.png",
-      "size": 992750,
-      "hash": "149acac462299e538c639f3bd237174d0f90b7ef9ad06f8572f9dee5659451b6",
+      "size": 838680,
+      "hash": "b19f60c6603ff60c6e7d511f4f7bc84fd64b13a61ef0ffae4f1c075b21cc5263",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -254,8 +254,8 @@
       },
       "svg": {
         "file": "experts-4-dark.svg",
-        "size": 2964962,
-        "hash": "cb6b3ac2940b4f5690c00c271e55d264488d321c2c81fc00fc95c5aa3ec0752e"
+        "size": 2565510,
+        "hash": "4e876ff0962c429491a9a07bb30ec85f02f58d22a72311349d00454668fb69f5"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -263,8 +263,8 @@
       "name": "experts-4-light",
       "source": "checks/layout-experts-4-light.json",
       "file": "experts-4-light.png",
-      "size": 930581,
-      "hash": "14299f79884bcf58a146fbbd6f9db12f945e60f695f70856509833640ed6e581",
+      "size": 836016,
+      "hash": "994fe89bf376d1dd3bff77a8bb25f0f5af630d944eeb0ab6ecf87d44230448fd",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -274,8 +274,8 @@
       },
       "svg": {
         "file": "experts-4-light.svg",
-        "size": 2964864,
-        "hash": "b1ac8bc022f06ade8438660161d13a5368c44527682bde24d38131a56881b648"
+        "size": 2565412,
+        "hash": "937e36d43df08ea8ae5c6b7222812f0229aee366340dd8215d26b8a87cae608c"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -283,8 +283,8 @@
       "name": "guest-experts-dark",
       "source": "checks/layout-guest-experts-dark.json",
       "file": "guest-experts-dark.png",
-      "size": 1003376,
-      "hash": "4705f72e7599eeb00f0e594827591081dd3043c155bd01cb23778e907439d756",
+      "size": 849549,
+      "hash": "cbc3e7221a9fa25f75d28381e9349aeb24eb0c8becccbdf9fd3a6e5bff1229d9",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -294,8 +294,8 @@
       },
       "svg": {
         "file": "guest-experts-dark.svg",
-        "size": 2966679,
-        "hash": "1dbb7faa48eeaa8a95c64b14363dcc47a00747b875234eadc26dcd968df79b9c"
+        "size": 2567227,
+        "hash": "97eac62ee0c57b965a424dad3e9ddc65cd3006e90e4062247df703c3ed09d21a"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -303,8 +303,8 @@
       "name": "guest-experts-light",
       "source": "checks/layout-guest-experts-light.json",
       "file": "guest-experts-light.png",
-      "size": 941627,
-      "hash": "aba0cb298bfbeb1af8f0c145218480fee905426cb5c53374551ec8496f1ba8c4",
+      "size": 847461,
+      "hash": "d4569d69d1ce5fcb0508cc6502077ea0d516624f91a8c05ba21655a99e6dab32",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -314,8 +314,8 @@
       },
       "svg": {
         "file": "guest-experts-light.svg",
-        "size": 2966559,
-        "hash": "8557b3a9575d50a8a9e962d16d3af11c49510e9b0c1bed38dff71bf8eae64232"
+        "size": 2567107,
+        "hash": "96eef6c1cc2b75cd632f033500aa9b27f0dff2e220f80c90e724712ba91cc9c3"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -323,8 +323,8 @@
       "name": "profile-dark",
       "source": "checks/layout-profile-dark.json",
       "file": "profile-dark.png",
-      "size": 498152,
-      "hash": "88cc89d95f777764ce58a83910022be310fd0b433a8ed923ec5be78b65542ba6",
+      "size": 379160,
+      "hash": "767dbe0bff31a2cc5b9a90b4c0c5ce509dc83e1fa085155c0ce9d206becab2eb",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -334,8 +334,8 @@
       },
       "svg": {
         "file": "profile-dark.svg",
-        "size": 396099,
-        "hash": "835a76bf684fb28bb9464b86f13b2827ed4f0e900a5422856e319459d97ce643"
+        "size": 322183,
+        "hash": "3b55738f97bcb6bb6225395ceb4f9658c0209c95327a06a44e3289d44e2e66e2"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -343,8 +343,8 @@
       "name": "profile-light",
       "source": "checks/layout-profile-light.json",
       "file": "profile-light.png",
-      "size": 427428,
-      "hash": "6982054f7e2d524f8ea89f10c46a27f4147536fd909b2864a36675e71e08322f",
+      "size": 377612,
+      "hash": "978de0fbd7ee7e5c61206f351e01837143317693cd5d3c09cc896dfb638410e8",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -354,8 +354,8 @@
       },
       "svg": {
         "file": "profile-light.svg",
-        "size": 396017,
-        "hash": "fc68ad802eec26aabdbb505555178aa681dfacbbee99dd4f776da9bb92494530"
+        "size": 322101,
+        "hash": "9a9f30a7a5910a16320e42f8ec5c95747cca778683b7badaf8004082852163de"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -363,8 +363,8 @@
       "name": "signin-dark",
       "source": "checks/layout-signin-dark.json",
       "file": "signin-dark.png",
-      "size": 290366,
-      "hash": "9cf05b95f7444003b623d85e4e53c77e94c0149dccc69310340f38a27159ebd4",
+      "size": 187597,
+      "hash": "5b0dd3b1afb49e6bf55dd326506baef16151986b55ffb7f3c8ba8050f5fb82d5",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -383,8 +383,8 @@
       "name": "signin-light",
       "source": "checks/layout-signin-light.json",
       "file": "signin-light.png",
-      "size": 205568,
-      "hash": "806f15b4e7e95ecd2d278bae6e71849ba575ef1d8e9f1120e1538fb3355f21ae",
+      "size": 185386,
+      "hash": "174ec9bc8fc97193b529e8919d04ba92963f9f2a25da9c6b82c11e3654f8961a",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -403,8 +403,8 @@
       "name": "task-dark",
       "source": "checks/layout-task-dark.json",
       "file": "task-dark.png",
-      "size": 379310,
-      "hash": "cc4a1f4bfe1cd394d34f52a4003092026e0e6c931870870b811a60622c35e0bd",
+      "size": 269191,
+      "hash": "16ff331914e3411c5e6d599ddbfb19d679762bcf91891e244a8f38b95d742451",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -414,8 +414,8 @@
       },
       "svg": {
         "file": "task-dark.svg",
-        "size": 1088348,
-        "hash": "2b0f0c640b070bb434e95d303dfd308fec7d0475ee1ce8030714ba64a083884c"
+        "size": 914840,
+        "hash": "014bb1f94ba8f9b147c9320e6456b45d1c4a0d46e938835ff1b56703979ec300"
       },
       "method": "browser-measured native SVG, not screenshot"
     },
@@ -423,8 +423,8 @@
       "name": "task-light",
       "source": "checks/layout-task-light.json",
       "file": "task-light.png",
-      "size": 293275,
-      "hash": "c833a207e8430ea5e9f5601c35ac9b116f36c85d133fec5d2afcdb04f48845ae",
+      "size": 263898,
+      "hash": "652c3a2692f7c658796f1777544eee5a6e7d579bd48fd85d598ba8a08b67161c",
       "metadata": {
         "format": "png",
         "width": 3200,
@@ -434,8 +434,8 @@
       },
       "svg": {
         "file": "task-light.svg",
-        "size": 1088269,
-        "hash": "0dc728a319dd2cf21542c7e7d60d1a27988d0a04a7e5a1f1615303c042f1005f"
+        "size": 914761,
+        "hash": "b14c8e8d6b6b5d730165d4f38fb498c90e1bda47fc054fb11c359816f73b7a47"
       },
       "method": "browser-measured native SVG, not screenshot"
     }
@@ -446,215 +446,215 @@
     "files": [
       {
         "file": "assets/avatars/AGT-001.webp",
-        "hash": "43673aa08a6fbb6204b21eeefddad67e1e957358773e342ac8127bf9a96efe34"
+        "hash": "007284a076c58c929be3bfc4664853774b6f973539b57cd10001406f39e2efb2"
       },
       {
         "file": "assets/avatars/AGT-002.webp",
-        "hash": "5558cc9b84e0e7af29ea9d5df4a9018da6ed1ef85e13ef55d7d18937aca5bf26"
+        "hash": "1539518087a41b2cc13ab58d20236820f185e5cbbb61a425ff198367a181d885"
       },
       {
         "file": "assets/avatars/AGT-003.webp",
-        "hash": "7a79a16174a97c0f69a2f91b920075a0eb899743f879ff2e1e9397252aa36385"
+        "hash": "d16663f3af8d115a2b0b0ca2615fcb2ee3f332bb761a73f844433ae4bf256ce8"
       },
       {
         "file": "assets/avatars/AGT-004.webp",
-        "hash": "23877bdcafbb63c7a551756cb204af745f75207a7d27e52c767fd10918bdcd15"
+        "hash": "3c2ef6084a8c5e56568184140a11287b71776fdf3945bd26dc0105c69fc3ffba"
       },
       {
         "file": "assets/avatars/AGT-005.webp",
-        "hash": "408026ce2f55672c63d411db259fb163f8eaa60b66102fec58a1e720d889a637"
+        "hash": "3695e9b9d700515fc24915810bf451b76c27ebc6048b0df09b18c6954170620f"
       },
       {
         "file": "assets/avatars/AGT-006.webp",
-        "hash": "43bdf28d336eb831beade995e592c86c40f142bef99ebf99fa66f510370bcb53"
+        "hash": "15bdc9eafc088d83a26fdea0333b39aac1712a92bde5944628b430f89eb85d0b"
       },
       {
         "file": "assets/avatars/AGT-007.webp",
-        "hash": "fae3aa91938209ff59c913c485cb6f366d387644e8e6c895d54c617cec0906a7"
+        "hash": "12dc9ce7536636a980a7873abe17c1229cc35f038fd2db4eac96bd6e9b444ba6"
       },
       {
         "file": "assets/avatars/AGT-008.webp",
-        "hash": "24dd70206ee56ee91287fb08da92c35b12a35b270de74da9c9254fda6e01df75"
+        "hash": "c47e7586e38b4cbb2a63394c793bd72d652278e30f9ce323919eeee1397ff268"
       },
       {
         "file": "assets/avatars/AGT-009.webp",
-        "hash": "94fe85d8632750d0cbeb5f1e034e034bd43bb2b3f49c1bea8c7ccfdad99e9e87"
+        "hash": "1c1b83e4950c405450d9b2fedbdcd89372b79af1491fe8d552d8cb166555ad35"
       },
       {
         "file": "assets/avatars/AGT-010.webp",
-        "hash": "b825c46efcd131a714807f86b84e6cf29264dc34d8c24e459c3fec7703d30d79"
+        "hash": "e7b15c7f1901cf851e18203551f1199e2bf52c6bb4260784f2fd7f046820cb92"
       },
       {
         "file": "assets/avatars/AGT-011.webp",
-        "hash": "5754f7eadaa89898fcea6b867fb9d6070f46885228a5fdd5cfb9715e12e7aa9c"
+        "hash": "c31b37e3ca80b006bbceae3d8e6feeef182a8ca1643ee866dfd2de4c02529e7d"
       },
       {
         "file": "assets/avatars/AGT-012.webp",
-        "hash": "3d5da3363f1bf7c4bc713e5cb8d87efaf7723077ec19822a0381932fa8e8dc0b"
+        "hash": "6f83706246df1da5f3e073761f28fa8b5cf257814bdc72d960df228ed55a6e89"
       },
       {
         "file": "assets/avatars/AGT-013.webp",
-        "hash": "6d4e6a5399d49cd05c4941637419215fb295f2c7172cd53595fadcacb55ec95d"
+        "hash": "4ce9af665c9ee045f1a14b9f2d825d9bb214bf2a23e305d6bc5df96a67add06b"
       },
       {
         "file": "assets/avatars/AGT-014.webp",
-        "hash": "3d2de58f5a833590d39642a5cca673e4780cffc54e3e755aba2362864cc49e2c"
+        "hash": "73a23cff0666ae65d47b5b87375ed1592e171b0f7300240f11a25b447bf8b8d8"
       },
       {
         "file": "assets/avatars/AGT-015.webp",
-        "hash": "9da5a8ad4106277bd3d9a0b38a6b3d2f3d58f0ad8f9af5a538b153d7a00ff9e9"
+        "hash": "991a347c6a7e03093b87de376350068f091c55b44923dc433b700645fecc5064"
       },
       {
         "file": "assets/avatars/AGT-016.webp",
-        "hash": "8bceb6c40bd534cfeeb0693ac6fa990008e2c6aded4634bb57af7793e330a1ab"
+        "hash": "d43d4bb95c8fe3c9c035c8ad266b4774907955643767be445bc0a4f9169f5a14"
       },
       {
         "file": "assets/avatars/AGT-017.webp",
-        "hash": "9b0659e6e2b2fbec6cc9f95e061e86bd79c30aa7f78c3bec49b785eac38024ce"
+        "hash": "f68393b5fef504da00954afae5d1d4832a002cd16d9c3f5ad610e61522e12918"
       },
       {
         "file": "assets/avatars/AGT-018.webp",
-        "hash": "88e78a248cd37c377219b67096e58b18967fbc40106644c4be49802cd3287588"
+        "hash": "9b8011e994c60a882f05d705950a6dccb987c7480c167777d29be8c759176307"
       },
       {
         "file": "assets/avatars/AGT-019.webp",
-        "hash": "700ae78b1f289155d03b5b17a607d9d1abb280e6346a481612d2592bc600acce"
+        "hash": "1b36d719f79971741f74cf5378e1670dbf647a43f43f16138067a5774d2e1af1"
       },
       {
         "file": "assets/avatars/AGT-020.webp",
-        "hash": "b46e48d72bcf3194445d3693b661160bd5dda2c19f1db01c3dd3c186446d68a0"
+        "hash": "49e7d24df9711db8ad0fa4ffae60185b93e2dcf0cbbccfd07de67e5f80fa3242"
       },
       {
         "file": "assets/avatars/AGT-021.webp",
-        "hash": "3f36b2f5921e851f10372f1973525b8326d868f88c535288e6e9707ba833eb3b"
+        "hash": "b94cf2474f2e1b7b141e2ea43a4242369ca80338f29717eb5e8cdd03eea5a64f"
       },
       {
         "file": "assets/avatars/AGT-022.webp",
-        "hash": "2f100397f2281d94aaaefc6eddd6f66e452cc7d5c8d72a8ba423e20f2629279d"
+        "hash": "1126d4f5ebae3fada3ffa619d6c7c13cf9caf07da5682505ecabf9f4efc845a2"
       },
       {
         "file": "assets/avatars/AGT-023.webp",
-        "hash": "03265fd563619f52981c135a1d5e0525009f9ec9bafe64cb83ab71452dd94b2f"
+        "hash": "31b05e06c063bd4c0df1d669d483154608e3f3fd0e6e7c8065870b7b445ba02a"
       },
       {
         "file": "assets/avatars/AGT-024.webp",
-        "hash": "0e197669012e2e337dc813e50ec4d45c0a45ec9d7a9115895ea32e81b8e9d38d"
+        "hash": "a51b22341034a1822b7cdd918523bc1ded6c66ed608dca3e2c6b6805d7e29905"
       },
       {
         "file": "assets/avatars/AGT-025.webp",
-        "hash": "c4294f4174fd30e27521b9136e00e45c757528436a19d97ee060f061a87bf541"
+        "hash": "66e27190e03b6f02c25b23716584af2d535a95dc05ffaee1115ef0cffbf789ac"
       },
       {
         "file": "assets/avatars/AGT-026.webp",
-        "hash": "3fa76ba32c3a3c40fdf05ed2309244094017c60ec274feff89b3a842f3ec07b5"
+        "hash": "ab459b3b50e6a81fc4d1a76447063bb42a6f75445b3caa3a33592d4f41e2f219"
       },
       {
         "file": "assets/avatars/AGT-027.webp",
-        "hash": "37954860c647b35b4e04ece45a3a3743540e17908551c53201eca589f6526059"
+        "hash": "a832c2de87aa5f9b13bf6796fb1251c92cc9b393cc5861f1a32bbc6f1976f6c5"
       },
       {
         "file": "assets/avatars/AGT-028.webp",
-        "hash": "d2ccdf77f3fcd827cae6c1f07abf05206357c4a3727005e815a5038016f87327"
+        "hash": "eebf7c7eb70941d48e998b55acfd11ce2bbe14ac5b6d714d19c8ac35eb6c6307"
       },
       {
         "file": "assets/avatars/AGT-029.webp",
-        "hash": "40fda256a09899da9caec3792bfa887a4edb35efeb835d2c5b0fdf9bedcec5b0"
+        "hash": "83666e466dc98bae0e7efa7545f1dab50823f1cbb094f89ee95ea4316ee1f563"
       },
       {
         "file": "assets/avatars/AGT-030.webp",
-        "hash": "3b908e1028ad3a697a673f582a549e6ba54566f0860879eb7b2cd002622bab8d"
+        "hash": "c11d184785d8ec397fd2fe2e23cb1ba30dc2d4fb49839a014753760e2b664446"
       },
       {
         "file": "assets/avatars/AGT-031.webp",
-        "hash": "28729210ebeeba1af91626285c140dfa64909a4c924348381db272cd18e6d8a1"
+        "hash": "45cb394d59cf1a409403fcb24400daf97edbdeae7031a3fe7dee157d496607e4"
       },
       {
         "file": "assets/avatars/AGT-032.webp",
-        "hash": "3dec02315f183c59383fd77d31e28d7e7e0f1dd4e0f9c399b27a9f37f626ae49"
+        "hash": "8b75ebb9da2b6965a01a5a6c6e18df90e9f281548c05d935c6ab174f215f6fa9"
       },
       {
         "file": "assets/avatars/AGT-033.webp",
-        "hash": "5ae8612bdcd1fa2b79047e05dd61246f8e5463026cfe8d21af57f1a26d85a39f"
+        "hash": "d36bddc1b93f7e27e0380835e198351694dbc10875cf198e7f79f5134837f171"
       },
       {
         "file": "assets/avatars/AGT-034.webp",
-        "hash": "9ea9b65775d4dad95ee5ba07a625cfb4fc0c178f857829909a6b0e7ee0418b53"
+        "hash": "decc38c93e716abc174c309b1071601232cf8b0bb3c0da2c3a5df9794a6aa527"
       },
       {
         "file": "assets/avatars/AGT-035.webp",
-        "hash": "52d00b3d0bb564c5a7820739f117317dc8b9173c08ab93e6696fd160065db409"
+        "hash": "c2a4517904bee1ce02547a685c426834138d32daa1ec7507fa06af7f50b75fc3"
       },
       {
         "file": "assets/avatars/AGT-036.webp",
-        "hash": "de9083b7cdf8f27b83f6625c98671597020bb7baeb2e8dafa10d1b67784a257a"
+        "hash": "75da091a64d6ec392be36d0944f732362c7ac3286638e2ce058d5fb538fbd580"
       },
       {
         "file": "assets/avatars/AGT-037.webp",
-        "hash": "d14c2b53e50aba2c0646b67b62d8b3d271a5aadad0b2c2883469bdf6b37acc67"
+        "hash": "efc34aeff9c6061ec73b268ffbbc3dc3fb8a31aa8fbf6e6b9c2d99da3c0eb780"
       },
       {
         "file": "assets/avatars/AGT-038.webp",
-        "hash": "3ce882e46ec9a03ecaf6998fd08955f8ef050ecf097090949772612ffe9b8e49"
+        "hash": "b68ca748280cffc4ca6b16a099c86104db069584a6dc09caed9f9120a7527bf2"
       },
       {
         "file": "assets/avatars/AGT-039.webp",
-        "hash": "d16ee838bdd2e19adf28b29499b15dc7371d8f9f2cd1269ec3ec994e9c2e06d6"
+        "hash": "bc6a09d7da13149718d4dcfbd2f15f9e92d4367eb30616081125508cd28f8b0e"
       },
       {
         "file": "assets/avatars/AGT-040.webp",
-        "hash": "64e9d6ac9203be04dd72140c8a601548a91c9f13c92717724840c575edb58847"
+        "hash": "e3ad3f8014e40e44ebb160a1469ffec5acfb999864e760e1dfc0717f5c73b272"
       },
       {
         "file": "assets/avatars/AGT-041.webp",
-        "hash": "e8560810be38e98e807d7def34c72c503f3e772c9c953d348a66e84645344e1a"
+        "hash": "c25dc279e3073daaaaf6c5c41fd6516810941bf4f13203d5ca384225161c5849"
       },
       {
         "file": "assets/avatars/AGT-042.webp",
-        "hash": "bfbb88a16306be67e9b0cfcfdec7dbb92417f11fb45005d30e8bc9c3c395f480"
+        "hash": "e346ae653e3696b1d4cb7289fac1c39e06c91ef78868fec612688ea2088772b0"
       },
       {
         "file": "assets/avatars/AGT-043.webp",
-        "hash": "74eed94dbb93714981917c0bcefb72aadeb7c902b9efcb11e0aa33e8bf6b14a1"
+        "hash": "c7091baf4e27c1c64630cc47aabb9c83230ab84c4155be3d317e2e4819814d25"
       },
       {
         "file": "assets/avatars/AGT-044.webp",
-        "hash": "1c32ebf49e1819a753f57d48e97e829a93e82317e40deba1eb394a7374bdc3be"
+        "hash": "55a479a82e9cb06cbc6d0f2b3136401be121d5325aa66eb95f31617754312c96"
       },
       {
         "file": "assets/avatars/AGT-045.webp",
-        "hash": "1f1a22b530a1d4cb2b368c48a6e2cf396cbf939eacbf1f73d8ba3a9b93fa13ba"
+        "hash": "fae3d431db41b30eca063472a9569d44a84f755e05d58f982b931f2c529a21a8"
       },
       {
         "file": "assets/avatars/AGT-046.webp",
-        "hash": "430c956a51ab5f3d4f5817fdcba64a1ea9cbf7234b38c9fbf15aff671a15b99a"
+        "hash": "9b1ce02a661bef68f91858d874162d7f32618498223b5b725988530fe72a5c59"
       },
       {
         "file": "assets/avatars/AGT-047.webp",
-        "hash": "521b3e43fd042b07a6ad2a0bd55873e5ef8554518aea227c088c13e8e98f1183"
+        "hash": "860546c18eb6c49d40bdf94ff891759e572c99bd1f71627c45ecc79d0c5983bf"
       },
       {
         "file": "assets/avatars/AGT-048.webp",
-        "hash": "8405650c8a6264c46601f0a971f79f4770f0b99d1f2e7caf0b428d41f53c0f63"
+        "hash": "6214129ddb54b6923dc2be0400ecb16a2c2c5d1db241eca1d4adcdf1e9400911"
       },
       {
         "file": "assets/avatars/AGT-049.webp",
-        "hash": "e7421784ca33d42df60c10786d39873063fec54198055dd594961d0db01d56fa"
+        "hash": "c0012b5531b45933f393d0c7ea84506834e201cf24b3992842e2133abd5ab6d3"
       },
       {
         "file": "assets/avatars/AGT-050.webp",
-        "hash": "7362b97d62b0e29318827691a2e3594fabd8222ae92291232bb2f42ae213083b"
+        "hash": "e31c7b4807796ed91105c1f3d6b485964d11875626c04f854bb470d9bbf9350b"
       },
       {
         "file": "assets/avatars/MGMT-CEO.webp",
-        "hash": "40c04079c42ca7bfe95d5f62ad5885a5de83989d6bac6802bcc3060d4a44d784"
+        "hash": "09f0fa137b413466621dfcb6348c06a8e6f907801b09c6a2a2f5cacf69684e29"
       },
       {
         "file": "assets/avatars/MGMT-CGO.webp",
-        "hash": "e3cdd3334870587a6afa3d5cc2445a45316c8a9cda78b6d9b7b3ee189fe9b4de"
+        "hash": "56eec49ebd818512a6601d4a3c8df099468f9053c4e3bff6a7638df842b21b4c"
       },
       {
         "file": "assets/avatars/MGMT-CGOV.webp",
-        "hash": "93b1b893cea6323bbe35d15874578d913a6660e03dd913794b9691f4f3ab2e01"
+        "hash": "5df5592a62fd2fc742d3932699a0ba44ef5cabc109d56179e2f28ce0c33d6721"
       }
     ]
   }

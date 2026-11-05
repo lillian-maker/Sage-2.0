@@ -1,0 +1,2162 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-05",
+  "description": "Sage digital employee avatars, five styles bound one-to-one to the five theme styles (D56). ID-photo framing standard D72.",
+  "styles": {
+    "photo": {
+      "label": "商务 · 稳重（写实）",
+      "framing": "head 60% of height, headroom 8% (crown y=0.08, chin y=0.68), centered",
+      "count": 53,
+      "items": [
+        {
+          "id": "MGMT-CEO",
+          "name": "天时",
+          "path": "assets/avatars/photo/MGMT-CEO.webp",
+          "sha256": "09f0fa137b413466621dfcb6348c06a8e6f907801b09c6a2a2f5cacf69684e29",
+          "bytes": 18592,
+          "sourceSha256": "57e5f28adb5670865e74d4ccb2bd9e994249ec650329e351c015516feb211c93"
+        },
+        {
+          "id": "MGMT-CGO",
+          "name": "地利",
+          "path": "assets/avatars/photo/MGMT-CGO.webp",
+          "sha256": "56eec49ebd818512a6601d4a3c8df099468f9053c4e3bff6a7638df842b21b4c",
+          "bytes": 23524,
+          "sourceSha256": "cc8b5a4ce1b3c12c10ccf1971f9100ce09ed4c3f6b259f04da5b615bf02d38c0"
+        },
+        {
+          "id": "MGMT-CGOV",
+          "name": "人和",
+          "path": "assets/avatars/photo/MGMT-CGOV.webp",
+          "sha256": "5df5592a62fd2fc742d3932699a0ba44ef5cabc109d56179e2f28ce0c33d6721",
+          "bytes": 13670,
+          "sourceSha256": "4ba0bce01fc7385e32b551fb6b2d7cb16f09574f008a2b19e89680a4940b1514"
+        },
+        {
+          "id": "AGT-001",
+          "name": "衡远",
+          "path": "assets/avatars/photo/AGT-001.webp",
+          "sha256": "007284a076c58c929be3bfc4664853774b6f973539b57cd10001406f39e2efb2",
+          "bytes": 21082,
+          "sourceSha256": "5d7765b6a40508dead1d3b50986b624f6218ec25f00e00b35208eee59bd00208"
+        },
+        {
+          "id": "AGT-002",
+          "name": "枢衡",
+          "path": "assets/avatars/photo/AGT-002.webp",
+          "sha256": "1539518087a41b2cc13ab58d20236820f185e5cbbb61a425ff198367a181d885",
+          "bytes": 18790,
+          "sourceSha256": "c72f48268d63ed0427a56802deb67ecdf73f8211d07c1f0d8b983d2d2871966f"
+        },
+        {
+          "id": "AGT-003",
+          "name": "明镜",
+          "path": "assets/avatars/photo/AGT-003.webp",
+          "sha256": "d16663f3af8d115a2b0b0ca2615fcb2ee3f332bb761a73f844433ae4bf256ce8",
+          "bytes": 19582,
+          "sourceSha256": "ae85c3a5af5e3967ff2d813b8c988bc6d273fb8eb8a6d51205a82a7dfad1572b"
+        },
+        {
+          "id": "AGT-004",
+          "name": "知人",
+          "path": "assets/avatars/photo/AGT-004.webp",
+          "sha256": "3c2ef6084a8c5e56568184140a11287b71776fdf3945bd26dc0105c69fc3ffba",
+          "bytes": 26150,
+          "sourceSha256": "e668ac86cd127379377896462cdfdb3788034b0af51f2bf9aede18ca7dc84d38"
+        },
+        {
+          "id": "AGT-005",
+          "name": "守衡",
+          "path": "assets/avatars/photo/AGT-005.webp",
+          "sha256": "3695e9b9d700515fc24915810bf451b76c27ebc6048b0df09b18c6954170620f",
+          "bytes": 21510,
+          "sourceSha256": "c82a43c0a939656907c37a31332c0a6f58ac9559c2c3f6071a5809071f7f07b5"
+        },
+        {
+          "id": "AGT-006",
+          "name": "听澜",
+          "path": "assets/avatars/photo/AGT-006.webp",
+          "sha256": "15bdc9eafc088d83a26fdea0333b39aac1712a92bde5944628b430f89eb85d0b",
+          "bytes": 25556,
+          "sourceSha256": "f6725fb6f516debee68a642e308be6638387710ea695ce78076b4603e2f0a1dc"
+        },
+        {
+          "id": "AGT-007",
+          "name": "望野",
+          "path": "assets/avatars/photo/AGT-007.webp",
+          "sha256": "12dc9ce7536636a980a7873abe17c1229cc35f038fd2db4eac96bd6e9b444ba6",
+          "bytes": 22580,
+          "sourceSha256": "dc9bc615b6a9d98a237ddc31c2c4f1711d88b9a9e4e93ad5e12325a4c9942f4b"
+        },
+        {
+          "id": "AGT-008",
+          "name": "拓新",
+          "path": "assets/avatars/photo/AGT-008.webp",
+          "sha256": "c47e7586e38b4cbb2a63394c793bd72d652278e30f9ce323919eeee1397ff268",
+          "bytes": 29962,
+          "sourceSha256": "68e98fe5593242e02e58181469b94e1572cdb5ac8a4ad52edcf342a9ba0eb9d4"
+        },
+        {
+          "id": "AGT-009",
+          "name": "定形",
+          "path": "assets/avatars/photo/AGT-009.webp",
+          "sha256": "1c1b83e4950c405450d9b2fedbdcd89372b79af1491fe8d552d8cb166555ad35",
+          "bytes": 12792,
+          "sourceSha256": "0478136fd88e77cda72827d718f0aa02ffb648ce8abefae15436f1f504bb7938"
+        },
+        {
+          "id": "AGT-010",
+          "name": "映物",
+          "path": "assets/avatars/photo/AGT-010.webp",
+          "sha256": "e7b15c7f1901cf851e18203551f1199e2bf52c6bb4260784f2fd7f046820cb92",
+          "bytes": 22926,
+          "sourceSha256": "31a8056b0560e64a4b32bf92124544cc059738ce2c717358dcef49528354f105"
+        },
+        {
+          "id": "AGT-011",
+          "name": "砺器",
+          "path": "assets/avatars/photo/AGT-011.webp",
+          "sha256": "c31b37e3ca80b006bbceae3d8e6feeef182a8ca1643ee866dfd2de4c02529e7d",
+          "bytes": 20662,
+          "sourceSha256": "90dabea5a06149d55ac9b7d87899feb83a7a104fb51378beea0c28a5bbab3b5d"
+        },
+        {
+          "id": "AGT-012",
+          "name": "灵枢",
+          "path": "assets/avatars/photo/AGT-012.webp",
+          "sha256": "6f83706246df1da5f3e073761f28fa8b5cf257814bdc72d960df228ed55a6e89",
+          "bytes": 25892,
+          "sourceSha256": "7736bf691d57a58a7182d571d5cd11fa8b4e9b6c09dc9771c621952a546fdfe7"
+        },
+        {
+          "id": "AGT-013",
+          "name": "求证",
+          "path": "assets/avatars/photo/AGT-013.webp",
+          "sha256": "4ce9af665c9ee045f1a14b9f2d825d9bb214bf2a23e305d6bc5df96a67add06b",
+          "bytes": 20320,
+          "sourceSha256": "ca6656b428b2714a9baf877ebac697da22c6673dba9a0794a4e1e8a8b9e2fbcd"
+        },
+        {
+          "id": "AGT-014",
+          "name": "择源",
+          "path": "assets/avatars/photo/AGT-014.webp",
+          "sha256": "73a23cff0666ae65d47b5b87375ed1592e171b0f7300240f11a25b447bf8b8d8",
+          "bytes": 24086,
+          "sourceSha256": "5a16af0ed6b2d097980e910f1ced417a9086a2fd6ad7135edab2eb20e1bfadeb"
+        },
+        {
+          "id": "AGT-015",
+          "name": "契约",
+          "path": "assets/avatars/photo/AGT-015.webp",
+          "sha256": "991a347c6a7e03093b87de376350068f091c55b44923dc433b700645fecc5064",
+          "bytes": 16588,
+          "sourceSha256": "e8d09c389af4e7a5586fefb25715b931ba819543527bd8d61f2c5a80926bebcd"
+        },
+        {
+          "id": "AGT-016",
+          "name": "知量",
+          "path": "assets/avatars/photo/AGT-016.webp",
+          "sha256": "d43d4bb95c8fe3c9c035c8ad266b4774907955643767be445bc0a4f9169f5a14",
+          "bytes": 18016,
+          "sourceSha256": "e2fb335d39cad16234844225fd6dacdb6b57e0a9988c2ac9354aa5edb9fa8153"
+        },
+        {
+          "id": "AGT-017",
+          "name": "衡仓",
+          "path": "assets/avatars/photo/AGT-017.webp",
+          "sha256": "f68393b5fef504da00954afae5d1d4832a002cd16d9c3f5ad610e61522e12918",
+          "bytes": 25196,
+          "sourceSha256": "07d0ba4fadb26bbaa898f71782d78b94866cc483a7af9d1c95e2af15448c56e6"
+        },
+        {
+          "id": "AGT-018",
+          "name": "质守",
+          "path": "assets/avatars/photo/AGT-018.webp",
+          "sha256": "9b8011e994c60a882f05d705950a6dccb987c7480c167777d29be8c759176307",
+          "bytes": 23728,
+          "sourceSha256": "81c03afd997490befca27662204b1364fac185127f6307fca05e259d7228914b"
+        },
+        {
+          "id": "AGT-019",
+          "name": "通途",
+          "path": "assets/avatars/photo/AGT-019.webp",
+          "sha256": "1b36d719f79971741f74cf5378e1670dbf647a43f43f16138067a5774d2e1af1",
+          "bytes": 30186,
+          "sourceSha256": "fad3659abe79e183f96f647b234632c12e3b04e92323b908e67a9f6b62864a3a"
+        },
+        {
+          "id": "AGT-020",
+          "name": "行舟",
+          "path": "assets/avatars/photo/AGT-020.webp",
+          "sha256": "49e7d24df9711db8ad0fa4ffae60185b93e2dcf0cbbccfd07de67e5f80fa3242",
+          "bytes": 24090,
+          "sourceSha256": "59650817bfe60037f1126e0d5a3b95d8d2994df86585cd06a66485da842634bf"
+        },
+        {
+          "id": "AGT-021",
+          "name": "北辰",
+          "path": "assets/avatars/photo/AGT-021.webp",
+          "sha256": "b94cf2474f2e1b7b141e2ea43a4242369ca80338f29717eb5e8cdd03eea5a64f",
+          "bytes": 22758,
+          "sourceSha256": "61a24aa79c0196d65b86d94d6edc3b74d7dc4ecfe79ebbe817da9041f8e94995"
+        },
+        {
+          "id": "AGT-022",
+          "name": "觅位",
+          "path": "assets/avatars/photo/AGT-022.webp",
+          "sha256": "1126d4f5ebae3fada3ffa619d6c7c13cf9caf07da5682505ecabf9f4efc845a2",
+          "bytes": 20284,
+          "sourceSha256": "b6bb6c5036bd2d6f3451826f462f8010baabd0d35497f7942808c13f64e9cac1"
+        },
+        {
+          "id": "AGT-023",
+          "name": "自航",
+          "path": "assets/avatars/photo/AGT-023.webp",
+          "sha256": "31b05e06c063bd4c0df1d669d483154608e3f3fd0e6e7c8065870b7b445ba02a",
+          "bytes": 16398,
+          "sourceSha256": "ad69292bb32581026ce0ef28f79b736e381460e2472b17b4f4148a2e8b1e6456"
+        },
+        {
+          "id": "AGT-024",
+          "name": "拓域",
+          "path": "assets/avatars/photo/AGT-024.webp",
+          "sha256": "a51b22341034a1822b7cdd918523bc1ded6c66ed608dca3e2c6b6805d7e29905",
+          "bytes": 32014,
+          "sourceSha256": "75df6b777a928e4955a665b4e33da73dafdb777d71c8a4c5eba486dcdbd06fd7"
+        },
+        {
+          "id": "AGT-025",
+          "name": "联商",
+          "path": "assets/avatars/photo/AGT-025.webp",
+          "sha256": "66e27190e03b6f02c25b23716584af2d535a95dc05ffaee1115ef0cffbf789ac",
+          "bytes": 20810,
+          "sourceSha256": "73bc99fa3aefab3992fc6451ce9886ad44d7c085d376f4c99dbd6f6e28fe4f01"
+        },
+        {
+          "id": "AGT-026",
+          "name": "衡价",
+          "path": "assets/avatars/photo/AGT-026.webp",
+          "sha256": "ab459b3b50e6a81fc4d1a76447063bb42a6f75445b3caa3a33592d4f41e2f219",
+          "bytes": 24150,
+          "sourceSha256": "102f69d9b1002fc46a373663e1b8f71a0316444f4d444d02d6796fb87a9b6167"
+        },
+        {
+          "id": "AGT-027",
+          "name": "守店",
+          "path": "assets/avatars/photo/AGT-027.webp",
+          "sha256": "a832c2de87aa5f9b13bf6796fb1251c92cc9b393cc5861f1a32bbc6f1976f6c5",
+          "bytes": 23914,
+          "sourceSha256": "4b66929edf0bc0a91d5d7237a2601b0e2986ea8aada40470ff093f4213134667"
+        },
+        {
+          "id": "AGT-028",
+          "name": "译境",
+          "path": "assets/avatars/photo/AGT-028.webp",
+          "sha256": "eebf7c7eb70941d48e998b55acfd11ce2bbe14ac5b6d714d19c8ac35eb6c6307",
+          "bytes": 21034,
+          "sourceSha256": "761821f9d5977cb47cfb3dd9b690267de8acdb5247607bb15982b853b3913927"
+        },
+        {
+          "id": "AGT-029",
+          "name": "立言",
+          "path": "assets/avatars/photo/AGT-029.webp",
+          "sha256": "83666e466dc98bae0e7efa7545f1dab50823f1cbb094f89ee95ea4316ee1f563",
+          "bytes": 19692,
+          "sourceSha256": "7e6a6c49f2c950dc58ffeaf93cd0d1d8b98347f51130bf0ee30ee071b18235a9"
+        },
+        {
+          "id": "AGT-030",
+          "name": "叙事",
+          "path": "assets/avatars/photo/AGT-030.webp",
+          "sha256": "c11d184785d8ec397fd2fe2e23cb1ba30dc2d4fb49839a014753760e2b664446",
+          "bytes": 20702,
+          "sourceSha256": "d78cca1bccd1da1660cd162f5d466a110ef9038f5aac5a69b14e8de0733e3c2e"
+        },
+        {
+          "id": "AGT-031",
+          "name": "绘影",
+          "path": "assets/avatars/photo/AGT-031.webp",
+          "sha256": "45cb394d59cf1a409403fcb24400daf97edbdeae7031a3fe7dee157d496607e4",
+          "bytes": 27102,
+          "sourceSha256": "8311b2f27de784e3be482e6c4c98b589a8ce743947db75a5be202fe6f4ade20d"
+        },
+        {
+          "id": "AGT-032",
+          "name": "点火",
+          "path": "assets/avatars/photo/AGT-032.webp",
+          "sha256": "8b75ebb9da2b6965a01a5a6c6e18df90e9f281548c05d935c6ab174f215f6fa9",
+          "bytes": 21608,
+          "sourceSha256": "e6dd7c4a937228940ef5c0a434dd2cda2db339ee92494d19be4964293ae824d6"
+        },
+        {
+          "id": "AGT-033",
+          "name": "结伴",
+          "path": "assets/avatars/photo/AGT-033.webp",
+          "sha256": "d36bddc1b93f7e27e0380835e198351694dbc10875cf198e7f79f5134837f171",
+          "bytes": 26074,
+          "sourceSha256": "d10ea937ca71337af54f8d34bf36a1edbc45b3e1cdf3819691fa639958a7d198"
+        },
+        {
+          "id": "AGT-034",
+          "name": "续缘",
+          "path": "assets/avatars/photo/AGT-034.webp",
+          "sha256": "decc38c93e716abc174c309b1071601232cf8b0bb3c0da2c3a5df9794a6aa527",
+          "bytes": 20876,
+          "sourceSha256": "290afbedab7386e5c6fcea20a1340748b1f8bd22f39913d5019a7da157c14ec6"
+        },
+        {
+          "id": "AGT-035",
+          "name": "试真",
+          "path": "assets/avatars/photo/AGT-035.webp",
+          "sha256": "c2a4517904bee1ce02547a685c426834138d32daa1ec7507fa06af7f50b75fc3",
+          "bytes": 23604,
+          "sourceSha256": "b343f0940cd5407f2a73d1d318ea30e75714c7b2232bbf6b21e90eed2fcaa433"
+        },
+        {
+          "id": "AGT-036",
+          "name": "安心",
+          "path": "assets/avatars/photo/AGT-036.webp",
+          "sha256": "75da091a64d6ec392be36d0944f732362c7ac3286638e2ce058d5fb538fbd580",
+          "bytes": 23664,
+          "sourceSha256": "7d4da4e7619dd0f112444613dcbe502b21a6856f767113a98692f2726275c50e"
+        },
+        {
+          "id": "AGT-037",
+          "name": "解忧",
+          "path": "assets/avatars/photo/AGT-037.webp",
+          "sha256": "efc34aeff9c6061ec73b268ffbbc3dc3fb8a31aa8fbf6e6b9c2d99da3c0eb780",
+          "bytes": 22840,
+          "sourceSha256": "a691fa480ccb28fe6691606eb0202a343a1e388e831fb3d0aa6822a522ed570e"
+        },
+        {
+          "id": "AGT-038",
+          "name": "回声",
+          "path": "assets/avatars/photo/AGT-038.webp",
+          "sha256": "b68ca748280cffc4ca6b16a099c86104db069584a6dc09caed9f9120a7527bf2",
+          "bytes": 22404,
+          "sourceSha256": "56b312f9bcf21584fb7a3bbc25843172b088602b88d0a0d261e4ca762e3a23da"
+        },
+        {
+          "id": "AGT-039",
+          "name": "同行",
+          "path": "assets/avatars/photo/AGT-039.webp",
+          "sha256": "bc6a09d7da13149718d4dcfbd2f15f9e92d4367eb30616081125508cd28f8b0e",
+          "bytes": 19250,
+          "sourceSha256": "0169843d8cfc96ba770747cccb02555c2a9c146bac389e2617a2ea7544926a0d"
+        },
+        {
+          "id": "AGT-040",
+          "name": "清账",
+          "path": "assets/avatars/photo/AGT-040.webp",
+          "sha256": "e3ad3f8014e40e44ebb160a1469ffec5acfb999864e760e1dfc0717f5c73b272",
+          "bytes": 21758,
+          "sourceSha256": "fd2187e678a08950136a6a9a76450e0865993f73944d77f46fa0f932d430151d"
+        },
+        {
+          "id": "AGT-041",
+          "name": "守金",
+          "path": "assets/avatars/photo/AGT-041.webp",
+          "sha256": "c25dc279e3073daaaaf6c5c41fd6516810941bf4f13203d5ca384225161c5849",
+          "bytes": 16706,
+          "sourceSha256": "38bafe565e38a7e9fbd838a80897af864ca9a585f11b82198d478b7a1a9990f0"
+        },
+        {
+          "id": "AGT-042",
+          "name": "合账",
+          "path": "assets/avatars/photo/AGT-042.webp",
+          "sha256": "e346ae653e3696b1d4cb7289fac1c39e06c91ef78868fec612688ea2088772b0",
+          "bytes": 25494,
+          "sourceSha256": "6f9b3d1b1111ecd3dd92eeb9549d385d863991090a7a061477329c91b6bc2f95"
+        },
+        {
+          "id": "AGT-043",
+          "name": "律衡",
+          "path": "assets/avatars/photo/AGT-043.webp",
+          "sha256": "c7091baf4e27c1c64630cc47aabb9c83230ab84c4155be3d317e2e4819814d25",
+          "bytes": 17008,
+          "sourceSha256": "3d574fc4a7bd1400ca9cec4058893036f7ba2788fb81a2a5e0344648b961dd22"
+        },
+        {
+          "id": "AGT-044",
+          "name": "安界",
+          "path": "assets/avatars/photo/AGT-044.webp",
+          "sha256": "55a479a82e9cb06cbc6d0f2b3136401be121d5325aa66eb95f31617754312c96",
+          "bytes": 17168,
+          "sourceSha256": "73f305c537fcb7f15f2fe197b3fd2b0f4415ea241afd4a3cc9bb2cce74c0d098"
+        },
+        {
+          "id": "AGT-045",
+          "name": "同尺",
+          "path": "assets/avatars/photo/AGT-045.webp",
+          "sha256": "fae3d431db41b30eca063472a9569d44a84f755e05d58f982b931f2c529a21a8",
+          "bytes": 25008,
+          "sourceSha256": "b69f54627cd5119420e00b7d2f8ba5890fabe0b6272ae7e3b0371965804d4066"
+        },
+        {
+          "id": "AGT-046",
+          "name": "清源",
+          "path": "assets/avatars/photo/AGT-046.webp",
+          "sha256": "9b1ce02a661bef68f91858d874162d7f32618498223b5b725988530fe72a5c59",
+          "bytes": 18600,
+          "sourceSha256": "0633e5eb2a4925862e85e28c9f0c3945bf94ded148897d2d49aadd3c967c3849"
+        },
+        {
+          "id": "AGT-047",
+          "name": "接桥",
+          "path": "assets/avatars/photo/AGT-047.webp",
+          "sha256": "860546c18eb6c49d40bdf94ff891759e572c99bd1f71627c45ecc79d0c5983bf",
+          "bytes": 27458,
+          "sourceSha256": "b5822cfa4c8a7b332484d6152adf14a44a1af54e531f7bc3fa1468d3eb13443c"
+        },
+        {
+          "id": "AGT-048",
+          "name": "积知",
+          "path": "assets/avatars/photo/AGT-048.webp",
+          "sha256": "6214129ddb54b6923dc2be0400ecb16a2c2c5d1db241eca1d4adcdf1e9400911",
+          "bytes": 22982,
+          "sourceSha256": "03c31f9cf00eaf775634e45808d6487bf7c84c8ab902deec9cc010985c482ec9"
+        },
+        {
+          "id": "AGT-049",
+          "name": "稳行",
+          "path": "assets/avatars/photo/AGT-049.webp",
+          "sha256": "c0012b5531b45933f393d0c7ea84506834e201cf24b3992842e2133abd5ab6d3",
+          "bytes": 17572,
+          "sourceSha256": "749367ef0f021d05523f90aa4af072b8b130b3d46ec02688901748a0a4a93c74"
+        },
+        {
+          "id": "AGT-050",
+          "name": "门卫",
+          "path": "assets/avatars/photo/AGT-050.webp",
+          "sha256": "e31c7b4807796ed91105c1f3d6b485964d11875626c04f854bb470d9bbf9350b",
+          "bytes": 18410,
+          "sourceSha256": "e8bb53e1c10abb1f5a95aba5a8f18a25f3ef44f5f5491309618d995bbfa0b50d"
+        }
+      ]
+    },
+    "iso": {
+      "label": "新锐 · 电光（等距体块）",
+      "framing": "head 50% of height, headroom 10% (crown y=0.10, chin y=0.60), centered",
+      "count": 53,
+      "items": [
+        {
+          "id": "MGMT-CEO",
+          "name": "天时",
+          "path": "assets/avatars/iso/MGMT-CEO.webp",
+          "sha256": "57171ccf5f1b4de787c145731f0267e01bbc134272424783b2467dd4d0cceb12",
+          "bytes": 18528,
+          "sourceSha256": "6efaf4d2a1b72b8c0cc063aa404c6915fa2a6fbf66762f1c4e1d5b182d205d5a"
+        },
+        {
+          "id": "MGMT-CGO",
+          "name": "地利",
+          "path": "assets/avatars/iso/MGMT-CGO.webp",
+          "sha256": "cee16fa492f9b57994c7cf7249d58c3e3b338926cafd3a9d194b76b2781eab5d",
+          "bytes": 22606,
+          "sourceSha256": "ccbabce3d9cdcaed77cf9119f29d043a84eedd7794252ecce7156b071ad6cce1"
+        },
+        {
+          "id": "MGMT-CGOV",
+          "name": "人和",
+          "path": "assets/avatars/iso/MGMT-CGOV.webp",
+          "sha256": "7a5b76b5e4c2745a2f113b203c93774849fa0ca3d6fb7f4f43e393768ca4f861",
+          "bytes": 15468,
+          "sourceSha256": "0bd3d56e7250699edb72a48af9e6c5bf11d0ccbbaca75ff394fb92082c51617c"
+        },
+        {
+          "id": "AGT-001",
+          "name": "衡远",
+          "path": "assets/avatars/iso/AGT-001.webp",
+          "sha256": "5ef7b08d944f9d9cce95ea450fe8bf7d3109fb67b48a074be1ff5974e8acf440",
+          "bytes": 21300,
+          "sourceSha256": "7c5f5e1687f6b858327118aaec2e17f1760a6304ba38e6df5bdf21be6723d752"
+        },
+        {
+          "id": "AGT-002",
+          "name": "枢衡",
+          "path": "assets/avatars/iso/AGT-002.webp",
+          "sha256": "31667df2f199d3725beba3c13d1b22baa7cb248cb20f038928e6232c0c130aaa",
+          "bytes": 24088,
+          "sourceSha256": "0a914e931382101467f4282d58b41c3271e8bdacf72e5dfe5fb0f96671b8841f"
+        },
+        {
+          "id": "AGT-003",
+          "name": "明镜",
+          "path": "assets/avatars/iso/AGT-003.webp",
+          "sha256": "78b04eaff7fd2c48da6ecabeb499f98f4231fc6d2d76451355521142010db2fd",
+          "bytes": 20974,
+          "sourceSha256": "b15b4f94e348d2961df407c57a83f58f5d97b5d042487845e8bd59bbe4616a52"
+        },
+        {
+          "id": "AGT-004",
+          "name": "知人",
+          "path": "assets/avatars/iso/AGT-004.webp",
+          "sha256": "9ed9ac1a4b4e27657fb93bedfa881591e8ea9b7033b9576698c17df00fa8fe57",
+          "bytes": 24112,
+          "sourceSha256": "8c7908232bef44c1ee05acce65dc36d385ea46c7ef5b93c90c602f4387e445e3"
+        },
+        {
+          "id": "AGT-005",
+          "name": "守衡",
+          "path": "assets/avatars/iso/AGT-005.webp",
+          "sha256": "4726be376304818e5be9d28f466cf1311ead21b5eb6b2be9fa0a0202e31a121e",
+          "bytes": 15852,
+          "sourceSha256": "ce997725b06ce9e4c94b3a3ef72ae43eac8d0ef5fd36b1d1e26f3d9f8a4e6005"
+        },
+        {
+          "id": "AGT-006",
+          "name": "听澜",
+          "path": "assets/avatars/iso/AGT-006.webp",
+          "sha256": "3a7ae62b0c465e3992dfe8a598d1b585ecd6acab698dc310dfb1a930501fe656",
+          "bytes": 21994,
+          "sourceSha256": "a49c0d2770de7d91acdde1d40923ac2073996472d86dbff22285cc49dc7d2f6a"
+        },
+        {
+          "id": "AGT-007",
+          "name": "望野",
+          "path": "assets/avatars/iso/AGT-007.webp",
+          "sha256": "8415e2361080c4716eb54bb0f4fd55a114dc42df2bd28cb82a680a1c03488993",
+          "bytes": 22646,
+          "sourceSha256": "6ff89dcfe8b6ce5d80007f25be71fcf061e86a0206771341d9e7544dc410f54f"
+        },
+        {
+          "id": "AGT-008",
+          "name": "拓新",
+          "path": "assets/avatars/iso/AGT-008.webp",
+          "sha256": "61ad23071814ec7e9aea86eb4bba032857e3b2c0e4ab833ea1a93910d07d1ee8",
+          "bytes": 31246,
+          "sourceSha256": "42302ffb79e7fecb0e8e15c2d07901901abb9a465f5f49d9015932de2b3948c4"
+        },
+        {
+          "id": "AGT-009",
+          "name": "定形",
+          "path": "assets/avatars/iso/AGT-009.webp",
+          "sha256": "0131f66ecd7cab933c5fc351adc08914eb50f036b7767f504289ac49e9d6432d",
+          "bytes": 17396,
+          "sourceSha256": "612603030b4f35f60d8798de32b8bb1cb6c1d96309959329f150ae58af1c740f"
+        },
+        {
+          "id": "AGT-010",
+          "name": "映物",
+          "path": "assets/avatars/iso/AGT-010.webp",
+          "sha256": "48ff5dfdae93867f838145406b3f007a979df63a7b4fb38ce5b7baacff532038",
+          "bytes": 23322,
+          "sourceSha256": "0a5b1b74abb923a69b263a96762c5ddbd5dda68161cf63a9e840d4f0fe62e2cd"
+        },
+        {
+          "id": "AGT-011",
+          "name": "砺器",
+          "path": "assets/avatars/iso/AGT-011.webp",
+          "sha256": "0f5f63d227071c1c52bd2527d7af03cefacd1c8a8006182616423dc66176db7c",
+          "bytes": 29312,
+          "sourceSha256": "6a6f795c6185b548d0fa5653b79d86bcd6ffa5b1a4658cfed9069de24321e0af"
+        },
+        {
+          "id": "AGT-012",
+          "name": "灵枢",
+          "path": "assets/avatars/iso/AGT-012.webp",
+          "sha256": "0768dcc731b812327283904cd29009ece2686bc0b6021e0c7155ed31abfbeac9",
+          "bytes": 28282,
+          "sourceSha256": "553e0c16b6efac578e82f233cc36a137b48386b922d9843a6725ccc216ab86e5"
+        },
+        {
+          "id": "AGT-013",
+          "name": "求证",
+          "path": "assets/avatars/iso/AGT-013.webp",
+          "sha256": "e06440eb60779c9f4bbe17c4f6f9c8895ad7d1071ede4f4063ba645619e7bd11",
+          "bytes": 30970,
+          "sourceSha256": "3af18306882e67db72fc00b851615c4e9eb241125c4b9519587a65258fa0a234"
+        },
+        {
+          "id": "AGT-014",
+          "name": "择源",
+          "path": "assets/avatars/iso/AGT-014.webp",
+          "sha256": "f908be81e8c743afae548b34b286035700ebc728c21b4f426ed4f9bff50e3793",
+          "bytes": 26220,
+          "sourceSha256": "113f434dc419f440b31c5ae13c742172b2afb64966ac8e989cb97f0e572e9515"
+        },
+        {
+          "id": "AGT-015",
+          "name": "契约",
+          "path": "assets/avatars/iso/AGT-015.webp",
+          "sha256": "cf6dcf63c69546e4008bb3d5d7724bc0b0296f717dbdc839e356e516244d6c9b",
+          "bytes": 20308,
+          "sourceSha256": "c87510eb9fc2fb686b4cd6f1d6cc86fd920969666a6e246b4d2a7c023e182f3b"
+        },
+        {
+          "id": "AGT-016",
+          "name": "知量",
+          "path": "assets/avatars/iso/AGT-016.webp",
+          "sha256": "f867efa84452f71c087a74a22d837fc428018936b6cc4957c66407b4c31c9f65",
+          "bytes": 26330,
+          "sourceSha256": "d33345bcdd3717b3c5e9392f2c984517ba4131c26d983ab77e492902977d68de"
+        },
+        {
+          "id": "AGT-017",
+          "name": "衡仓",
+          "path": "assets/avatars/iso/AGT-017.webp",
+          "sha256": "72c381445d0028f81ab10e819927e9ad0f7e784db8acfcdf8490b23043f3335a",
+          "bytes": 20928,
+          "sourceSha256": "86882e96110ad9f926db9406c0365ee030ad481ece23ef855aef27136839780f"
+        },
+        {
+          "id": "AGT-018",
+          "name": "质守",
+          "path": "assets/avatars/iso/AGT-018.webp",
+          "sha256": "cc5ac59e7a2a7329a7a5264286d7539425d4fd9bf7fbdd16caf46e307418c30a",
+          "bytes": 27506,
+          "sourceSha256": "494c8cea900ed487937e3fba3309d59bf5b857308c94f5dafb5b4c4c3c00cc6e"
+        },
+        {
+          "id": "AGT-019",
+          "name": "通途",
+          "path": "assets/avatars/iso/AGT-019.webp",
+          "sha256": "c3b12817ab4998b1a33754db16187c46c70b85e06886b63b638ec49b0133f3bc",
+          "bytes": 29386,
+          "sourceSha256": "5c9f44ccebdd4082927d4442e3b1025bb46376729a03031c10969c7dfccbb0e5"
+        },
+        {
+          "id": "AGT-020",
+          "name": "行舟",
+          "path": "assets/avatars/iso/AGT-020.webp",
+          "sha256": "8ca5b591f0b65e01372d56192683f8bc2a4decb6a2663757b220e32b3cfc9af6",
+          "bytes": 23726,
+          "sourceSha256": "ebdd4820d7481e6464daef04230e9fb3a10fb56a6e7b3676b51341972d28690e"
+        },
+        {
+          "id": "AGT-021",
+          "name": "北辰",
+          "path": "assets/avatars/iso/AGT-021.webp",
+          "sha256": "fa4dea60142435148638d7cba4d7506577aade206c46e64621a219de895b3f2a",
+          "bytes": 18074,
+          "sourceSha256": "d2fd493008e8934932ff692a9697403495f94c00c811ae7511e19165462c5f21"
+        },
+        {
+          "id": "AGT-022",
+          "name": "觅位",
+          "path": "assets/avatars/iso/AGT-022.webp",
+          "sha256": "79ce94bc62d401826775cbb39bc2967c614b136c203d592eaba7fe1bb6d2ed21",
+          "bytes": 23806,
+          "sourceSha256": "38c3be4c5198772d452116ba6ad469a09923db9505636b99f5abf6dead362332"
+        },
+        {
+          "id": "AGT-023",
+          "name": "自航",
+          "path": "assets/avatars/iso/AGT-023.webp",
+          "sha256": "213d2f742b02449c334d1872794129c71e1e69949b811ec119f5c1c93bd4c250",
+          "bytes": 19266,
+          "sourceSha256": "ae4e034f44ef8bb8affe832b578f10cd884d567450f549577baa7d955c9283f5"
+        },
+        {
+          "id": "AGT-024",
+          "name": "拓域",
+          "path": "assets/avatars/iso/AGT-024.webp",
+          "sha256": "d6f39403bad4106fb44c21b4a95d3895104b190877c53ab93038a692eff9a178",
+          "bytes": 28970,
+          "sourceSha256": "fa61eb169df6ac9ec2781d8c8ba1589f4f53820ddd8bbf683b9ce4bdcdc08f87"
+        },
+        {
+          "id": "AGT-025",
+          "name": "联商",
+          "path": "assets/avatars/iso/AGT-025.webp",
+          "sha256": "c3e38ff51dd720f3af4709d50b4c6b651cc25fb49489dcbe409f5b133074c736",
+          "bytes": 24248,
+          "sourceSha256": "b394af3526d72b7390ba5f8394f3dbd2c29642094ce80ce7cd70d4d68f9eb608"
+        },
+        {
+          "id": "AGT-026",
+          "name": "衡价",
+          "path": "assets/avatars/iso/AGT-026.webp",
+          "sha256": "79da7acee48c1a596959b3a9bfbd0e2459b45e271652228206e5f845937e7cb2",
+          "bytes": 29258,
+          "sourceSha256": "698c3d86ae74fedf461ecba8221e64acc6e1e67710bf622a723dc354e122fc6f"
+        },
+        {
+          "id": "AGT-027",
+          "name": "守店",
+          "path": "assets/avatars/iso/AGT-027.webp",
+          "sha256": "4c257a3efe3e374766b5ad1ee1dabb7b68d40b922ecd55d5e76bcdac96f1ec1f",
+          "bytes": 25596,
+          "sourceSha256": "166d634c1d0b89c8a174ffe5496942612a336ad0b0033f7272c67af1fc670608"
+        },
+        {
+          "id": "AGT-028",
+          "name": "译境",
+          "path": "assets/avatars/iso/AGT-028.webp",
+          "sha256": "17325dedeefefe9e5637f6bdb04c44185e9baecdf2150ce95ced339fc101f157",
+          "bytes": 26584,
+          "sourceSha256": "6d3793cf2443e76dcc8d27438fbb2f605c5c4e37d8ac755434750d7528a74505"
+        },
+        {
+          "id": "AGT-029",
+          "name": "立言",
+          "path": "assets/avatars/iso/AGT-029.webp",
+          "sha256": "e14f9e0b6d3692588f6d1f063826aa90bc5a00931df5c124382a904a439ad9b0",
+          "bytes": 22182,
+          "sourceSha256": "2627b98e7d3cad5d76c6bc81b238a8dc7c1a5f81659fd85e1909d4fa5944f703"
+        },
+        {
+          "id": "AGT-030",
+          "name": "叙事",
+          "path": "assets/avatars/iso/AGT-030.webp",
+          "sha256": "8f23f6ac8bbf8a394dc09c531c7ac057691a73196e9b8cbfd93239be5d360771",
+          "bytes": 22166,
+          "sourceSha256": "69025f79eacf107812418556b9af000949f9c86330fc50ad4ed7622035260de3"
+        },
+        {
+          "id": "AGT-031",
+          "name": "绘影",
+          "path": "assets/avatars/iso/AGT-031.webp",
+          "sha256": "1e2cc8dc205aa4b420e0c4922ffb0fd58eddd25770a4b0e0550998f1cc6827a4",
+          "bytes": 29654,
+          "sourceSha256": "7aa5ccc246c34bb62c84948922841e5d4ed6cd9e600198945dcbbce58b5d1dd4"
+        },
+        {
+          "id": "AGT-032",
+          "name": "点火",
+          "path": "assets/avatars/iso/AGT-032.webp",
+          "sha256": "4bedf62a2905fdeeded3b0e04b78cc5ea2e11bc0ea17a40ac2d9d9d50f41494f",
+          "bytes": 21392,
+          "sourceSha256": "9ea4fc75e9b7263bb083ff2a8c7063a9768780d866cb1640fbfb372bfd14b903"
+        },
+        {
+          "id": "AGT-033",
+          "name": "结伴",
+          "path": "assets/avatars/iso/AGT-033.webp",
+          "sha256": "754ad04ffc6e29d024b6bd327a7c46e1eb75b330a5a875118fb69de3fe377e5c",
+          "bytes": 25968,
+          "sourceSha256": "0a6e7bf46b30191c63c012252b1451f907b0c07e768663f34e3b243862922043"
+        },
+        {
+          "id": "AGT-034",
+          "name": "续缘",
+          "path": "assets/avatars/iso/AGT-034.webp",
+          "sha256": "b3bd5830df3af51f54117280266997efc4481cf5f819851f4f7b93943ab57bfb",
+          "bytes": 20728,
+          "sourceSha256": "d7d8fe1881203eed8a547a9c71215f3caccd597345be68a02a8ef1f3c922e29d"
+        },
+        {
+          "id": "AGT-035",
+          "name": "试真",
+          "path": "assets/avatars/iso/AGT-035.webp",
+          "sha256": "5038e403a3ae31e0953de63ee8181702af12998e03773a5352d4bc938de49cf3",
+          "bytes": 27228,
+          "sourceSha256": "447cd405ad19ffbd2162edfcaca0c6b980b6e29369d75948ba9a6d39222522b4"
+        },
+        {
+          "id": "AGT-036",
+          "name": "安心",
+          "path": "assets/avatars/iso/AGT-036.webp",
+          "sha256": "86e41b5e8ad7b99ee5d96356443e5cf009335cc5076869857e8561f8a9d835f8",
+          "bytes": 20422,
+          "sourceSha256": "c8f43c73345df14399a8d53e79ee50bafb4901fa1432034f19f03da61e3a4bf1"
+        },
+        {
+          "id": "AGT-037",
+          "name": "解忧",
+          "path": "assets/avatars/iso/AGT-037.webp",
+          "sha256": "f43e930622bcf96fca116a5a5873e497cd070cd0700a3df4e8f8e13bc2bc8d5c",
+          "bytes": 17668,
+          "sourceSha256": "96caca1973d885800945c1c15a3323a1c3fdae89d82c7598b4d4fef320879dff"
+        },
+        {
+          "id": "AGT-038",
+          "name": "回声",
+          "path": "assets/avatars/iso/AGT-038.webp",
+          "sha256": "37aa8a9e2c7e225f6c57beed665d7c62616fcdb53c8b7c7706660ff5fe6d56f8",
+          "bytes": 24900,
+          "sourceSha256": "6343bb8bb36eeb8f04a869fdb080782a24919f0b6843cc23d64c6f0d97147154"
+        },
+        {
+          "id": "AGT-039",
+          "name": "同行",
+          "path": "assets/avatars/iso/AGT-039.webp",
+          "sha256": "31fa3af578d7454e5945d9d296bfcb4637b2df7f644ad2f7ca95066c15732c5c",
+          "bytes": 19398,
+          "sourceSha256": "dd412a672aab5c48b6e2b21760f892270a5066d2b73a8e5bd562b59e07cd1bb4"
+        },
+        {
+          "id": "AGT-040",
+          "name": "清账",
+          "path": "assets/avatars/iso/AGT-040.webp",
+          "sha256": "20ad871834d96f122922cf4aca0eb2032726dc839362cedb02bb399d62798c4b",
+          "bytes": 20298,
+          "sourceSha256": "d402f2c066501e6c2b9f780aaecf839ae10c49e39a4f526facd5198c61e322a5"
+        },
+        {
+          "id": "AGT-041",
+          "name": "守金",
+          "path": "assets/avatars/iso/AGT-041.webp",
+          "sha256": "eac14b959a47e4ff20c51a3a785292710b56dcc88358c98b7b37f19f7b457e6b",
+          "bytes": 20924,
+          "sourceSha256": "2207e48dd7b118b1730e7a4553639435d00d44db47595d52981fac67e6228762"
+        },
+        {
+          "id": "AGT-042",
+          "name": "合账",
+          "path": "assets/avatars/iso/AGT-042.webp",
+          "sha256": "c6b87faeb98243b753fa64e0005aad044c8baaeb4b7096afec0f9231c4aadde1",
+          "bytes": 27116,
+          "sourceSha256": "c93b08dd0b675d4ced89993d7b83f3b857e8375d1c8409295f0c0d8e7e179b11"
+        },
+        {
+          "id": "AGT-043",
+          "name": "律衡",
+          "path": "assets/avatars/iso/AGT-043.webp",
+          "sha256": "52e0c1c526db89d1751ed9c6c8192b96b061e30723e1f7b36147d77fc5944c77",
+          "bytes": 19304,
+          "sourceSha256": "0af1e6c84484c464f2a88affe6ae4edf86061f4739326e3c26822e48551f672f"
+        },
+        {
+          "id": "AGT-044",
+          "name": "安界",
+          "path": "assets/avatars/iso/AGT-044.webp",
+          "sha256": "9823f0e8cf9260fcacdcdfcb66ee7626ec08423382d236da93d4c9b5449f3d23",
+          "bytes": 17714,
+          "sourceSha256": "05c315962939e19d2b40aba491fa06fd4ac39d646a91197799a6a78893ac0adc"
+        },
+        {
+          "id": "AGT-045",
+          "name": "同尺",
+          "path": "assets/avatars/iso/AGT-045.webp",
+          "sha256": "ae0ea29a646e73d5c6a7fb80cf148bfcec479987baf1e3f18723dd4953bd236e",
+          "bytes": 19772,
+          "sourceSha256": "fbc8f1670284c41412899d53393f6cbcb7f752dbc6f7a77d73c573006300a227"
+        },
+        {
+          "id": "AGT-046",
+          "name": "清源",
+          "path": "assets/avatars/iso/AGT-046.webp",
+          "sha256": "bfb1fd3bd1299eae07e6492b1bc51eb47d5b71e354bb024c37af9f8048ec764a",
+          "bytes": 18828,
+          "sourceSha256": "18886eed85ee67d416f26fabea68738ceb9458457af8179a2036f2e17eab5b33"
+        },
+        {
+          "id": "AGT-047",
+          "name": "接桥",
+          "path": "assets/avatars/iso/AGT-047.webp",
+          "sha256": "8feee2801a937a2d50fbc79b4a62195951badcb211148b14469c531f5a84e69b",
+          "bytes": 31392,
+          "sourceSha256": "c84745d337ee25651c04dd19ed742bd7ae067aee6419848e1846624f71d947f3"
+        },
+        {
+          "id": "AGT-048",
+          "name": "积知",
+          "path": "assets/avatars/iso/AGT-048.webp",
+          "sha256": "145eb1a78f3dc132856420be1b094f796afd2b431b39c8d76d66b76738e020e6",
+          "bytes": 29458,
+          "sourceSha256": "ab294f6b28d703f9763a24c658157b1784271b075c3ce7a09ffd78e4e941c124"
+        },
+        {
+          "id": "AGT-049",
+          "name": "稳行",
+          "path": "assets/avatars/iso/AGT-049.webp",
+          "sha256": "9291a5a6c752fa2e0cd9de883f2298944ca9313f6518509afb3db291c667171a",
+          "bytes": 22224,
+          "sourceSha256": "403b882ac6c58daea7a9fa9ed5888e44ae0484139a880d87d7699b6ec7a0ca5a"
+        },
+        {
+          "id": "AGT-050",
+          "name": "门卫",
+          "path": "assets/avatars/iso/AGT-050.webp",
+          "sha256": "e0786d39848bf92bcff356c7e974fdbe129e363fa0477b67c30f50e1f65f5081",
+          "bytes": 19462,
+          "sourceSha256": "a035eb53bca1a8b965142bfcd87399dd44d83e4544a7a5409978b8bf63f2fa0e"
+        }
+      ]
+    },
+    "collage": {
+      "label": "时尚 · 编辑（编辑拼贴）",
+      "framing": "head 50% of height, headroom 10% (crown y=0.10, chin y=0.60), centered",
+      "count": 53,
+      "items": [
+        {
+          "id": "MGMT-CEO",
+          "name": "天时",
+          "path": "assets/avatars/collage/MGMT-CEO.webp",
+          "sha256": "6aa5d9b986a59079f264972df140f0d1b15009eee5fa4d7005be849b8f8bca1e",
+          "bytes": 82346,
+          "sourceSha256": "ea0e694bf8a95f85589a134a79b7cf96a90c1a8e023bfac0b4b21c9539814cc4"
+        },
+        {
+          "id": "MGMT-CGO",
+          "name": "地利",
+          "path": "assets/avatars/collage/MGMT-CGO.webp",
+          "sha256": "9a037040d942ca8172cd59c2b6e470b1fecfceaf7c7805ba51d6804b81faf348",
+          "bytes": 54866,
+          "sourceSha256": "2731520a5f402ba6154b5450446129451463cf58b05123b38cd02de653c7416d"
+        },
+        {
+          "id": "MGMT-CGOV",
+          "name": "人和",
+          "path": "assets/avatars/collage/MGMT-CGOV.webp",
+          "sha256": "de5fa4d88b7b9333a01f54f30827b6c4f7268814783364ed6c245383f6ebf00f",
+          "bytes": 45690,
+          "sourceSha256": "a29f1fffeeccd9d5005a2b8f48ed8dba8353d25ef54e7422c77dac8069e676d2"
+        },
+        {
+          "id": "AGT-001",
+          "name": "衡远",
+          "path": "assets/avatars/collage/AGT-001.webp",
+          "sha256": "a78a5529f72abc0e69a11ef01eb7a001aacdd364bca3d7e6b41b208ac6554c27",
+          "bytes": 67074,
+          "sourceSha256": "1d714f797c7287005bb2422e47848e395a681b4273dc760c43c15659f91ddea0"
+        },
+        {
+          "id": "AGT-002",
+          "name": "枢衡",
+          "path": "assets/avatars/collage/AGT-002.webp",
+          "sha256": "edacda8d6964beb45f8afd34c77d6f1f6a8f8be6b4d96e7668bee1151c996a7f",
+          "bytes": 74852,
+          "sourceSha256": "5aebd8c3205b8682501bef37640ede019d48085dd214e8f9984da80606600f84"
+        },
+        {
+          "id": "AGT-003",
+          "name": "明镜",
+          "path": "assets/avatars/collage/AGT-003.webp",
+          "sha256": "ef1b79f7fe4c30425d7bf9b55a67168ee6bc2ff87637e0fee3129e85d72c12e5",
+          "bytes": 56062,
+          "sourceSha256": "7952e25b5538919541a25c178da5f7be77253f4e4320fd7787ddd2ee60ca19a1"
+        },
+        {
+          "id": "AGT-004",
+          "name": "知人",
+          "path": "assets/avatars/collage/AGT-004.webp",
+          "sha256": "f1acb49e5646106a47b70e57fcfeff3432590d2c6274ea0ef5636243ab7b6c0e",
+          "bytes": 65868,
+          "sourceSha256": "793fc5860d543806e0a86716ccdf412adbbd2b7594930614da7f0927ca3ce0f1"
+        },
+        {
+          "id": "AGT-005",
+          "name": "守衡",
+          "path": "assets/avatars/collage/AGT-005.webp",
+          "sha256": "426efa0121f9121eb5c8e63d842f38174895142575fa95cf3e59f480c3cd0e3b",
+          "bytes": 62816,
+          "sourceSha256": "1b9b7f778be44d22bce7a0a6cf1c7d874f450b3fe0cb4c5394588a61103597aa"
+        },
+        {
+          "id": "AGT-006",
+          "name": "听澜",
+          "path": "assets/avatars/collage/AGT-006.webp",
+          "sha256": "3292c41ab05893692231903d15adf20d6f394b04cd4c180e89fd6f2f9422e9cf",
+          "bytes": 60734,
+          "sourceSha256": "68a5ed4dd7c31b02972d3499a235688a0714d4616f43118435db92ea64977667"
+        },
+        {
+          "id": "AGT-007",
+          "name": "望野",
+          "path": "assets/avatars/collage/AGT-007.webp",
+          "sha256": "1082eaf8ae07e69e368c151a4eaaa54031155edb4356c9ec927373cd52ad7592",
+          "bytes": 58860,
+          "sourceSha256": "9df78943e7c2dcca93756b6cba2cc99091d231c4d021d5e781b622af453e8291"
+        },
+        {
+          "id": "AGT-008",
+          "name": "拓新",
+          "path": "assets/avatars/collage/AGT-008.webp",
+          "sha256": "647a77025258a6083d77d98ba6558814fb6d40ad2b98a12aac82430dc5e9bd48",
+          "bytes": 69794,
+          "sourceSha256": "3d362bd6a9fde48f4ddc75af3b3250a09292625bf7c25e7e584328e98f646c8f"
+        },
+        {
+          "id": "AGT-009",
+          "name": "定形",
+          "path": "assets/avatars/collage/AGT-009.webp",
+          "sha256": "5989a4f6766687aff3dedf2d343dce80fe595a2c557bdd68c4e8bb903cfbd971",
+          "bytes": 57386,
+          "sourceSha256": "a69f1c0b21825d070e1b08b2e85c6455bfce627ce9c22d82c789b9f8dc620d6f"
+        },
+        {
+          "id": "AGT-010",
+          "name": "映物",
+          "path": "assets/avatars/collage/AGT-010.webp",
+          "sha256": "61bb2c754d5f651b9779ebed3fa5e9ef9cbe1bdc0f3080348b7c5a6a1a13a1b3",
+          "bytes": 59522,
+          "sourceSha256": "e103f2002cd225dc631c411742ad8e6976edb6b7ce18d46fd922c03936c848b3"
+        },
+        {
+          "id": "AGT-011",
+          "name": "砺器",
+          "path": "assets/avatars/collage/AGT-011.webp",
+          "sha256": "b2a7f890d9eed52f737994768bf835e63da8b790e6c4a442a3c2ffaa9a36b9f7",
+          "bytes": 68834,
+          "sourceSha256": "cd9e40e17fba59a58a5e82c5585eed1ceea4f8895cdfb71433b0919b20360f12"
+        },
+        {
+          "id": "AGT-012",
+          "name": "灵枢",
+          "path": "assets/avatars/collage/AGT-012.webp",
+          "sha256": "38d103e34910da15b264e8fbdb0d59810c08587ca8f6395b42213f45eb823fe8",
+          "bytes": 71344,
+          "sourceSha256": "a929525c1e1d862eadfed2c8b6b740a10d5aaca98a367c58f729ce4ddda1eaab"
+        },
+        {
+          "id": "AGT-013",
+          "name": "求证",
+          "path": "assets/avatars/collage/AGT-013.webp",
+          "sha256": "a5240d86551e082fcc0cae404394a6b347e38bcf0ac4297be62bfefd30c7c80d",
+          "bytes": 63810,
+          "sourceSha256": "43201a577a95fa6acbdde1096bbeae09e47149ea16631f5fd61a2e914501d70c"
+        },
+        {
+          "id": "AGT-014",
+          "name": "择源",
+          "path": "assets/avatars/collage/AGT-014.webp",
+          "sha256": "95d437ea7fa4b41b4955f4e9a56b81f33c3c6ae7b8ee2dd3d7359e9c226287b3",
+          "bytes": 53636,
+          "sourceSha256": "8cc971c60a07c050b56b9ddde3d52346d71c6be657a30ed17a14e4727ca72096"
+        },
+        {
+          "id": "AGT-015",
+          "name": "契约",
+          "path": "assets/avatars/collage/AGT-015.webp",
+          "sha256": "9d7ba2e2103b629fb16070e1c359665b34a7b48cbf672f301611f0aed55c519e",
+          "bytes": 78624,
+          "sourceSha256": "3edce663c087856f6b95f0279e6127ee1c7dd15d7d84a36a91ca9f029d6b6638"
+        },
+        {
+          "id": "AGT-016",
+          "name": "知量",
+          "path": "assets/avatars/collage/AGT-016.webp",
+          "sha256": "2c004e85d62e1d756e80586ead6304a6eb23a217c62c06ba736fc9c7c1731e51",
+          "bytes": 60022,
+          "sourceSha256": "521129d6730c5359b1b0a6ff094096dae5fddd703878cebc640fbb742280877d"
+        },
+        {
+          "id": "AGT-017",
+          "name": "衡仓",
+          "path": "assets/avatars/collage/AGT-017.webp",
+          "sha256": "4c8caacda44c2b0ba11750f227d7d9a8c3c8768bde1e9d564a7d09c85401568a",
+          "bytes": 57498,
+          "sourceSha256": "f1dfc5cec2cb373cf6d3b944f450d9513eb7ace4ea53b10b1efb44cea8cff204"
+        },
+        {
+          "id": "AGT-018",
+          "name": "质守",
+          "path": "assets/avatars/collage/AGT-018.webp",
+          "sha256": "1000b1fed5d926c31ecd2ce94d6140f033bc619f125d41efe3f2bc1d70e30f55",
+          "bytes": 76574,
+          "sourceSha256": "d1303fc6ec90deb6c5906aa456e53cee8b020bf66f2cd1258b981935e94505d5"
+        },
+        {
+          "id": "AGT-019",
+          "name": "通途",
+          "path": "assets/avatars/collage/AGT-019.webp",
+          "sha256": "51d390e20208c78f469501cdbf91dbd1a367d3f950ebec6ac5ef1e193cb789d5",
+          "bytes": 72784,
+          "sourceSha256": "0420596b9c7b289ba1432b2f75f79590429d193156be9252bd2c2ecebe180889"
+        },
+        {
+          "id": "AGT-020",
+          "name": "行舟",
+          "path": "assets/avatars/collage/AGT-020.webp",
+          "sha256": "fd37b845ec605466b30253489110c0d1b5d6834b67a2decca83706ddd1b576b9",
+          "bytes": 72554,
+          "sourceSha256": "d7b37fd552f3875e40be051185bb98073b13473e677a2ef05cd30ce633ad7218"
+        },
+        {
+          "id": "AGT-021",
+          "name": "北辰",
+          "path": "assets/avatars/collage/AGT-021.webp",
+          "sha256": "621aafb8236d5eef181fa123b13110ec06caf07698f8e7166b6e919258a35add",
+          "bytes": 51940,
+          "sourceSha256": "4f508fdff40e5b35e19175ce17c422fb3625a45fe64220b80fef0f8243190937"
+        },
+        {
+          "id": "AGT-022",
+          "name": "觅位",
+          "path": "assets/avatars/collage/AGT-022.webp",
+          "sha256": "3d7aceb036a7871cc61f6d3400dc5561c6569f5409c98dfe8a98a8525a0d3b94",
+          "bytes": 65146,
+          "sourceSha256": "1703b957b0400f119e11bd818eb6ee33c53d097b2b5f8867a89a29b430f00725"
+        },
+        {
+          "id": "AGT-023",
+          "name": "自航",
+          "path": "assets/avatars/collage/AGT-023.webp",
+          "sha256": "eec919e97864c97b0a9ea3a31676bb988a3b72f0eb78fd87f1de404540ab4a99",
+          "bytes": 59944,
+          "sourceSha256": "3e793e1441e866319777c2e4558064abcea6adb978e0af3de8c1d9d923da8b72"
+        },
+        {
+          "id": "AGT-024",
+          "name": "拓域",
+          "path": "assets/avatars/collage/AGT-024.webp",
+          "sha256": "8d04ccd4958b969c176d039b3054d3451837d827f06ece945fc4db3de5305e7d",
+          "bytes": 62356,
+          "sourceSha256": "ac73a3791a42ec09710d2361bf8103853c5dff2379a94417713240f580959164"
+        },
+        {
+          "id": "AGT-025",
+          "name": "联商",
+          "path": "assets/avatars/collage/AGT-025.webp",
+          "sha256": "0b4fddee258bd23cb6b7ab66fbd52278f6b81f0a12237d70a1e2f57e06e12b01",
+          "bytes": 65854,
+          "sourceSha256": "45a1349ccbe941177c33216b0695443e0367e8d043c469c4adeecae501bf6d99"
+        },
+        {
+          "id": "AGT-026",
+          "name": "衡价",
+          "path": "assets/avatars/collage/AGT-026.webp",
+          "sha256": "7608f4d3bcf617c0ce3720c87570273abad8bbbc266e788e425f81ecbb049de0",
+          "bytes": 75752,
+          "sourceSha256": "ac3b04f3f91fe45fa8cbbf7c169c7c8606cd2cb310e5dac301b5b7dbaa83ff52"
+        },
+        {
+          "id": "AGT-027",
+          "name": "守店",
+          "path": "assets/avatars/collage/AGT-027.webp",
+          "sha256": "1c5df881d05b96e65dd3082efdf84844a5a17c4a8e6d3bee18e1afadcbd8fea6",
+          "bytes": 52352,
+          "sourceSha256": "1ecb0fa203f7c81afbb5c8048abbf8791a7f4ff76c64ad4d47f0b865376d5d17"
+        },
+        {
+          "id": "AGT-028",
+          "name": "译境",
+          "path": "assets/avatars/collage/AGT-028.webp",
+          "sha256": "c166bd2f75d456eb5b6b745e60e8dfdd7b8e61c8a0c1cc988980cfcbd49f0eab",
+          "bytes": 67300,
+          "sourceSha256": "819e40097da2e4af2061f9fbc0dbf480b3467542585f692f2c14b077a5518d31"
+        },
+        {
+          "id": "AGT-029",
+          "name": "立言",
+          "path": "assets/avatars/collage/AGT-029.webp",
+          "sha256": "41f7c9e27dd41ec9df724a9f4719176bded3fb21a818761df8d28671a524a541",
+          "bytes": 70094,
+          "sourceSha256": "985a81d9e8371a109fbab980407e3ac5854806ec549e0e73d292dc9a2a3f91eb"
+        },
+        {
+          "id": "AGT-030",
+          "name": "叙事",
+          "path": "assets/avatars/collage/AGT-030.webp",
+          "sha256": "a7736e7c9edd15feca404c799f83f49dacd62ba04e6a00948f6bfe85c2e55e6a",
+          "bytes": 55330,
+          "sourceSha256": "e01a9ec37b5132d40faadfb482647678ccf5f4d0fdbbebb8519881df144ed944"
+        },
+        {
+          "id": "AGT-031",
+          "name": "绘影",
+          "path": "assets/avatars/collage/AGT-031.webp",
+          "sha256": "389f5899f3b4bf9908e95764a1df11b7783cd5b4b20f97e5421ae529aa09709d",
+          "bytes": 69290,
+          "sourceSha256": "70715f97fa3223c76ffdf5eaa27f9e6f52f207a32a72c5439fff275d8831d401"
+        },
+        {
+          "id": "AGT-032",
+          "name": "点火",
+          "path": "assets/avatars/collage/AGT-032.webp",
+          "sha256": "ae2e3192b6352a675bff3b9f10023d6a0e5c0fe40fdc537f86a9850e8e1057c3",
+          "bytes": 75972,
+          "sourceSha256": "e73ebfd320ef1fbb2a0dbe4c30fcb9ed2232022c604eaf0c4a30c2b2c4f3bf98"
+        },
+        {
+          "id": "AGT-033",
+          "name": "结伴",
+          "path": "assets/avatars/collage/AGT-033.webp",
+          "sha256": "3a9078e20061188fe3dfe4f033d5f268cf6721f37b7417b651c039dda814632f",
+          "bytes": 68654,
+          "sourceSha256": "a635d227e637b36c5d65f1155d24f76790e8cc7a5df59fbe4531bd83db8fcda8"
+        },
+        {
+          "id": "AGT-034",
+          "name": "续缘",
+          "path": "assets/avatars/collage/AGT-034.webp",
+          "sha256": "b46cf0d938ad7644a370cefe1231c828dd0c8f50876c19992aeb3562fe84312e",
+          "bytes": 58460,
+          "sourceSha256": "ed39b0b020861d9929eda972e492b7453aa0033502124b14e1cf07cc8453ce53"
+        },
+        {
+          "id": "AGT-035",
+          "name": "试真",
+          "path": "assets/avatars/collage/AGT-035.webp",
+          "sha256": "736fedd83ad665b1d156fb6a4bdf38e951c097fb66c401533ec7b0530e6e33b0",
+          "bytes": 55314,
+          "sourceSha256": "b6111469fa96278930929251bfc65f76f32f7450c6516715c1e637e0a7ce8e21"
+        },
+        {
+          "id": "AGT-036",
+          "name": "安心",
+          "path": "assets/avatars/collage/AGT-036.webp",
+          "sha256": "28b17d759590e8e68aba18231c4e03f0bd8110039418bf9bd95d96a796b8e6ff",
+          "bytes": 53146,
+          "sourceSha256": "24a61625cf22406830af407872d082cd0af18ab02e56473a6b19689d2c99ef52"
+        },
+        {
+          "id": "AGT-037",
+          "name": "解忧",
+          "path": "assets/avatars/collage/AGT-037.webp",
+          "sha256": "b6a40c3b2802d05b9e6bf90e880205f306557dbe1a803a4627d48ac6345aca6e",
+          "bytes": 59846,
+          "sourceSha256": "8c948b14543ed1fbe0b63c1509c8d000462052b0e289be7431b54dfd27d8741b"
+        },
+        {
+          "id": "AGT-038",
+          "name": "回声",
+          "path": "assets/avatars/collage/AGT-038.webp",
+          "sha256": "ad60d717df0a3267d1cec294fb9b8250ebf7f90ea76d421e1012b2d53e63fcda",
+          "bytes": 53588,
+          "sourceSha256": "b24bd5cec502d34ea5d6e5e1124a29c67c7137049be801926f64d68cad5fc85d"
+        },
+        {
+          "id": "AGT-039",
+          "name": "同行",
+          "path": "assets/avatars/collage/AGT-039.webp",
+          "sha256": "4ebf3680b37863c93949994d2fc43c56799d623d981f1fba1bc30ee594417d4d",
+          "bytes": 62858,
+          "sourceSha256": "b496108638f3191a43bea1d86facf76f890f83b7f4aef97b9883a0a4c3bb4713"
+        },
+        {
+          "id": "AGT-040",
+          "name": "清账",
+          "path": "assets/avatars/collage/AGT-040.webp",
+          "sha256": "87690b3f83af47d7a5320f6b8d0f0238cb2461c7d65ca5ca392e64b00e9b4eb4",
+          "bytes": 51280,
+          "sourceSha256": "a533b45e18cab2e4cd6f16bb50d08feb3c300222a9fdb2dbbd287e99b8c606ff"
+        },
+        {
+          "id": "AGT-041",
+          "name": "守金",
+          "path": "assets/avatars/collage/AGT-041.webp",
+          "sha256": "9a4ab797014f034436d0d0bc3cec76d14e78ffecabc7cecac602d697943a10be",
+          "bytes": 82488,
+          "sourceSha256": "41a445ec54312199a42dec19d2f619b5e0da3f1dea02d382837cc39d35b97c27"
+        },
+        {
+          "id": "AGT-042",
+          "name": "合账",
+          "path": "assets/avatars/collage/AGT-042.webp",
+          "sha256": "2d4c094f4cf6a5342b9606d02c2728b48477a325ca73a6069d27f889d3e8f4b0",
+          "bytes": 72090,
+          "sourceSha256": "dde875cd29e0fe4ff22c319bcf30801a614a15db423b2201f54c4f846468b422"
+        },
+        {
+          "id": "AGT-043",
+          "name": "律衡",
+          "path": "assets/avatars/collage/AGT-043.webp",
+          "sha256": "4aaf0070374b9f5a706c8ec4a7ae6f4212f01c160ab20c3a495cca627cee324e",
+          "bytes": 58460,
+          "sourceSha256": "f7454aae6f1c8b1ad4ecdc51a4dc951c3a4c1ad77dd13d7675f0050fec269ab0"
+        },
+        {
+          "id": "AGT-044",
+          "name": "安界",
+          "path": "assets/avatars/collage/AGT-044.webp",
+          "sha256": "d25cc4b476a519946d6e9386bb701bc1fa606a1b819b1c4a57a476743b47a2d1",
+          "bytes": 54154,
+          "sourceSha256": "690bc37c1946942e8bbb86e1e49931546a88e7ff27081c8278db926028a9d4d1"
+        },
+        {
+          "id": "AGT-045",
+          "name": "同尺",
+          "path": "assets/avatars/collage/AGT-045.webp",
+          "sha256": "16c993d1ae91bdac990594edca4be22c5026e0b43d3a2a94b71235faa6d3774a",
+          "bytes": 75964,
+          "sourceSha256": "a0d52f6158fa0e49f86f76446b1189c55b22bb2de7abad651a7349f20cfd8fed"
+        },
+        {
+          "id": "AGT-046",
+          "name": "清源",
+          "path": "assets/avatars/collage/AGT-046.webp",
+          "sha256": "53f1abdac210fd01d382295a90f6962fe8734d1a9eef59b45ab6f8e66a581b77",
+          "bytes": 62630,
+          "sourceSha256": "a42dbfade1f9b85b88de25253cd194ec3448e2fb210d8becb4ee087f0545aaed"
+        },
+        {
+          "id": "AGT-047",
+          "name": "接桥",
+          "path": "assets/avatars/collage/AGT-047.webp",
+          "sha256": "670ee1a91fe0ecf5b19930120b421855df5c07c35479b7ebc17dd97312aebf54",
+          "bytes": 59634,
+          "sourceSha256": "02bf54391fc5061ea481b255dee90b78b8e919867bf9923b1f4f86722c7ea79b"
+        },
+        {
+          "id": "AGT-048",
+          "name": "积知",
+          "path": "assets/avatars/collage/AGT-048.webp",
+          "sha256": "2f575bf532da382b32456575535816b6d6a0c9f54cb73c04f3c8e5e1609ba8e1",
+          "bytes": 72154,
+          "sourceSha256": "6b6a09c13ab27f617782109a4f767024470eb8ba436c0ce33b4c7948fc0e9ef5"
+        },
+        {
+          "id": "AGT-049",
+          "name": "稳行",
+          "path": "assets/avatars/collage/AGT-049.webp",
+          "sha256": "d3f19cfd53c791934e12ade6fa84f5c4a94e47a602bc8b5a252c74b55f6872ec",
+          "bytes": 59906,
+          "sourceSha256": "e0d1e167c7dbefa8f8b5aab12a6a6a1bd24adf26ff04f80dc19eba0224757374"
+        },
+        {
+          "id": "AGT-050",
+          "name": "门卫",
+          "path": "assets/avatars/collage/AGT-050.webp",
+          "sha256": "8dfc1e61aea8fd10f4af67214b9a1e5f31bcb1bb86e20f96590401914b7270d9",
+          "bytes": 56044,
+          "sourceSha256": "518abdbaadf5cda62f3e556453d744b8617e211021aafe3449bfc1804f7bf95d"
+        }
+      ]
+    },
+    "flat": {
+      "label": "舒适 · 易读（平涂插画）",
+      "framing": "head 50% of height, headroom 10% (crown y=0.10, chin y=0.60), centered",
+      "count": 53,
+      "items": [
+        {
+          "id": "MGMT-CEO",
+          "name": "天时",
+          "path": "assets/avatars/flat/MGMT-CEO.webp",
+          "sha256": "a6f328a0a4c22c73995104f06f4cf2fd9c9b93aef97835c883f072658cabf648",
+          "bytes": 13840,
+          "sourceSha256": "2c8648eb9d416d476d73385a7acfb5993c93be3cc392dcebec22751b9ad204be"
+        },
+        {
+          "id": "MGMT-CGO",
+          "name": "地利",
+          "path": "assets/avatars/flat/MGMT-CGO.webp",
+          "sha256": "0e63b3fd54149538d70b11bb7520d193abeb23e710e3ae44b0f0449c207e7a07",
+          "bytes": 17562,
+          "sourceSha256": "32ebb8db8e4c41cdde6954d7e34ced9d5e2ccaf15f54aabfd3f8b2df2fb47c37"
+        },
+        {
+          "id": "MGMT-CGOV",
+          "name": "人和",
+          "path": "assets/avatars/flat/MGMT-CGOV.webp",
+          "sha256": "d149d1fea85cd216a827c444e4625731fc613495b5925874d1d8cb175bbca308",
+          "bytes": 12168,
+          "sourceSha256": "1676d6b267c216ad4680073af36f8a51e45ea11bb70f6d4d33cdfff76e7aa5fd"
+        },
+        {
+          "id": "AGT-001",
+          "name": "衡远",
+          "path": "assets/avatars/flat/AGT-001.webp",
+          "sha256": "b86a6b87d177ff2cdb6eea7dcce6fc649f01e137135f2598d6024be6a23c8139",
+          "bytes": 19884,
+          "sourceSha256": "bf52e4c924d8f3332120bf1920a4af44fbd206683f96e60c9751aa4b5d5c5643"
+        },
+        {
+          "id": "AGT-002",
+          "name": "枢衡",
+          "path": "assets/avatars/flat/AGT-002.webp",
+          "sha256": "0de96d53819ca3fcbf56587b5dc23897d8d0bdf1cb7eded1176d524251487ffb",
+          "bytes": 19392,
+          "sourceSha256": "3083fd9e5ec609cf1aa296ab9b139cde83fd7a12ade2d69869d7d9f5b128eb87"
+        },
+        {
+          "id": "AGT-003",
+          "name": "明镜",
+          "path": "assets/avatars/flat/AGT-003.webp",
+          "sha256": "9efaa27430b328b82de212955fa4a532d2948c5182ca14179668756d12473c7d",
+          "bytes": 19354,
+          "sourceSha256": "976f32a3b48d4d9475745597536121d7f00e0540e80fcf9e049ca70998c5f102"
+        },
+        {
+          "id": "AGT-004",
+          "name": "知人",
+          "path": "assets/avatars/flat/AGT-004.webp",
+          "sha256": "98f17e500910957f97e71a7137a2fcc03f8d9b534de64f57fe3e2782e7555bd9",
+          "bytes": 20170,
+          "sourceSha256": "8ff812cd8b34f59a6c0d12774ced04063025f922e7624c9a425fc47483a468a6"
+        },
+        {
+          "id": "AGT-005",
+          "name": "守衡",
+          "path": "assets/avatars/flat/AGT-005.webp",
+          "sha256": "0799276a3636a368b0ff9f30cbe50c724ef08e6a5469ba0d40addecfb8a62816",
+          "bytes": 16946,
+          "sourceSha256": "a209f0adff74cc99ad73d872d2ebdd9f408384bc1d9a65bf991e12faa1abd171"
+        },
+        {
+          "id": "AGT-006",
+          "name": "听澜",
+          "path": "assets/avatars/flat/AGT-006.webp",
+          "sha256": "13f5338c99257f88396a9f237468495fbc2c45c901f38efdcac8eda84ae9dce9",
+          "bytes": 17440,
+          "sourceSha256": "14d9a7f89d2731fdb08bc38700a5e472e7eec6718897bb415fc8edb45de27caf"
+        },
+        {
+          "id": "AGT-007",
+          "name": "望野",
+          "path": "assets/avatars/flat/AGT-007.webp",
+          "sha256": "5c8ba5615ee0107097a3c79c0c6cca9e7ad7e893e38ebf938233b99c2b8a0b04",
+          "bytes": 18860,
+          "sourceSha256": "581fad446716925460df6fe6101eb6b07e203ffe9b7bcb91fd544037e1e8dadf"
+        },
+        {
+          "id": "AGT-008",
+          "name": "拓新",
+          "path": "assets/avatars/flat/AGT-008.webp",
+          "sha256": "d88bfe77aa522c2bd58f998a71d1aec519ca54482c87a9009f9de9ab49caca99",
+          "bytes": 26950,
+          "sourceSha256": "90f7ee01fdbc19bf18eda6aa4e698770daa7f7e81960cfeb48bc13e6b423ebe0"
+        },
+        {
+          "id": "AGT-009",
+          "name": "定形",
+          "path": "assets/avatars/flat/AGT-009.webp",
+          "sha256": "b25f1b05e14d117d29828192cc57d2b0ce339da9768792363fed6c3836a94a4a",
+          "bytes": 15522,
+          "sourceSha256": "5d4106122d460a166269de282dca08d1f5ec8a9dd3485d2e24fbd9f44fdbef35"
+        },
+        {
+          "id": "AGT-010",
+          "name": "映物",
+          "path": "assets/avatars/flat/AGT-010.webp",
+          "sha256": "8172d9553cb86ce9dbb636a49e1c76efb2b584b0be2722cde5a1614d8967ab82",
+          "bytes": 19212,
+          "sourceSha256": "f62bef124cbda3f4a1b4cc23ea20b5ce66fb6036e7ba4855248ef97148f870e0"
+        },
+        {
+          "id": "AGT-011",
+          "name": "砺器",
+          "path": "assets/avatars/flat/AGT-011.webp",
+          "sha256": "6a6000fc0186b560dddeac7682df2e19fecf2edb8385548fab46d347a4f5b072",
+          "bytes": 18866,
+          "sourceSha256": "ef541b9e5a5039b81de4b855a552c4a60396c978c7094ddd12c511d1b46ea306"
+        },
+        {
+          "id": "AGT-012",
+          "name": "灵枢",
+          "path": "assets/avatars/flat/AGT-012.webp",
+          "sha256": "025cd54bc44cade1d86033c19f9a991338e1d91cd4a96dca0614feca6bd90e7b",
+          "bytes": 19982,
+          "sourceSha256": "399752d1d794be2da24712d6ae632ef4d51aba30663965b1e594b33a520e2994"
+        },
+        {
+          "id": "AGT-013",
+          "name": "求证",
+          "path": "assets/avatars/flat/AGT-013.webp",
+          "sha256": "618e0b0318af19cdbf2130b50aa10f815ec7e2c2f51b1f1dd914fc12c1978b46",
+          "bytes": 15628,
+          "sourceSha256": "7b33f7dd197ff391d908e612f94e84975f4511be10570b9c7ba3dbc3e0b4b342"
+        },
+        {
+          "id": "AGT-014",
+          "name": "择源",
+          "path": "assets/avatars/flat/AGT-014.webp",
+          "sha256": "88a7dfcb8b98d1c57eaee3332239cc004103f757db3406413869f768a5c6b9ac",
+          "bytes": 20236,
+          "sourceSha256": "517f8540e8893b48df71e9dd6cf7f9b99e9883ba2dc4f49ff9b8eb9ff14902fb"
+        },
+        {
+          "id": "AGT-015",
+          "name": "契约",
+          "path": "assets/avatars/flat/AGT-015.webp",
+          "sha256": "5734140034f6232214eed28631502f7bd176ab5a1123b46a3538f07870388819",
+          "bytes": 20820,
+          "sourceSha256": "08edef628f583881f37ee3a2591e8079e756e198f30110c6c8e314e8d47f3ad7"
+        },
+        {
+          "id": "AGT-016",
+          "name": "知量",
+          "path": "assets/avatars/flat/AGT-016.webp",
+          "sha256": "7eef76b6b547f1471abd8b632b420220815857efafac625751fcd89db01888c4",
+          "bytes": 16982,
+          "sourceSha256": "5e406e1b4baafad2277fb66be3b168ebe5877b11917a70fa548687103099ee74"
+        },
+        {
+          "id": "AGT-017",
+          "name": "衡仓",
+          "path": "assets/avatars/flat/AGT-017.webp",
+          "sha256": "3648c20430e2bab8e80f7702e3ac1d29ac80d1a572dddba5118596436951d324",
+          "bytes": 21394,
+          "sourceSha256": "d673e9bae48f892e48b0c7bed24116a9bc4d952be9b0819005295cc95ff03b23"
+        },
+        {
+          "id": "AGT-018",
+          "name": "质守",
+          "path": "assets/avatars/flat/AGT-018.webp",
+          "sha256": "9856a4810482a5759a7ad55b057cd0dcbb56b605d8364299324761391c187941",
+          "bytes": 21020,
+          "sourceSha256": "d2d5bed423f691ea14bb151c9612e33641b6685f4078508b9fbd88dc2d869ea0"
+        },
+        {
+          "id": "AGT-019",
+          "name": "通途",
+          "path": "assets/avatars/flat/AGT-019.webp",
+          "sha256": "9869f68143f2d6d5f9ff2d6337cd0db1eaa4cf4ad3f45385d53de85b351cac8f",
+          "bytes": 19698,
+          "sourceSha256": "dbf0cee1e64593117b6de093f70efd10b37d38ca1b52afda099ebd9aa7550a32"
+        },
+        {
+          "id": "AGT-020",
+          "name": "行舟",
+          "path": "assets/avatars/flat/AGT-020.webp",
+          "sha256": "5fc2b1a00c3c2622a58a64a00c39b17329cdfd2a52aade7457bee7e88088a274",
+          "bytes": 20702,
+          "sourceSha256": "3ec7304be46282d3983ede61349da500d9dbfcec78cbf3308c3c2ac233b1952a"
+        },
+        {
+          "id": "AGT-021",
+          "name": "北辰",
+          "path": "assets/avatars/flat/AGT-021.webp",
+          "sha256": "9c770683f19b73b8d69dafc2c158b4c414bfcbd4f934e4353a33d71bf21bc5e3",
+          "bytes": 14042,
+          "sourceSha256": "4b576731736f41eb77c947efb9f6e16a6560f850d59038d1d704e880efd7d176"
+        },
+        {
+          "id": "AGT-022",
+          "name": "觅位",
+          "path": "assets/avatars/flat/AGT-022.webp",
+          "sha256": "33d663cf2a38974a37bbaf2b69a1fea6e772eae98b3976a9a02c70a692701e8f",
+          "bytes": 21742,
+          "sourceSha256": "b37637897a7779da60cbafd5a4bbf0ca95e13131a2c73884e56c941626d8f66c"
+        },
+        {
+          "id": "AGT-023",
+          "name": "自航",
+          "path": "assets/avatars/flat/AGT-023.webp",
+          "sha256": "93285f3b7a3f7c223e30ec339fad9957fb7cc2cc9eccbb580f0efb484053ba60",
+          "bytes": 15392,
+          "sourceSha256": "9e969fc67e886075ae11b2aa3889e2f921e0ffc8ed6290e8fe2b9e503ef2e7eb"
+        },
+        {
+          "id": "AGT-024",
+          "name": "拓域",
+          "path": "assets/avatars/flat/AGT-024.webp",
+          "sha256": "f7a1ffff675c4da2116712a49fab0733843328dcf218158b09312d3008c84ad3",
+          "bytes": 19470,
+          "sourceSha256": "b178782540a497e5a3152407f414c47cb93e3a6508b5b5b92b8467301953a43b"
+        },
+        {
+          "id": "AGT-025",
+          "name": "联商",
+          "path": "assets/avatars/flat/AGT-025.webp",
+          "sha256": "15c87a696e6cd3177cce429de8ae586c2b5c78348f7b5c7bc90da0d034b110d4",
+          "bytes": 15214,
+          "sourceSha256": "6e1afe19c09c2f4c611098abf3b7c9684f170983d9c39520aa17311f6a7afb76"
+        },
+        {
+          "id": "AGT-026",
+          "name": "衡价",
+          "path": "assets/avatars/flat/AGT-026.webp",
+          "sha256": "a8223327aed476e130edb475cec567e14d40424439f25216035a32b4086e9420",
+          "bytes": 28100,
+          "sourceSha256": "78b0b6ffd735b3c07e106c09007cd47bae23158b260e841af61875b13ce97248"
+        },
+        {
+          "id": "AGT-027",
+          "name": "守店",
+          "path": "assets/avatars/flat/AGT-027.webp",
+          "sha256": "d495791b552312a39dbdc1365a3a9c2cd5b6d8078cf69d04bd5cb8356aaf3346",
+          "bytes": 23400,
+          "sourceSha256": "ad72d9eb55b28146f2c39adf7876c6ae911361455b9391a6bb441fdb7207a768"
+        },
+        {
+          "id": "AGT-028",
+          "name": "译境",
+          "path": "assets/avatars/flat/AGT-028.webp",
+          "sha256": "7ae221f6a3c281c961522c4ba48b15e7bf5d0b33da92fc10176707ba1abf4f43",
+          "bytes": 18156,
+          "sourceSha256": "3ca3e0eb49f6afa9ff6be60b05096521491768930bf6f558375f825e82faed48"
+        },
+        {
+          "id": "AGT-029",
+          "name": "立言",
+          "path": "assets/avatars/flat/AGT-029.webp",
+          "sha256": "9eed8e089385012c89e1452f946411015848d35014d9955f4941e3fe401be6fa",
+          "bytes": 18628,
+          "sourceSha256": "918d5cdd25952fd73bc39956fb1d8ff94f923312c6d400929b2a1ec4cb69e392"
+        },
+        {
+          "id": "AGT-030",
+          "name": "叙事",
+          "path": "assets/avatars/flat/AGT-030.webp",
+          "sha256": "8adeb08320bb0f4c103d29fecc3ffda73737bdb20539a73a1f51f042453329bd",
+          "bytes": 18504,
+          "sourceSha256": "c29c6f611be67237a2c69e19d221b3c695e807178f9a71ed66c14d71460939c0"
+        },
+        {
+          "id": "AGT-031",
+          "name": "绘影",
+          "path": "assets/avatars/flat/AGT-031.webp",
+          "sha256": "7b5b6c09c794638247eb6be1b58f1793493b2389ea17918b395d521d2c4ffdb7",
+          "bytes": 25708,
+          "sourceSha256": "e72bd7250d8772c6fd395323f4dc65dee84c099cdf30d9eb2d79d2271f0aa75f"
+        },
+        {
+          "id": "AGT-032",
+          "name": "点火",
+          "path": "assets/avatars/flat/AGT-032.webp",
+          "sha256": "4fde36947c37a17b7268f542ae59e09dd158fe70cca768d3b7ffb152bbafc6a6",
+          "bytes": 17224,
+          "sourceSha256": "de4286b4405362350cb4dea31ab2023b596c2560e26ff085ce6b7846acb995c3"
+        },
+        {
+          "id": "AGT-033",
+          "name": "结伴",
+          "path": "assets/avatars/flat/AGT-033.webp",
+          "sha256": "946aa0cde7de4c8bc896298b7a0d92888c4843feb8fb3700dcc797d7ea73d5e7",
+          "bytes": 26532,
+          "sourceSha256": "caa408f27ff37639b0771b3d223daea7bc2e0682b47559de5cb207be53f518ee"
+        },
+        {
+          "id": "AGT-034",
+          "name": "续缘",
+          "path": "assets/avatars/flat/AGT-034.webp",
+          "sha256": "9d9388f78f6670a92384ea67143f2b47752e12d96ecb1d5bc33b03e03eaefa13",
+          "bytes": 15026,
+          "sourceSha256": "5379ebb54c35bc759f6aa2aa1e08a8e8b3cce1e924522fcbdb21fe93a7541d32"
+        },
+        {
+          "id": "AGT-035",
+          "name": "试真",
+          "path": "assets/avatars/flat/AGT-035.webp",
+          "sha256": "26ed1a78472067162b3bf4efd949467e40075860378d08a62a6cb3962afa2e9d",
+          "bytes": 19734,
+          "sourceSha256": "730d05d8fd1f7f44d609eede3937a47dff1a96cc17d3791f4603e611c7eb1bc6"
+        },
+        {
+          "id": "AGT-036",
+          "name": "安心",
+          "path": "assets/avatars/flat/AGT-036.webp",
+          "sha256": "cf66570d52323edf5fb814d9a03230535d45a0e31aa6e378ab57a1efed2e41ab",
+          "bytes": 16646,
+          "sourceSha256": "49234f8d9674f60d884f849731b5aadcbdc747be63826d50a619066180088a69"
+        },
+        {
+          "id": "AGT-037",
+          "name": "解忧",
+          "path": "assets/avatars/flat/AGT-037.webp",
+          "sha256": "6d0b6dbbe02cecbdbebd91e2c783bda4d1cb7f07fe924242ea9a3a6ccde98b82",
+          "bytes": 18780,
+          "sourceSha256": "4a93fc3efaa8070047d75b2d81d8c91852da3b5ee27a6679c25a1522d15ad12b"
+        },
+        {
+          "id": "AGT-038",
+          "name": "回声",
+          "path": "assets/avatars/flat/AGT-038.webp",
+          "sha256": "04a1f7b3c2ae3769d332d7a2e967a00f7ca0f8c38c76b2bb71eeab7a2c8886a5",
+          "bytes": 15194,
+          "sourceSha256": "b07a6abcd98a0fb55c2290ea2b473281ffa3e8bb87ad3777633c668bf52606cf"
+        },
+        {
+          "id": "AGT-039",
+          "name": "同行",
+          "path": "assets/avatars/flat/AGT-039.webp",
+          "sha256": "12043d58831d7f63f04c4920ae1f9a8e687c6f3069d0c8b3bf392267c6dbd923",
+          "bytes": 17824,
+          "sourceSha256": "b647322d1f863885decb764a70db4fb60263da3571983f9087e300453379054b"
+        },
+        {
+          "id": "AGT-040",
+          "name": "清账",
+          "path": "assets/avatars/flat/AGT-040.webp",
+          "sha256": "13861547899827921287fa7aef62951cb4800aac1d44741cf3201ea70265fd97",
+          "bytes": 16320,
+          "sourceSha256": "5eb8f2742c072571420dd52243539e28e7c76c3362126c92618d8d52c375664b"
+        },
+        {
+          "id": "AGT-041",
+          "name": "守金",
+          "path": "assets/avatars/flat/AGT-041.webp",
+          "sha256": "6b1c26376bf53b2d6a1c1d99bb3c2ffff781a0148c16c360e592c73de0254919",
+          "bytes": 16002,
+          "sourceSha256": "ca0cf6de885b0c1395103eb064c64781678e51aaa4df424ae10f56583e26a1b9"
+        },
+        {
+          "id": "AGT-042",
+          "name": "合账",
+          "path": "assets/avatars/flat/AGT-042.webp",
+          "sha256": "a4eced5e1469f34df8a4147f368b51d38e2b972acf0a0f5c872f1981bfd34328",
+          "bytes": 17168,
+          "sourceSha256": "2d96147bd337f494f3d244d16db2d0884a35692dc6648f2631a0faa1fc7c74fd"
+        },
+        {
+          "id": "AGT-043",
+          "name": "律衡",
+          "path": "assets/avatars/flat/AGT-043.webp",
+          "sha256": "c5aa249f2cc1437d82ddb38776203678baea435106531e805a6e63e481f07959",
+          "bytes": 17286,
+          "sourceSha256": "e4939faa021eef6637c2f305b3b64ba37762d60ca8167546e72bb15c4be1aefb"
+        },
+        {
+          "id": "AGT-044",
+          "name": "安界",
+          "path": "assets/avatars/flat/AGT-044.webp",
+          "sha256": "a627382aa060e665d10dcecf662dc171b53bceca20ce83f6fab07b1e7e596940",
+          "bytes": 18684,
+          "sourceSha256": "1727d6785c4fe2d7fcab0f7a45342bf25d275eea1e4b3e36f3b709d31dc9e7e7"
+        },
+        {
+          "id": "AGT-045",
+          "name": "同尺",
+          "path": "assets/avatars/flat/AGT-045.webp",
+          "sha256": "4721a4fc75897f2a57ccfd92818504e3098884187bc8c4f72b57e3db46a5d246",
+          "bytes": 15290,
+          "sourceSha256": "8db7a67eff9c3e2c269c36a3ca189e2fecd4d3fbccd1fbb1dd17fd95a05b98ab"
+        },
+        {
+          "id": "AGT-046",
+          "name": "清源",
+          "path": "assets/avatars/flat/AGT-046.webp",
+          "sha256": "5488e7b2d0ff9da23094746011122e5241382351066c241000593b0baaa44797",
+          "bytes": 16348,
+          "sourceSha256": "29c15ea806e7a7a54cff98dcb8f16a4a20398e7dc23a29cfaea8a01bcb7e5e19"
+        },
+        {
+          "id": "AGT-047",
+          "name": "接桥",
+          "path": "assets/avatars/flat/AGT-047.webp",
+          "sha256": "4f2a83c2779d08ea7166c4dcf68346623e8e23da39ecdf4ae3ef57cd92176897",
+          "bytes": 16746,
+          "sourceSha256": "e28f18925737ce728a8e7c4bd9f1471f8593a4ab97ed5b820a89ed833b503a4d"
+        },
+        {
+          "id": "AGT-048",
+          "name": "积知",
+          "path": "assets/avatars/flat/AGT-048.webp",
+          "sha256": "53007783d48fca3a89eadfcdbe60e0bf71043b57fc59652fc8542483b9c6e0f5",
+          "bytes": 15288,
+          "sourceSha256": "de6cfcfa6e3144d553c33e57ade277a7ed641754edd933528b955e3392304804"
+        },
+        {
+          "id": "AGT-049",
+          "name": "稳行",
+          "path": "assets/avatars/flat/AGT-049.webp",
+          "sha256": "7863246d817294668a2235e04cd0153aa783ad82613b6c42bfbf71fd1ffd0df3",
+          "bytes": 15872,
+          "sourceSha256": "be347b550dc590d5bf3c85f4490f3100e597f84ff987e986dd7b34468686a35f"
+        },
+        {
+          "id": "AGT-050",
+          "name": "门卫",
+          "path": "assets/avatars/flat/AGT-050.webp",
+          "sha256": "cde2a920444973ac596426fbb54f9f1de696349aaa4be30170965cf2a1a26b61",
+          "bytes": 13566,
+          "sourceSha256": "c9a2c5b8dd7875d62a0e81d61c46d5db46e3dffac5ab8f1b7774ce5af9ce1a76"
+        }
+      ]
+    },
+    "line": {
+      "label": "极简 · 专注（线性符号）",
+      "framing": "head 50% of height, headroom 10% (crown y=0.10, chin y=0.60), centered",
+      "count": 53,
+      "items": [
+        {
+          "id": "MGMT-CEO",
+          "name": "天时",
+          "path": "assets/avatars/line/MGMT-CEO.webp",
+          "sha256": "6f0947f48fa8680ead563eb6998a84c2b366f97b0e940102818e24771735a194",
+          "bytes": 15110,
+          "sourceSha256": "1e43397cbb4cbc7c3d8f2eced3f0152514233f58671996e4acf2b5b5b144f005"
+        },
+        {
+          "id": "MGMT-CGO",
+          "name": "地利",
+          "path": "assets/avatars/line/MGMT-CGO.webp",
+          "sha256": "c3e7d61f24ef5afcb3a00d07894a236cb61c6f190aa22f6d8ce8d9c49525948e",
+          "bytes": 14120,
+          "sourceSha256": "14ae9c1e27ff8d6b2f2c4008ceb8cf9d7bc816d32870c962af43006032e750c7"
+        },
+        {
+          "id": "MGMT-CGOV",
+          "name": "人和",
+          "path": "assets/avatars/line/MGMT-CGOV.webp",
+          "sha256": "48efd53443f208c0286d1ee372dc28fb2c49684e4d8a579296417fde50de8374",
+          "bytes": 10804,
+          "sourceSha256": "5244424e90a277454025c401b63c14c1d5d13a0fe0d5d8f604b188e94bffdf9d"
+        },
+        {
+          "id": "AGT-001",
+          "name": "衡远",
+          "path": "assets/avatars/line/AGT-001.webp",
+          "sha256": "f952916567bdac3ccd1dd8cc4e3a65664ac5efe02d851c9879371a200b2294b3",
+          "bytes": 15756,
+          "sourceSha256": "d0c49bec4a3346b25348707847d9fb2f198fa047af7ea111f77c4c76148e8e2c"
+        },
+        {
+          "id": "AGT-002",
+          "name": "枢衡",
+          "path": "assets/avatars/line/AGT-002.webp",
+          "sha256": "972c782a67db723ca8a893885c2b951b3f52011f59015509496cfa769547c00b",
+          "bytes": 18216,
+          "sourceSha256": "ba3b3cf8f8088ace115159c8f7d6ef67b5380f4ce8c1f728906fe2178d97b04d"
+        },
+        {
+          "id": "AGT-003",
+          "name": "明镜",
+          "path": "assets/avatars/line/AGT-003.webp",
+          "sha256": "5e0034c1b3bc2f3f0ef24582a0d0ccae6c7b55b8624dd841a612ba2df78e10ca",
+          "bytes": 15706,
+          "sourceSha256": "b1a08d6701b1df4e601db94e24b93b83d7f4f8859dbd55c3a0a34dc0de37552f"
+        },
+        {
+          "id": "AGT-004",
+          "name": "知人",
+          "path": "assets/avatars/line/AGT-004.webp",
+          "sha256": "72fea8671819251cec36a376ba3c37ce848f7d9f4340770035b98f9aa5bba7ff",
+          "bytes": 16210,
+          "sourceSha256": "81907f34963aac4621074757d4eed7b28bcbd762994942f2d7533c3084fe5014"
+        },
+        {
+          "id": "AGT-005",
+          "name": "守衡",
+          "path": "assets/avatars/line/AGT-005.webp",
+          "sha256": "02e83728a2e165e6ac4e674755cc35a8674bdd53ff8387ee5745bfecfc38dee6",
+          "bytes": 13712,
+          "sourceSha256": "f73cdff6c58fddd87932443bce6d6e974413dfb9f32ca00457235c485a5fa24c"
+        },
+        {
+          "id": "AGT-006",
+          "name": "听澜",
+          "path": "assets/avatars/line/AGT-006.webp",
+          "sha256": "c69dbb0e9d042692e2e1d18ede8e2ad00a60258d9517eb72bb6d64749e16d5a4",
+          "bytes": 13956,
+          "sourceSha256": "f4d805889d1d21daf283e790401b2f6f5cd0d7ca08d8545fd003b74cb7516605"
+        },
+        {
+          "id": "AGT-007",
+          "name": "望野",
+          "path": "assets/avatars/line/AGT-007.webp",
+          "sha256": "851aebc91c78eb067bb6406219e7a3302a79fc2ffedf896d1ab4f9942fa4f2ce",
+          "bytes": 13558,
+          "sourceSha256": "fbb61fd4bc56695110146d0c6c756cf2da333fb3e1545f091830173ebfd381d9"
+        },
+        {
+          "id": "AGT-008",
+          "name": "拓新",
+          "path": "assets/avatars/line/AGT-008.webp",
+          "sha256": "b6176f60d5409a8fa583ccd1bb710c9e107f789e58a482b10c4b2f2645304df5",
+          "bytes": 19240,
+          "sourceSha256": "020e0cc428ed44ea4cce160152fd168969a2308ee3090a0bcfd3e00746bf2cea"
+        },
+        {
+          "id": "AGT-009",
+          "name": "定形",
+          "path": "assets/avatars/line/AGT-009.webp",
+          "sha256": "b60dafc05172241384e63861df0020e2b3c778610b342d06c974d0aeedc53c1a",
+          "bytes": 12486,
+          "sourceSha256": "56d84d1cabfa3d69a695fe2ce7288362c91ef70663e71aecc840e5c803427776"
+        },
+        {
+          "id": "AGT-010",
+          "name": "映物",
+          "path": "assets/avatars/line/AGT-010.webp",
+          "sha256": "23a83dbc9fd263f7cfeb5733f7189146acc967c6d5c51fdbc15e3c6ee0a322e9",
+          "bytes": 15920,
+          "sourceSha256": "376602dc1e0e5a80369a056950d125914003b8420a14abe2a3035e3ed3903fe6"
+        },
+        {
+          "id": "AGT-011",
+          "name": "砺器",
+          "path": "assets/avatars/line/AGT-011.webp",
+          "sha256": "ff034199d09a931aa2a3f6992812add098abbb46d23699758f8f914d3b6d2d0b",
+          "bytes": 14506,
+          "sourceSha256": "db3cc7b5682349150023738f88fb03b5b77911911a638b5273ba6496597a8d31"
+        },
+        {
+          "id": "AGT-012",
+          "name": "灵枢",
+          "path": "assets/avatars/line/AGT-012.webp",
+          "sha256": "eb5c126f9710923e3612500827b63387c3d2ec258751a8d7cedd78ae8cba7ded",
+          "bytes": 15656,
+          "sourceSha256": "adefa69d9d8b84ea935a373dd1e01987caa0d5e6d1c040c60e30552561a21207"
+        },
+        {
+          "id": "AGT-013",
+          "name": "求证",
+          "path": "assets/avatars/line/AGT-013.webp",
+          "sha256": "50de19bb6d39349d1c29549a1609f83cfb050aed4b0a2042de49c9b57b7d0cf7",
+          "bytes": 13198,
+          "sourceSha256": "b7d39fc8ed94a7068455974f61856e8616096415378bf26b35724d921a2c9c5c"
+        },
+        {
+          "id": "AGT-014",
+          "name": "择源",
+          "path": "assets/avatars/line/AGT-014.webp",
+          "sha256": "b15be4204a346e01533279d45966b7b6fb2bb71d6e82421eb1bba9d5545d2231",
+          "bytes": 20718,
+          "sourceSha256": "e90b8aa7862f9611588b72221eb6677929e450ccd2cf1f65a84dc3e737b07d33"
+        },
+        {
+          "id": "AGT-015",
+          "name": "契约",
+          "path": "assets/avatars/line/AGT-015.webp",
+          "sha256": "0b4fb405a2c7d6412f144886238a0c09f5db43f2523c6bb4ce05cda344e3f156",
+          "bytes": 15914,
+          "sourceSha256": "5a37b3f858228b51cb0ce2537037e461d09186c7a9d14e09a09450511352bd60"
+        },
+        {
+          "id": "AGT-016",
+          "name": "知量",
+          "path": "assets/avatars/line/AGT-016.webp",
+          "sha256": "78aea32e77da91050ac873690ab7acab21b1b0b3f863763c94b081624cdfa695",
+          "bytes": 15874,
+          "sourceSha256": "ee06293863d045a554ed0b835b1759bc20f02aa3ff1cb5e852a6f7138aaf731b"
+        },
+        {
+          "id": "AGT-017",
+          "name": "衡仓",
+          "path": "assets/avatars/line/AGT-017.webp",
+          "sha256": "319128422d2e3c52788494daa43708d7d2810802edc89e8723a8da17e37a9c6d",
+          "bytes": 14598,
+          "sourceSha256": "766902e4b2862d07b981877ac725a5b0ee6da71b45191a52dd5025003ec54bce"
+        },
+        {
+          "id": "AGT-018",
+          "name": "质守",
+          "path": "assets/avatars/line/AGT-018.webp",
+          "sha256": "dd65a07b26ab1ed61776a9c6e7a5d7d1927ef599a45266e6841476471f2748b6",
+          "bytes": 13372,
+          "sourceSha256": "a304e9a21ff0cd1efc32ea499962511ba55758ab5b4dcb34825cf8f7ddbc3daf"
+        },
+        {
+          "id": "AGT-019",
+          "name": "通途",
+          "path": "assets/avatars/line/AGT-019.webp",
+          "sha256": "a05ae54a959607eb8c3c320f33e546c2b4b6bd822825d9810f4dce002b9c3578",
+          "bytes": 15710,
+          "sourceSha256": "e1ee6eb5c69052afbe014e0e6076e0cbb00d4cd8a65cd948a1da0501fb9a2178"
+        },
+        {
+          "id": "AGT-020",
+          "name": "行舟",
+          "path": "assets/avatars/line/AGT-020.webp",
+          "sha256": "a93db1ac2266cb2d57b9c6ff41e3a2f4a2773ecbd69fc0539ec0d9132407119f",
+          "bytes": 16932,
+          "sourceSha256": "690bbffdf035f7802676e57e470a5e940f559b5a7fa56244afcaaf1412e54322"
+        },
+        {
+          "id": "AGT-021",
+          "name": "北辰",
+          "path": "assets/avatars/line/AGT-021.webp",
+          "sha256": "80b9f502c6a09da0644fbf1661b7424d6ee55eb26c9f41cf1876c66d298fe8e7",
+          "bytes": 13712,
+          "sourceSha256": "bd65a691766baaa5a0dbfbb34d0a0651e04ac1f6e298b5be3105d84d39227455"
+        },
+        {
+          "id": "AGT-022",
+          "name": "觅位",
+          "path": "assets/avatars/line/AGT-022.webp",
+          "sha256": "d5522afb2450bacfc190a914884c5fcaf6d7782d06758771a3b0bfe4935df1bd",
+          "bytes": 18350,
+          "sourceSha256": "b3d0c99a237e2106a6bbb6feb10c5e39261b8317e39be5bbb8f2796d470effb6"
+        },
+        {
+          "id": "AGT-023",
+          "name": "自航",
+          "path": "assets/avatars/line/AGT-023.webp",
+          "sha256": "6a2e48bda85617e072a941ac38cee82635206c1c7972e6c05aa660c7385277c6",
+          "bytes": 12914,
+          "sourceSha256": "0450996aab3043c9675b529b54b701344aa6d2ddea43d29b9ba59f1e648b4b70"
+        },
+        {
+          "id": "AGT-024",
+          "name": "拓域",
+          "path": "assets/avatars/line/AGT-024.webp",
+          "sha256": "f79910e9d048f356eefae275048432114e8ed0622772b8af8df0b7fd09b7f0b2",
+          "bytes": 13292,
+          "sourceSha256": "741593daa4621ad431f3e042d31ba1ebe6d9ea609a8c64670cc5b29ce1cce518"
+        },
+        {
+          "id": "AGT-025",
+          "name": "联商",
+          "path": "assets/avatars/line/AGT-025.webp",
+          "sha256": "221b87bf42d822796f97fbafff0afbbd6af30b0d46e298bd25f2e8e2cc24c2dd",
+          "bytes": 14100,
+          "sourceSha256": "ccd87e9fe81089da6e74e6494cb806daf59b17402f6de8d6d84f55392b60a076"
+        },
+        {
+          "id": "AGT-026",
+          "name": "衡价",
+          "path": "assets/avatars/line/AGT-026.webp",
+          "sha256": "af2979982bf4b2e452e7bd9d22228c3c03550e4fd887c41c3038a6b862a2d4b5",
+          "bytes": 19794,
+          "sourceSha256": "af8b131739c167dc417fa401bd6f7a52caa127008052fffe62df63c1d194ef69"
+        },
+        {
+          "id": "AGT-027",
+          "name": "守店",
+          "path": "assets/avatars/line/AGT-027.webp",
+          "sha256": "f6fafe5aaef8e2bfb4696893a68dd4ef7af5b8101d97599a1b9f94d4cbf977b7",
+          "bytes": 15124,
+          "sourceSha256": "ace8903c8c59b8c8793d0420c2c070c495dee5a974ff608c0677eae52bbdc2cc"
+        },
+        {
+          "id": "AGT-028",
+          "name": "译境",
+          "path": "assets/avatars/line/AGT-028.webp",
+          "sha256": "6c1a030a606c03b13a8c88e2110060c70195d56573d34649238480f9c9546620",
+          "bytes": 16774,
+          "sourceSha256": "ff36abaf2432d49c19009a751dd74c6b6f60391953c75778f8d6fe1a5f574da9"
+        },
+        {
+          "id": "AGT-029",
+          "name": "立言",
+          "path": "assets/avatars/line/AGT-029.webp",
+          "sha256": "f400835c82a6f35934f44fcfe3dba7be4c76a2f73f2dc995b71034df27a56b37",
+          "bytes": 15970,
+          "sourceSha256": "5b362743c564285e919ffa2cbad6c5282298b1d89cff9f51d423c89e67cec576"
+        },
+        {
+          "id": "AGT-030",
+          "name": "叙事",
+          "path": "assets/avatars/line/AGT-030.webp",
+          "sha256": "0f8aa65e0a1b145270f6edafc1e45e7db64dca6b0453663b5c2f040ba60341f6",
+          "bytes": 15420,
+          "sourceSha256": "adb9ce0de05cff8cff9651722363723c9bef47a668466a5cc0cfb6f12adf548e"
+        },
+        {
+          "id": "AGT-031",
+          "name": "绘影",
+          "path": "assets/avatars/line/AGT-031.webp",
+          "sha256": "e309e79e686b6c561d86f2c32799ef56bd438230d2a0ffde9fbeb27788ed9379",
+          "bytes": 22806,
+          "sourceSha256": "0bb0b081db7323ab87014ebaa6dd54d2f39966676a00baf729787288eb747e33"
+        },
+        {
+          "id": "AGT-032",
+          "name": "点火",
+          "path": "assets/avatars/line/AGT-032.webp",
+          "sha256": "a4ed6c6bb47c812874f00bf4c9b55f3e31ec8f670c6041a47398b5d14ea53df8",
+          "bytes": 18158,
+          "sourceSha256": "77eba0ade0f2583ba8dce598499e6cfbe6ac5267a584b64d7e9c86b5a43bf921"
+        },
+        {
+          "id": "AGT-033",
+          "name": "结伴",
+          "path": "assets/avatars/line/AGT-033.webp",
+          "sha256": "a00358eb0bf257dc623bcad012f984d33d15d6460cfeb7d6d90063dfa3ebbec4",
+          "bytes": 18366,
+          "sourceSha256": "86b0d85e9a7ca2319163b578ee14efd36da79796e052d098e5cbfe023773abe5"
+        },
+        {
+          "id": "AGT-034",
+          "name": "续缘",
+          "path": "assets/avatars/line/AGT-034.webp",
+          "sha256": "2e975c155ec0089076aad66589ae12d0fd3faddb97fce90f8a1ecb60eb13487c",
+          "bytes": 12858,
+          "sourceSha256": "b319703817025cfb36cfdcadc043c30bf1aa6e42e68dfef0465b4f5ef6047533"
+        },
+        {
+          "id": "AGT-035",
+          "name": "试真",
+          "path": "assets/avatars/line/AGT-035.webp",
+          "sha256": "1ff543651d68e2d954f348b75eb0451ae00e0d1217dcfdf9a328838f96bca31a",
+          "bytes": 15998,
+          "sourceSha256": "360db1c294b31d6f968c80b6aa64ed36d88cbdc1eeb84980729bab6460e87a83"
+        },
+        {
+          "id": "AGT-036",
+          "name": "安心",
+          "path": "assets/avatars/line/AGT-036.webp",
+          "sha256": "bd64f637614646578d5623c8acf869d7018ffc78dd31d90f3510c31f057ba10c",
+          "bytes": 14688,
+          "sourceSha256": "3358dd72f86ac0a1c619cad0cfb7aa2de20663dc44db7e65c676b5b07310b288"
+        },
+        {
+          "id": "AGT-037",
+          "name": "解忧",
+          "path": "assets/avatars/line/AGT-037.webp",
+          "sha256": "abaa34602c11e41fe5ca2a43bdb1725d10c708e7fb372e2800632cb0955cc0c2",
+          "bytes": 15914,
+          "sourceSha256": "69bdbfbb390f48fb31549b39bf571b71cdc4985a2922b04125b9b427da343703"
+        },
+        {
+          "id": "AGT-038",
+          "name": "回声",
+          "path": "assets/avatars/line/AGT-038.webp",
+          "sha256": "5f9d5e21b09475b1fbea287bc78ec2d6c0c18bb17b4c5b0be4b4993b9a6b29d5",
+          "bytes": 14166,
+          "sourceSha256": "32fc22881f33bb277803a6ea1c0001d9096e1f19336c00fc44e48b3cc831abe0"
+        },
+        {
+          "id": "AGT-039",
+          "name": "同行",
+          "path": "assets/avatars/line/AGT-039.webp",
+          "sha256": "fa2684d1f9abf511ba93a6e7895a7f4cd28ce7d167ec051b9108fdae566b00a1",
+          "bytes": 13902,
+          "sourceSha256": "885c77641aab7fd3248045856e3ead821c0546ed61843fa48e43dfcb5ee4f8df"
+        },
+        {
+          "id": "AGT-040",
+          "name": "清账",
+          "path": "assets/avatars/line/AGT-040.webp",
+          "sha256": "0580247b3be51a9e44d82b848d03ba2f2e07bc09cadfa25df664f62c03bf5363",
+          "bytes": 13238,
+          "sourceSha256": "a27c145b0a58a15c2bdd5ad73c31de01364bd9487b4e7f3a9ab23acbb311d17b"
+        },
+        {
+          "id": "AGT-041",
+          "name": "守金",
+          "path": "assets/avatars/line/AGT-041.webp",
+          "sha256": "dc053bc6d9c7bc1537c3712e0457eda6990c4781bf026fdd21f43c7e2da14923",
+          "bytes": 14268,
+          "sourceSha256": "b37b6961e42ffc6310246e997790020ffba92d1c84d2f5f928e88fb2bc2ef241"
+        },
+        {
+          "id": "AGT-042",
+          "name": "合账",
+          "path": "assets/avatars/line/AGT-042.webp",
+          "sha256": "50c2934c450a8a557eaea7e92d907d2e5f316beb68aea94417c9e8ca4477fdb8",
+          "bytes": 14862,
+          "sourceSha256": "3dfe17ac5a8515c83c7b1a17ad85e48f667c6ecdcfa64f600faa725a34b17907"
+        },
+        {
+          "id": "AGT-043",
+          "name": "律衡",
+          "path": "assets/avatars/line/AGT-043.webp",
+          "sha256": "6f8ada9283f07f99a4b38c12576def1ece8e3a9f32a93ef5eeee5e20f9339dab",
+          "bytes": 14752,
+          "sourceSha256": "3f542b3d2d3b048b59dfcf5f5690734e2a30cd3e4c577501e7d43521915ce0ae"
+        },
+        {
+          "id": "AGT-044",
+          "name": "安界",
+          "path": "assets/avatars/line/AGT-044.webp",
+          "sha256": "dd37d4b572eab3d79da1072f39b53dbc808ddf40ad2d66b6e1db3d2e48cb50b5",
+          "bytes": 14860,
+          "sourceSha256": "6ab8c6c048572c723e5bf4a4662bdcd8dd54f6e18031d3f775c8b251ebf10c1b"
+        },
+        {
+          "id": "AGT-045",
+          "name": "同尺",
+          "path": "assets/avatars/line/AGT-045.webp",
+          "sha256": "b1183ab63287b2087dbf2de9e4e826844a43834fb302e7ba5f9a739a86b5d0ae",
+          "bytes": 14006,
+          "sourceSha256": "a5645ec7a4a4b7c3ec87e638e445689d493a4fbd1f2c44f8cd86f9c8d3a15ee7"
+        },
+        {
+          "id": "AGT-046",
+          "name": "清源",
+          "path": "assets/avatars/line/AGT-046.webp",
+          "sha256": "9998897cf8833be934e4da957db4a16f9439bd36129b5ba383fcf80cf33dae68",
+          "bytes": 16048,
+          "sourceSha256": "1060c7e42c4ea562bc9af358f73cfe66f61b416a85fca545933f6cb27b422951"
+        },
+        {
+          "id": "AGT-047",
+          "name": "接桥",
+          "path": "assets/avatars/line/AGT-047.webp",
+          "sha256": "c5da43451ca31ef87db5ce41e570104d949d25b76867d20a550963d55385f3bf",
+          "bytes": 14908,
+          "sourceSha256": "0260067b759c561b84a991d4b8f345ff679c5d8a10d732be76e4770d24082bf5"
+        },
+        {
+          "id": "AGT-048",
+          "name": "积知",
+          "path": "assets/avatars/line/AGT-048.webp",
+          "sha256": "378a0633bc008883c9197fb4e61e9a7f9d82ba09b70de2b1aabd8970c7e42784",
+          "bytes": 15084,
+          "sourceSha256": "46672f65585258c73d29848b745712d375f07ded16f74a181550dd8d045513a2"
+        },
+        {
+          "id": "AGT-049",
+          "name": "稳行",
+          "path": "assets/avatars/line/AGT-049.webp",
+          "sha256": "408883869c481b2a051efa4c57750e809a62ba84ff0605b08169e8f96b8bad93",
+          "bytes": 15448,
+          "sourceSha256": "dc04f6914d24834484bffc5b65ee609155a761e1f8cd0d5444ecd07daaa75b40"
+        },
+        {
+          "id": "AGT-050",
+          "name": "门卫",
+          "path": "assets/avatars/line/AGT-050.webp",
+          "sha256": "dc4c85fdfc856ab8ac62ea5ecdb0a230afb12bd2f8394dea0f7d054c4d5ef088",
+          "bytes": 13374,
+          "sourceSha256": "7000bda2577dd4c65b5d35e0cfeeb2331183267686670700541180ff67dd4533"
+        }
+      ]
+    }
+  }
+}
