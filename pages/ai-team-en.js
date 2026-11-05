@@ -36,13 +36,13 @@
 
 // App demo on the team page: plays only while visible, never under reduced motion, and can always be paused.
 (function teamDemo(){
- const video=document.querySelector('#at-demo-video'),toggle=document.querySelector('#at-demo-toggle'),steps=[...document.querySelectorAll('#at-demo-steps li')];
+ const video=document.querySelector('#at-demo-video'),toggle=document.querySelector('#at-demo-toggle'),steps=[...document.querySelectorAll('#at-demo-steps li')],live=document.querySelector('#at-demo-live');
  if(!video||!toggle)return;
  const en=document.documentElement.lang==='en',motion=matchMedia('(prefers-reduced-motion: reduce)'),starts=steps.map(step=>Number(step.dataset.start));
  let userPaused=false,inView=false;
  const label=()=>{const playing=!video.paused;toggle.setAttribute('aria-pressed',String(playing));toggle.classList.toggle('is-playing',playing);toggle.querySelector('.at-demo-label').textContent=playing?(en?'Pause demo':'暂停演示'):(en?'Play demo':'Play demo');};
  const play=()=>{video.preload='auto';const attempt=video.play();if(attempt)attempt.catch(()=>{});};
- const chapter=()=>{let index=0;starts.forEach((start,i)=>{if(video.currentTime>=start)index=i;});steps.forEach((step,i)=>step.classList.toggle('is-active',i===index));};
+ const chapter=()=>{const t=video.currentTime,end=video.duration||starts[starts.length-1]+8;let index=0;starts.forEach((start,i)=>{if(t>=start)index=i;});steps.forEach((step,i)=>{const from=starts[i],to=starts[i+1]??end;step.classList.toggle('is-active',i===index);step.style.setProperty('--p',i<index?1:i>index?0:Math.min(1,(t-from)/(to-from)).toFixed(3));});if(live)live.textContent=steps[index].querySelector('p').textContent;};
  video.addEventListener('play',label);video.addEventListener('pause',label);video.addEventListener('timeupdate',chapter);
  toggle.addEventListener('click',()=>{if(video.paused){userPaused=false;play();}else{userPaused=true;video.pause();}});
  steps.forEach((step,i)=>step.querySelector('.at-demo-seek').addEventListener('click',()=>{video.currentTime=starts[i];chapter();userPaused=false;play();}));

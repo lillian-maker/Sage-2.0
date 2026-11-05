@@ -104,7 +104,7 @@ def version_homepage_assets(html):
         if path.endswith('.webp') and (data[:4] != b'RIFF' or data[8:12] != b'WEBP'):
             raise ValueError(f"Invalid WebP asset: {path}")
         return f'{path}?v={asset_version(path)}'
-    return re.sub(r'(assets/(?:(?:people/[\w-]+|earth-texture)\.webp|video/[\w-]+\.(?:mp4|jpg)))(?!\?v=)', versioned, html)
+    return re.sub(r'(assets/(?:(?:people/[\w-]+|app/[\w-]+|earth-texture)\.webp|video/[\w-]+\.(?:mp4|jpg)))(?!\?v=)', versioned, html)
 
 def team_domains():
     """Render the homepage domain overview from the approved employee catalog."""
@@ -213,7 +213,9 @@ def build():
         shutil.copy2(ROOT / 'assets/favicon.svg', output / 'assets/favicon.svg')
         shutil.copy2(ROOT / 'assets/earth-texture.webp', output / 'assets/earth-texture.webp')
         shutil.copytree(ROOT / 'assets/og', output / 'assets/og', dirs_exist_ok=True)
-        shutil.copytree(ROOT / 'assets/video', output / 'assets/video', dirs_exist_ok=True)
+        for media in ('assets/video', 'assets/app'):
+            shutil.rmtree(output / media, ignore_errors=True)
+            shutil.copytree(ROOT / media, output / media)
         for entry in ('robots.txt', 'sitemap.xml'):
             shutil.copy2(ROOT / entry, output / entry)
         shutil.copytree(ROOT / 'assets/brand', output / 'assets/brand', dirs_exist_ok=True)

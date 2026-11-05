@@ -17,6 +17,8 @@ COPY = r"""
 真人与数字专家，在同一个工作区里协作	People and digital specialists working in one workspace
 Sage App 的协作入口集中了团队要处理的事：待我处理、@我的、指派给我、共享给我与讨论。	The Collaboration area of the Sage app gathers what your team needs to handle: needs my action, mentions, assigned to me, shared with me and discussions.
 工作区	Workspaces
+Sage App 协作页 · 设计稿 · 示例数据	Sage app Collaboration · Design prototype · Sample data
+Sage App 协作页：左侧是待我处理列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Collaboration page (interface in Chinese): on the left, the Needs my action list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
 待我处理	Needs my action
 审批与授权	Approvals and authorization
 企业管理	Business admin
@@ -28,7 +30,15 @@ Sage App 的协作入口集中了团队要处理的事：待我处理、@我的�
 多位专家协作完成，	Specialists work together,
 关键处由你把关	and you decide at the key moments
 每个任务由一位主责专家牵头，按需组织协作与复核专家；需要判断、授权和验收的地方，交给你和你的团队。下面是 Sage App 中一个任务的完整过程。	Each task is led by one specialist who brings in contributors and reviewers as needed; judgments, authorizations and acceptance stay with you and your team. Below is one complete task in the Sage app.
-Sage App 界面演示：计划确认、多专家编排、并行协作、真人审核、授权把关与验收成果	Sage app demo: plan confirmation, multi-specialist orchestration, parallel work, human review, authorization and acceptance
+Sage App 交互演示：计划确认、多专家编排、并行协作、真人审核、授权把关与验收成果	Sage app walkthrough: plan confirmation, multi-specialist orchestration, parallel work, human review, authorization and acceptance
+Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Design prototype · Sample data
+主责专家把任务拆成 8 步、交给 5 位专家，标出依赖、预计消耗和需要授权的步骤；你点“开始执行”后才动。	The lead specialist breaks the task into 8 steps for 5 specialists, with dependencies, estimated usage and the steps that need authorization; nothing runs until you press Start.
+执行图按理解、研究、分析、复核、交付分阶段；三位专家并行研究，遇到需要授权的节点自动停下等你。	The execution graph runs through understand, research, analyze, review and deliver; three specialists research in parallel, and any node that needs authorization stops and waits for you.
+每位专家在做什么、读到哪份资料、用了多久，实时可见；完成的部分交回主责汇总。	See what each specialist is doing, which material they are reading and for how long; finished work goes back to the lead to combine.
+审批、补充信息、验收和邀请集中到“待我处理”；任务负责人或团队成员处理后，各处状态同步。	Approvals, requests for information, acceptance and invitations gather in “Needs my action”; once the task owner or a teammate handles one, every view updates.
+批准时选择范围：仅本次、本任务内或本工作区内；写入外部系统的动作不提供长期授权。	When approving, choose the scope: this time only, this task or this workspace; actions that write to external systems never get standing approval.
+结论逐条标注出处，可回到原始资料核对；验收后锁定为 v1，之后的修改生成新版本。	Every conclusion cites its source so you can check the original; on acceptance it is locked as v1, and later edits create a new version.
+画面由 Sage App 设计稿录制，数据为示例；第三方数据工具以通用名称示意，界面与能力以 App 正式版本为准。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; third-party data tools are shown under a generic name, and the released app prevails.
 多专家编排	Multi-specialist orchestration
 并行协作	Parallel work
 真人审核	Human review
@@ -40,12 +50,6 @@ Sage App 界面演示：计划确认、多专家编排、并行协作、真人�
 播放：真人审核	Play: Human review
 播放：授权把关	Play: Authorization
 播放：验收成果	Play: Accept results
-主责专家给出执行计划：步骤、负责专家、预计消耗与所需授权，你确认后才开始。	The lead specialist proposes a plan: steps, owners, estimated usage and the authorizations needed; work starts only after you confirm.
-执行图按阶段分泳道，每个节点显示负责专家、所用技能与状态。	The execution graph is laid out in stage lanes, each node showing its specialist, skill and status.
-没有依赖的步骤由多位专家同时推进，交接附带来源与待验证项。	Independent steps run at once across several specialists, and every handoff carries its sources and open questions.
-需要人判断的事项进入“待我处理”，由任务负责人或团队成员审批。	Items that need a human judgment land in “Needs my action” for the task owner or a teammate to approve.
-涉及外部系统的动作，先确认发起人、动作、范围、预计消耗与有效期。	Before any action on an external system, confirm who asked, the action, scope, estimated usage and validity.
-结论附带出处，验收后锁定版本，可继续追问或修改。	Conclusions arrive with sources and are locked as a version on acceptance; you can still ask follow-ups or revise.
 在 Sage App 中	In the Sage app
 在 App 中	In the app
 找到专家、了解专家、创建专家	Find, understand and create specialists
@@ -212,9 +216,6 @@ Sage 会直接改价、采购或发布吗？	Will Sage change prices, purchase o
 只在你授权的对象、范围和预算内执行，需要人工确认的步骤不会被跳过，授权可以随时撤回。	Sage acts only within the targets, scope and budget you authorize, never skips steps that need human confirmation, and you can withdraw authorization at any time.
 订阅、实施、模型与资源消耗、持续维护分别约定，具体以合同为准。	Subscriptions, implementation, model and resource usage, and ongoing maintenance are agreed separately, as set out in the contract.
 企业订阅不默认包含私有化部署、无限定制或终身维护；如有需要，在专项实施中单独评估范围与费用。	Business subscriptions do not include private deployment, unlimited customization or lifetime maintenance by default; if you need them, scope and cost are assessed in a dedicated implementation.
-Sage App 界面演示：提出问题、确认计划、编排与授权、验收成果	Sage app demo: ask a question, confirm the plan, orchestrate and authorize, accept the result
-Sage App 界面演示 · 示例数据	Sage app demo · Sample data
-Sage App 界面演示	Sage app demo
 播放演示	Play demo
 播放：提出经营问题	Play: Ask a business question
 播放：专业岗位接力	Play: Specialists work in relay
@@ -225,7 +226,7 @@ Sage App 界面演示	Sage app demo
 看见 Sage 如何工作	See how Sage works
 一个经营问题，从提出到交付，每一步都可以检查。	From question to delivery, every step of a business task can be checked.
 提出经营问题	Ask a business question
-说清目标、对象、时间范围与约束。例如：家用小家电进入德国市场，是否值得投入？	Define the goal, scope, timeframe and constraints. For example: is it worth bringing small home appliances to Germany?
+说清目标与约束，主责专家给出执行计划，你确认后才开始。例如：家用小家电进入德国市场，是否值得投入？	State the goal and constraints; the lead specialist proposes a plan, and work starts only after you confirm. For example: is it worth bringing small home appliances to Germany?
 专业岗位接力	Specialists work in relay
 按问题组建岗位，分头研究、交叉复核。每次交接都写明来源、范围与待验证项。	Sage assembles the roles the question needs. They research in parallel and review each other, and every handoff states its sources, scope and open assumptions.
 交付可核验的成果	Receive verifiable deliverables
@@ -723,16 +724,16 @@ Shopify 店铺诊断	Shopify store diagnosis
 返回产品	Back to product
 桌面客户端	Desktop app
 Sage App，即将上线。	The Sage app is coming soon.
-桌面客户端正在完成最后的开发与测试。上线前，你可以先在网页中体验，或预约一次演示。	We are finishing development and testing of the desktop app. Until it ships, try Sage on the web or book a demo.
+桌面客户端正在完成最后的开发与测试。上线前，你可以先观看产品交互演示，或预约一次一对一演示。	We are finishing development and testing of the desktop app. Until it ships, watch the product walkthrough or book a one-to-one demo.
 即将上线	Coming soon
 安装包、支持平台与文件校验信息，将在发布时一并公布。	Installers, supported platforms and file checksums will be published with the release.
 尚未发布	Not released
 待确认	To be confirmed
 一个经营问题	One business question
 一份可检查的成果	One reviewable deliverable
-先在网页里体验。	Start with the web preview.
-无需安装、无需先注册。从 VOC 机会洞察或 Shopify 店铺诊断的有限范围示例开始。	No installation or registration required. Explore a limited-scope VOC insight or Shopify diagnosis example.
-当前为本地交互示例，真实分析服务尚未接入。	This is a local interactive example. Live analysis services are not connected.
+先看 Sage 如何工作。	See how Sage works first.
+在 AI 团队页观看一个任务的完整过程：计划确认、多专家编排、真人审核、授权与验收。	Watch one complete task on the AI team page: plan confirmation, multi-specialist orchestration, human review, authorization and acceptance.
+观看交互演示	Watch the walkthrough
 正式发布时，一并提供。	Included with the official release.
 更新说明	Release notes
 版本变更与已知问题	Version changes and known issues
@@ -1317,7 +1318,7 @@ def build_localized_pages(root):
             header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="download.html" data-app-soon>下载</a></div></header>'
             footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p></footer>'
             js = ''.join(f'<script src="{name}.js" defer></script>' for name in scripts.get(path.stem,[]) + ['site-shell'])
-            layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
+            layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 0;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
             html = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles.get(path.stem,"Sage")} · Sage</title>{styles}{layout}{js}</head><body>{header}{html}{footer}</body></html>'
         else:
             # Auth and trial already have their own shell; keep that layout intact.
