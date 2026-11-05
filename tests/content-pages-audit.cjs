@@ -78,8 +78,8 @@ for (const name of ['team','enterprise','docs']) {
     if(article)assert.ok(slugs.includes(article),`Unknown article: ${article}`);
   }
 }
-assert.ok(read('src/pages/team.html').includes('<strong>CMO</strong>'));
-assert.ok(read('src/pages/team.html').includes('<strong>CHO</strong>'));
+assert.ok(read('src/pages/team.html').includes('<strong>首席增长官 CGO</strong>'),'Management titles follow the App: CGO');
+assert.ok(read('src/pages/team.html').includes('<strong>首席治理官 CGOV</strong>'),'Management titles follow the App: CGOV');
 assert.ok(!read('src/pages/team.html').includes('CGOv'));
 const teamHero=read('src/pages/team.html').split('<section class="at-hero"')[1].split('</section>')[0];
 const enterpriseHero=read('src/pages/enterprise.html').match(/<header class="ep-hero"[\s\S]*?<\/header>/)[0];
@@ -88,12 +88,12 @@ for(const hero of [teamHero,enterpriseHero])assert.ok(!hero.includes('<a '),'Her
 assert.ok(teamHero.includes('at-professional-visual'));
 assert.ok(!read('src/pages/team.html').includes('at-business-heading'),'Remove the screenshot business-problem section entirely');
 assert.ok(!read('src/pages/ai-team.css').includes('at-business-reading'),'No orphan styles for the removed section');
-assert.ok(teamHero.includes('icons/team-human-ai-workspace.png'),'Use the user-approved meeting illustration');
+assert.ok(teamHero.includes('icons/team-human-ai-workspace.webp'),'Use the user-approved meeting illustration');
 assert.ok(read('src/pages/ai-team.css').includes('.at-professional-visual::after'),'Blend the illustration edges into the white page');
 for(const home of ['index.html','index-en.html'])assert.ok(read(home).includes('data-theme="dark"'),'Homepage hero keeps its approved dark background');
 const homePalette=read('src/visual-draft.css');
-assert.ok(homePalette.includes('.v1 .btn.primary{background:#aec8e2;'));
-assert.ok(homePalette.includes('.v1 .btn.primary:hover{background:#c2d8ec}'));
+assert.ok(homePalette.includes('.v1 .btn.primary{background:#396397;color:#fff;'),'Launch primary buttons use brand blue');
+assert.ok(homePalette.includes('.v1 .btn.primary:hover{background:#2f5585}'));
 assert.ok(!homePalette.includes('body.v1[data-theme=light] .hero{background:#fff}'),'Do not override the approved hero background');
 assert.ok(!teamHero.includes('at-orbit'));
 assert.ok(!read('src/pages/team.html').includes('经营工作'));
@@ -126,6 +126,8 @@ assert.ok(read('src/pages/content-pages.js').includes("auth.html?return='"));
 for (const icon of ['person','file-earmark-text','database','diagram-3','people','search','shield-lock','bar-chart']) assert.ok(fs.existsSync(path.join(root,'pages/icons',icon+'.svg')));
 const sharedRoutes=['team','enterprise','docs','pricing','trial','download','checkout','billing','auth','profile'].flatMap(name=>[name,name+'-en']).concat('product');
 const publicNames=new Set(['index','team','enterprise','docs','pricing','download']);
+const indexedNames=new Set(['index','team','enterprise','docs']);
+const publicURL=filename=>'https://sagegogo.com/'+(filename==='index.html'?'':filename);
 for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'pages/'+name+'.html')]){
   const html=read(filename),head=html.split('</head>')[0],english=filename.endsWith('-en.html'),name=path.basename(filename,'.html').replace(/-en$/,'');
   assert.equal((head.match(/<title>/g)||[]).length,1,filename+': unique title');
@@ -134,15 +136,16 @@ for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'p
   assert.ok(description.length>20,filename+': meaningful description');
   if(english)assert.ok(!/[\u4e00-\u9fff]/.test(description),filename+': localized description');
   assert.equal((head.match(/rel="canonical"/g)||[]).length,1,filename+': unique canonical');
-  assert.ok(head.includes(`<link rel="canonical" href="https://sagegogo.com/${filename}">`),filename+': query-free canonical');
+  assert.ok(head.includes(`<link rel="canonical" href="${publicURL(filename)}">`),filename+': query-free canonical');
   assert.equal((head.match(/name="robots"/g)||[]).length,1,filename+': unique indexing policy');
-  assert.ok(head.includes(`<meta name="robots" content="noindex,${publicNames.has(name)?'follow':'nofollow'}">`),filename+': release candidate must remain unindexed');
+  const robots=indexedNames.has(name)?'index,follow':`noindex,${publicNames.has(name)?'follow':'nofollow'}`;
+  assert.ok(head.includes(`<meta name="robots" content="${robots}">`),filename+': launch indexing policy');
   const stem=filename.replace(/-en\.html$/,'.html').replace(/\.html$/,'');
   if(name!=='product'){
-    assert.equal((head.match(/rel="alternate" hreflang=/g)||[]).length,2,filename+': bilingual head links');
+    assert.equal((head.match(/rel="alternate" hreflang=/g)||[]).length,3,filename+': bilingual head links with x-default');
     for(const [lang,suffix] of [['zh-CN',''],['en','-en']]){
       const target=stem+suffix+'.html';assert.ok(fs.existsSync(path.join(root,target)),filename+': alternate exists');
-      assert.ok(head.includes(`<link rel="alternate" hreflang="${lang}" href="https://sagegogo.com/${target}">`),filename+': alternate language');
+      assert.ok(head.includes(`<link rel="alternate" hreflang="${lang}" href="${publicURL(target)}">`),filename+': alternate language');
     }
   }
   if(publicNames.has(name)){
@@ -152,8 +155,10 @@ for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'p
     assert.ok(head.includes('<meta name="twitter:card" content="summary_large_image">'));
   }else assert.ok(!head.includes('property="og:'),filename+': no private-page share data');
 }
-assert.ok(!fs.existsSync(path.join(root,'dist/robots.txt')), 'Release flag must not publish a crawler allow policy');
-assert.ok(!fs.existsSync(path.join(root,'dist/sitemap.xml')), 'Indexing samples remain review-only');
+for(const file of ['robots.txt','sitemap.xml'])assert.equal(read('dist/'+file),read(file),file+': published with the release');
+assert.ok(read('robots.txt').includes('Disallow: /api/')&&read('robots.txt').includes('Sitemap: https://sagegogo.com/sitemap.xml'));
+for(const name of indexedNames)for(const file of name==='index'?['index.html','index-en.html']:[`pages/${name}.html`,`pages/${name}-en.html`])assert.ok(read('sitemap.xml').includes(`<loc>${publicURL(file)}</loc>`),file+': listed in sitemap');
+assert.ok(!read('sitemap.xml').includes('pricing')&&!read('sitemap.xml').includes('auth'),'Unindexed routes stay out of the sitemap');
 for(const route of sharedRoutes){
   const html=read('pages/'+route+'.html');
   assert.ok(html.includes('content-pages.css'),route+': shared visual foundation');

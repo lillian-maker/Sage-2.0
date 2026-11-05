@@ -12,11 +12,30 @@ from pathlib import Path
 
 COPY = r"""
 下载	Download
+Sage App 即将上线	Sage app coming soon
+App 即将上线	App coming soon
+把出海经营决策<br>交给<span class="hero-team-emphasis">你的 AI 团队</span>	Hand your global commerce decisions to <span class="hero-team-emphasis">your AI team</span>
+选品、渠道、补货、合规——53 位专业数字员工分头研究、交叉复核，交给你有出处的结论。每一步执行，都等你批准。	Product selection, channels, replenishment, compliance: 53 specialist digital employees research in parallel and review each other's work, then hand you conclusions with their sources. Nothing is executed without your approval.
+看见 Sage 如何工作	See how Sage works
+一个经营问题，从提出到交付，每一步都可以检查。	From question to delivery, every step of a business task can be checked.
+提出经营问题	Ask a business question
+说清目标、对象、时间范围与约束。例如：家用小家电进入德国市场，是否值得投入？	Define the goal, scope, timeframe and constraints. For example: is it worth bringing small home appliances to Germany?
+专业岗位接力	Specialists work in relay
+按问题组建岗位，分头研究、交叉复核。每次交接都写明来源、范围与待验证项。	Sage assembles the roles the question needs. They research in parallel and review each other, and every handoff states its sources, scope and open assumptions.
+交付可核验的成果	Receive verifiable deliverables
+结论、依据与行动方案一起交付。涉及店铺、资金或发布的动作，经你批准后才执行。	Conclusions arrive with their evidence and an action plan. Anything that touches your store, funds or publishing runs only after you approve it.
+53 位数字员工，各有专长	53 digital employees, each a specialist
+3 位管理职能统筹方向，50 个专业岗位分布在 8 个专业域。每个岗位都有明确的职责、方法与交付标准。	Three management roles set direction. Fifty specialist roles span eight domains, each with defined responsibilities, methods and delivery standards.
+ 个专业岗位</span>	 specialist roles</span>
+查看全部岗位与职责	See all roles and responsibilities
+从一个场景开始，<br>接入你的业务。	Start with one workflow.<br>Connect it to your business.
+从标准产品直接启用，到接入企业数据与系统的专项实施。<br>按你当前的阶段选择路径。	Use the standard product as it is, or bring in your data and systems through a dedicated implementation.<br>Choose the path that fits your stage.
+告诉我们，<br>你最想先解决的经营问题。	Tell us the business problem you want to solve first.
+留下联系方式，我们会与你联系，并按你的业务准备演示。	Leave your details and we will get in touch with a demo prepared for your business.
+联系方式仅用于处理本次咨询。已完成咨询的联系方式和问题内容将在完成后90天清除。	Contact details are used only to handle this inquiry. Contact details and question content are cleared 90 days after the inquiry is completed.
+首席增长官 CGO	Chief Growth Officer · CGO
+首席治理官 CGOV	Chief Governance Officer · CGOV
 Sage · 你的出海 AI 团队	Sage · Your AI Team for Global Commerce
-Sage，53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	Sage brings 53 digital employees into one business organization. Evidence-backed decisions. Human-authorized execution.
-洞察 · 决策 · 执行	Insight · Decisions · Execution
-你的<span class="hero-team-emphasis">出海 AI 团队</span>	Your <span class="hero-team-emphasis">AI Team for Global Commerce</span>
-53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	53 digital employees. One complete business organization. Evidence-backed decisions. Human-authorized execution.
 正在读取通知…	Loading notifications…
 跳转到正文	Skip to content
 主导航	Main navigation
@@ -26,7 +45,6 @@ Sage 首页	Sage home
 订阅方案	Subscription plans
 >产品</a>	>Product</a>
 打开导航菜单	Open navigation menu
-下载Sage	Download Sage
 免费体验	Try Sage
 咨询和演示	Talk to us
 提交预约	Submit request
@@ -37,15 +55,10 @@ AI 团队	AI Team
 登录	Log in
 账户	Account
 订阅与账单	Billing
-产品</span>	Product</span>
 九个经营场景的协作演示	Team collaboration across nine business workflows
 切换经营场景	Next business workflow
 持续转动的地球，点亮全球经营目标	Rotating globe showing global business roles
 持续转动的地球，展示全球经营目标	Rotating globe showing global business roles
-看见Sage如何工作	See Sage at work
-Sage 产品录屏占位	Sage product recording placeholder
-AI 团队协作录屏占位	AI team collaboration recording placeholder
-各有专长，一起把事做好	Specialists working as one
 依据可追溯，行动有边界	Traceable evidence. Controlled action.
 分身资产	Reusable expertise
 专业可积累	Expertise that grows
@@ -62,22 +75,16 @@ Agent 治理	Agent governance
 独立复核	Independent review
 人的决策权	Human decision rights
 版本与审计	Versioning and audit
-在你的企业中，<br>真正落地。	Built for your business.<br>Deployed with purpose.
-从既有产品启用，到深度接入业务。<br>选择与你当前阶段相符的路径。	Start with the product or integrate it into your operations.<br>Choose the path that fits your business.
 产品采购	Product procurement
 FDE 落地	FDE deployment
 场景选择 → 组织与数据 → 权限 → 验收	Workflow → Organization and data → Permissions → Acceptance
 问题界定 → 受控试点 → 联合验收 → 持续运行	Scope → Controlled pilot → Joint acceptance → Ongoing operation
-下一项业务挑战，<br>一起开始。	Your next business challenge.<br>Start with Sage.
 聊聊你的业务	Tell us about your business
 公司 / 品牌	Company / brand
 访客手机号	Phone number
 工作邮箱（选填）	Work email (optional)
 想解决的经营问题	What business problem would you like to solve?
-联系方式仅用于业务咨询。当前预览未接通接收服务，填写内容不会发送或保存。	Contact details are for business inquiries only. This preview has no connected submission service. Nothing you enter is sent or saved.
-咨询接收服务尚未接通。内容未发送、未保存，请勿在预览中填写敏感资料。	The inquiry service is not connected. Your information was not sent or saved. Please do not enter sensitive information in this preview.
 AI 团队，立足真实业务。	An AI team grounded in real business.
-本地产品预览 · 认证、支付与真实任务尚未接入	Product preview · Authentication, payments and live tasks are not connected
 场景资料未加载	Workflow data failed to load
 牵头	Lead
 保障	Assurance
@@ -508,18 +515,13 @@ Shopify 店铺诊断	Shopify store diagnosis
 权限、积分与保存规则	Permissions, credits and retention rules
 官网中的方案和流程图是产品设计说明，不代表相应能力已接入或上线。	Website plans and diagrams describe the product design. They do not imply that the corresponding capabilities are connected or live.
 返回产品	Back to product
-下载 Sage。	Download Sage
-下载 Sage	Download Sage
-把业务分析放在手边。也可以直接从网页体验开始。	Keep your business work close at hand. Or start with the web preview.
 桌面客户端	Desktop app
+Sage App，即将上线。	The Sage app is coming soon.
+桌面客户端正在完成最后的开发与测试。上线前，你可以先在网页中体验，或预约一次演示。	We are finishing development and testing of the desktop app. Until it ships, try Sage on the web or book a demo.
+即将上线	Coming soon
+安装包、支持平台与文件校验信息，将在发布时一并公布。	Installers, supported platforms and file checksums will be published with the release.
 尚未发布	Not released
-安装包和平台支持信息待提供。正式发布前，不提供有效下载入口。	Installers and platform support details are not yet available. Downloads will open after the official release.
-当前版本	Current version
-待发布	Pending release
-支持平台 / 系统要求	Supported platforms / System requirements
 待确认	To be confirmed
-发布时间 / 文件校验	Release date / File verification
-待提供	Not yet available
 一个经营问题	One business question
 一份可检查的成果	One reviewable deliverable
 先在网页里体验。	Start with the web preview.
@@ -1047,7 +1049,7 @@ def static_documentation(source, english=False):
 def build_localized_pages(root):
     """Wrap legacy page fragments and emit reviewed English routes and scripts."""
     source, destination = root / 'src/pages', root / 'pages'
-    titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'下载 Sage','product':'产品方案'}
+    titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'Sage App','product':'产品方案'}
     scripts = {'team':['catalog-data','team-page'], 'enterprise':['info-pages'], 'pricing':['info-pages'], 'product':['catalog-data','catalog']}
     for path in source.glob('*.js'):
         if path.stem in {'billing', 'auth', 'profile', 'notifications', 'docs-page', 'docs-articles-en'}:
@@ -1071,8 +1073,8 @@ def build_localized_pages(root):
             js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
             items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
             nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
-            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="download.html">下载</a></div></header>'
-            footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div><p>具体开放能力以产品内说明为准</p></footer>'
+            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><span class="cp-consult app-soon" role="button" aria-disabled="true">App 即将上线</span></div></header>'
+            footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div></footer>'
             document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
             (destination / path.name).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
             localized = english_links(translate(document)).replace('lang="zh-CN"', 'lang="en"')
@@ -1109,8 +1111,8 @@ def build_localized_pages(root):
         if '<!doctype' not in html.lower():
             styles = ''.join(f'<link rel="stylesheet" href="{name}.css">' for name in ['redesign','pages','catalog','team-page','info-pages'])
             nav = '<nav id="r-menu" class="r-links" aria-label="主导航"><a href="../index.html#product">产品</a><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav>'
-            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="download.html">下载</a></div></header>'
-            footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p><small>本地产品预览 · 认证、支付与真实任务尚未接入</small></footer>'
+            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><span class="r-button small app-soon" role="button" aria-disabled="true">App 即将上线</span></div></header>'
+            footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p></footer>'
             js = ''.join(f'<script src="{name}.js" defer></script>' for name in scripts.get(path.stem,[]) + ['site-shell'])
             layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
             html = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles.get(path.stem,"Sage")} · Sage</title>{styles}{layout}{js}</head><body>{header}{html}{footer}</body></html>'

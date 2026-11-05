@@ -16,12 +16,12 @@ assert.ok(read('src/pages/content-pages.css').includes('.nav-account:not([open])
 assert.ok(read('src/pages/content-pages.css').includes('.nav-account .account-dropdown{right:0;max-width:calc(100vw - 32px)}'), 'Account dropdown stays within the narrow viewport');
 for(const name of ['index.template.html','pages/profile.html','pages/trial.html']){
  const header=read('src/'+name).match(/<header\b[\s\S]*?<\/header>/)[0];
- assert.ok(header.includes('download.html'), `${name}: navigation links to download`);
+ assert.ok(header.includes('aria-disabled="true">App 即将上线</span>') && !header.includes('download.html'), `${name}: download entry shows the app release status until an installer ships`);
  assert.ok(!header.includes('咨询和演示'), `${name}: consultation stays out of the top navigation`);
 }
 for(const name of ['billing']){
  const header=read('src/pages/'+name+'.js').match(/<header\b[\s\S]*?<\/header>/)[0];
- assert.ok(header.includes("page('download')"), `${name}: bilingual download route`);
+ assert.ok(header.includes("t('App 即将上线','App coming soon')") && !header.includes("page('download')"), `${name}: bilingual app release status`);
  assert.ok(!header.includes('咨询和演示'), `${name}: navigation download replaces consultation`);
 }
 assert.ok(shell.includes("fetch('/api/consultations'"), 'Shared consultation must persist through the API');

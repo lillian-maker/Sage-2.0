@@ -29,8 +29,8 @@ body[data-auth-page] #auth-root .auth-agreement input{width:16px;height:16px;mar
 body[data-auth-page] #auth-root .auth-agreement label{font-size:13px;margin:0}
 body[data-auth-page] #auth-root a,body[data-auth-page] #auth-root .auth-text-link{color:#396397;text-underline-offset:3px}
 body[data-auth-page] #auth-root .auth-text-link{background:transparent;border:0;padding:0;min-height:44px;font-size:inherit;text-decoration:underline}
-body[data-auth-page] #auth-root .auth-primary{width:100%;min-height:44px;padding:10px 16px;color:#14243A;background:#AEC8E2;border:1px solid transparent;border-radius:6px;font-size:15px;font-weight:500}
-body[data-auth-page] #auth-root .auth-primary:hover:not(:disabled){background:#C2D8EC}
+body[data-auth-page] #auth-root .auth-primary{width:100%;min-height:44px;padding:10px 16px;color:#FFFFFF;background:#396397;border:1px solid transparent;border-radius:6px;font-size:15px;font-weight:500}
+body[data-auth-page] #auth-root .auth-primary:hover:not(:disabled){background:#2F5585}
 body[data-auth-page] #auth-root button:disabled,body[data-auth-page] #auth-root input:disabled{opacity:.68}
 body[data-auth-page] #auth-root .auth-submit{margin-top:24px}
 body[data-auth-page] #auth-root .auth-switch{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin:22px 0 0;font-size:14px;color:#647386}

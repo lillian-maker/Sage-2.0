@@ -39,9 +39,9 @@ body.v1[data-theme=dark]{--bg:#0b1220;--surface:#142033;--ink:#f4f7fb;--muted:#a
 body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--surface2:#edf3f9;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;--on-accent:#ffffff}
 .v1 .btn{background:#fff;color:#202b38;border-color:#e4e9ef}
 .v1 .btn:hover{background:#edf3f9}
-.v1 .btn.primary{background:#aec8e2;color:#14243a;border-color:transparent;box-shadow:0 3px 10px #14243a0c}
-.v1 .btn.primary:hover{background:#c2d8ec}
-.v1 .btn.primary:active{background:#9ebad6}
+.v1 .btn.primary{background:#396397;color:#fff;border-color:transparent;box-shadow:0 4px 14px #1b3a6526}
+.v1 .btn.primary:hover{background:#2f5585}
+.v1 .btn.primary:active{background:#284a74}
 .v1 .btn:focus-visible{outline:2px solid #396397;outline-offset:4px}
 .v1{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif}
 .v1 .nav{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:88px;padding:0 max(28px,calc((100vw - 1344px)/2));gap:24px}
@@ -70,7 +70,6 @@ body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--su
 .v1 .cinema-section,.v1 .ensemble-section,.v1 .assurance-section,.v1 .enterprise-section,.v1 .contact-section{width:100%;padding-left:max(44px,calc((100% - 1240px)/2));padding-right:max(44px,calc((100% - 1240px)/2))}
 .v1 .cinema-section,.v1 .assurance-section,.v1 .contact-section,.v1 .footer{--bg:#ffffff;--surface:#f4f7fb;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;background:var(--bg);color:var(--ink)}
 .v1 .ensemble-section,.v1 .enterprise-section{--bg:#f4f7fb;--surface:#ffffff;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;background:var(--bg);color:var(--ink)}
-.v1 .recording-placeholder{border:0;border-radius:14px;background:var(--surface);box-shadow:0 18px 70px #152d5010}
 .v1 .evidence-sheet,.v1 .contact-section form{border:0;border-radius:10px;box-shadow:0 12px 40px #14243a08}
 .v1 .enterprise-paths a{border-top:0;border-bottom:1px solid var(--line)}
 .v1 .section-heading h2{color:var(--ink)}

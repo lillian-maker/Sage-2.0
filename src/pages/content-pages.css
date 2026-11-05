@@ -16,7 +16,7 @@
 .sage-consult-dialog label{display:block;font-size:14px;margin:0 0 18px}
 .sage-consult-dialog :is(input,textarea){display:block;width:100%;margin-top:8px;padding:12px;border:1px solid #d7e2ed;border-radius:8px;background:#f9fbfd;color:#202b38;font:inherit;min-height:48px;resize:vertical}
 .sage-consult-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}.sage-consult-note,.sage-consult-status{font-size:13px;color:#526171;line-height:1.7;margin:0 0 18px}
-.sage-consult-submit{width:100%;min-height:48px;background:#aec8e2;color:#14243a;border:0;border-radius:8px;font:inherit;font-size:14px;font-weight:500;cursor:pointer}.sage-consult-submit:hover{background:#c2d8ec}
+.sage-consult-submit{width:100%;min-height:48px;background:#396397;color:#fff;border:0;border-radius:8px;font:inherit;font-size:14px;font-weight:500;cursor:pointer}.sage-consult-submit:hover{background:#2f5585}
 body:has(.sage-consult-dialog[open]){overflow:hidden}.sage-consult-status{margin:12px 0 0}
 .sage-profile{max-width:1040px;margin:64px auto;padding:0 24px 80px}.sage-profile h1{font-size:36px;font-weight:500;margin-bottom:36px}.sage-profile-layout{display:grid;grid-template-columns:200px 1fr;gap:48px}.sage-profile aside a{display:block;padding:12px;color:#526171;border-radius:8px}.sage-profile aside a[aria-current]{background:#edf3f9;color:#396397}.sage-profile-card{border:1px solid #e4e9ef;border-radius:12px;padding:28px;background:#fff}.sage-profile-card h2{font-size:22px;font-weight:500;margin:0 0 24px}.sage-profile-card dl{margin:0}.sage-profile-card dl>div{display:grid;grid-template-columns:130px 1fr;gap:20px;padding:20px 0;border-bottom:1px solid #e4e9ef}.sage-profile-card dt{color:#526171}.sage-profile-card dd{margin:0;overflow-wrap:anywhere}.sage-profile-card select{max-width:100%;min-height:44px;border:1px solid #d7e2ed;border-radius:8px;padding:8px;background:#fff;font:inherit}
 .profile-section{margin-top:28px;padding-top:24px;border-top:1px solid #e4e9ef}.profile-section:first-child{margin-top:0;padding-top:0;border:0}.profile-section h3{font-size:18px;font-weight:500}.profile-section label{display:block;margin:16px 0;color:#526171}.profile-section input:not([type=checkbox]){display:block;width:100%;max-width:420px;min-height:44px;border:1px solid #d7e2ed;border-radius:8px;padding:10px;font:inherit;background:#f8fafc}.profile-section input[type=checkbox]{margin-right:10px}.profile-section button{margin:8px 12px 8px 0;font:inherit}.profile-section button:disabled{opacity:.55;cursor:not-allowed}.profile-avatar{width:72px;height:72px;display:grid;place-items:center;overflow:hidden;border-radius:50%;background:#edf3f9;color:#396397;font-size:26px}.profile-avatar img{width:100%;height:100%;object-fit:cover}.profile-avatar-preview{display:block;object-fit:cover;border-radius:50%;margin:12px 0}.profile-avatar-preview[hidden]{display:none}.profile-sessions{width:100%;border-collapse:collapse;font-size:13px}.profile-sessions td,.profile-sessions th{padding:12px 6px;border-bottom:1px solid #e4e9ef;text-align:left;overflow-wrap:anywhere}.profile-sessions td button{padding:8px}
@@ -31,8 +31,8 @@ body:has(.sage-consult-dialog[open]){overflow:hidden}.sage-consult-status{margin
 @media(max-width:1100px){.cp-nav{gap:25px;padding:0 24px}.cp-links,.cp-tools{gap:19px}.cp-tools .cp-consult{padding:10px 14px}}@media(max-width:900px){.cp-nav{height:72px;gap:18px;padding:0 20px}.cp-brand{font-size:23px}.cp-menu{display:block;margin-left:auto}.cp-links{display:none;position:absolute;top:71px;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;background:#fff;border-bottom:1px solid var(--cp-line);padding:10px 20px;box-shadow:0 12px 22px #202b3808}.cp-links.open{display:flex}.cp-links a{padding:12px 8px;border:0}.cp-links a[aria-current=page]{background:var(--cp-silver);border-radius:5px}.cp-tools{margin-left:0;gap:18px}.cp-tools .cp-consult{display:none}html{scroll-padding-top:88px}.cp-footer{display:block}.cp-footer>div{margin:14px 0}.cp-account{max-width:80px}}@media(max-width:380px){.cp-nav{padding:0 16px;gap:12px}.cp-tools{gap:12px;font-size:13px}.cp-brand img{width:25px;height:25px}.cp-brand{gap:7px}.cp-menu{font-size:13px}.cp-footer{padding:24px 18px}.cp-footer>div{gap:16px;flex-wrap:wrap}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
 .cp-menu,.cp-links a,.cp-tools a{transition:color .15s ease,background .15s ease}.cp-tools>a:not(.cp-consult){min-height:44px;display:inline-flex;align-items:center}.cp-links a:hover{color:var(--cp-ink)}
 .cp-footer{color:#657487}
-:root{--cp-silver:#edf3f9;--cp-teal:#396397;--cp-blue:#aec8e2;--cp-blue-hover:#c2d8ec}
-.cp-tools .cp-consult,.cp-button,.cp-button.silver{background:var(--cp-blue);color:#14243a;border-color:transparent;box-shadow:0 3px 10px #14243a0c}
+:root{--cp-silver:#edf3f9;--cp-teal:#396397;--cp-blue:#396397;--cp-blue-hover:#2f5585}
+.cp-tools .cp-consult,.cp-button,.cp-button.silver{background:var(--cp-blue);color:#fff;border-color:transparent;box-shadow:0 3px 10px #14243a0c}
 .cp-tools .cp-consult:hover,.cp-button:hover{background:var(--cp-blue-hover)}
 .cp-links a[aria-current=page]{color:var(--cp-teal);border-bottom-color:var(--cp-teal)}
 /* Common brand, typography and interaction tokens across legacy and account routes. */
@@ -45,8 +45,8 @@ body:not(.v1) :is(.r-nav,.billing-nav) nav a{font-size:15px;font-weight:400;colo
 body:not(.v1) :is(.r-nav,.billing-nav) nav a[aria-current=page]{color:#396397;border-bottom:2px solid #396397}
 body:not(.v1) :is(.r-nav,.billing-nav) nav a:hover{color:#202b38}
 body:not(.v1) :is(.r-tools,.nav-actions){display:flex;align-items:center;margin-left:auto;gap:24px;font-size:14px}
-body:not(.v1) :is(.button.primary,.r-button:not(.secondary)){background:#aec8e2!important;color:#14243a!important;border-color:transparent!important;box-shadow:0 3px 10px #14243a0c;border-radius:7px;font-weight:500;min-height:44px}
-body:not(.v1) :is(.button.primary,.r-button:not(.secondary)):not(:disabled):not([aria-disabled=true]):hover{background:#c2d8ec!important}
+body:not(.v1) :is(.button.primary,.r-button:not(.secondary)){background:#396397!important;color:#fff!important;border-color:transparent!important;box-shadow:0 3px 10px #14243a0c;border-radius:7px;font-weight:500;min-height:44px}
+body:not(.v1) :is(.button.primary,.r-button:not(.secondary)):not(:disabled):not([aria-disabled=true]):hover{background:#2f5585!important}
 body:not(.v1) :is(.button,.r-button).secondary{background:#fff!important;color:#202b38!important;border:1px solid #e4e9ef!important;border-radius:7px}
 body:not(.v1) :is(.button,.r-button):is(:disabled,[aria-disabled=true]){background:#edf3f9!important;border-color:#e4e9ef!important;color:#657487!important;box-shadow:none;cursor:not-allowed}
 body:not(.v1) :is(a,button,input,select,textarea,summary):focus-visible{outline:2px solid #396397!important;outline-offset:4px}
@@ -236,7 +236,7 @@ body[data-auth-page] .auth-methods button[aria-pressed=true]{background:#edf3f9;
 .usage-records th{font-weight:400;background:#edf3f9;color:#526171;white-space:nowrap}
 .usage-records .usage-empty{text-align:center;height:180px;color:#718092}
 .usage-pagination{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;color:#718092;font-size:13px}
-.usage-pagination .cp-button{background:#fff;border:1px solid #d7e2ed;min-height:44px;padding:8px 12px;font-size:14px}
+.usage-pagination .cp-button{background:#fff;color:#202b38;border:1px solid #d7e2ed;min-height:44px;padding:8px 12px;font-size:14px}
 .usage-pagination button:disabled{opacity:.5;cursor:not-allowed}
 .usage-pagination select{font-size:13px}
 @media(max-width:760px){.usage-card{padding:16px}.usage-table-wrap{margin-left:-16px;margin-right:-16px}.usage-filters{gap:4px}.usage-preset{padding:8px}.usage-chart-top select{min-width:0;max-width:145px}.usage-balance{font-size:13px}.usage-pagination{justify-content:flex-start}}
@@ -287,3 +287,15 @@ body[data-auth-page] #auth-reset-link{display:block;color:#396397}
 /* Full lockups retain their natural proportions instead of the old square icon. */
 .cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{display:block;width:112px;height:49px;object-fit:contain;max-width:none;filter:none}
 @media(max-width:600px){.cp-brand img.sage-logo,body:not(.v1) :is(.r-brand,.billing-brand) img.sage-logo{width:96px;height:42px}}
+/* App release status replaces download entries until an installer ships. */
+.app-soon{cursor:default;user-select:none}
+.v1 .nav .btn.app-soon,.v1 .nav .btn.app-soon:hover{background:transparent;color:#c4d0dc;border:1px solid #ffffff33;box-shadow:none}
+.v1 .nav.nav-light .btn.app-soon,.v1 .nav.nav-light .btn.app-soon:hover{color:#526171;border-color:#d5dde6}
+.v1 .mobile-nav .app-soon{color:var(--muted)}
+body:not(.v1) :is(.cp-consult,.r-button,.button,.mobile-download).app-soon,body:not(.v1) :is(.cp-consult,.r-button,.button,.mobile-download).app-soon:hover{background:transparent!important;color:#526171!important;border:1px solid #d5dde6!important;box-shadow:none!important}
+body:not(.v1) :is(.cp-links,#r-menu) .mobile-download.app-soon{border:0!important;color:#8090a3!important}
+/* Operator and ICP filing, injected into every static footer by build.py. */
+:is(.footer,.cp-footer,.r-footer,.trial-footer){flex-wrap:wrap}
+.sage-legal{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px 16px;margin:8px 0 0;font-size:12px;line-height:1.7;color:#657487}
+.sage-legal a{color:inherit;text-decoration:none}
+.sage-legal a:hover{text-decoration:underline}

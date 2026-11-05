@@ -2,6 +2,7 @@
 """Build the standalone WorldPilot HTML using only Python's standard library."""
 from pathlib import Path
 import base64
+import json
 import re
 import shutil
 import sys
@@ -20,51 +21,111 @@ ASSETS = {
     "favicon.svg": "image/svg+xml",
     "brand/sage-logo-website.svg": "image/svg+xml",
     "brand/sage-logo-product.svg": "image/svg+xml",
-    "earth-texture.png": "image/png",
 }
+SITE_URL = 'https://sagegogo.com/'
+# Indexed launch pages; pricing, download and account routes stay out of search results.
+INDEXED_PAGES = ('index', 'team', 'enterprise', 'docs')
+LEGAL_ENTITY = '深圳市众妙之门科技有限公司'
+ICP_LICENSE = '粤ICP备2026173751号'
+LEGAL_LINE = (f'<p class="sage-legal"><span lang="zh-CN">© 2026 {LEGAL_ENTITY}</span>'
+              f'<a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" lang="zh-CN">{ICP_LICENSE}</a></p>')
+SHARE_IMAGE = SITE_URL + 'assets/og/sage-share.jpg'
 
 def read_text(relative_path):
     return (ROOT / relative_path).read_bytes().decode("utf-8")
 
 def page_metadata(html, name, english=False):
-    """Prepare canonical/share metadata without opening preview pages to indexing."""
+    """Prepare canonical, indexing and share metadata for the launch site."""
     descriptions = {
-        'index': ('Sage 产品预览：了解出海 AI 团队、经营场景与经人授权的协作方式。', 'Sage product preview: explore AI teams, global commerce workflows and human-authorized collaboration.'),
-        'team': ('了解 Sage AI 团队的专业岗位、协作方法与复核职责。具体开放能力以产品内说明为准。', 'Explore Sage AI team roles, collaboration methods and review responsibilities. Available capabilities follow product disclosures.'),
+        'index': ('Sage 是面向出海品牌的 AI 团队：53 位专业数字员工分头研究、交叉复核，交付有出处的经营结论，执行经你批准。', 'Sage is the AI team for global commerce brands: 53 specialist digital employees research, cross-check and deliver sourced business conclusions, and nothing runs without your approval.'),
+        'team': ('认识 Sage 的 53 位数字员工：8 个专业域的岗位职责、协作方法与复核机制。', 'Meet the 53 Sage digital employees: roles across eight domains, how they collaborate and how their work is reviewed.'),
         'enterprise': ('了解 Sage 标准产品与专项实施的合作方式、阶段成果及验收安排。', 'Explore Sage product procurement, enterprise implementation, deliverables and acceptance stages.'),
         'docs': ('阅读 Sage 产品规则、场景说明、账户及订阅帮助文档。', 'Read Sage product rules, workflow guides, account documentation and subscription help.'),
-        'pricing': ('查看 Sage 订阅方案与计费规则。当前预览未开放收款。', 'Review Sage subscription plans and billing rules. Payments are not available in this preview.'),
-        'download': ('查看 Sage 客户端发布状态、系统要求及安装说明。安装包尚未发布。', 'Check Sage client release status, system requirements and installation guidance. The installer has not been released.'),
-        'trial': ('Sage 本地交互示例：真实分析服务尚未接入。', 'Sage local interactive examples. Live analysis services are not connected.'),
-        'auth': ('登录或注册 Sage 账户。真实认证服务需完成接入验收。', 'Sign in or register for a Sage account. Live authentication requires integration acceptance.'),
+        'pricing': ('查看 Sage 个人与企业订阅方案、Sage Credits 与计费规则。', 'Review Sage personal and business plans, Sage Credits and billing rules.'),
+        'download': ('Sage App 即将上线。了解发布计划，或先在网页中体验 Sage。', 'The Sage app is coming soon. Follow the release or try Sage on the web first.'),
+        'trial': ('免费体验 Sage 的 VOC 机会洞察与 Shopify 店铺诊断。', 'Try Sage VOC opportunity insights and Shopify store diagnostics for free.'),
+        'auth': ('使用邮箱或手机号验证码，登录或注册 Sage 账户。', 'Sign in or register for a Sage account with an email or phone verification code.'),
         'notifications': ('查看 Sage 付款、订阅、退款、安全与成员变动通知。仅展示你有权查看的记录。', 'View Sage payment, subscription, refund, security and membership updates. Only authorized records are shown.'),
         'profile': ('管理 Sage 个人设置。账户资料仅在验证身份后展示。', 'Manage Sage personal settings. Account data requires identity verification.'),
         'billing': ('管理 Sage 账户、订阅与账单。账户资料仅在验证身份后展示。', 'Manage Sage accounts, subscriptions and billing. Account data requires identity verification.'),
-        'checkout': ('核对 Sage 方案与订单。当前预览未开放收款。', 'Review Sage plans and orders. Payments are not available in this preview.'),
+        'checkout': ('确认购买前，核对 Sage 订阅方案、价格与订单信息。', 'Check your Sage plan, price and order details before you confirm a purchase.'),
         'product': ('Sage 产品方案预览。具体开放能力以产品内说明为准。', 'Sage product design preview. Available capabilities follow product disclosures.'),
     }
     description = descriptions[name][int(english)]
     title = re.search(r'<title>(.*?)</title>', html, re.S)[1]
-    prefix = '' if name == 'index' else 'pages/'
-    base_url = 'https://sagegogo.com/' + prefix + name
-    url = base_url + ('-en' if english else '') + '.html'
+    chinese_url, english_url = page_urls(name)
+    url = english_url if english else chinese_url
     public = name in {'index', 'team', 'enterprise', 'docs', 'pricing', 'download'}
-    # --release is also used for the closed candidate; indexing needs separate approval.
+    robots = 'index,follow' if name in INDEXED_PAGES else f'noindex,{"follow" if public else "nofollow"}'
     tags = [f'<meta name="description" content="{escape(description, quote=True)}">',
-            f'<meta name="robots" content="noindex,{"follow" if public else "nofollow"}">',
+            f'<meta name="robots" content="{robots}">',
             f'<link rel="canonical" href="{url}">']
     if name != 'product':
-        tags += [f'<link rel="alternate" hreflang="zh-CN" href="{base_url}.html">',
-                 f'<link rel="alternate" hreflang="en" href="{base_url}-en.html">']
+        tags += [f'<link rel="alternate" hreflang="zh-CN" href="{chinese_url}">',
+                 f'<link rel="alternate" hreflang="en" href="{english_url}">',
+                 f'<link rel="alternate" hreflang="x-default" href="{chinese_url}">']
     if public:
-        image = 'https://sagegogo.com/pages/icons/team-human-ai-workspace.png'
-        alt = 'Sage business collaboration illustration' if english else 'Sage 业务协作示意图'
+        image = SHARE_IMAGE
+        alt = 'Sage: your AI team for global commerce' if english else 'Sage：你的出海 AI 团队'
         for property_name, value in [('og:type','website'), ('og:site_name','Sage'), ('og:title',title), ('og:description',description), ('og:url',url), ('og:locale','en_US' if english else 'zh_CN'), ('og:image',image), ('og:image:alt',alt)]:
             tags.append(f'<meta property="{property_name}" content="{escape(value, quote=True)}">')
         for property_name, value in [('twitter:card','summary_large_image'), ('twitter:title',title), ('twitter:description',description), ('twitter:image',image), ('twitter:image:alt',alt)]:
             tags.append(f'<meta name="{property_name}" content="{escape(value, quote=True)}">')
     html = re.sub(r'<meta name="(?:description|robots)" content="[^"]*">', '', html)
     return html.replace('</head>', '\n' + '\n'.join(tags) + '\n</head>', 1)
+
+def page_urls(name):
+    """Public Chinese and English URLs; the Chinese homepage is the site root."""
+    if name == 'index':
+        return SITE_URL, SITE_URL + 'index-en.html'
+    return SITE_URL + f'pages/{name}.html', SITE_URL + f'pages/{name}-en.html'
+
+def add_legal_line(html):
+    """Show the operator and ICP filing in every static footer, after localization."""
+    if 'class="sage-legal"' in html or '</footer>' not in html:
+        return html
+    return html.replace('</footer>', LEGAL_LINE + '</footer>', 1)
+
+def asset_version(relative_path):
+    return sha256((ROOT / relative_path).read_bytes()).hexdigest()[:12]
+
+def version_homepage_assets(html):
+    """Load portraits and the globe texture as cacheable files instead of inline data."""
+    def versioned(match):
+        path = match[1]
+        data = (ROOT / path).read_bytes()
+        if data[:4] != b'RIFF' or data[8:12] != b'WEBP':
+            raise ValueError(f"Invalid WebP asset: {path}")
+        return f'{path}?v={asset_version(path)}'
+    return re.sub(r'(assets/(?:people/[\w-]+|earth-texture)\.webp)(?!\?v=)', versioned, html)
+
+def team_domains():
+    """Render the homepage domain overview from the approved employee catalog."""
+    source = read_text('src/data/sage-catalog.js')
+    catalog = json.loads(source.split('=', 1)[1].strip().rstrip(';'))
+    domains = {}
+    for person in catalog['people']:
+        domains.setdefault(person['domain'], []).append(person)
+    cards = []
+    for domain, people in domains.items():
+        faces = ''.join(f'<img src="{escape(p["avatar"])}" width="44" height="44" alt="{escape(p["name"])}" loading="lazy" decoding="async">' for p in people[:5])
+        more = f'<span class="team-domain-more">+{len(people) - 5}</span>' if len(people) > 5 else ''
+        roles = ' · '.join(p['role'] for p in people[:2])
+        cards.append(f'<li><a href="pages/team.html#organization"><span class="team-domain-faces">{faces}{more}</span>'
+                     f'<strong>{escape(domain)}</strong><span class="team-domain-count">{len(people)} 个专业岗位</span>'
+                     f'<span class="team-domain-roles">{escape(roles)}</span></a></li>')
+    if sum(len(people) for people in domains.values()) != 50 or len(domains) != 8:
+        raise ValueError('Expected 50 specialist roles across 8 domains')
+    return (f'<ul class="team-domains">{"".join(cards)}</ul>'
+            '<a class="team-domains-link" href="pages/team.html#organization">查看全部岗位与职责 <span aria-hidden="true">→</span></a>')
+
+def write_search_files(directory):
+    urls = [url for name in INDEXED_PAGES for url in page_urls(name)]
+    (directory / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /sales/\n'
+                                          f'Sitemap: {SITE_URL}sitemap.xml\n', encoding='utf-8')
+    entries = ''.join(f'<url><loc>{url}</loc></url>' for url in urls)
+    (directory / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{entries}</urlset>\n', encoding='utf-8')
 
 def unify_page_shells():
     """Keep the retained English content, but rebuild its shared navigation styles."""
@@ -93,7 +154,7 @@ def unify_page_shells():
         html = re.sub(r'((?:src|href)=")([\w-]+\.(?:css|js))(?:\?v=[a-f0-9]+)?(")',
                       lambda m: m[1] + m[2] + '?v=' + sha256((path.parent / m[2]).read_bytes()).hexdigest()[:12] + m[3]
                       if (path.parent / m[2]).is_file() else m[0], html)
-        path.write_text(page_metadata(html, name, english), encoding='utf-8')
+        path.write_text(add_legal_line(page_metadata(html, name, english)), encoding='utf-8')
 
 def build():
     html = read_text("src/index.template.html")
@@ -104,12 +165,9 @@ def build():
         if relative_path == 'src/app.js':
             content = read_text('src/pages/site-shell.js') + '\n' + content
         html = html.replace(token, content)
-    # Keep portraits with the standalone homepage, including shared single-file copies.
-    for portrait in sorted(set(re.findall(r'assets/people/AGT-\d+\.webp', html))):
-        data = (ROOT / portrait).read_bytes()
-        if data[:4] != b'RIFF' or data[8:12] != b'WEBP':
-            raise ValueError(f"Invalid portrait: {portrait}")
-        html = html.replace(portrait, 'data:image/webp;base64,' + base64.b64encode(data).decode('ascii'))
+    if html.count('{{SAGE_TEAM_DOMAINS}}') != 1:
+        raise ValueError('Expected exactly one {{SAGE_TEAM_DOMAINS}} in the template')
+    html = version_homepage_assets(html.replace('{{SAGE_TEAM_DOMAINS}}', team_domains()))
     html = html.replace("</style>", read_text("src/sage-content.css") + "</style>")
     for filename, mime_type in ASSETS.items():
         token = "{{WORLD_PILOT_ASSET:" + filename + "}}"
@@ -129,9 +187,10 @@ def build():
     if draft:
         html = html.replace("<title>Sage · 你的出海 AI 团队</title>", "<title>Sage · 商务科技配色视觉稿</title>")
     destination = ROOT / ("visual-draft.html" if draft else "index.html")
-    destination.write_bytes(page_metadata(language_dropdown(html, 'index'), 'index').encode("utf-8"))
+    destination.write_bytes(add_legal_line(page_metadata(language_dropdown(html, 'index'), 'index')).encode("utf-8"))
     if not draft:
-        (ROOT / 'index-en.html').write_text(page_metadata(language_dropdown(english_homepage(html), 'index', True), 'index', True), encoding='utf-8')
+        (ROOT / 'index-en.html').write_text(add_legal_line(page_metadata(language_dropdown(english_homepage(html), 'index', True), 'index', True)), encoding='utf-8')
+        write_search_files(ROOT)
     if '--release' in sys.argv:
         output = ROOT / 'dist'
         output.mkdir(exist_ok=True)
@@ -141,6 +200,10 @@ def build():
         shutil.copytree(ROOT / 'assets/people', output / 'assets/people', dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns('*.json'))
         shutil.copy2(ROOT / 'assets/favicon.svg', output / 'assets/favicon.svg')
+        shutil.copy2(ROOT / 'assets/earth-texture.webp', output / 'assets/earth-texture.webp')
+        shutil.copytree(ROOT / 'assets/og', output / 'assets/og', dirs_exist_ok=True)
+        for entry in ('robots.txt', 'sitemap.xml'):
+            shutil.copy2(ROOT / entry, output / entry)
         shutil.copytree(ROOT / 'assets/brand', output / 'assets/brand', dirs_exist_ok=True)
     print(f"Built {destination.name} ({destination.stat().st_size:,} bytes)")
 
