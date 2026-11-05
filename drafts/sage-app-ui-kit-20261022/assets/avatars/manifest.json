@@ -1,7 +1,7 @@
 {
   "count": 53,
-  "source": "Sage-2.0 approved avatar collection 2026-10-22",
-  "processing": "Existing published 512x512 WebP copied byte-for-byte; no new image editing or encoding",
+  "source": "Sage-2.0 approved avatar collection 2026-11-05 (photo style, ID-photo framing D72)",
+  "processing": "Published 512x512 WebP from assets/people copied byte-for-byte; no new image editing or encoding",
   "avatars": [
     {
       "id": "MGMT-CEO",
@@ -10,8 +10,8 @@
       "path": "assets/avatars/MGMT-CEO.webp",
       "width": 512,
       "height": 512,
-      "sha256": "40c04079c42ca7bfe95d5f62ad5885a5de83989d6bac6802bcc3060d4a44d784",
-      "sourceSha256": "b3feae58a6433ecd33e2e85d2a3becfef8e284987afd9e39990372711a459181",
+      "sha256": "09f0fa137b413466621dfcb6348c06a8e6f907801b09c6a2a2f5cacf69684e29",
+      "sourceSha256": "57e5f28adb5670865e74d4ccb2bd9e994249ec650329e351c015516feb211c93",
       "type": "management"
     },
     {
@@ -21,8 +21,8 @@
       "path": "assets/avatars/MGMT-CGO.webp",
       "width": 512,
       "height": 512,
-      "sha256": "e3cdd3334870587a6afa3d5cc2445a45316c8a9cda78b6d9b7b3ee189fe9b4de",
-      "sourceSha256": "58f697f476e21860a5998f85f5fb290472532d043545e60e87512ad68d648da0",
+      "sha256": "56eec49ebd818512a6601d4a3c8df099468f9053c4e3bff6a7638df842b21b4c",
+      "sourceSha256": "cc8b5a4ce1b3c12c10ccf1971f9100ce09ed4c3f6b259f04da5b615bf02d38c0",
       "type": "management"
     },
     {
@@ -32,8 +32,8 @@
       "path": "assets/avatars/MGMT-CGOV.webp",
       "width": 512,
       "height": 512,
-      "sha256": "93b1b893cea6323bbe35d15874578d913a6660e03dd913794b9691f4f3ab2e01",
-      "sourceSha256": "8ef91fecd93b52eecb1ae6e22cda3f8dac1922c5df230bd770cbfec86102baf0",
+      "sha256": "5df5592a62fd2fc742d3932699a0ba44ef5cabc109d56179e2f28ce0c33d6721",
+      "sourceSha256": "4ba0bce01fc7385e32b551fb6b2d7cb16f09574f008a2b19e89680a4940b1514",
       "type": "management"
     },
     {
@@ -43,8 +43,8 @@
       "path": "assets/avatars/AGT-001.webp",
       "width": 512,
       "height": 512,
-      "sha256": "43673aa08a6fbb6204b21eeefddad67e1e957358773e342ac8127bf9a96efe34",
-      "sourceSha256": "cf7d1f42894ca576fb568628673c51ff6a9034780f008471d10694c0621b7d20",
+      "sha256": "007284a076c58c929be3bfc4664853774b6f973539b57cd10001406f39e2efb2",
+      "sourceSha256": "5d7765b6a40508dead1d3b50986b624f6218ec25f00e00b35208eee59bd00208",
       "type": "specialist"
     },
     {
@@ -54,8 +54,8 @@
       "path": "assets/avatars/AGT-002.webp",
       "width": 512,
       "height": 512,
-      "sha256": "5558cc9b84e0e7af29ea9d5df4a9018da6ed1ef85e13ef55d7d18937aca5bf26",
-      "sourceSha256": "c8935e5d285c51ed3abe51bb920cf0ebb8c463f40c2520b7bf2fbd9154b51b84",
+      "sha256": "1539518087a41b2cc13ab58d20236820f185e5cbbb61a425ff198367a181d885",
+      "sourceSha256": "c72f48268d63ed0427a56802deb67ecdf73f8211d07c1f0d8b983d2d2871966f",
       "type": "specialist"
     },
     {
@@ -65,8 +65,8 @@
       "path": "assets/avatars/AGT-003.webp",
       "width": 512,
       "height": 512,
-      "sha256": "7a79a16174a97c0f69a2f91b920075a0eb899743f879ff2e1e9397252aa36385",
-      "sourceSha256": "def60e446f11b4c6fe94cde53b454dcdb672157d451c0b73bb7cdb9b9ab0c926",
+      "sha256": "d16663f3af8d115a2b0b0ca2615fcb2ee3f332bb761a73f844433ae4bf256ce8",
+      "sourceSha256": "ae85c3a5af5e3967ff2d813b8c988bc6d273fb8eb8a6d51205a82a7dfad1572b",
       "type": "specialist"
     },
     {
@@ -76,8 +76,8 @@
       "path": "assets/avatars/AGT-004.webp",
       "width": 512,
       "height": 512,
-      "sha256": "23877bdcafbb63c7a551756cb204af745f75207a7d27e52c767fd10918bdcd15",
-      "sourceSha256": "3aa244417b15aca00af6968b6becb2cbe48126312d565ef56a902ee795d4930a",
+      "sha256": "3c2ef6084a8c5e56568184140a11287b71776fdf3945bd26dc0105c69fc3ffba",
+      "sourceSha256": "e668ac86cd127379377896462cdfdb3788034b0af51f2bf9aede18ca7dc84d38",
       "type": "specialist"
     },
     {
@@ -87,8 +87,8 @@
       "path": "assets/avatars/AGT-005.webp",
       "width": 512,
       "height": 512,
-      "sha256": "408026ce2f55672c63d411db259fb163f8eaa60b66102fec58a1e720d889a637",
-      "sourceSha256": "a6b8bef098fc3ee0fae13824d983bb4a0d6c7abcd40c576421f8eece756f0eb3",
+      "sha256": "3695e9b9d700515fc24915810bf451b76c27ebc6048b0df09b18c6954170620f",
+      "sourceSha256": "c82a43c0a939656907c37a31332c0a6f58ac9559c2c3f6071a5809071f7f07b5",
       "type": "specialist"
     },
     {
@@ -98,8 +98,8 @@
       "path": "assets/avatars/AGT-006.webp",
       "width": 512,
       "height": 512,
-      "sha256": "43bdf28d336eb831beade995e592c86c40f142bef99ebf99fa66f510370bcb53",
-      "sourceSha256": "6ed8c337caed1402f160cd49be030245ecde1783ace425fd07fb80a26060c61f",
+      "sha256": "15bdc9eafc088d83a26fdea0333b39aac1712a92bde5944628b430f89eb85d0b",
+      "sourceSha256": "f6725fb6f516debee68a642e308be6638387710ea695ce78076b4603e2f0a1dc",
       "type": "specialist"
     },
     {
@@ -109,8 +109,8 @@
       "path": "assets/avatars/AGT-007.webp",
       "width": 512,
       "height": 512,
-      "sha256": "fae3aa91938209ff59c913c485cb6f366d387644e8e6c895d54c617cec0906a7",
-      "sourceSha256": "2db64c50cf279a3c3c530a38d2bd749a0eeea2cf08ef84caefb0ef60a11631d1",
+      "sha256": "12dc9ce7536636a980a7873abe17c1229cc35f038fd2db4eac96bd6e9b444ba6",
+      "sourceSha256": "dc9bc615b6a9d98a237ddc31c2c4f1711d88b9a9e4e93ad5e12325a4c9942f4b",
       "type": "specialist"
     },
     {
@@ -120,8 +120,8 @@
       "path": "assets/avatars/AGT-008.webp",
       "width": 512,
       "height": 512,
-      "sha256": "24dd70206ee56ee91287fb08da92c35b12a35b270de74da9c9254fda6e01df75",
-      "sourceSha256": "4276720016ea81e941f24198c9670e7337db9099459cf220953c270d8035abdd",
+      "sha256": "c47e7586e38b4cbb2a63394c793bd72d652278e30f9ce323919eeee1397ff268",
+      "sourceSha256": "68e98fe5593242e02e58181469b94e1572cdb5ac8a4ad52edcf342a9ba0eb9d4",
       "type": "specialist"
     },
     {
@@ -131,8 +131,8 @@
       "path": "assets/avatars/AGT-009.webp",
       "width": 512,
       "height": 512,
-      "sha256": "94fe85d8632750d0cbeb5f1e034e034bd43bb2b3f49c1bea8c7ccfdad99e9e87",
-      "sourceSha256": "952f1cda9bdb4a121a2beb495e9f1797bdf3ba6e3bb942cb92c3f5becdd592a7",
+      "sha256": "1c1b83e4950c405450d9b2fedbdcd89372b79af1491fe8d552d8cb166555ad35",
+      "sourceSha256": "0478136fd88e77cda72827d718f0aa02ffb648ce8abefae15436f1f504bb7938",
       "type": "specialist"
     },
     {
@@ -142,8 +142,8 @@
       "path": "assets/avatars/AGT-010.webp",
       "width": 512,
       "height": 512,
-      "sha256": "b825c46efcd131a714807f86b84e6cf29264dc34d8c24e459c3fec7703d30d79",
-      "sourceSha256": "4ed62db3e793a07d4be761a33588789676ffc8ab47dbfb7254bc55325afac28c",
+      "sha256": "e7b15c7f1901cf851e18203551f1199e2bf52c6bb4260784f2fd7f046820cb92",
+      "sourceSha256": "31a8056b0560e64a4b32bf92124544cc059738ce2c717358dcef49528354f105",
       "type": "specialist"
     },
     {
@@ -153,8 +153,8 @@
       "path": "assets/avatars/AGT-011.webp",
       "width": 512,
       "height": 512,
-      "sha256": "5754f7eadaa89898fcea6b867fb9d6070f46885228a5fdd5cfb9715e12e7aa9c",
-      "sourceSha256": "c75a430f1e2ad25c94c108c22249d31fabd423889c66117a4f54a3482eb9cffd",
+      "sha256": "c31b37e3ca80b006bbceae3d8e6feeef182a8ca1643ee866dfd2de4c02529e7d",
+      "sourceSha256": "90dabea5a06149d55ac9b7d87899feb83a7a104fb51378beea0c28a5bbab3b5d",
       "type": "specialist"
     },
     {
@@ -164,8 +164,8 @@
       "path": "assets/avatars/AGT-012.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3d5da3363f1bf7c4bc713e5cb8d87efaf7723077ec19822a0381932fa8e8dc0b",
-      "sourceSha256": "2fe2b069fed862c2277cd3efe33630d5f7e0b7ece4a7306ed609b57db2e7b173",
+      "sha256": "6f83706246df1da5f3e073761f28fa8b5cf257814bdc72d960df228ed55a6e89",
+      "sourceSha256": "7736bf691d57a58a7182d571d5cd11fa8b4e9b6c09dc9771c621952a546fdfe7",
       "type": "specialist"
     },
     {
@@ -175,8 +175,8 @@
       "path": "assets/avatars/AGT-013.webp",
       "width": 512,
       "height": 512,
-      "sha256": "6d4e6a5399d49cd05c4941637419215fb295f2c7172cd53595fadcacb55ec95d",
-      "sourceSha256": "eb4c6b3659042273f23092405892f8dbb970ae0a933f8cbcad5bc4266f8abe4a",
+      "sha256": "4ce9af665c9ee045f1a14b9f2d825d9bb214bf2a23e305d6bc5df96a67add06b",
+      "sourceSha256": "ca6656b428b2714a9baf877ebac697da22c6673dba9a0794a4e1e8a8b9e2fbcd",
       "type": "specialist"
     },
     {
@@ -186,8 +186,8 @@
       "path": "assets/avatars/AGT-014.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3d2de58f5a833590d39642a5cca673e4780cffc54e3e755aba2362864cc49e2c",
-      "sourceSha256": "2ed80d92aad9e3aa3115ebe74aa7ca276250003cbaa93a0bd5176b9fbd707697",
+      "sha256": "73a23cff0666ae65d47b5b87375ed1592e171b0f7300240f11a25b447bf8b8d8",
+      "sourceSha256": "5a16af0ed6b2d097980e910f1ced417a9086a2fd6ad7135edab2eb20e1bfadeb",
       "type": "specialist"
     },
     {
@@ -197,8 +197,8 @@
       "path": "assets/avatars/AGT-015.webp",
       "width": 512,
       "height": 512,
-      "sha256": "9da5a8ad4106277bd3d9a0b38a6b3d2f3d58f0ad8f9af5a538b153d7a00ff9e9",
-      "sourceSha256": "602d0dc00f0380e7f3468c67ea58da7317d9eae9c434ad53820f30df0b78f4f1",
+      "sha256": "991a347c6a7e03093b87de376350068f091c55b44923dc433b700645fecc5064",
+      "sourceSha256": "e8d09c389af4e7a5586fefb25715b931ba819543527bd8d61f2c5a80926bebcd",
       "type": "specialist"
     },
     {
@@ -208,8 +208,8 @@
       "path": "assets/avatars/AGT-016.webp",
       "width": 512,
       "height": 512,
-      "sha256": "8bceb6c40bd534cfeeb0693ac6fa990008e2c6aded4634bb57af7793e330a1ab",
-      "sourceSha256": "e464ccae7fa2a0d6780240818c5fdfb1cb031a64c388de644ff8361a675e70d8",
+      "sha256": "d43d4bb95c8fe3c9c035c8ad266b4774907955643767be445bc0a4f9169f5a14",
+      "sourceSha256": "e2fb335d39cad16234844225fd6dacdb6b57e0a9988c2ac9354aa5edb9fa8153",
       "type": "specialist"
     },
     {
@@ -219,8 +219,8 @@
       "path": "assets/avatars/AGT-017.webp",
       "width": 512,
       "height": 512,
-      "sha256": "9b0659e6e2b2fbec6cc9f95e061e86bd79c30aa7f78c3bec49b785eac38024ce",
-      "sourceSha256": "b027b91e4c09c84988ad38a49f68589f50339af59e57f34e7204732af94e419b",
+      "sha256": "f68393b5fef504da00954afae5d1d4832a002cd16d9c3f5ad610e61522e12918",
+      "sourceSha256": "07d0ba4fadb26bbaa898f71782d78b94866cc483a7af9d1c95e2af15448c56e6",
       "type": "specialist"
     },
     {
@@ -230,8 +230,8 @@
       "path": "assets/avatars/AGT-018.webp",
       "width": 512,
       "height": 512,
-      "sha256": "88e78a248cd37c377219b67096e58b18967fbc40106644c4be49802cd3287588",
-      "sourceSha256": "1944c45949cb1be0518e01ad36048e8c8426daec36e5a9bfb6f66c4b9650562b",
+      "sha256": "9b8011e994c60a882f05d705950a6dccb987c7480c167777d29be8c759176307",
+      "sourceSha256": "81c03afd997490befca27662204b1364fac185127f6307fca05e259d7228914b",
       "type": "specialist"
     },
     {
@@ -241,8 +241,8 @@
       "path": "assets/avatars/AGT-019.webp",
       "width": 512,
       "height": 512,
-      "sha256": "700ae78b1f289155d03b5b17a607d9d1abb280e6346a481612d2592bc600acce",
-      "sourceSha256": "03e567c0673f4041c61834b5cad80b09d1df6a504923cb4c3d4d7ad9ef024337",
+      "sha256": "1b36d719f79971741f74cf5378e1670dbf647a43f43f16138067a5774d2e1af1",
+      "sourceSha256": "fad3659abe79e183f96f647b234632c12e3b04e92323b908e67a9f6b62864a3a",
       "type": "specialist"
     },
     {
@@ -252,8 +252,8 @@
       "path": "assets/avatars/AGT-020.webp",
       "width": 512,
       "height": 512,
-      "sha256": "b46e48d72bcf3194445d3693b661160bd5dda2c19f1db01c3dd3c186446d68a0",
-      "sourceSha256": "095377c75c4ce664243e5b560457e33d5217cdddbd0f79a769c056cb3baab82f",
+      "sha256": "49e7d24df9711db8ad0fa4ffae60185b93e2dcf0cbbccfd07de67e5f80fa3242",
+      "sourceSha256": "59650817bfe60037f1126e0d5a3b95d8d2994df86585cd06a66485da842634bf",
       "type": "specialist"
     },
     {
@@ -263,8 +263,8 @@
       "path": "assets/avatars/AGT-021.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3f36b2f5921e851f10372f1973525b8326d868f88c535288e6e9707ba833eb3b",
-      "sourceSha256": "1a9f7dddb5b3161ef42d56d2c1ac3033473fb86b475920db8a400bda6ce1e123",
+      "sha256": "b94cf2474f2e1b7b141e2ea43a4242369ca80338f29717eb5e8cdd03eea5a64f",
+      "sourceSha256": "61a24aa79c0196d65b86d94d6edc3b74d7dc4ecfe79ebbe817da9041f8e94995",
       "type": "specialist"
     },
     {
@@ -274,8 +274,8 @@
       "path": "assets/avatars/AGT-022.webp",
       "width": 512,
       "height": 512,
-      "sha256": "2f100397f2281d94aaaefc6eddd6f66e452cc7d5c8d72a8ba423e20f2629279d",
-      "sourceSha256": "cca487416668302e81645bee48619ce4ea4beacea08538912ebf582d40fa7e0f",
+      "sha256": "1126d4f5ebae3fada3ffa619d6c7c13cf9caf07da5682505ecabf9f4efc845a2",
+      "sourceSha256": "b6bb6c5036bd2d6f3451826f462f8010baabd0d35497f7942808c13f64e9cac1",
       "type": "specialist"
     },
     {
@@ -285,8 +285,8 @@
       "path": "assets/avatars/AGT-023.webp",
       "width": 512,
       "height": 512,
-      "sha256": "03265fd563619f52981c135a1d5e0525009f9ec9bafe64cb83ab71452dd94b2f",
-      "sourceSha256": "ef878bca266948c191ada658f221bc2edea920031bcff8a0ed1514527f1a8427",
+      "sha256": "31b05e06c063bd4c0df1d669d483154608e3f3fd0e6e7c8065870b7b445ba02a",
+      "sourceSha256": "ad69292bb32581026ce0ef28f79b736e381460e2472b17b4f4148a2e8b1e6456",
       "type": "specialist"
     },
     {
@@ -296,8 +296,8 @@
       "path": "assets/avatars/AGT-024.webp",
       "width": 512,
       "height": 512,
-      "sha256": "0e197669012e2e337dc813e50ec4d45c0a45ec9d7a9115895ea32e81b8e9d38d",
-      "sourceSha256": "03cfa6cfeec0b592fc3eb67db309053e706a91bcbae6fbc4845692239025ca90",
+      "sha256": "a51b22341034a1822b7cdd918523bc1ded6c66ed608dca3e2c6b6805d7e29905",
+      "sourceSha256": "75df6b777a928e4955a665b4e33da73dafdb777d71c8a4c5eba486dcdbd06fd7",
       "type": "specialist"
     },
     {
@@ -307,8 +307,8 @@
       "path": "assets/avatars/AGT-025.webp",
       "width": 512,
       "height": 512,
-      "sha256": "c4294f4174fd30e27521b9136e00e45c757528436a19d97ee060f061a87bf541",
-      "sourceSha256": "75477e10f4fe7b2a2eaa11ce51caf1b5f88db84d10658e60d7cb37a816687c96",
+      "sha256": "66e27190e03b6f02c25b23716584af2d535a95dc05ffaee1115ef0cffbf789ac",
+      "sourceSha256": "73bc99fa3aefab3992fc6451ce9886ad44d7c085d376f4c99dbd6f6e28fe4f01",
       "type": "specialist"
     },
     {
@@ -318,8 +318,8 @@
       "path": "assets/avatars/AGT-026.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3fa76ba32c3a3c40fdf05ed2309244094017c60ec274feff89b3a842f3ec07b5",
-      "sourceSha256": "402e327c8d74efd06af01892fdc8455e831ecb3cab7730401fdcd3138d8faaae",
+      "sha256": "ab459b3b50e6a81fc4d1a76447063bb42a6f75445b3caa3a33592d4f41e2f219",
+      "sourceSha256": "102f69d9b1002fc46a373663e1b8f71a0316444f4d444d02d6796fb87a9b6167",
       "type": "specialist"
     },
     {
@@ -329,8 +329,8 @@
       "path": "assets/avatars/AGT-027.webp",
       "width": 512,
       "height": 512,
-      "sha256": "37954860c647b35b4e04ece45a3a3743540e17908551c53201eca589f6526059",
-      "sourceSha256": "75dddb0aba461d9d2740a94429ee273a02b3ad93b3d1b00a7f93b8d60d0595a6",
+      "sha256": "a832c2de87aa5f9b13bf6796fb1251c92cc9b393cc5861f1a32bbc6f1976f6c5",
+      "sourceSha256": "4b66929edf0bc0a91d5d7237a2601b0e2986ea8aada40470ff093f4213134667",
       "type": "specialist"
     },
     {
@@ -340,8 +340,8 @@
       "path": "assets/avatars/AGT-028.webp",
       "width": 512,
       "height": 512,
-      "sha256": "d2ccdf77f3fcd827cae6c1f07abf05206357c4a3727005e815a5038016f87327",
-      "sourceSha256": "62c8682e7aa2a23e8162580783d8a7a56347fe36a3a1a647bad28e1fff5c674e",
+      "sha256": "eebf7c7eb70941d48e998b55acfd11ce2bbe14ac5b6d714d19c8ac35eb6c6307",
+      "sourceSha256": "761821f9d5977cb47cfb3dd9b690267de8acdb5247607bb15982b853b3913927",
       "type": "specialist"
     },
     {
@@ -351,8 +351,8 @@
       "path": "assets/avatars/AGT-029.webp",
       "width": 512,
       "height": 512,
-      "sha256": "40fda256a09899da9caec3792bfa887a4edb35efeb835d2c5b0fdf9bedcec5b0",
-      "sourceSha256": "2e9bc1cccacdce30561952087aa505c418996f16271403781219ac5994d648cd",
+      "sha256": "83666e466dc98bae0e7efa7545f1dab50823f1cbb094f89ee95ea4316ee1f563",
+      "sourceSha256": "7e6a6c49f2c950dc58ffeaf93cd0d1d8b98347f51130bf0ee30ee071b18235a9",
       "type": "specialist"
     },
     {
@@ -362,8 +362,8 @@
       "path": "assets/avatars/AGT-030.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3b908e1028ad3a697a673f582a549e6ba54566f0860879eb7b2cd002622bab8d",
-      "sourceSha256": "7bae8aef378c9258cc880af491f3e13818c0b5ae3b04fe57becc0f6da30ddad2",
+      "sha256": "c11d184785d8ec397fd2fe2e23cb1ba30dc2d4fb49839a014753760e2b664446",
+      "sourceSha256": "d78cca1bccd1da1660cd162f5d466a110ef9038f5aac5a69b14e8de0733e3c2e",
       "type": "specialist"
     },
     {
@@ -373,8 +373,8 @@
       "path": "assets/avatars/AGT-031.webp",
       "width": 512,
       "height": 512,
-      "sha256": "28729210ebeeba1af91626285c140dfa64909a4c924348381db272cd18e6d8a1",
-      "sourceSha256": "22a90b96c8f042031a0c0a03903ee31e87a02710ae002ef7fbca63fef23f990b",
+      "sha256": "45cb394d59cf1a409403fcb24400daf97edbdeae7031a3fe7dee157d496607e4",
+      "sourceSha256": "8311b2f27de784e3be482e6c4c98b589a8ce743947db75a5be202fe6f4ade20d",
       "type": "specialist"
     },
     {
@@ -384,8 +384,8 @@
       "path": "assets/avatars/AGT-032.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3dec02315f183c59383fd77d31e28d7e7e0f1dd4e0f9c399b27a9f37f626ae49",
-      "sourceSha256": "59718b6feadecc4a7f9a7d0c8b87ee5b5966a0eb5a597e8616f5cb9d058c6327",
+      "sha256": "8b75ebb9da2b6965a01a5a6c6e18df90e9f281548c05d935c6ab174f215f6fa9",
+      "sourceSha256": "e6dd7c4a937228940ef5c0a434dd2cda2db339ee92494d19be4964293ae824d6",
       "type": "specialist"
     },
     {
@@ -395,8 +395,8 @@
       "path": "assets/avatars/AGT-033.webp",
       "width": 512,
       "height": 512,
-      "sha256": "5ae8612bdcd1fa2b79047e05dd61246f8e5463026cfe8d21af57f1a26d85a39f",
-      "sourceSha256": "51dd0a548cf86e8a2ba9482cbee17bf9837dd43bd58bba75b710ce9edf5041da",
+      "sha256": "d36bddc1b93f7e27e0380835e198351694dbc10875cf198e7f79f5134837f171",
+      "sourceSha256": "d10ea937ca71337af54f8d34bf36a1edbc45b3e1cdf3819691fa639958a7d198",
       "type": "specialist"
     },
     {
@@ -406,8 +406,8 @@
       "path": "assets/avatars/AGT-034.webp",
       "width": 512,
       "height": 512,
-      "sha256": "9ea9b65775d4dad95ee5ba07a625cfb4fc0c178f857829909a6b0e7ee0418b53",
-      "sourceSha256": "b05095b971094f4731cea75e3ec66c0746d7c03be25812ed990b3e0a3b00d876",
+      "sha256": "decc38c93e716abc174c309b1071601232cf8b0bb3c0da2c3a5df9794a6aa527",
+      "sourceSha256": "290afbedab7386e5c6fcea20a1340748b1f8bd22f39913d5019a7da157c14ec6",
       "type": "specialist"
     },
     {
@@ -417,8 +417,8 @@
       "path": "assets/avatars/AGT-035.webp",
       "width": 512,
       "height": 512,
-      "sha256": "52d00b3d0bb564c5a7820739f117317dc8b9173c08ab93e6696fd160065db409",
-      "sourceSha256": "b86fba9633322cdf30b65a8b818e295d4942a90aa326d298763cc8041be2c9bb",
+      "sha256": "c2a4517904bee1ce02547a685c426834138d32daa1ec7507fa06af7f50b75fc3",
+      "sourceSha256": "b343f0940cd5407f2a73d1d318ea30e75714c7b2232bbf6b21e90eed2fcaa433",
       "type": "specialist"
     },
     {
@@ -428,8 +428,8 @@
       "path": "assets/avatars/AGT-036.webp",
       "width": 512,
       "height": 512,
-      "sha256": "de9083b7cdf8f27b83f6625c98671597020bb7baeb2e8dafa10d1b67784a257a",
-      "sourceSha256": "7f49b393d8c67baa4d411cbdb8a5b0468e06503cd4bfa4d840d36c5abce15be6",
+      "sha256": "75da091a64d6ec392be36d0944f732362c7ac3286638e2ce058d5fb538fbd580",
+      "sourceSha256": "7d4da4e7619dd0f112444613dcbe502b21a6856f767113a98692f2726275c50e",
       "type": "specialist"
     },
     {
@@ -439,8 +439,8 @@
       "path": "assets/avatars/AGT-037.webp",
       "width": 512,
       "height": 512,
-      "sha256": "d14c2b53e50aba2c0646b67b62d8b3d271a5aadad0b2c2883469bdf6b37acc67",
-      "sourceSha256": "e0e506bfe22971ed9104a83cde677085f47f8d1ad4f21a8cb9ca95174c75b1b4",
+      "sha256": "efc34aeff9c6061ec73b268ffbbc3dc3fb8a31aa8fbf6e6b9c2d99da3c0eb780",
+      "sourceSha256": "a691fa480ccb28fe6691606eb0202a343a1e388e831fb3d0aa6822a522ed570e",
       "type": "specialist"
     },
     {
@@ -450,8 +450,8 @@
       "path": "assets/avatars/AGT-038.webp",
       "width": 512,
       "height": 512,
-      "sha256": "3ce882e46ec9a03ecaf6998fd08955f8ef050ecf097090949772612ffe9b8e49",
-      "sourceSha256": "e5f649827a4d6933feb27b54ca7e025e3476a9c4a8c8e329bead0768b9d60ca1",
+      "sha256": "b68ca748280cffc4ca6b16a099c86104db069584a6dc09caed9f9120a7527bf2",
+      "sourceSha256": "56b312f9bcf21584fb7a3bbc25843172b088602b88d0a0d261e4ca762e3a23da",
       "type": "specialist"
     },
     {
@@ -461,8 +461,8 @@
       "path": "assets/avatars/AGT-039.webp",
       "width": 512,
       "height": 512,
-      "sha256": "d16ee838bdd2e19adf28b29499b15dc7371d8f9f2cd1269ec3ec994e9c2e06d6",
-      "sourceSha256": "aa39ed319a2836154822e1b477f90b28194fb911b3d514b285b5138cdf73ca24",
+      "sha256": "bc6a09d7da13149718d4dcfbd2f15f9e92d4367eb30616081125508cd28f8b0e",
+      "sourceSha256": "0169843d8cfc96ba770747cccb02555c2a9c146bac389e2617a2ea7544926a0d",
       "type": "specialist"
     },
     {
@@ -472,8 +472,8 @@
       "path": "assets/avatars/AGT-040.webp",
       "width": 512,
       "height": 512,
-      "sha256": "64e9d6ac9203be04dd72140c8a601548a91c9f13c92717724840c575edb58847",
-      "sourceSha256": "af593466368bd939fb793e9a9b9474c84d8c669e38187a46d8cc709fbb57a538",
+      "sha256": "e3ad3f8014e40e44ebb160a1469ffec5acfb999864e760e1dfc0717f5c73b272",
+      "sourceSha256": "fd2187e678a08950136a6a9a76450e0865993f73944d77f46fa0f932d430151d",
       "type": "specialist"
     },
     {
@@ -483,8 +483,8 @@
       "path": "assets/avatars/AGT-041.webp",
       "width": 512,
       "height": 512,
-      "sha256": "e8560810be38e98e807d7def34c72c503f3e772c9c953d348a66e84645344e1a",
-      "sourceSha256": "8a53415d543491f3eb58c9f7daf9b28c71d4de12f92fd089c3398788642d39dc",
+      "sha256": "c25dc279e3073daaaaf6c5c41fd6516810941bf4f13203d5ca384225161c5849",
+      "sourceSha256": "38bafe565e38a7e9fbd838a80897af864ca9a585f11b82198d478b7a1a9990f0",
       "type": "specialist"
     },
     {
@@ -494,8 +494,8 @@
       "path": "assets/avatars/AGT-042.webp",
       "width": 512,
       "height": 512,
-      "sha256": "bfbb88a16306be67e9b0cfcfdec7dbb92417f11fb45005d30e8bc9c3c395f480",
-      "sourceSha256": "789f4dfb0f2b3ebdd45347f9e6eaf7af2cfceeebd481551ea119795dce677ab8",
+      "sha256": "e346ae653e3696b1d4cb7289fac1c39e06c91ef78868fec612688ea2088772b0",
+      "sourceSha256": "6f9b3d1b1111ecd3dd92eeb9549d385d863991090a7a061477329c91b6bc2f95",
       "type": "specialist"
     },
     {
@@ -505,8 +505,8 @@
       "path": "assets/avatars/AGT-043.webp",
       "width": 512,
       "height": 512,
-      "sha256": "74eed94dbb93714981917c0bcefb72aadeb7c902b9efcb11e0aa33e8bf6b14a1",
-      "sourceSha256": "4a0293626ea8490fa5d5285b4962aa54df6bf3bbadfceedb5671b9f225878704",
+      "sha256": "c7091baf4e27c1c64630cc47aabb9c83230ab84c4155be3d317e2e4819814d25",
+      "sourceSha256": "3d574fc4a7bd1400ca9cec4058893036f7ba2788fb81a2a5e0344648b961dd22",
       "type": "specialist"
     },
     {
@@ -516,8 +516,8 @@
       "path": "assets/avatars/AGT-044.webp",
       "width": 512,
       "height": 512,
-      "sha256": "1c32ebf49e1819a753f57d48e97e829a93e82317e40deba1eb394a7374bdc3be",
-      "sourceSha256": "94a26cdd34788f34656d388e27fbf1126c1a359fd549c7b2a0c91b363cb8d398",
+      "sha256": "55a479a82e9cb06cbc6d0f2b3136401be121d5325aa66eb95f31617754312c96",
+      "sourceSha256": "73f305c537fcb7f15f2fe197b3fd2b0f4415ea241afd4a3cc9bb2cce74c0d098",
       "type": "specialist"
     },
     {
@@ -527,8 +527,8 @@
       "path": "assets/avatars/AGT-045.webp",
       "width": 512,
       "height": 512,
-      "sha256": "1f1a22b530a1d4cb2b368c48a6e2cf396cbf939eacbf1f73d8ba3a9b93fa13ba",
-      "sourceSha256": "0a3d9b47e00700176e41782fcc43d613223a307abc3916164dac952ba753c9a0",
+      "sha256": "fae3d431db41b30eca063472a9569d44a84f755e05d58f982b931f2c529a21a8",
+      "sourceSha256": "b69f54627cd5119420e00b7d2f8ba5890fabe0b6272ae7e3b0371965804d4066",
       "type": "specialist"
     },
     {
@@ -538,8 +538,8 @@
       "path": "assets/avatars/AGT-046.webp",
       "width": 512,
       "height": 512,
-      "sha256": "430c956a51ab5f3d4f5817fdcba64a1ea9cbf7234b38c9fbf15aff671a15b99a",
-      "sourceSha256": "e3d9a4e68fce9cc28a39051f2f257346db70ea7ba1e6125bd4e1accff736331e",
+      "sha256": "9b1ce02a661bef68f91858d874162d7f32618498223b5b725988530fe72a5c59",
+      "sourceSha256": "0633e5eb2a4925862e85e28c9f0c3945bf94ded148897d2d49aadd3c967c3849",
       "type": "specialist"
     },
     {
@@ -549,8 +549,8 @@
       "path": "assets/avatars/AGT-047.webp",
       "width": 512,
       "height": 512,
-      "sha256": "521b3e43fd042b07a6ad2a0bd55873e5ef8554518aea227c088c13e8e98f1183",
-      "sourceSha256": "bc8e8d1c1fbb218190b2b7008eb6f115e7d719522a00e1f099f53c101a9dcec3",
+      "sha256": "860546c18eb6c49d40bdf94ff891759e572c99bd1f71627c45ecc79d0c5983bf",
+      "sourceSha256": "b5822cfa4c8a7b332484d6152adf14a44a1af54e531f7bc3fa1468d3eb13443c",
       "type": "specialist"
     },
     {
@@ -560,8 +560,8 @@
       "path": "assets/avatars/AGT-048.webp",
       "width": 512,
       "height": 512,
-      "sha256": "8405650c8a6264c46601f0a971f79f4770f0b99d1f2e7caf0b428d41f53c0f63",
-      "sourceSha256": "b731626657dd042f9d91aecca3043cec843f131158f988a9ea70ce5b7600bb76",
+      "sha256": "6214129ddb54b6923dc2be0400ecb16a2c2c5d1db241eca1d4adcdf1e9400911",
+      "sourceSha256": "03c31f9cf00eaf775634e45808d6487bf7c84c8ab902deec9cc010985c482ec9",
       "type": "specialist"
     },
     {
@@ -571,8 +571,8 @@
       "path": "assets/avatars/AGT-049.webp",
       "width": 512,
       "height": 512,
-      "sha256": "e7421784ca33d42df60c10786d39873063fec54198055dd594961d0db01d56fa",
-      "sourceSha256": "646dd9657426a25c7116cacdfd5a4dbeb92692e4b5791d0a968d1e735452ce07",
+      "sha256": "c0012b5531b45933f393d0c7ea84506834e201cf24b3992842e2133abd5ab6d3",
+      "sourceSha256": "749367ef0f021d05523f90aa4af072b8b130b3d46ec02688901748a0a4a93c74",
       "type": "specialist"
     },
     {
@@ -582,8 +582,8 @@
       "path": "assets/avatars/AGT-050.webp",
       "width": 512,
       "height": 512,
-      "sha256": "7362b97d62b0e29318827691a2e3594fabd8222ae92291232bb2f42ae213083b",
-      "sourceSha256": "11896848334ae829cbb4373c9e719a5592ebf68e5e425e43f2950be4f630895d",
+      "sha256": "e31c7b4807796ed91105c1f3d6b485964d11875626c04f854bb470d9bbf9350b",
+      "sourceSha256": "e8bb53e1c10abb1f5a95aba5a8f18a25f3ef44f5f5491309618d995bbfa0b50d",
       "type": "specialist"
     }
   ]

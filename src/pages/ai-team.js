@@ -33,3 +33,20 @@
     article.prepend(image);
   });
 })();
+
+// App demo on the team page: plays only while visible, never under reduced motion, and can always be paused.
+(function teamDemo(){
+ const video=document.querySelector('#at-demo-video'),toggle=document.querySelector('#at-demo-toggle'),steps=[...document.querySelectorAll('#at-demo-steps li')];
+ if(!video||!toggle)return;
+ const en=document.documentElement.lang==='en',motion=matchMedia('(prefers-reduced-motion: reduce)'),starts=steps.map(step=>Number(step.dataset.start));
+ let userPaused=false,inView=false;
+ const label=()=>{const playing=!video.paused;toggle.setAttribute('aria-pressed',String(playing));toggle.classList.toggle('is-playing',playing);toggle.querySelector('.at-demo-label').textContent=playing?(en?'Pause demo':'暂停演示'):(en?'Play demo':'播放演示');};
+ const play=()=>{video.preload='auto';const attempt=video.play();if(attempt)attempt.catch(()=>{});};
+ const chapter=()=>{let index=0;starts.forEach((start,i)=>{if(video.currentTime>=start)index=i;});steps.forEach((step,i)=>step.classList.toggle('is-active',i===index));};
+ video.addEventListener('play',label);video.addEventListener('pause',label);video.addEventListener('timeupdate',chapter);
+ toggle.addEventListener('click',()=>{if(video.paused){userPaused=false;play();}else{userPaused=true;video.pause();}});
+ steps.forEach((step,i)=>step.querySelector('.at-demo-seek').addEventListener('click',()=>{video.currentTime=starts[i];chapter();userPaused=false;play();}));
+ new IntersectionObserver(entries=>entries.forEach(entry=>{inView=entry.isIntersecting;if(inView&&!userPaused&&!motion.matches)play();else if(!inView)video.pause();}),{threshold:.4}).observe(video);
+ motion.addEventListener?.('change',()=>{if(motion.matches)video.pause();else if(inView&&!userPaused)play();});
+ chapter();label();
+})();

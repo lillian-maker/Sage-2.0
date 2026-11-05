@@ -162,7 +162,7 @@ def unify_page_shells():
                       lambda m: m[1] + m[2] + '?v=' + sha256((path.parent / m[2]).read_bytes()).hexdigest()[:12] + m[3]
                       if (path.parent / m[2]).is_file() else m[0], html)
         # Content-hash local images too, so the gateway can cache every versioned file for a year.
-        html = re.sub(r'(src=")((?:\.\./)?(?:icons|assets)/[\w/.-]+\.(?:webp|png|jpe?g|svg))(?:\?v=[a-f0-9]+)?(")',
+        html = re.sub(r'((?:src|poster)=")((?:\.\./)?(?:icons|assets)/[\w/.-]+\.(?:webp|png|jpe?g|svg|mp4))(?:\?v=[a-f0-9]+)?(")',
                       lambda m: m[1] + m[2] + '?v=' + sha256((path.parent / m[2]).read_bytes()).hexdigest()[:12] + m[3]
                       if (path.parent / m[2]).is_file() else m[0], html)
         path.write_text(add_legal_line(page_metadata(html, name, english), english=english), encoding='utf-8')

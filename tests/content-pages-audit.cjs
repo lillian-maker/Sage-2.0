@@ -81,11 +81,11 @@ for (const name of ['team','enterprise','docs']) {
 assert.ok(read('src/pages/team.html').includes('<strong>首席增长官 CGO</strong>'),'Management titles follow the App: CGO');
 assert.ok(read('src/pages/team.html').includes('<strong>首席治理官 CGOV</strong>'),'Management titles follow the App: CGOV');
 assert.ok(!read('src/pages/team.html').includes('CGOv'));
-const teamHero=read('src/pages/team.html').split('<section class="at-hero cp-dark"')[1].split('</section>')[0];
-const enterpriseHero=read('src/pages/enterprise.html').match(/<header class="ep-hero cp-dark"[\s\S]*?<\/header>/)[0];
-assert.ok(teamHero.includes('一条看得见的执行路径')&&teamHero.includes('class="at-plan"'),'Team hero shows how one task runs through the team');
+const teamHero=read('src/pages/team.html').split('<section class="at-hero"')[1].split('</section>')[0];
+const enterpriseHero=read('src/pages/enterprise.html').match(/<header class="ep-hero"[\s\S]*?<\/header>/)[0];
+assert.ok(teamHero.includes('关键处由你把关')&&teamHero.includes('id="at-demo-video"'),'Team hero plays the App orchestration and review demo');
 for(const hero of [teamHero,enterpriseHero])assert.ok(!hero.includes('<a '),'Hero actions must stay removed');
-assert.ok(teamHero.includes('界面示意 · 示例任务'),'Hero plan is labelled as an illustration');
+assert.equal((teamHero.match(/<li data-start=/g)||[]).length,6,'Six demo chapters: plan, orchestration, parallel work, human review, authorization, acceptance');
 assert.ok(!read('src/pages/team.html').includes('at-business-heading'),'Remove the screenshot business-problem section entirely');
 assert.ok(!read('src/pages/ai-team.css').includes('at-business-reading'),'No orphan styles for the removed section');
 assert.ok(!teamHero.includes('at-staff-directory'),'Hero does not repeat the roster');
@@ -104,7 +104,8 @@ assert.ok(read('src/pages/ai-team.css').includes('repeat(var(--staff-count),minm
 for(const note of ['工程方法参考','以上为业务判断示例','外部工程资料不代表'])assert.ok(!read('src/pages/team.html').includes(note),note);
 for(const note of ['企业实施结构示意，非实时操作界面','以上为实施与交付结构示意'])assert.ok(!read('src/pages/enterprise.html').includes(note),note);
 for(const removed of ['at-work-scene','at-domain-grid','data-person='])assert.ok(!read('src/pages/team.html').includes(removed),removed);
-for(const content of ['四种角色，责任从不含糊','七步闭环，你在关键处拍板','三张图，让每一次编排都有依据','越用，越懂你的业务','50 个专业岗位，覆盖出海经营全链路'])assert.ok(read('src/pages/team.html').includes(content),content);
+assert.ok(!read('src/pages/team.html').includes('方案参数'),'Unconfirmed orchestration limits stay off the page');
+for(const content of ['四种角色，责任从不含糊','七步闭环，你在关键处拍板','三张图，让每一次编排都有依据','越用，越懂你的业务','找到专家、了解专家、创建专家','50 个专业岗位，覆盖出海经营全链路'])assert.ok(read('src/pages/team.html').includes(content),content);
 assert.equal((read('src/pages/team.html').match(/<span class="at-loop-index">/g)||[]).length,7,'Seven-step closed loop');
 for(const removed of ['at-toolbar','at-scene-tools','id="at-status"','id="at-search"'])assert.ok(!read('src/pages/team.html').includes(removed),removed);
 assert.ok(!read('src/pages/ai-team.js').includes('at-ensemble-left'));

@@ -867,7 +867,7 @@ window.SAGE_CATALOG = {
       "title": "Customer journey and retention",
       "product": "客户旅程修复台",
       "deliverables": ["客户旅程事件", "旅程Problem diagnosis", "跨域体验修复包", "客户触达回执", "体验学习记录"],
-      "question": "客户在哪里Troubleshooting, 如何修复体验？",
+      "question": "客户在哪里遇到问题, 如何修复体验？",
       "output": "Customer recovery and retention plan",
       "owner": "AGT-034",
       "input": "去重客户事件, Authorization范围内的售前/售后/退货/CRM/反馈；Personal details最小化处理.",

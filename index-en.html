@@ -1110,20 +1110,6 @@ body[data-auth-page] #auth-reset-link{display:block;color:#396397}
 /* Pricing: the purchase status is read before the reference prices. */
 .pricing-page .notice{margin:0 0 20px;padding:12px 16px;border:1px solid #e4e9ef;border-top:1px solid #e4e9ef;border-radius:10px;background:#f4f7fb;color:#202b38;font-size:14px;line-height:1.6}
 .pricing-page .plan-pending dd{background:none;border:0;padding:0;color:#63758a;font-size:12px}
-/* Night-sky band: identical recipe to the homepage hero (base #030408, two faint tints, fine stars, no glow). */
-.cp-dark{position:relative;isolation:isolate;color:#f4f7fb;background:radial-gradient(ellipse at 72% 18%,#25426835,transparent 48%),radial-gradient(ellipse at 34% 78%,#25355230,transparent 50%),#030408;overflow:hidden}
-.cp-dark::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.85;background-image:radial-gradient(circle at 1px 387px,rgba(224,236,255,.95) 0 1.45px,transparent 2.45px),radial-gradient(circle at 203px 249px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px),radial-gradient(circle at 468px 122px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px),radial-gradient(circle at 389px 433px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px),radial-gradient(circle at 615px 339px,rgba(224,236,255,.65) 0 .95px,transparent 1.95px),radial-gradient(circle at 138px 196px,rgba(224,236,255,.65) 0 .55px,transparent 1.55px);background-size:640px 480px}
-.cp-dark :is(h1,h2,h3,dt,strong){color:#f4f7fb}
-.cp-dark :is(p,dd,li,span){color:#aab8ca}
-.cp-dark .cp-link{color:#cfe0f5}
-/* Pricing heading as a night-sky band. */
-.pricing-page .pricing-heading{position:relative;isolation:isolate;margin:0 calc(50% - 50vw) 40px;padding:88px 24px 64px;color:#f4f7fb;background:radial-gradient(ellipse at 72% 18%,#25426835,transparent 48%),radial-gradient(ellipse at 34% 78%,#25355230,transparent 50%),#030408}
-.pricing-page .pricing-heading h1{color:#f4f7fb}
-.pricing-page .pricing-heading p,.pricing-page .pricing-heading .eyebrow{color:#aab8ca}
-.pricing-page .pricing-heading .segmented{background:#ffffff14;border-color:#ffffff26}
-.pricing-page .pricing-heading .segmented button{color:#cfe0f5}
-.pricing-page .pricing-heading .segmented button[aria-pressed=true]{color:#14243a}
-.pricing-page .pricing-heading{margin-top:-56px}
 html[lang="en"] .v1 #hero-title{font-size:clamp(32px,3.1vw,52px);line-height:1.15;white-space:normal;max-width:100%;overflow-wrap:normal}
 html[lang="en"] .v1 #hero-title .hero-team-emphasis{font-size:1.08em;white-space:normal;display:inline}
 html[lang="en"] .hero-body{max-width:560px;line-height:1.65}
@@ -1238,7 +1224,7 @@ html[lang="en"] .nav-tools{gap:22px}
   <div class="section-heading"><h2 id="product-title">See how Sage works</h2><p>From question to delivery, every step of a business task can be checked.</p></div>
 <div class="work-demo"><figure class="work-video-frame"><video id="work-video" muted playsinline loop preload="none" poster="assets/video/sage-app-demo-poster.jpg?v=db335bf194d0" aria-label="Sage app demo: ask a question, confirm the plan, orchestrate and authorize, accept the result"><source src="assets/video/sage-app-demo.mp4?v=05225340036d" type="video/mp4"></video><button type="button" class="work-video-toggle" id="work-video-toggle" aria-pressed="false"><span class="work-video-icon" aria-hidden="true"></span><span class="work-video-label">Play demo</span></button><figcaption>Sage app demo · Sample data</figcaption></figure><ol class="work-steps" id="work-steps"><li data-start="0"><button type="button" class="work-step-seek" aria-label="Play: Ask a business question"></button><span class="work-step-index">01</span><svg aria-hidden="true"><use href="#wp-icon-goal"></use></svg><h3>Ask a business question</h3><p>Define the goal, scope, timeframe and constraints. For example: is it worth bringing small home appliances to Germany?</p></li><li data-start="6.7"><button type="button" class="work-step-seek" aria-label="Play: Specialists work in relay"></button><span class="work-step-index">02</span><svg aria-hidden="true"><use href="#wp-icon-orchestrator"></use></svg><h3>Specialists work in relay</h3><p>Sage assembles the roles the question needs. They research in parallel and review each other, and every handoff states its sources, scope and open assumptions.</p></li><li data-start="19.2"><button type="button" class="work-step-seek" aria-label="Play: Receive verifiable deliverables"></button><span class="work-step-index">03</span><svg aria-hidden="true"><use href="#wp-icon-receipt"></use></svg><h3>Receive verifiable deliverables</h3><p>Conclusions arrive with their evidence and an action plan. Anything that touches your store, funds or publishing runs only after you approve it.</p></li></ol></div></section>
 <section class="section ensemble-section" id="team" aria-labelledby="team-title"><div class="section-heading"><h2 id="team-title">53 digital employees, each a specialist</h2><p>Three management roles set direction. Fifty specialist roles span eight domains, each with defined responsibilities, methods and delivery standards.</p></div>
-<ul class="team-domains"><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-001.webp?v=43673aa08a6f" width="44" height="44" alt="Hengyuan" loading="lazy" decoding="async"><img src="assets/people/AGT-002.webp?v=5558cc9b84e0" width="44" height="44" alt="Shuheng" loading="lazy" decoding="async"><img src="assets/people/AGT-003.webp?v=7a79a16174a9" width="44" height="44" alt="Mingjing" loading="lazy" decoding="async"><img src="assets/people/AGT-004.webp?v=23877bdcafbb" width="44" height="44" alt="Zhiren" loading="lazy" decoding="async"><img src="assets/people/AGT-005.webp?v=408026ce2f55" width="44" height="44" alt="Shouheng" loading="lazy" decoding="async"></span><strong>Business and organization</strong><span class="team-domain-count">5 specialist roles</span><span class="team-domain-roles">Business goals and resource planning · Workflow orchestration and exception handling</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-006.webp?v=43bdf28d336e" width="44" height="44" alt="Tinglan" loading="lazy" decoding="async"><img src="assets/people/AGT-007.webp?v=fae3aa919382" width="44" height="44" alt="Wangye" loading="lazy" decoding="async"><img src="assets/people/AGT-008.webp?v=24dd70206ee5" width="44" height="44" alt="Tuoxin" loading="lazy" decoding="async"><img src="assets/people/AGT-009.webp?v=94fe85d86327" width="44" height="44" alt="Dingxing" loading="lazy" decoding="async"><img src="assets/people/AGT-010.webp?v=b825c46efcd1" width="44" height="44" alt="Yingwu" loading="lazy" decoding="async"><span class="team-domain-more">+3</span></span><strong>Product and innovation</strong><span class="team-domain-count">8 specialist roles</span><span class="team-domain-roles">Customer needs and voice-of-customer research · Market, competitor and opportunity research</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-014.webp?v=3d2de58f5a83" width="44" height="44" alt="Zeyuan" loading="lazy" decoding="async"><img src="assets/people/AGT-015.webp?v=9da5a8ad4106" width="44" height="44" alt="Qiyue" loading="lazy" decoding="async"><img src="assets/people/AGT-016.webp?v=8bceb6c40bd5" width="44" height="44" alt="Zhiliang" loading="lazy" decoding="async"><img src="assets/people/AGT-017.webp?v=9b0659e6e2b2" width="44" height="44" alt="Hengcang" loading="lazy" decoding="async"><img src="assets/people/AGT-018.webp?v=88e78a248cd3" width="44" height="44" alt="Zhishou" loading="lazy" decoding="async"><span class="team-domain-more">+2</span></span><strong>Supply and fulfillment</strong><span class="team-domain-count">7 specialist roles</span><span class="team-domain-roles">OEM sourcing and supplier collaboration · Procurement and contract fulfillment</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-021.webp?v=3f36b2f5921e" width="44" height="44" alt="Beichen" loading="lazy" decoding="async"><img src="assets/people/AGT-022.webp?v=2f100397f228" width="44" height="44" alt="Miwei" loading="lazy" decoding="async"><img src="assets/people/AGT-023.webp?v=03265fd56361" width="44" height="44" alt="Zihang" loading="lazy" decoding="async"><img src="assets/people/AGT-024.webp?v=0e197669012e" width="44" height="44" alt="Tuoyu" loading="lazy" decoding="async"><img src="assets/people/AGT-025.webp?v=c4294f4174fd" width="44" height="44" alt="Lianshang" loading="lazy" decoding="async"><span class="team-domain-more">+3</span></span><strong>Channel operations</strong><span class="team-domain-count">8 specialist roles</span><span class="team-domain-roles">Amazon business operations · Amazon listings and search optimization</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-029.webp?v=40fda256a098" width="44" height="44" alt="Liyan" loading="lazy" decoding="async"><img src="assets/people/AGT-030.webp?v=3b908e1028ad" width="44" height="44" alt="Xushi" loading="lazy" decoding="async"><img src="assets/people/AGT-031.webp?v=28729210ebee" width="44" height="44" alt="Huiying" loading="lazy" decoding="async"><img src="assets/people/AGT-032.webp?v=3dec02315f18" width="44" height="44" alt="Dianhuo" loading="lazy" decoding="async"><img src="assets/people/AGT-033.webp?v=5ae8612bdcd1" width="44" height="44" alt="Jieban" loading="lazy" decoding="async"><span class="team-domain-more">+2</span></span><strong>Brand and growth</strong><span class="team-domain-count">7 specialist roles</span><span class="team-domain-roles">Brand strategy and communications · Content and creative strategy</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-036.webp?v=de9083b7cdf8" width="44" height="44" alt="Anxin" loading="lazy" decoding="async"><img src="assets/people/AGT-037.webp?v=d14c2b53e50a" width="44" height="44" alt="Jieyou" loading="lazy" decoding="async"><img src="assets/people/AGT-038.webp?v=3ce882e46ec9" width="44" height="44" alt="Huisheng" loading="lazy" decoding="async"><img src="assets/people/AGT-039.webp?v=d16ee838bdd2" width="44" height="44" alt="Tongxing" loading="lazy" decoding="async"></span><strong>Service and experience</strong><span class="team-domain-count">4 specialist roles</span><span class="team-domain-roles">Presales support and purchase guidance · Customer complaints and service recovery</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-040.webp?v=64e9d6ac9203" width="44" height="44" alt="Qingzhang" loading="lazy" decoding="async"><img src="assets/people/AGT-041.webp?v=e8560810be38" width="44" height="44" alt="Shoujin" loading="lazy" decoding="async"><img src="assets/people/AGT-042.webp?v=bfbb88a16306" width="44" height="44" alt="Hezhang" loading="lazy" decoding="async"><img src="assets/people/AGT-043.webp?v=74eed94dbb93" width="44" height="44" alt="Lvheng" loading="lazy" decoding="async"><img src="assets/people/AGT-044.webp?v=1c32ebf49e18" width="44" height="44" alt="Anjie" loading="lazy" decoding="async"></span><strong>Finance and compliance</strong><span class="team-domain-count">5 specialist roles</span><span class="team-domain-roles">Sales settlement and accounting reconciliation · Business finance and cash management</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-045.webp?v=1f1a22b530a1" width="44" height="44" alt="Tongchi" loading="lazy" decoding="async"><img src="assets/people/AGT-046.webp?v=430c956a51ab" width="44" height="44" alt="Qingyuan" loading="lazy" decoding="async"><img src="assets/people/AGT-047.webp?v=521b3e43fd04" width="44" height="44" alt="Jieqiao" loading="lazy" decoding="async"><img src="assets/people/AGT-048.webp?v=8405650c8a62" width="44" height="44" alt="Jizhi" loading="lazy" decoding="async"><img src="assets/people/AGT-049.webp?v=e7421784ca33" width="44" height="44" alt="Wenxing" loading="lazy" decoding="async"><span class="team-domain-more">+1</span></span><strong>Data and AI operations</strong><span class="team-domain-count">6 specialist roles</span><span class="team-domain-roles">Business definitions and master data · Data engineering and quality</span></a></li></ul><a class="team-domains-link" href="pages/team-en.html#organization">See all roles and responsibilities <span aria-hidden="true">→</span></a><div class="team-principles"><a href="pages/team-en.html#organization"><span>Organization</span><strong>Clear responsibilities</strong></a><a href="pages/team-en.html#assets"><span>Reusable expertise</span><strong>Expertise that grows</strong></a><a href="pages/team-en.html#collaboration"><span>Collaboration</span><strong>Connected deliverables</strong></a><a href="pages/team-en.html#governance"><span>Agent governance</span><strong>Defined boundaries</strong></a></div></section>
+<ul class="team-domains"><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-001.webp?v=007284a076c5" width="44" height="44" alt="Hengyuan" loading="lazy" decoding="async"><img src="assets/people/AGT-002.webp?v=1539518087a4" width="44" height="44" alt="Shuheng" loading="lazy" decoding="async"><img src="assets/people/AGT-003.webp?v=d16663f3af8d" width="44" height="44" alt="Mingjing" loading="lazy" decoding="async"><img src="assets/people/AGT-004.webp?v=3c2ef6084a8c" width="44" height="44" alt="Zhiren" loading="lazy" decoding="async"><img src="assets/people/AGT-005.webp?v=3695e9b9d700" width="44" height="44" alt="Shouheng" loading="lazy" decoding="async"></span><strong>Business and organization</strong><span class="team-domain-count">5 specialist roles</span><span class="team-domain-roles">Business goals and resource planning · Workflow orchestration and exception handling</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-006.webp?v=15bdc9eafc08" width="44" height="44" alt="Tinglan" loading="lazy" decoding="async"><img src="assets/people/AGT-007.webp?v=12dc9ce75366" width="44" height="44" alt="Wangye" loading="lazy" decoding="async"><img src="assets/people/AGT-008.webp?v=c47e7586e38b" width="44" height="44" alt="Tuoxin" loading="lazy" decoding="async"><img src="assets/people/AGT-009.webp?v=1c1b83e4950c" width="44" height="44" alt="Dingxing" loading="lazy" decoding="async"><img src="assets/people/AGT-010.webp?v=e7b15c7f1901" width="44" height="44" alt="Yingwu" loading="lazy" decoding="async"><span class="team-domain-more">+3</span></span><strong>Product and innovation</strong><span class="team-domain-count">8 specialist roles</span><span class="team-domain-roles">Customer needs and voice-of-customer research · Market, competitor and opportunity research</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-014.webp?v=73a23cff0666" width="44" height="44" alt="Zeyuan" loading="lazy" decoding="async"><img src="assets/people/AGT-015.webp?v=991a347c6a7e" width="44" height="44" alt="Qiyue" loading="lazy" decoding="async"><img src="assets/people/AGT-016.webp?v=d43d4bb95c8f" width="44" height="44" alt="Zhiliang" loading="lazy" decoding="async"><img src="assets/people/AGT-017.webp?v=f68393b5fef5" width="44" height="44" alt="Hengcang" loading="lazy" decoding="async"><img src="assets/people/AGT-018.webp?v=9b8011e994c6" width="44" height="44" alt="Zhishou" loading="lazy" decoding="async"><span class="team-domain-more">+2</span></span><strong>Supply and fulfillment</strong><span class="team-domain-count">7 specialist roles</span><span class="team-domain-roles">OEM sourcing and supplier collaboration · Procurement and contract fulfillment</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-021.webp?v=b94cf2474f2e" width="44" height="44" alt="Beichen" loading="lazy" decoding="async"><img src="assets/people/AGT-022.webp?v=1126d4f5ebae" width="44" height="44" alt="Miwei" loading="lazy" decoding="async"><img src="assets/people/AGT-023.webp?v=31b05e06c063" width="44" height="44" alt="Zihang" loading="lazy" decoding="async"><img src="assets/people/AGT-024.webp?v=a51b22341034" width="44" height="44" alt="Tuoyu" loading="lazy" decoding="async"><img src="assets/people/AGT-025.webp?v=66e27190e03b" width="44" height="44" alt="Lianshang" loading="lazy" decoding="async"><span class="team-domain-more">+3</span></span><strong>Channel operations</strong><span class="team-domain-count">8 specialist roles</span><span class="team-domain-roles">Amazon business operations · Amazon listings and search optimization</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-029.webp?v=83666e466dc9" width="44" height="44" alt="Liyan" loading="lazy" decoding="async"><img src="assets/people/AGT-030.webp?v=c11d184785d8" width="44" height="44" alt="Xushi" loading="lazy" decoding="async"><img src="assets/people/AGT-031.webp?v=45cb394d59cf" width="44" height="44" alt="Huiying" loading="lazy" decoding="async"><img src="assets/people/AGT-032.webp?v=8b75ebb9da2b" width="44" height="44" alt="Dianhuo" loading="lazy" decoding="async"><img src="assets/people/AGT-033.webp?v=d36bddc1b93f" width="44" height="44" alt="Jieban" loading="lazy" decoding="async"><span class="team-domain-more">+2</span></span><strong>Brand and growth</strong><span class="team-domain-count">7 specialist roles</span><span class="team-domain-roles">Brand strategy and communications · Content and creative strategy</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-036.webp?v=75da091a64d6" width="44" height="44" alt="Anxin" loading="lazy" decoding="async"><img src="assets/people/AGT-037.webp?v=efc34aeff9c6" width="44" height="44" alt="Jieyou" loading="lazy" decoding="async"><img src="assets/people/AGT-038.webp?v=b68ca748280c" width="44" height="44" alt="Huisheng" loading="lazy" decoding="async"><img src="assets/people/AGT-039.webp?v=bc6a09d7da13" width="44" height="44" alt="Tongxing" loading="lazy" decoding="async"></span><strong>Service and experience</strong><span class="team-domain-count">4 specialist roles</span><span class="team-domain-roles">Presales support and purchase guidance · Customer complaints and service recovery</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-040.webp?v=e3ad3f8014e4" width="44" height="44" alt="Qingzhang" loading="lazy" decoding="async"><img src="assets/people/AGT-041.webp?v=c25dc279e307" width="44" height="44" alt="Shoujin" loading="lazy" decoding="async"><img src="assets/people/AGT-042.webp?v=e346ae653e36" width="44" height="44" alt="Hezhang" loading="lazy" decoding="async"><img src="assets/people/AGT-043.webp?v=c7091baf4e27" width="44" height="44" alt="Lvheng" loading="lazy" decoding="async"><img src="assets/people/AGT-044.webp?v=55a479a82e9c" width="44" height="44" alt="Anjie" loading="lazy" decoding="async"></span><strong>Finance and compliance</strong><span class="team-domain-count">5 specialist roles</span><span class="team-domain-roles">Sales settlement and accounting reconciliation · Business finance and cash management</span></a></li><li><a href="pages/team-en.html#organization"><span class="team-domain-faces"><img src="assets/people/AGT-045.webp?v=fae3d431db41" width="44" height="44" alt="Tongchi" loading="lazy" decoding="async"><img src="assets/people/AGT-046.webp?v=9b1ce02a661b" width="44" height="44" alt="Qingyuan" loading="lazy" decoding="async"><img src="assets/people/AGT-047.webp?v=860546c18eb6" width="44" height="44" alt="Jieqiao" loading="lazy" decoding="async"><img src="assets/people/AGT-048.webp?v=6214129ddb54" width="44" height="44" alt="Jizhi" loading="lazy" decoding="async"><img src="assets/people/AGT-049.webp?v=c0012b5531b4" width="44" height="44" alt="Wenxing" loading="lazy" decoding="async"><span class="team-domain-more">+1</span></span><strong>Data and AI operations</strong><span class="team-domain-count">6 specialist roles</span><span class="team-domain-roles">Business definitions and master data · Data engineering and quality</span></a></li></ul><a class="team-domains-link" href="pages/team-en.html#organization">See all roles and responsibilities <span aria-hidden="true">→</span></a><div class="team-principles"><a href="pages/team-en.html#organization"><span>Organization</span><strong>Clear responsibilities</strong></a><a href="pages/team-en.html#assets"><span>Reusable expertise</span><strong>Expertise that grows</strong></a><a href="pages/team-en.html#collaboration"><span>Collaboration</span><strong>Connected deliverables</strong></a><a href="pages/team-en.html#governance"><span>Agent governance</span><strong>Defined boundaries</strong></a></div></section>
 <section class="section assurance-section" id="trust" aria-labelledby="trust-title"><div class="section-heading"><h2 id="trust-title">Traceable evidence. Controlled action.</h2></div>
 <div class="assurance-tabs" role="group" aria-label="Choose a trust mechanism"><button type="button" data-assurance="evidence" aria-pressed="true">Evidence-backed decisions</button><button type="button" data-assurance="permission" aria-pressed="false">Authorization before action</button><button type="button" data-assurance="receipt" aria-pressed="false">Verifiable outcomes</button></div>
 <div class="sketch-frame"><div class="assurance-work" id="assurance-work" aria-live="polite"></div></div><div class="assurance-foot"><span>Independent review</span><i></i><span>Human decision rights</span><i></i><span>Versioning and audit</span></div></section>
@@ -1256,7 +1242,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Goals and resource allocation decisions",
       "domain": "Business and organization",
-      "avatar": "assets/people/AGT-001.webp?v=43673aa08a6f"
+      "avatar": "assets/people/AGT-001.webp?v=007284a076c5"
     },
     {
       "id": "AGT-002",
@@ -1265,7 +1251,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Orchestration rationale and autonomous-workflow exceptions",
       "domain": "Business and organization",
-      "avatar": "assets/people/AGT-002.webp?v=5558cc9b84e0"
+      "avatar": "assets/people/AGT-002.webp?v=1539518087a4"
     },
     {
       "id": "AGT-003",
@@ -1274,7 +1260,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Source-backed business analysis",
       "domain": "Business and organization",
-      "avatar": "assets/people/AGT-003.webp?v=7a79a16174a9"
+      "avatar": "assets/people/AGT-003.webp?v=d16663f3af8d"
     },
     {
       "id": "AGT-004",
@@ -1283,7 +1269,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Capability matrix and organizational recommendations",
       "domain": "Business and organization",
-      "avatar": "assets/people/AGT-004.webp?v=23877bdcafbb"
+      "avatar": "assets/people/AGT-004.webp?v=3c2ef6084a8c"
     },
     {
       "id": "AGT-005",
@@ -1292,7 +1278,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Review and remediation checklist",
       "domain": "Business and organization",
-      "avatar": "assets/people/AGT-005.webp?v=408026ce2f55"
+      "avatar": "assets/people/AGT-005.webp?v=3695e9b9d700"
     },
     {
       "id": "AGT-006",
@@ -1301,7 +1287,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Customer-needs evidence and issue map",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-006.webp?v=43bdf28d336e"
+      "avatar": "assets/people/AGT-006.webp?v=15bdc9eafc08"
     },
     {
       "id": "AGT-007",
@@ -1310,7 +1296,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Opportunity evidence and counterevidence",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-007.webp?v=fae3aa919382"
+      "avatar": "assets/people/AGT-007.webp?v=12dc9ce75366"
     },
     {
       "id": "AGT-008",
@@ -1319,7 +1305,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "New-product portfolio and continue-or-stop recommendations",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-008.webp?v=24dd70206ee5"
+      "avatar": "assets/people/AGT-008.webp?v=c47e7586e38b"
     },
     {
       "id": "AGT-009",
@@ -1328,7 +1314,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Product definition and business case",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-009.webp?v=94fe85d86327"
+      "avatar": "assets/people/AGT-009.webp?v=1c1b83e4950c"
     },
     {
       "id": "AGT-010",
@@ -1337,7 +1323,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Design and experience validation plan",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-010.webp?v=b825c46efcd1"
+      "avatar": "assets/people/AGT-010.webp?v=e7b15c7f1901"
     },
     {
       "id": "AGT-011",
@@ -1346,7 +1332,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Technical risks and engineering validation checklist",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-011.webp?v=5754f7eadaa8"
+      "avatar": "assets/people/AGT-011.webp?v=c31b37e3ca80"
     },
     {
       "id": "AGT-012",
@@ -1355,7 +1341,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Software proposal and validation evidence",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-012.webp?v=3d5da3363f1b"
+      "avatar": "assets/people/AGT-012.webp?v=6f83706246df"
     },
     {
       "id": "AGT-013",
@@ -1364,7 +1350,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Validation report and defect-resolution records",
       "domain": "Product and innovation",
-      "avatar": "assets/people/AGT-013.webp?v=6d4e6a5399d4"
+      "avatar": "assets/people/AGT-013.webp?v=4ce9af665c9e"
     },
     {
       "id": "AGT-014",
@@ -1373,7 +1359,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Supplier capabilities and risk profile",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-014.webp?v=3d2de58f5a83"
+      "avatar": "assets/people/AGT-014.webp?v=73a23cff0666"
     },
     {
       "id": "AGT-015",
@@ -1382,7 +1368,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Procurement recommendations and delivery exceptions",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-015.webp?v=9da5a8ad4106"
+      "avatar": "assets/people/AGT-015.webp?v=991a347c6a7e"
     },
     {
       "id": "AGT-016",
@@ -1391,7 +1377,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Replenishment plan and forecast intervals",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-016.webp?v=8bceb6c40bd5"
+      "avatar": "assets/people/AGT-016.webp?v=d43d4bb95c8f"
     },
     {
       "id": "AGT-017",
@@ -1400,7 +1386,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Inventory risks and resolution plan",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-017.webp?v=9b0659e6e2b2"
+      "avatar": "assets/people/AGT-017.webp?v=f68393b5fef5"
     },
     {
       "id": "AGT-018",
@@ -1409,7 +1395,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Quality incidents and corrective actions",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-018.webp?v=88e78a248cd3"
+      "avatar": "assets/people/AGT-018.webp?v=9b8011e994c6"
     },
     {
       "id": "AGT-019",
@@ -1418,7 +1404,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Transport plan and exception handling",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-019.webp?v=700ae78b1f28"
+      "avatar": "assets/people/AGT-019.webp?v=1b36d719f799"
     },
     {
       "id": "AGT-020",
@@ -1427,7 +1413,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Fulfillment and returns records",
       "domain": "Supply and fulfillment",
-      "avatar": "assets/people/AGT-020.webp?v=b46e48d72bcf"
+      "avatar": "assets/people/AGT-020.webp?v=49e7d24df971"
     },
     {
       "id": "AGT-021",
@@ -1436,7 +1422,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Amazon workflow action plan",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-021.webp?v=3f36b2f5921e"
+      "avatar": "assets/people/AGT-021.webp?v=b94cf2474f2e"
     },
     {
       "id": "AGT-022",
@@ -1445,7 +1431,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Listing and search improvement plan",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-022.webp?v=2f100397f228"
+      "avatar": "assets/people/AGT-022.webp?v=1126d4f5ebae"
     },
     {
       "id": "AGT-023",
@@ -1454,7 +1440,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "DTC operations and experiment plan",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-023.webp?v=03265fd56361"
+      "avatar": "assets/people/AGT-023.webp?v=31b05e06c063"
     },
     {
       "id": "AGT-024",
@@ -1463,7 +1449,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "New-channel entry and validation plan",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-024.webp?v=0e197669012e"
+      "avatar": "assets/people/AGT-024.webp?v=a51b22341034"
     },
     {
       "id": "AGT-025",
@@ -1472,7 +1458,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Channel opportunities and partnership recommendations",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-025.webp?v=c4294f4174fd"
+      "avatar": "assets/people/AGT-025.webp?v=66e27190e03b"
     },
     {
       "id": "AGT-026",
@@ -1481,7 +1467,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Pricing and promotion decisions",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-026.webp?v=3fa76ba32c3a"
+      "avatar": "assets/people/AGT-026.webp?v=ab459b3b50e6"
     },
     {
       "id": "AGT-027",
@@ -1490,7 +1476,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Account health and remediation recommendations",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-027.webp?v=37954860c647"
+      "avatar": "assets/people/AGT-027.webp?v=a832c2de87aa"
     },
     {
       "id": "AGT-028",
@@ -1499,7 +1485,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Localized content and market differences",
       "domain": "Channel operations",
-      "avatar": "assets/people/AGT-028.webp?v=d2ccdf77f3fc"
+      "avatar": "assets/people/AGT-028.webp?v=eebf7c7eb709"
     },
     {
       "id": "AGT-029",
@@ -1508,7 +1494,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Brand principles and communications plan",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-029.webp?v=40fda256a098"
+      "avatar": "assets/people/AGT-029.webp?v=83666e466dc9"
     },
     {
       "id": "AGT-030",
@@ -1517,7 +1503,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Content plan and evidence references",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-030.webp?v=3b908e1028ad"
+      "avatar": "assets/people/AGT-030.webp?v=c11d184785d8"
     },
     {
       "id": "AGT-031",
@@ -1526,7 +1512,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Versioned channel creative assets",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-031.webp?v=28729210ebee"
+      "avatar": "assets/people/AGT-031.webp?v=45cb394d59cf"
     },
     {
       "id": "AGT-032",
@@ -1535,7 +1521,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Advertising actions and performance report",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-032.webp?v=3dec02315f18"
+      "avatar": "assets/people/AGT-032.webp?v=8b75ebb9da2b"
     },
     {
       "id": "AGT-033",
@@ -1544,7 +1530,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Partner candidates and attribution evidence",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-033.webp?v=5ae8612bdcd1"
+      "avatar": "assets/people/AGT-033.webp?v=d36bddc1b93f"
     },
     {
       "id": "AGT-034",
@@ -1553,7 +1539,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Customer engagement plan and experiment results",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-034.webp?v=9ea9b65775d4"
+      "avatar": "assets/people/AGT-034.webp?v=decc38c93e71"
     },
     {
       "id": "AGT-035",
@@ -1562,7 +1548,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Experiment protocol and continue-or-stop decision",
       "domain": "Brand and growth",
-      "avatar": "assets/people/AGT-035.webp?v=52d00b3d0bb5"
+      "avatar": "assets/people/AGT-035.webp?v=c2a4517904be"
     },
     {
       "id": "AGT-036",
@@ -1571,7 +1557,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Evidence-backed presales responses and leads",
       "domain": "Service and experience",
-      "avatar": "assets/people/AGT-036.webp?v=de9083b7cdf8"
+      "avatar": "assets/people/AGT-036.webp?v=75da091a64d6"
     },
     {
       "id": "AGT-037",
@@ -1580,7 +1566,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Complaint cases and recovery recommendations",
       "domain": "Service and experience",
-      "avatar": "assets/people/AGT-037.webp?v=d14c2b53e50a"
+      "avatar": "assets/people/AGT-037.webp?v=efc34aeff9c6"
     },
     {
       "id": "AGT-038",
@@ -1589,7 +1575,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Experience issues and root-cause hypotheses",
       "domain": "Service and experience",
-      "avatar": "assets/people/AGT-038.webp?v=3ce882e46ec9"
+      "avatar": "assets/people/AGT-038.webp?v=b68ca748280c"
     },
     {
       "id": "AGT-039",
@@ -1598,7 +1584,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Educational content and service feedback",
       "domain": "Service and experience",
-      "avatar": "assets/people/AGT-039.webp?v=d16ee838bdd2"
+      "avatar": "assets/people/AGT-039.webp?v=bc6a09d7da13"
     },
     {
       "id": "AGT-040",
@@ -1607,7 +1593,7 @@ window.SAGE_CATALOG = {
       "plane": "Business operations",
       "output": "Reconciliation statement and discrepancy resolution",
       "domain": "Finance and compliance",
-      "avatar": "assets/people/AGT-040.webp?v=64e9d6ac9203"
+      "avatar": "assets/people/AGT-040.webp?v=e3ad3f8014e4"
     },
     {
       "id": "AGT-041",
@@ -1616,7 +1602,7 @@ window.SAGE_CATALOG = {
       "plane": "Business management",
       "output": "Cash and resource constraints",
       "domain": "Finance and compliance",
-      "avatar": "assets/people/AGT-041.webp?v=e8560810be38"
+      "avatar": "assets/people/AGT-041.webp?v=c25dc279e307"
     },
     {
       "id": "AGT-042",
@@ -1625,7 +1611,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Tax and legal-entity checklist",
       "domain": "Finance and compliance",
-      "avatar": "assets/people/AGT-042.webp?v=bfbb88a16306"
+      "avatar": "assets/people/AGT-042.webp?v=e346ae653e36"
     },
     {
       "id": "AGT-043",
@@ -1634,7 +1620,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Legal risks and recommended responses",
       "domain": "Finance and compliance",
-      "avatar": "assets/people/AGT-043.webp?v=74eed94dbb93"
+      "avatar": "assets/people/AGT-043.webp?v=c7091baf4e27"
     },
     {
       "id": "AGT-044",
@@ -1643,7 +1629,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Compliance matrix and evidence gaps",
       "domain": "Finance and compliance",
-      "avatar": "assets/people/AGT-044.webp?v=1c32ebf49e18"
+      "avatar": "assets/people/AGT-044.webp?v=55a479a82e9c"
     },
     {
       "id": "AGT-045",
@@ -1652,7 +1638,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Data definitions and object relationship contracts",
       "domain": "Data and AI operations",
-      "avatar": "assets/people/AGT-045.webp?v=1f1a22b530a1"
+      "avatar": "assets/people/AGT-045.webp?v=fae3d431db41"
     },
     {
       "id": "AGT-046",
@@ -1661,7 +1647,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Data deliverables with quality status",
       "domain": "Data and AI operations",
-      "avatar": "assets/people/AGT-046.webp?v=430c956a51ab"
+      "avatar": "assets/people/AGT-046.webp?v=9b1ce02a661b"
     },
     {
       "id": "AGT-047",
@@ -1670,7 +1656,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Tool capabilities and acceptance package",
       "domain": "Data and AI operations",
-      "avatar": "assets/people/AGT-047.webp?v=521b3e43fd04"
+      "avatar": "assets/people/AGT-047.webp?v=860546c18eb6"
     },
     {
       "id": "AGT-048",
@@ -1679,7 +1665,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Capability versions and evaluation records",
       "domain": "Data and AI operations",
-      "avatar": "assets/people/AGT-048.webp?v=8405650c8a62"
+      "avatar": "assets/people/AGT-048.webp?v=6214129ddb54"
     },
     {
       "id": "AGT-049",
@@ -1688,7 +1674,7 @@ window.SAGE_CATALOG = {
       "plane": "Data and agent platform",
       "output": "Runtime status and recovery evidence",
       "domain": "Data and AI operations",
-      "avatar": "assets/people/AGT-049.webp?v=e7421784ca33"
+      "avatar": "assets/people/AGT-049.webp?v=c0012b5531b4"
     },
     {
       "id": "AGT-050",
@@ -1697,7 +1683,7 @@ window.SAGE_CATALOG = {
       "plane": "Independent controls",
       "output": "Permission matrix and access evidence",
       "domain": "Data and AI operations",
-      "avatar": "assets/people/AGT-050.webp?v=7362b97d62b0"
+      "avatar": "assets/people/AGT-050.webp?v=e31c7b480779"
     }
   ],
   "scenes": [
@@ -2112,7 +2098,7 @@ window.SAGE_CATALOG = {
       "title": "Customer journey and retention",
       "product": "客户旅程修复台",
       "deliverables": ["客户旅程事件", "旅程Problem diagnosis", "跨域体验修复包", "客户触达回执", "体验学习记录"],
-      "question": "客户在哪里Troubleshooting, 如何修复体验？",
+      "question": "客户在哪里遇到问题, 如何修复体验？",
       "output": "Customer recovery and retention plan",
       "owner": "AGT-034",
       "input": "去重客户事件, Authorization范围内的售前/售后/退货/CRM/反馈；Personal details最小化处理.",

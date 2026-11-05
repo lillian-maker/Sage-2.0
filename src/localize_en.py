@@ -14,46 +14,63 @@ COPY = r"""
 下载	Download
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
+真人与数字专家，在同一个工作区里协作	People and digital specialists working in one workspace
+Sage App 的协作入口集中了团队要处理的事：待我处理、@我的、指派给我、共享给我与讨论。	The Collaboration area of the Sage app gathers what your team needs to handle: needs my action, mentions, assigned to me, shared with me and discussions.
+工作区	Workspaces
+待我处理	Needs my action
+审批与授权	Approvals and authorization
+企业管理	Business admin
+资料、任务和成员放在同一个工作区。企业工作区默认只有创建者可以访问，其他成员需要明确授权。	Materials, tasks and members live in one workspace. A business workspace is visible only to its creator until other members are explicitly granted access.
+需要你审批、补充信息或验收的事项集中在一处；在协作、任务详情或通知中任一处处理，其他地方同步更新。	Everything you need to approve, supplement or accept is in one place; handle it in Collaboration, the task or a notification and the others update.
+外部动作先出确认卡，写明发起人、动作、范围、预计消耗与有效期；批准只对确认卡上的范围有效，可以修改范围或拒绝。	External actions start with a confirmation card naming the requester, action, scope, estimated usage and validity; approval covers only that scope, and you can change the scope or decline.
+管理员管理成员、席位与权限；个人工作区的资料不会自动共享给企业。	Admins manage members, seats and permissions; materials in personal workspaces are never shared with the business automatically.
+多人审批等协作规则仍在确认中，以 Sage App 正式版本为准。	Collaboration rules such as multi-person approval are still being finalized; the released Sage app prevails.
+多位专家协作完成，	Specialists work together,
+关键处由你把关	and you decide at the key moments
+每个任务由一位主责专家牵头，按需组织协作与复核专家；需要判断、授权和验收的地方，交给你和你的团队。下面是 Sage App 中一个任务的完整过程。	Each task is led by one specialist who brings in contributors and reviewers as needed; judgments, authorizations and acceptance stay with you and your team. Below is one complete task in the Sage app.
+Sage App 界面演示：计划确认、多专家编排、并行协作、真人审核、授权把关与验收成果	Sage app demo: plan confirmation, multi-specialist orchestration, parallel work, human review, authorization and acceptance
+多专家编排	Multi-specialist orchestration
+并行协作	Parallel work
+真人审核	Human review
+授权把关	Authorization
+验收成果	Accept results
+播放：计划确认	Play: Confirm the plan
+播放：多专家编排	Play: Multi-specialist orchestration
+播放：并行协作	Play: Parallel work
+播放：真人审核	Play: Human review
+播放：授权把关	Play: Authorization
+播放：验收成果	Play: Accept results
+主责专家给出执行计划：步骤、负责专家、预计消耗与所需授权，你确认后才开始。	The lead specialist proposes a plan: steps, owners, estimated usage and the authorizations needed; work starts only after you confirm.
+执行图按阶段分泳道，每个节点显示负责专家、所用技能与状态。	The execution graph is laid out in stage lanes, each node showing its specialist, skill and status.
+没有依赖的步骤由多位专家同时推进，交接附带来源与待验证项。	Independent steps run at once across several specialists, and every handoff carries its sources and open questions.
+需要人判断的事项进入“待我处理”，由任务负责人或团队成员审批。	Items that need a human judgment land in “Needs my action” for the task owner or a teammate to approve.
+涉及外部系统的动作，先确认发起人、动作、范围、预计消耗与有效期。	Before any action on an external system, confirm who asked, the action, scope, estimated usage and validity.
+结论附带出处，验收后锁定版本，可继续追问或修改。	Conclusions arrive with sources and are locked as a version on acceptance; you can still ask follow-ups or revise.
+在 Sage App 中	In the Sage app
+在 App 中	In the app
+找到专家、了解专家、创建专家	Find, understand and create specialists
+团队协作落在 App 的具体位置，下面四处是你最常用到的。	Team collaboration lives in specific places in the app; these are the four you will use most.
+专家目录	Specialist directory
+专家资料	Specialist profile
+新建专家	Create a specialist
+任务中的协作	Collaboration in a task
+Sage 助手置顶，53 位数字专家按专业域分组；可按名称、岗位与技能搜索，选择一位作为任务主责。	Sage Assistant is pinned on top and 53 digital specialists are grouped by domain; search by name, role or skill and pick one to lead a task.
+查看专家的职责、技能、可用工具与协作网络：常与谁交接、由谁复核。	See a specialist’s responsibilities, skills, available tools and collaboration network: who they hand off to and who reviews them.
+从身份与职责、协作方式、专业技能、工具与连接、知识与用户背景五步，创建贴合你业务的专家，可先测试再启用。	Create a specialist for your business in five steps: identity and responsibilities, collaboration style, skills, tools and connections, knowledge and context; test before enabling.
+任务详情里有主对话、侧聊和进度；编排视图显示每位专家在做什么，计划确认卡与授权卡插在对话流中。	A task has a main conversation, side chats and progress; the orchestration view shows what each specialist is doing, and plan and authorization cards appear in the conversation.
+页面内容依据 Sage App 产品设计，演示画面来自设计稿；相关能力随 App 版本逐步开放。	This page follows the Sage app product design and the demo uses design frames; capabilities open with app releases.
 什么是 Sage	What is Sage
 适用人群与使用边界	Who it is for and usage boundaries
 提交任务与查看成果	Submit tasks and review results
 注册与登录	Sign up and sign in
-第一次使用 Sage？按这个顺序读	New to Sage? Read in this order
-四篇文章，从了解产品到提交第一个任务。	Four articles, from understanding the product to submitting your first task.
-按你要做的事查找	Find what you need to do
 了解产品定位、服务范围和使用边界。	Learn the product positioning, scope and usage boundaries.
 先判断问题是否适合，再准备具体任务。	Check whether a question fits before preparing a task.
 验证身份后，再进入个人或企业计费账户。	Verify your identity, then enter a personal or business billing account.
 让输入、结果和下一步都可以核对。	Keep inputs, results and next steps verifiable.
-选择经营场景	Choose a workflow
-九个入口分别对应哪些经营问题	Which business question each of the nine entries covers
-了解数字员工	Meet the digital employees
-岗位职责、工作方法与授权	Responsibilities, methods and authorization
-管理授权	Manage authorization
-授权范围、撤回与外部动作	Scope, withdrawal and external actions
-订阅与计费	Plans and billing
-套餐、Credits 与计费周期	Plans, Credits and billing cycles
-管理企业成员	Manage business members
-管理员、成员与真人席位	Admins, members and human seats
-遇到问题	Troubleshooting
-付款、余额与任务异常的处理	Payment, balance and task issues
-一个任务，一支团队，	One task, one team,
-一条看得见的执行路径	one execution path you can see
-Sage 为每个任务指定唯一的主责专家，按需组建协作与复核专家。计划、依据、授权和成果，都在你眼前推进。	Sage gives every task a single lead specialist and brings in contributors and reviewers as needed. Plans, evidence, authorizations and results all move forward in front of you.
-界面示意：一个内容审核任务的执行计划	Interface illustration: the execution plan of a content review task
-执行计划 · 5 位专家	Execution plan · 5 specialists
-界面示意 · 示例任务	Interface illustration · Sample task
-审核新品详情页的品牌表述、平台规则与合规风险	Review a new product page for brand wording, platform rules and compliance risk
 协作	Contributor
-合规风险判断	Compliance risk
-品牌表述核对	Brand wording
-平台规则核对	Platform rules
-素材修改建议	Creative fixes
 进行中	In progress
 已完成	Done
-等待上游	Waiting
 需你授权	Needs your authorization
-发布修改后的商品详情	Publish the revised product page
 闭环执行	Closed loop
 能力深度	Capability depth
 岗位目录	Role directory
@@ -69,7 +86,6 @@ Sage 为每个任务指定唯一的主责专家，按需组建协作与复核专
 你决定	You decide
 你验收	You accept
 组队与编排	Assemble and orchestrate
-方案参数：默认最多 3 位专家同时工作，每一步最多重试 2 次，整个任务最多重新规划 3 次，以正式版本为准。	Design parameters: up to 3 specialists work at once, each step retries at most twice and a task replans at most 3 times; the released version prevails.
 越用，越懂你的业务	The more you use it, the better it knows your business
 事实沉淀	Facts that stay
 协作进化	Collaboration that improves
@@ -77,7 +93,6 @@ Sage 为每个任务指定唯一的主责专家，按需组建协作与复核专
 50 个专业岗位，覆盖出海经营全链路	50 specialist roles across the whole global commerce chain
 3 位管理者统筹方向，岗位分布在经营、产品、供应、渠道、品牌、服务、财务与数据 8 个专业域。	Three leaders set direction; roles span eight domains: business, product, supply, channels, brand, service, finance and data.
 从一个经营问题开始	Start with one business question
-协作机制、闭环执行与三张图依据 Sage App 产品设计，相关能力随 App 版本逐步开放。	Collaboration roles, the closed loop and the three graphs follow the Sage app product design; capabilities open with app releases.
 每个任务开始前有且只有一位主责：理解目标、拆解步骤、组织协作并交付。系统自动推荐，你可以随时切换。	Each task has exactly one lead before it starts: it understands the goal, breaks down the steps, organizes collaboration and delivers. Sage recommends one and you can switch at any time.
 在主责之下接受明确的子目标，并行推进；子结果由主责引用汇总，不会被当作独立完成或直接对外发布。	They take clear sub-goals under the lead and work in parallel; the lead cites and combines their results, which are never treated as finished on their own or published directly.
 关键结论交叉检查：数字由清账核对，合规结论由安界把关，整体由守衡或求证独立复核。	Key conclusions are cross-checked: numbers by Qingzhang, compliance by Anjie, and the whole by Shouheng or Qiuzheng as independent reviewers.
