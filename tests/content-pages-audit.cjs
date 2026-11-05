@@ -22,7 +22,7 @@ assert.ok(!read('src/pages/ai-team.css').includes('repeat(auto-fit,minmax(78px,1
 assert.ok(read('src/index.template.html').includes('data-account-entry href="pages/auth.html?return=%2Findex.html">登录</a>'));
 assert.ok(read('src/pages/content-pages.js').includes("account.textContent = '登录'; account.title = '使用邮箱或手机号验证登录'"));
 assert.ok(read('src/pages/billing.js').includes("document.querySelector('.nav-login').textContent = t('登录','Sign in');"));
-assert.ok(read('src/pages/content-pages.css').includes('.pricing-page .segmented button[aria-pressed=true]{background:#aec8e2'));
+assert.ok(read('src/pages/content-pages.css').includes('.pricing-page .segmented button[aria-pressed=true]{background:#fff;color:#396397;'),'Selected pricing toggle uses the brand blue text on a white pill');
 const context = {window:{}};
 vm.runInNewContext(read('src/pages/catalog-data.js'), context);
 const catalog = context.window.SAGE_CATALOG;
@@ -110,12 +110,13 @@ for(const removed of ['at-toolbar','at-scene-tools','id="at-status"','id="at-sea
 assert.ok(!read('src/pages/ai-team.js').includes('at-ensemble-left'));
 assert.ok(enterpriseHero.includes('ep-business-chain'));
 const enterpriseSource=read('src/pages/enterprise.html');
-assert.ok(enterpriseSource.includes('href="trial.html">免费体验'));
+assert.ok(enterpriseSource.includes('href="download.html" data-app-soon>下载 Sage'),'Standard product path leads to the app, not an unreleased trial');
 assert.ok(!enterpriseSource.includes('查看产品'));
 assert.ok(!enterpriseSource.includes('讨论企业需求'));
-assert.ok(!enterpriseSource.split('<section id="contact"')[1].includes('<button'),'No duplicate closing consultation button');
+assert.ok(!enterpriseSource.split('class="ep-section ep-faq"')[1].includes('<button'),'No duplicate closing consultation button');
+assert.equal((enterpriseSource.split('class="ep-faq-list"')[1].split('</dl>')[0].match(/<div><dt>/g)||[]).length,6,'Enterprise FAQ answers six documented questions');
 assert.ok(read('src/pages/trial.html').includes('id="r-menu-toggle"'));
-for(const copy of ['打通企业现有系统与多源数据','沉淀企业的核心业务资产','理解 · 推理 · 执行','生成结果并回写到业务系统','业务执行结果','审批意见','驳回','通过','制度规范','决策规则','合规要求','业务指标定义','统计口径','计算逻辑','业务流程','审批规则','角色与权限','相关文档与过程记录','执行结果与数据指标','更新企业业务系统'])assert.ok(enterpriseHero.includes(copy),copy);
+for(const copy of ['打通企业现有系统与多源数据','沉淀企业的核心业务资产','协作 · 留痕 · 授权','生成结果并回写到业务系统','业务执行结果','审批意见','驳回','通过','制度规范','决策规则','合规要求','业务指标定义','统计口径','计算逻辑','业务流程','审批规则','角色与权限','相关文档与过程记录','执行结果与数据指标','更新企业业务系统'])assert.ok(enterpriseHero.includes(copy),copy);
 assert.ok(enterpriseHero.includes('非操作按钮'));
 for(const label of ['业务系统与数据','企业知识','人工审批','验证与交付'])assert.ok(enterpriseHero.includes(label));
 assert.ok(!enterpriseHero.includes('hero-collaboration.png'));

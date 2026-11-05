@@ -968,7 +968,7 @@ window.SAGE_CATALOG = {
       "question": "哪些决策卡在Data和工具上？",
       "output": "Acceptance-ready data products and tools",
       "owner": "AGT-047",
-      "input": "谁要做什么经营决策, 当前Data和Systems, 对象范围, 验收标准；不是一个“帮我搭平台”的无限需求.",
+      "input": "谁要做什么经营决策, 当前Data和Systems, 对象范围, JUDGE THE WORK, NOT THE PERSONA；不是一个“帮我搭平台”的无限需求.",
       "boundary": "Data质量不够不发布可信结论；接口候选不等于可用工具；没有验收回执不跳到生产.",
       "script": "0–10 经营者提出明确决策问题；10–22 Tongchi解释两个口径差异；22–35 Jieqiao/Qingyuan交付最小工具候选；35–45 Menwei与Anjie检查权限；45–55 展示验收记录与发布状态, 未Approve保留候选.",
       "steps": [

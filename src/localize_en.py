@@ -14,6 +14,37 @@ COPY = r"""
 下载	Download
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
+数字员工团队	SAGE AI TEAM
+组织设计	SAGE ORGANIZATION DESIGN
+专业方法	WHAT MAKES AN AI EMPLOYEE PROFESSIONAL
+协作机制	COLLABORATION WITH A REASON
+验收标准	JUDGE THE WORK, NOT THE PERSONA
+开始合作	START WITH A REAL BUSINESS QUESTION
+面向企业	SAGE FOR BUSINESS
+交付内容	WHAT WE BUILD TOGETHER
+实施方法	OUR APPROACH
+合作方式	TWO WAYS TO WORK WITH SAGE
+本页导航	On this page
+组织与岗位	Organization and roles
+协作 · 留痕 · 授权	Collaborate · Trace · Authorize
+读取企业依据，按审批规则	Reads company evidence and, following approval rules,
+把结果交付到业务系统	delivers results to business systems
+在 Sage App 中使用标准经营场景与数字员工，	Use standard business workflows and digital employees in the Sage app,
+无需项目实施即可开始。	with no implementation project required.
+常见问题	FAQ
+开始合作前，你可能想先了解	Before we start working together
+数据存在哪里？会被用来训练模型吗？	Where is data stored? Is it used to train models?
+实施前需要准备什么？	What do we need before implementation?
+一定要建设知识图谱吗？	Do we have to build a knowledge graph?
+Sage 会直接改价、采购或发布吗？	Will Sage change prices, purchase or publish on its own?
+费用怎么计算？	How is pricing structured?
+可以私有化部署吗？	Can Sage be deployed privately?
+个人信息存储在中国境内（腾讯云上海地域），任务内容不会用于训练模型。企业另有合同约定的，按合同执行。	Personal information is stored in mainland China (Tencent Cloud, Shanghai region), and task content is never used to train models. Where a business contract says otherwise, the contract applies.
+明确数据来源、访问范围、交付物、验收方式和双方责任，再从一项业务问题开始受控试点。	Agree on data sources, access scope, deliverables, acceptance and each side’s responsibilities, then start a controlled pilot with one business question.
+不一定。先判断任务输入或配置能否解决；知识图谱并非所有项目的必选项。	Not necessarily. We first check whether task inputs or configuration can solve the problem; a knowledge graph is not required for every project.
+只在你授权的对象、范围和预算内执行，需要人工确认的步骤不会被跳过，授权可以随时撤回。	Sage acts only within the targets, scope and budget you authorize, never skips steps that need human confirmation, and you can withdraw authorization at any time.
+订阅、实施、模型与资源消耗、持续维护分别约定，具体以合同为准。	Subscriptions, implementation, model and resource usage, and ongoing maintenance are agreed separately, as set out in the contract.
+企业订阅不默认包含私有化部署、无限定制或终身维护；如有需要，在专项实施中单独评估范围与费用。	Business subscriptions do not include private deployment, unlimited customization or lifetime maintenance by default; if you need them, scope and cost are assessed in a dedicated implementation.
 Sage App 界面演示：提出问题、确认计划、编排与授权、验收成果	Sage app demo: ask a question, confirm the plan, orchestrate and authorize, accept the result
 Sage App 界面演示 · 示例数据	Sage app demo · Sample data
 Sage App 界面演示	Sage app demo
@@ -854,9 +885,6 @@ Sage 按任务组建团队，用最合适的岗位组合完成工作。	Sage bui
 系统	Systems
 结果	Results
 明确目标、范围	Define objectives, scope
-理解 · 推理 · 执行	Understand · Reason · Execute
-连接企业知识与业务系统	Connect enterprise knowledge and business systems
-让 AI 成为可交付的生产力	Make AI a deliverable business capability
 人工审批	Human approval
 关键决策，始终由人把关	People retain control of key decisions
 审批意见示意，非操作按钮	Illustrative approval decision, not interactive controls
@@ -953,13 +981,9 @@ Sage 按任务组建团队，用最合适的岗位组合完成工作。	Sage bui
 验证结果与推广条件	Verify outcomes and expansion criteria
 选择适合你当前阶段的合作方式	Choose the right way to work together
 标准 Sage 产品	Standard Sage product
-开箱即用，适用标准经营场景，	Ready to use for standard scenarios,
-从当前已开放的产品能力开始。	starting with currently released capabilities.
 专项实施与定制	Dedicated implementation and customization
 基于你的业务需求、数据、知识与场景，	Based on your needs, data, knowledge and scenarios,
 按范围交付，稳步推进。	delivered within agreed scope, step by step.
-一起定义你的第一项业务任务	Define your first business task together
-让企业数据、业务知识与 AI 能力，真正服务于你的团队与业务。	Put company data, business knowledge and AI capabilities to work for your team.
 文档目录	Documentation contents
 搜索文档	Search documentation
 placeholder="搜索"	placeholder="Search"
@@ -1066,7 +1090,7 @@ def write_content_page(source, destination, name, html, titles, english_body=Non
     items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
     nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
     header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="download.html" data-app-soon>下载</a></div></header>'
-    footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div></footer>'
+    footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#cooperation">企业合作</a></div></footer>'
     document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
     (destination / (name + '.html')).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
     localized = english_links(translate(document.replace(html, '{{SAGE_ENGLISH_BODY}}') if english_body else document)).replace('lang="zh-CN"', 'lang="en"')
