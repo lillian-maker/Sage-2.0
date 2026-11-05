@@ -36,11 +36,11 @@
       name: t('Shopify store diagnosis', 'Shopify store diagnosis'),
       description: t('梳理购买信息与页面优化顺序', 'Review buying information and page improvements'),
       input: t('Shopify 店铺链接', 'Shopify store URL'),
-      scope: t('检查公开可访问的店铺页面, 无需店铺后台授权；不据此推断实际订单, 转化率, 广告或库存.', 'Review publicly accessible storefront pages without admin access. These pages cannot establish actual orders, conversion rates, ad performance or inventory.'),
+      scope: t('检查公开可访问的店铺页面, 无需店铺后台Authorization；不据此推断实际订单, 转化率, 广告或库存.', 'Review publicly accessible storefront pages without admin access. These pages cannot establish actual orders, conversion rates, ad performance or inventory.'),
       example: [
         [t('页面依据', 'Page evidence'), t('每项观察对应页面位置, URL 与读取时间；受限页面不绕过访问限制.', 'Link observations to page locations, URLs and access dates. Do not bypass access restrictions.')],
         [t('购买信息', 'Buying information'), t('检查商品说明, Specifications, shipping and returns, 区分缺失信息和待商家确认的事实.', 'Review product details, specifications, shipping and returns, distinguishing missing information from facts the merchant must confirm.')],
-        [t('优化建议', 'Recommendations'), t('给出有Evidence的建议和验证顺序；改价, 发布与广告操作需另行授权.', 'Provide evidence-led recommendations and validation priorities. Price changes, publishing and advertising require separate authorization.')]
+        [t('优化建议', 'Recommendations'), t('给出有Evidence的建议和验证顺序；改价, 发布与广告操作需另行Authorization.', 'Provide evidence-led recommendations and validation priorities. Price changes, publishing and advertising require separate authorization.')]
       ]
     }
   };

@@ -14,6 +14,87 @@ COPY = r"""
 下载	Download
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
+经营场景	Business workflows
+数字员工	Digital employees
+企业级架构	Enterprise architecture
+五层架构，把 AI 接进真实业务	Five layers that bring AI into real operations
+从数据连接到结果回写，每一层都有清楚的边界、权限与审计。	From data connections to results written back, every layer has clear boundaries, permissions and audit.
+各层能力按项目范围与 Sage App 版本交付。	Each layer is delivered according to project scope and Sage app releases.
+交付层	Delivery
+治理层	Governance
+编排层	Orchestration
+知识层	Knowledge
+连接层	Connection
+成果带版本，验收后回写业务系统；跑通的执行图存为 Playbook 复用。	Results are versioned and written back to business systems after acceptance; proven execution graphs are saved as Playbooks.
+授权卡、预算上限、执行回执与审计记录，关键决策始终由人把关。	Authorization cards, budget limits, execution receipts and audit records; people always make the key decisions.
+主责专家牵头，按“专家 × 技能 × 知识”编译执行图，并行执行、交叉校验。	A lead specialist compiles an execution graph of specialist × skill × knowledge, runs steps in parallel and cross-checks them.
+业务规则、指标口径、流程约束与知识图谱，每条事实带出处、时间与权限。	Business rules, metric definitions, process constraints and a knowledge graph; every fact carries its source, time and access rights.
+ERP、CRM、HR 等业务系统与文档、报表，通过标准连接按授权读取。	Business systems such as ERP, CRM and HR, plus documents and reports, read through standard connections with authorization.
+Sage 文档中心	Sage documentation
+产品规则、经营场景与订阅说明，一处查清	Product rules, business workflows and subscriptions in one place
+常用文档	Popular docs
+注册、登录与首次体验	Sign-up, sign-in and your first trial
+九个入口与八条核心经营流	Nine entries and eight core workflows
+岗位职责、方法与授权	Roles, methods and authorization
+帮助与规则	Help and rules
+常见问题与平台规则	FAQ and platform rules
+一支为出海经营而生的	An AI organization built
+AI 组织	for global commerce
+按岗位分工，按方法工作，按授权行动。	Organized by role, working by method, acting only with authorization.
+每个任务有唯一主责，每个结论附带出处。	Every task has one lead; every conclusion comes with its sources.
+位数字专家	digital specialists
+个专业域	specialist domains
+个经营场景	business workflows
+个协作阶段	collaboration stages
+组织架构	Organization
+协作闭环	Closed loop
+三张图	Three graphs
+3 位管理者统筹，50 个岗位各司其职	Three leaders set direction; fifty roles each own their work
+岗位覆盖经营、产品、供应、渠道、品牌、服务、财务与数据 8 个专业域。	Roles span eight domains: business, product, supply, channels, brand, service, finance and data.
+一个任务，七步闭环	One task, a seven-step loop
+一位主责专家牵头，协作专家并行推进，复核专家交叉检查。	One lead specialist owns the task, contributors work in parallel, and reviewers cross-check.
+每一步都看得见、改得了，并受预算和轮次上限约束。	Every step is visible and adjustable, within budget and iteration limits.
+编排架构	Orchestration
+三张图，让每一次编排都有依据	Three graphs ground every orchestration
+执行图中的每个节点 = 一位专家 × 一项技能 × 一组有权访问的知识	Each node in the execution graph = one specialist × one skill × the knowledge they are allowed to use
+谁来做	Who
+怎么做	How
+凭什么	On what basis
+专业性，写进每个岗位的工作方式	Expertise built into how every role works
+把你的第一个经营问题交给 Sage	Bring your first business question to Sage
+说清目标与约束，剩下的交给一支分工明确的团队。	State the goal and constraints; a team with clear roles takes it from there.
+协作闭环与三张图为 Sage 产品架构，相关能力随 App 版本逐步开放。	The closed loop and three graphs describe Sage’s product architecture; capabilities open with app releases.
+理解	Understand
+组队与编译	Assemble and compile
+计划确认	Confirm the plan
+并行执行	Execute in parallel
+交叉校验	Cross-check
+修复与重新规划	Repair and replan
+交付与沉淀	Deliver and retain
+建立任务账本：目标、验收标准、已知事实、待查事实与约束。	Build a task ledger: goal, acceptance criteria, known facts, open questions and constraints.
+在专家图谱上选出主责与协作专家，把步骤编译成有依赖关系的执行图。	Pick the lead and contributors on the specialist graph, then compile the steps into an execution graph with dependencies.
+复杂任务先出计划确认卡：步骤、负责专家、预计消耗与所需授权。	Complex tasks start with a plan card: steps, owners, estimated usage and the authorizations needed.
+没有依赖的步骤并行推进，每一步只拿到与它相关、且有权访问的知识。	Independent steps run in parallel, and each step sees only the knowledge it needs and may access.
+每一步按验收条件自检，关键结论由复核专家交叉检查。	Each step checks itself against its acceptance criteria; key conclusions are cross-checked by a reviewer.
+只在失败处局部重做；没有进展或接近预算时暂停，交给你决定。	Only failed steps are redone; with no progress or near the budget, Sage pauses and hands the decision to you.
+成果附带出处交你验收；验收后的事实写回知识图谱，执行图可存为 Playbook。	Results arrive with sources for your acceptance; accepted facts flow back to the knowledge graph, and the execution graph can be saved as a Playbook.
+专家图谱	Specialist graph
+技能图谱	Skill graph
+知识图谱	Knowledge graph
+53 位数字专家与自建专家，以常见交接、上下游与复核关系相连。用于组队：简单任务不拉很多人，关键结论一定有人复核。	53 digital specialists and custom specialists, linked by common handoffs, upstream and downstream work, and review relationships. Used to assemble teams: simple tasks stay small, and key conclusions always get a reviewer.
+每项技能都有前置条件与产出。执行前先编译成执行图，并检查所需连接与授权；某项技能失败时换用可替代技能。	Every skill has preconditions and outputs. Steps are compiled into an execution graph and checked for required connections and authorizations before running; a failed skill is replaced by an alternative.
+品牌、商品、市场、渠道、竞品与法规等经营实体，带生效时间、出处与访问权限。为每一步提供依据，并提示相互矛盾的事实。	Business entities such as brands, products, markets, channels, competitors and regulations, with effective dates, sources and access rights. They ground each step and flag conflicting facts.
+职责	Responsibility
+方法	Method
+上下文	Context
+工具	Tools
+授权	Authorization
+每个岗位明确要解决的决策、可用资料、必须检查的约束与交付标准。	Each role defines the decisions it owns, the materials it may use, the constraints it must check and its delivery standard.
+可复用的分析步骤与判断规则，带版本、适用条件与测试样本。	Reusable analysis steps and judgment rules, with versions, conditions of use and test samples.
+先理解这家企业：定位、市场、渠道、商品结构、资金约束与历史决策。	Understand this business first: positioning, markets, channels, assortment, funding constraints and past decisions.
+通过 MCP 等标准连接查询与计算，读取可核对的业务依据，权限另行授予。	Query and calculate through standard connections such as MCP to read verifiable business evidence; access is granted separately.
+独立核对来源、计算、遗漏条件与反例，可以退回成果或要求补证。	Independently check sources, calculations, missing conditions and counterexamples, and return work or request more evidence.
+建议与执行分开授权；涉及资金、发布或外部系统变更，必须由你确认。	Advice and execution are authorized separately; anything touching funds, publishing or external systems needs your confirmation.
 数字员工团队	SAGE AI TEAM
 组织设计	SAGE ORGANIZATION DESIGN
 专业方法	WHAT MAKES AN AI EMPLOYEE PROFESSIONAL

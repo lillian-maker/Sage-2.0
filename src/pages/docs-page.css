@@ -23,3 +23,13 @@
 .sage-docs{--sd-ink:#202b38;--sd-body:#526171;--sd-line:#e4e9ef;--sd-accent:#396397}.sd-directory a[aria-current=page]{background:#edf3f9;color:#396397}.sd-article:focus-visible{outline:2px solid #396397;outline-offset:-4px}
 .sd-directory,.sd-toc{top:var(--site-nav-height,88px);max-height:calc(100vh - var(--site-nav-height,88px))}.sd-directory{height:calc(100vh - var(--site-nav-height,88px))}.sd-mobile-tools button{border-radius:8px}.sd-article p,.sd-article li{font-size:16px}
 @media(max-width:900px){.sd-directory{height:auto;max-height:60vh}}
+/* Docs hero: a short night-sky band with the four most used entry points. */
+.sd-hero{padding:48px max(24px,calc((100vw - 1240px)/2)) 40px}
+.sd-hero-kicker{margin:0;font-size:13px;font-weight:600;letter-spacing:.08em;color:#8fb8e6!important}
+.sd-hero-title{margin:10px 0 24px;font-size:clamp(24px,2.6vw,34px);line-height:1.3;font-weight:700;color:#f4f7fb!important}
+.sd-hero-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.sd-hero-links a{display:block;padding:16px 18px;border-radius:12px;border:1px solid #ffffff1f;background:#ffffff0a;text-decoration:none;transition:background .2s ease,border-color .2s ease}
+.sd-hero-links a:hover,.sd-hero-links a:focus-visible{background:#ffffff14;border-color:#8fb8e680}
+.sd-hero-links strong{display:block;font-size:16px}
+.sd-hero-links span{display:block;margin-top:4px;font-size:13px}
+@media(max-width:760px){.sd-hero-links{grid-template-columns:1fr 1fr}}
