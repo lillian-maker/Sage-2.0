@@ -101,3 +101,37 @@
 @media(prefers-reduced-motion:reduce){.work-steps li{transition:none}}
 @media(max-width:1000px){.work-demo{grid-template-columns:1fr}}
 @media(max-width:520px){.work-steps li{padding:16px 16px 18px 54px}.work-steps svg{left:16px;top:18px}.work-video-chrome{height:32px;font-size:11px}.work-video-toggle{right:10px;bottom:10px;min-width:40px;padding:10px;justify-content:center}.work-video-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}
+
+/* Homepage demo v3: full-width recording with a chapter rail (same pattern as the AI team page). */
+.cinema-section .work-demo{display:block;max-width:1180px;margin:0 auto}
+.cinema-section .work-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px 28px;margin:28px 0 0}
+.cinema-section .work-steps li{padding:18px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:none;box-shadow:none}
+.cinema-section .work-steps li.is-active{background:none;box-shadow:none;border-color:var(--line)}
+.cinema-section .work-step-bar{position:absolute;left:0;top:-1px;height:2px;width:calc(var(--p,0) * 100%);background:var(--accent)}
+.cinema-section .work-step-seek{inset:-8px -10px -8px;width:calc(100% + 20px);border-radius:10px}
+.cinema-section .work-step-seek:hover{background:#f3f6fa}
+.cinema-section .work-step-index,.cinema-section .work-steps h3,.cinema-section .work-steps p{position:relative;pointer-events:none}
+.cinema-section .work-step-index{display:block;color:#63758a;font:600 12px/1 Arial,sans-serif;letter-spacing:.06em;margin-bottom:10px}
+.cinema-section .work-steps h3{margin:0 0 6px;font-size:17px;color:#526171}
+.cinema-section .work-steps p{font-size:13px;line-height:1.75;color:#63758a}
+.cinema-section .work-steps li.is-active .work-step-index,.cinema-section .work-steps li.is-active h3{color:var(--accent)}
+.cinema-section .work-steps li.is-active p{color:var(--ink)}
+.work-live{display:none}
+@media(prefers-reduced-motion:no-preference){.cinema-section .work-step-bar{transition:width .3s linear}}
+@media(max-width:900px){.cinema-section .work-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.cinema-section .work-steps{gap:14px 16px;margin-top:20px}.cinema-section .work-steps li{padding:12px 0 0}.cinema-section .work-steps h3{font-size:14px;margin:0;overflow-wrap:anywhere}.cinema-section .work-steps p{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.work-live{display:block;margin:16px 0 0;padding:14px 16px;border-radius:10px;background:#f5f7fa;font-size:14px;line-height:1.7;color:var(--ink);min-height:4.4em}}
+
+/* Demo v4: video and chapter list side by side so both fit in one screen; only the active chapter shows its description. */
+@media(min-width:1001px){
+.cinema-section .work-demo{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:start}
+.cinema-section .work-steps{grid-template-columns:1fr;gap:0;margin:0;border-top:0}
+.cinema-section .work-steps li{padding:12px 0 12px 18px;border-top:0;border-left:2px solid #e4e9ef}
+.cinema-section .work-steps li.is-active{border-left-color:#c9d8ea}
+.cinema-section .work-step-bar{left:-2px;top:0;width:2px;height:calc(var(--p,0) * 100%);min-width:0}
+.cinema-section .work-steps li.is-active .cinema-section .work-step-bar{min-height:8px}
+.cinema-section .work-step-index{display:inline-block;margin:0 8px 0 0}
+.cinema-section .work-steps h3{display:inline;font-size:15px;margin:0}
+.cinema-section .work-steps p{display:none;margin:6px 0 0}
+.cinema-section .work-steps li.is-active p{display:block}
+.cinema-section .work-step-seek{inset:0;width:100%;border-radius:8px}
+}

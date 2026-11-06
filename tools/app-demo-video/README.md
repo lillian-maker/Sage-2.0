@@ -1,29 +1,19 @@
 # Sage App 交互演示视频
 
-当前版本：`assets/video/sage-team-collaboration.mp4`（68.5 秒，1440×900，H.264）和海报图 `sage-team-collaboration-poster.jpg`。依据 2026-11-06 的 App PRD（D75 收件与协作合并、D76 任务交办体验升级）和 Figma 文件 `dnmr3E1NLP19pX3X3ZSRxo`（99 个画框，与 `sage-all-screens-final.html` 一一对应）录制。AI 团队页首屏和首页「看见 Sage 如何工作」共用这一条视频，只是章节划分不同。
+依据 2026-11-06 的 App PRD（D75、D76）与 Figma 文件 `dnmr3E1NLP19pX3X3ZSRxo`（与 `sage-all-screens-final.html` 一一对应）录制两条视频，分工不同、互不复用画面：
 
-## 制作方式
+| 视频 | 位置 | 讲什么 | 章节（起点秒） |
+|---|---|---|---|
+| `sage-home-demo.mp4`（52 秒） | 首页「看见 Sage 如何工作」 | 和 Sage 一起工作的差异化体验 | 先澄清再开工 0 · 多任务一屏掌握 9.5 · 只推需要你决定的事 16 · IM 接入两层过滤 23.5 · 逐条核对验收 31 · 越用越顺手 39 |
+| `sage-team-collaboration.mp4`（50.5 秒） | AI 团队页首屏 | 专家团队如何组织与协作 | 专家目录 0 · 协作网络 6.5 · 专家团队 13.5 · 多专家编排 20 · 主责统一汇报 29 · 授权把关 35.5 · 版本留痕 44 |
 
-`render-team.cjs` 打开视觉稿的 HTML 源文件，把 9 个画面放进 1440×900 的舞台，逐帧驱动真实 DOM 的状态变化后截图，再用 ffmpeg 编码。这是对设计稿原型的交互录制，不是对静态图片做镜头推拉。
+`render-demo.cjs` 打开设计源文件，把场景画面放进 1440×900 舞台，逐帧驱动真实 DOM 状态（点选、状态流转、计数、弹窗、高亮）后截图，用 ffmpeg 编码（CRF 27）。场景在 `SCENES` 中按画面定义，两条视频的组合在 `VIDEOS` 中。修改章节时同步修改 `src/index.template.html` 与 `src/pages/team.html` 的 `data-start`。
 
-| 章节 | 起点（秒） | 画面 | 画面里发生的变化 | 对应的亮点 / 壁垒 |
-|---|---|---|---|---|
-| 1 开工确认 | 0 | 04 开工确认卡 | 确认卡逐项展开；点选两个澄清问题；确认安装缺少的技能、连接只读连接器；点“开始执行”后状态从“待开工”变为“进行中” | 先对齐再执行，按需安装不静默 |
-| 2 多专家编排 | 9.5 | 20 编排视图 | 节点依次从排队变为进行中、已完成，三位专家并行；需授权的节点停下高亮，点开后详情抽屉滑出 | 专家 × 技能 × 知识编译的执行图 |
-| 3 并行协作 | 18.5 | 06 并行工作卡 | 每位专家的计时实时增长，完成后交回主责汇总 | 过程可见，主责统一汇报 |
-| 4 授权把关 | 25 | 12 授权作用域 | 展开仅本次 / 本任务内 / 本工作区内三档，选择后批准，出现可撤销提示 | 最小范围授权 |
-| 5 收件里拍板 | 33.5 | 47 收件 · 需要我决定 | 光标经过四类事项，点开审批并批准；事项与计数同步更新 | 唯一的待处理队列 |
-| 6 交付验收 | 41 | 08 交付验收 | 验收清单逐条打勾，对应证据同步高亮；点“验收通过” | 两层验收，每条都有证据 |
-| 7 版本留痕 | 49 | 54 成果变更与版本差异 | 打开 v1→v2 差异，删改处依次高亮，指向“恢复到 v1” | 修改留痕、可恢复 |
-| 8 沉淀复用 | 55.5 | 21 存为 Playbook、57 自动化运行 Playbook | 弹窗展开 6 个步骤与变量，保存为 Playbook；在自动化里选用该 Playbook 并保存 | 越用越懂你的业务 |
-
-首页使用其中三段：提出问题与开工确认（0 秒）、专业岗位接力（9.5 秒）、交付可核验的成果（41 秒）。修改章节时间时，需要同步修改 `src/pages/team.html` 和 `src/index.template.html` 中的 `data-start`。
-
-企业服务页的收件截图 `assets/app/collaboration-inbox.webp` 由 `capture-stills.cjs` 从同一份 HTML 的“47 收件 · 需要我决定”截取。
+企业服务页「企业版 App」的 6 张截图（收件、工作区规则、成员与权限、企业知识库、知识图谱、企业管理）由 `capture-stills.cjs` 从同一份源文件截取，保存为 `assets/app/enterprise-*.webp`。
 
 ## 对外表述规则
 
-- **第三方工具：** 视觉稿里的“Jungle Scout”“Keepa”在视频和截图中分别替换为“销量数据连接器”“价格数据连接器”。目前没有证据表明这些集成已经接入；确认接入后，可以在 `render-team.cjs` 的 `GENERIC` 和 `capture-stills.cjs` 中取消替换。
+- **第三方工具：** 视觉稿里的“Jungle Scout”“Keepa”在视频和截图中分别替换为“销量数据连接器”“价格数据连接器”。目前没有证据表明这些集成已经接入；确认接入后，可以在 `render-demo.cjs` 的 `GENERIC` 和 `capture-stills.cjs` 中取消替换。
 - **标注：** 页面统一标注“Sage App 交互演示 · 设计稿 · 示例数据”，并注明界面与能力以 App 正式版本为准。英文页另外注明界面为中文。
 - **数据：** 报告里的数字（德国本土品牌 6 席、€39–69 等）都是视觉稿里的示例数据。
 
@@ -39,15 +29,10 @@
 ## 重新生成
 
 ```sh
-SAGE_APP_DESIGN=<视觉稿目录>/sage-all-screens-final.html \
-FFMPEG=<含 libx264 的 ffmpeg> PLAYWRIGHT_MODULE=<playwright> \
-node tools/app-demo-video/render-team.cjs
-
-# 只预览某几个时间点的画面（不编码视频）：
-PREVIEW=3,12.5,36 PREVIEW_DIR=/tmp node tools/app-demo-video/render-team.cjs
-
-# 企业服务页截图：先截 PNG，再转成 WebP，宽度 1480
-node tools/app-demo-video/capture-stills.cjs /tmp/stills
+DEMO=home SAGE_APP_DESIGN=<设计目录>/sage-all-screens-final.html FFMPEG=<ffmpeg> PLAYWRIGHT_MODULE=<playwright> node tools/app-demo-video/render-demo.cjs
+DEMO=team ...（同上）
+# 只看某些时间点：PREVIEW=3,12 PREVIEW_DIR=/tmp；只看某个场景：SCENES=wake:3
+node tools/app-demo-video/capture-stills.cjs /tmp/stills   # 再转为宽 1480 的 WebP
 ```
 
 本机使用 `imageio-ffmpeg` 自带的 ffmpeg。当前版本用 `CRF=27` 编码（默认 25），可以用环境变量 `CRF` 调整。构建时会自动更新资源的内容哈希。
