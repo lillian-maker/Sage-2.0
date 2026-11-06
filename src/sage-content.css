@@ -117,7 +117,21 @@
 .cinema-section .work-steps li.is-active .work-step-index,.cinema-section .work-steps li.is-active h3{color:var(--accent)}
 .cinema-section .work-steps li.is-active p{color:var(--ink)}
 .work-live{display:none}
-.work-note{margin:22px 0 0;font-size:12px;color:#63758a;text-align:center}.work-note a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 @media(prefers-reduced-motion:no-preference){.cinema-section .work-step-bar{transition:width .3s linear}}
 @media(max-width:900px){.cinema-section .work-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.cinema-section .work-steps{gap:14px 16px;margin-top:20px}.cinema-section .work-steps li{padding:12px 0 0}.cinema-section .work-steps h3{font-size:14px;margin:0;overflow-wrap:anywhere}.cinema-section .work-steps p{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.work-live{display:block;margin:16px 0 0;padding:14px 16px;border-radius:10px;background:#f5f7fa;font-size:14px;line-height:1.7;color:var(--ink);min-height:4.4em}.work-note{text-align:left}}
+@media(max-width:600px){.cinema-section .work-steps{gap:14px 16px;margin-top:20px}.cinema-section .work-steps li{padding:12px 0 0}.cinema-section .work-steps h3{font-size:14px;margin:0;overflow-wrap:anywhere}.cinema-section .work-steps p{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.work-live{display:block;margin:16px 0 0;padding:14px 16px;border-radius:10px;background:#f5f7fa;font-size:14px;line-height:1.7;color:var(--ink);min-height:4.4em}}
+
+/* Demo v4: video and chapter list side by side so both fit in one screen; only the active chapter shows its description. */
+@media(min-width:1001px){
+.cinema-section .work-demo{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;align-items:start}
+.cinema-section .work-steps{grid-template-columns:1fr;gap:0;margin:0;border-top:0}
+.cinema-section .work-steps li{padding:12px 0 12px 18px;border-top:0;border-left:2px solid #e4e9ef}
+.cinema-section .work-steps li.is-active{border-left-color:#c9d8ea}
+.cinema-section .work-step-bar{left:-2px;top:0;width:2px;height:calc(var(--p,0) * 100%);min-width:0}
+.cinema-section .work-steps li.is-active .cinema-section .work-step-bar{min-height:8px}
+.cinema-section .work-step-index{display:inline-block;margin:0 8px 0 0}
+.cinema-section .work-steps h3{display:inline;font-size:15px;margin:0}
+.cinema-section .work-steps p{display:none;margin:6px 0 0}
+.cinema-section .work-steps li.is-active p{display:block}
+.cinema-section .work-step-seek{inset:0;width:100%;border-radius:8px}
+}

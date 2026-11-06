@@ -42,7 +42,6 @@ IM 接入，两层过滤	Chat sources, filtered twice
 播放：先澄清，再开工	Play: Clarify before work starts
 一句话需求常常含糊。主责先用 1–3 个选项确认关键问题，再给出可逐项修改的任务说明和验收清单；缺少的技能一键安装，照常由你确认。	A one-line request is often vague. The lead first settles the key questions with 1–3 choices, then gives you an editable task brief and acceptance checklist; missing skills install in one click, still with your confirmation.
 先澄清，再开工	Clarify before work starts
-画面由 Sage App 设计稿录制，数据为示例；界面与能力以 App 正式版本为准。专家如何分工协作，见 <a href="pages/team.html">AI 团队</a>。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; the released app prevails. For how the specialists divide the work, see <a href="pages/team-en.html">AI team</a>.
 Sage App 交互演示：先澄清再开工、多任务一屏掌握、只推需要你决定的事、IM 接入两层过滤、逐条核对验收、越用越顺手	Sage app walkthrough: clarify before work starts, every task on one screen, only what needs your decision, chat sources filtered twice, acceptance item by item, better every time
 Sage App 交互演示：专家目录、协作网络、专家团队、多专家编排、主责统一汇报、授权把关与版本留痕	Sage app walkthrough: specialist directory, collaboration network, specialist teams, orchestration, one lead reports, authorization and versions
 企业版的具体权益以正式发布为准	Business-plan entitlements follow the official release
@@ -131,7 +130,6 @@ Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Desig
 每位专家在做什么、读到哪份资料、用了多久，实时可见；完成的部分交回主责汇总。	See what each specialist is doing, which material they are reading and for how long; finished work goes back to the lead to combine.
 审批、补充信息、验收和邀请集中到“待我处理”；任务负责人或团队成员处理后，各处状态同步。	Approvals, requests for information, acceptance and invitations gather in “Needs my action”; once the task owner or a teammate handles one, every view updates.
 结论逐条标注出处，可回到原始资料核对；验收后锁定为 v1，之后的修改生成新版本。	Every conclusion cites its source so you can check the original; on acceptance it is locked as v1, and later edits create a new version.
-画面由 Sage App 设计稿录制，数据为示例；第三方数据工具以通用名称示意，界面与能力以 App 正式版本为准。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; third-party data tools are shown under a generic name, and the released app prevails.
 多专家编排	Multi-specialist orchestration
 真人审核	Human review
 授权把关	Authorization
