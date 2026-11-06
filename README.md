@@ -11,7 +11,7 @@ ICP 备案已通过（粤ICP备2026173751号，深圳市众妙之门科技有限
 - 所有静态页脚由 `build.py` 注入运营主体与 ICP 备案号（链接工信部备案系统），账单类页面在 `billing.js` 页脚同步展示；英文页保留中文法定名称与备案号。
 - 去掉"本地产品预览/未接通"一类对外文案。下载按钮保留，点击（`data-app-soon`）弹出"Sage App 即将上线，敬请期待"，不跳转；未启用脚本时仍进入下载页的即将上线说明。
 - 首屏、各节标题按方案 A 重写；两个空白录屏占位替换为"看见 Sage 如何工作"App 演示视频（三段章节可点击跳转）和按 8 个专业域聚合的员工概览（构建时由 `src/data/sage-catalog.js` 生成）。导航"产品"改为链接首页 `#product`。
-- 演示视频 `assets/video/sage-team-collaboration.mp4` 由 `tools/app-demo-video/render-team.cjs` 从 Sage App 设计源文件（`drafts/sage-app-redesign-20261103/sage-all-screens-final.html`，与 Figma `dnmr3E1NLP19pX3X3ZSRxo` 一致）逐帧录制，驱动真实 DOM 的状态变化。AI 团队页（8 章：0 / 9.5 / 18.5 / 25 / 33.5 / 41 / 49 / 55.5 秒）与首页（3 章：0 / 9.5 / 41 秒）共用这一条视频，章节起点写在各自的 `data-start` 中。只在进入视口时播放，减少动态效果时不自动播放，并提供暂停按钮。制作方法和对外表述规则（例如第三方工具使用通用名称）见 `tools/app-demo-video/README.md`。
+- 演示视频由 `tools/app-demo-video/render-demo.cjs` 从 Sage App 设计源文件（与 Figma `dnmr3E1NLP19pX3X3ZSRxo` 一致）逐帧录制：首页 `sage-home-demo.mp4`（6 章，产品体验亮点）与 AI 团队页 `sage-team-collaboration.mp4`（7 章，专家协作）分工不同、不复用画面。只在进入视口时播放，减少动态效果时不自动播放，并提供暂停按钮。详见 `tools/app-demo-video/README.md`。
 - 团队页管理职位统一为首席增长官 CGO、首席治理官 CGOV，与 App 一致。
 - 主按钮由浅蓝 `#AEC8E2` 改为品牌蓝 `#396397` 白字，悬停 `#2F5585`。
 - 首页、AI 团队、企业服务、文档（中英）开放收录，其余页面维持 `noindex`；首页 canonical 为站点根 `/`，补 `x-default`、`robots.txt`、`sitemap.xml` 与 `assets/og/sage-share.jpg` 分享图。

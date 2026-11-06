@@ -12,19 +12,95 @@ from pathlib import Path
 
 COPY = r"""
 下载	Download
-需要你审批、补充信息或验收的事项进入“需要我决定”；在收件或任务详情中处理，两处状态同步，通知中心只提醒一次。	Anything you need to approve, supply or accept goes to Needs my decision; handle it in the Inbox or the task and both stay in sync, while the notification center reminds you once.
+播放：主责统一汇报	Play: One lead reports
+每位专家在做什么、读到哪份资料、用了多久，实时可见；协作专家不在对话里刷屏，统一由主责向你汇报。	See what each specialist is doing, which material they are reading and for how long; contributors stay out of the conversation, and the lead reports to you.
+主责统一汇报	One lead reports
+执行图按理解、研究、分析、复核、交付分阶段；三位专家并行研究，需要授权的节点自动停下等你。	The execution graph runs through understand, research, analyze, review and deliver; three specialists research in parallel, and any node that needs authorization stops and waits for you.
+播放：专家团队	Play: Specialist teams
+常用的协作组合存为团队，例如“新市场进入小组”；新建任务时 @ 团队即可一次组齐，并有默认主责。	Save a regular line-up as a team, such as the new-market entry group; @ the team in a new task to bring everyone in at once, with a default lead.
+专家团队	Specialist teams
+播放：协作网络	Play: Collaboration network
+每位专家常与谁交接、由谁复核，来自近 90 天的真实协作记录；协作关系越来越准，组队也越来越准。	Who each specialist hands off to and who reviews them comes from the last 90 days of real collaboration, so relationships, and teams, get sharper over time.
+协作网络	Collaboration network
+播放：专家目录	Play: Specialist directory
+Sage 助手兜底担任主责；53 位数字专家按管理身份与 8 个专业域分组，每位都有职责、技能与可用工具。	Sage Assistant leads when no one else fits; 53 digital specialists are grouped by management role and 8 domains, each with responsibilities, skills and tools.
+播放：越用越顺手	Play: Better every time
+跑通的流程存为 Playbook，换个市场或品类直接复用，也能交给自动化按计划运行。	Save a proven flow as a Playbook to reuse for another market or category, or let an automation run it on a schedule.
+越用越顺手	Better every time
+播放：逐条核对验收	Play: Acceptance, item by item
+验收从“凭感觉”变成“逐条核对”：每条都指向报告里的证据，全部满足才验收，退回只返工相关部分。	Acceptance stops being a gut call: every checklist item points to its evidence in the report, you accept only when all are met, and a return reworks only that part.
+逐条核对验收	Acceptance, item by item
+播放：IM 接入，两层过滤	Play: Chat sources, filtered twice
+接入飞书或企业微信后，先按群、关键词和发送人过滤，再由专家按职责判断；默认只汇报，不在群里发言，也不外发。	Once Feishu or WeCom is connected, messages are filtered by group, keyword and sender, then judged by the responsible specialist; by default Sage only reports, never posting in the group or sending anything out.
+IM 接入，两层过滤	Chat sources, filtered twice
+播放：只推需要你决定的事	Play: Only what needs your decision
+审批、补充信息、验收和邀请进入收件的“需要我决定”；其余进度不打扰你，批准后任务同步更新。	Approvals, information requests, acceptance and invitations go to Inbox · Needs my decision; other progress stays out of your way, and the task updates as soon as you approve.
+只推需要你决定的事	Only what needs your decision
+播放：多任务一屏掌握	Play: Every task on one screen
+“进行中”列出每件事的进度、卡在哪里、需要你做什么；同时交办十几件事，也不用一个个点进去检查。	In Progress shows how far each task has got, where it is stuck and what it needs from you; hand off a dozen tasks without opening each one to check.
+多任务一屏掌握	Every task on one screen
+播放：先澄清，再开工	Play: Clarify before work starts
+一句话需求常常含糊。主责先用 1–3 个选项确认关键问题，再给出可逐项修改的任务说明和验收清单；缺少的技能一键安装，照常由你确认。	A one-line request is often vague. The lead first settles the key questions with 1–3 choices, then gives you an editable task brief and acceptance checklist; missing skills install in one click, still with your confirmation.
+先澄清，再开工	Clarify before work starts
+画面由 Sage App 设计稿录制，数据为示例；界面与能力以 App 正式版本为准。专家如何分工协作，见 <a href="pages/team.html">AI 团队</a>。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; the released app prevails. For how the specialists divide the work, see <a href="pages/team-en.html">AI team</a>.
+Sage App 交互演示：先澄清再开工、多任务一屏掌握、只推需要你决定的事、IM 接入两层过滤、逐条核对验收、越用越顺手	Sage app walkthrough: clarify before work starts, every task on one screen, only what needs your decision, chat sources filtered twice, acceptance item by item, better every time
+Sage App 交互演示：专家目录、协作网络、专家团队、多专家编排、主责统一汇报、授权把关与版本留痕	Sage app walkthrough: specialist directory, collaboration network, specialist teams, orchestration, one lead reports, authorization and versions
+企业版的具体权益以正式发布为准	Business-plan entitlements follow the official release
+只有企业管理员可以看到这一页	Only business admins can see this page
+关键操作写入审计日志，可导出近 90 天	Key actions are written to an audit log that can be exported for 90 days
+Sage App 企业管理 · 设计稿 · 示例数据	Sage app Business admin · Design prototype · Sample data
+Sage App 企业管理：策略设置与审计日志	Sage app business admin: policy settings and audit log
+管理员管理成员与部门、按部门分配企业额度，并设置需要审批的操作、扩展白名单和自建专家的共享范围。	Admins manage members and departments, allocate business credits by department, and set which actions need approval, the extension allowlist and how far custom specialists can be shared.
+成员、额度与策略，由管理员统一管理	Members, credits and policy, managed centrally
+首期为只读视图，事实写回属于二期规划	The first release is a read-only view; writing facts back is planned for phase two
+AI 识别的关联单独标注，不当作已确认事实	AI-identified relations are labeled and never treated as confirmed facts
+专家只使用你明确选入任务的内容	Specialists use only what you explicitly add to a task
+Sage App 知识图谱 · 设计稿 · 示例数据	Sage app Knowledge graph · Design prototype · Sample data
+Sage App 知识图谱：以“Amazon.de 小家电类目”为中心的实体关系，以及一条事实冲突提示	Sage app knowledge graph: entities around the Amazon.de small appliances category and a flagged fact conflict
+品牌、商品、市场、渠道、竞品与法规等实体，每条事实都带出处、时间与权限；来源冲突时会明确提示。	Brands, products, markets, channels, competitors and regulations, each fact with its source, date and access; conflicting sources are flagged explicitly.
+从资料里整理实体与事实，并提示矛盾	Entities and facts from your materials, with conflicts flagged
+访问范围与编辑权限逐库设置	Access and edit rights are set per library
+超过时效的资料标记为“已过期”，引用时提示	Stale materials are marked expired and flagged when cited
+列表显示来源、索引状态与最近被引用的时间	The list shows source, indexing status and when each was last cited
+Sage App 企业知识库 · 设计稿 · 示例数据	Sage app Business knowledge · Design prototype · Sample data
+Sage App 知识库详情：德国市场进入资料库的资料与索引状态	Sage app knowledge library: materials and their indexing status for the Germany entry library
+资料按个人、工作区或企业范围管理，完成索引后才能被引用，引用时固定资料版本。	Materials are scoped to a person, a workspace or the business; they can be cited only after indexing, and a citation pins the version.
+企业资料带版本、权限与状态	Company materials with versions, access and status
+企业知识库	Business knowledge
+个人工作区的资料不会自动共享给企业	Personal workspace materials are never shared with the business automatically
+成员的编辑权不会自动成为专家的执行权	A member’s edit rights never become a specialist’s execution rights
+企业工作区默认只有创建者可以访问	A business workspace is visible only to its creator until access is granted
+Sage App 成员与权限 · 设计稿 · 示例数据	Sage app Members and access · Design prototype · Sample data
+Sage App 工作区成员与权限：四位成员及四种角色说明	Sage app workspace members and access: four members and the four roles
+所有者、可编辑、仅查看、访客四种角色；访客只能看到被邀请的任务。	Owner, editor, viewer and guest roles; guests see only the tasks they are invited to.
+按角色共享任务与资料	Share tasks and materials by role
+成员与权限	Members and access
+例如：价格建议不得低于成本价加 15%、合规结论必须引用法规原文	For example: never price below cost plus 15%; compliance conclusions must cite the regulation
+工作区管理员编辑，成员只读	Workspace admins edit; members can only read
+每次修改生成版本，记录修改人与差异，可以回滚	Every change creates a version with author and diff, and can be rolled back
+Sage App 工作区规则 · 设计稿 · 示例数据	Sage app Workspace rules · Design prototype · Sample data
+Sage App 工作区规则：六条团队规则与版本记录	Sage app workspace rules: six team rules and their version history
+每条规则 200 字以内、最多 30 条，专家在这个工作区的每个任务里都会遵守；与本次指令冲突时，先指出冲突再执行。	Up to 30 rules of 200 characters each apply to every task in the workspace; when one conflicts with your current instruction, the specialist points it out first.
+团队约定写成规则，每个任务都遵守	Team conventions become rules every task follows
+通知中心只提醒一次，不重复列出	The notification center reminds you once, without repeating the queue
+在收件或任务详情中处理，两处状态同步	Handle it in the Inbox or the task and both stay in sync
+批准只覆盖确认卡上的对象、动作、范围和时效	An approval covers only the targets, actions, scope and time on the card
+Sage App 收件 · 设计稿 · 示例数据	Sage app Inbox · Design prototype · Sample data
+Sage App 收件：“需要我决定”列表与一条只读数据查询的审批详情	Sage app Inbox: the Needs my decision list and an approval for a read-only data query
+审批、补充信息、验收和邀请进入“需要我决定”并始终置顶；外部消息先经规则和模型两层过滤，再进入收件。	Approvals, information requests, acceptance and invitations land in Needs my decision and stay on top; external messages pass rule and model filters before they reach the Inbox.
+所有待你处理的事，只在一个地方	Everything waiting for you, in one place
+画面来自 Sage App 设计稿，数据为示例；多人审批等协作规则仍在确认中，以 Sage App 正式版本为准。	Screens come from Sage app design prototypes (interface in Chinese) with sample data; collaboration rules such as multi-person approval are still being finalized, and the released app prevails.
+企业版 App 功能	Business edition features
+真人与数字专家在同一个工作区里协作；规则、权限、知识与审计由企业统一管理。	People and digital specialists work in one workspace, while rules, access, knowledge and audit are managed by the business.
+一个团队、一套规则、一份企业知识	One team, one set of rules, one body of company knowledge
+企业版 App	Business edition
+53 位数字员工覆盖出海经营全链路，按任务组队、交叉复核——结论有出处，执行经你授权。	53 digital employees across the whole global-commerce chain, teaming up per task and checking each other: every conclusion sourced, every action authorized by you.
 收件	Inbox
 Sage App 收件页：左侧是“需要我决定”列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Inbox (interface in Chinese): on the left, the Needs my decision list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
-Sage App 收件 · 需要我决定 · 设计稿 · 示例数据	Sage app Inbox · Needs my decision · Design prototype · Sample data
-Sage App 的收件是唯一的待处理队列：需要我决定、@ 与指派、外部消息，分组排列，审批永远置顶。	The Inbox is the single queue of everything waiting for you, grouped into Needs my decision, Mentions and assignments, and External messages, with approvals always on top.
-验收清单逐条附证据，成果带版本、可复用为 Playbook。涉及店铺、资金或发布的动作，经你批准后才执行。	Every acceptance item links to its evidence; results are versioned and can be reused as a Playbook. Actions involving stores, funds or publishing run only after you approve them.
-说清目标与约束，主责用开工确认卡和你对齐问题、交付物与验收清单，你确认后才开始。例如：家用小家电进入德国市场，是否值得投入？	State the goal and constraints; the lead aligns with you on questions, deliverables and an acceptance checklist in a kick-off card, and work starts only after you confirm. For example: is it worth bringing small home appliances to Germany?
 任务详情里有主对话、侧聊和进度；编排视图显示每位专家在做什么，开工确认卡与授权卡插在对话流中，需要你处理的事同步进入收件。	A task has a main conversation, side chats and progress; the orchestration view shows what each specialist is doing, kick-off and authorization cards appear in the conversation, and anything that needs you also lands in the Inbox.
 复杂任务先出开工确认卡：澄清问题、任务说明、验收清单与执行计划。	Complex tasks start with a kick-off card: clarifying questions, task brief, acceptance checklist and plan.
-Sage App 交互演示：开工确认、多专家编排、并行协作、授权把关、收件里拍板、交付验收、版本留痕与沉淀复用	Sage app walkthrough: kick-off, multi-specialist orchestration, parallel work, authorization, deciding in the Inbox, acceptance, versions and reuse
 播放：沉淀复用	Play: Reuse
 验收通过的执行图存为 Playbook，换个市场或品类就能复用，也可以交给自动化按计划运行。	Save an accepted execution graph as a Playbook to reuse for another market or category, or hand it to an automation to run on a schedule.
-沉淀复用	Reuse
 播放：版本留痕	Play: Versions
 每次修改生成新版本，可以逐处对比差异；恢复旧版本也会生成新版本，不覆盖历史。	Every change creates a new version you can compare line by line; restoring an old version creates a new one too, so history is never overwritten.
 版本留痕	Versions
@@ -32,25 +108,19 @@ Sage App 交互演示：开工确认、多专家编排、并行协作、授权�
 验收清单逐条附证据，指向报告段落或资料；全部满足才验收，退回时写明原因，主责只返工相关部分。	Every item on the acceptance checklist links to its evidence in the report or materials; accept when all are met, or send it back with a reason and the lead reworks only that part.
 播放：收件里拍板	Play: Decide in the Inbox
 审批、补充信息、验收和邀请都进入“收件 · 需要我决定”；在这里批准，任务详情同步更新。	Approvals, requests for information, acceptance and invitations all arrive in Inbox · Needs my decision; approve there and the task updates too.
-收件里拍板	Decide in the Inbox
 每位专家在做什么、读到哪份资料、用了多久，实时可见；主对话里只有主责向你汇报。	See what each specialist is doing, which material they are reading and for how long; in the main conversation only the lead reports to you.
 播放：开工确认	Play: Kick-off
 主责先用开工确认卡对齐：澄清问题、任务说明、验收清单与执行计划；缺少的技能或连接由你确认，点“开始执行”后才动。	The lead aligns with you on a kick-off card: clarifying questions, task brief, acceptance checklist and plan; missing skills or connections wait for your confirmation, and nothing runs until you press Start.
 开工确认	Kick-off
 洞察 · 决策 · 执行	Insight · Decisions · Execution
 你的<span class="hero-team-emphasis">出海 AI 团队</span>	Your <span class="hero-team-emphasis">AI Team for Global Commerce</span>
-53 位数字员工组成完整的出海经营组织，覆盖战略、产品、供应、渠道、品牌、服务、财务与数据全链路。按任务组队、分工协作、交叉复核，结论有出处，执行经你授权。	53 digital employees form a complete business organization for global commerce, spanning strategy, product, supply, channels, brand, service, finance and data. They team up around each task, divide the work and review one another: every conclusion is sourced, and nothing is executed without your authorization.
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
-真人与数字专家，在同一个工作区里协作	People and digital specialists working in one workspace
 工作区	Workspaces
 Sage App 协作页：左侧是待我处理列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Collaboration page (interface in Chinese): on the left, the Needs my action list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
 待我处理	Needs my action
 审批与授权	Approvals and authorization
 企业管理	Business admin
-资料、任务和成员放在同一个工作区。企业工作区默认只有创建者可以访问，其他成员需要明确授权。	Materials, tasks and members live in one workspace. A business workspace is visible only to its creator until other members are explicitly granted access.
-外部动作先出确认卡，写明发起人、动作、范围、预计消耗与有效期；批准只对确认卡上的范围有效，可以修改范围或拒绝。	External actions start with a confirmation card naming the requester, action, scope, estimated usage and validity; approval covers only that scope, and you can change the scope or decline.
-管理员管理成员、席位与权限；个人工作区的资料不会自动共享给企业。	Admins manage members, seats and permissions; materials in personal workspaces are never shared with the business automatically.
 多人审批等协作规则仍在确认中，以 Sage App 正式版本为准。	Collaboration rules such as multi-person approval are still being finalized; the released Sage app prevails.
 多位专家协作完成，	Specialists work together,
 关键处由你把关	and you decide at the key moments
@@ -63,7 +133,6 @@ Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Desig
 结论逐条标注出处，可回到原始资料核对；验收后锁定为 v1，之后的修改生成新版本。	Every conclusion cites its source so you can check the original; on acceptance it is locked as v1, and later edits create a new version.
 画面由 Sage App 设计稿录制，数据为示例；第三方数据工具以通用名称示意，界面与能力以 App 正式版本为准。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; third-party data tools are shown under a generic name, and the released app prevails.
 多专家编排	Multi-specialist orchestration
-并行协作	Parallel work
 真人审核	Human review
 授权把关	Authorization
 验收成果	Accept results
@@ -283,10 +352,6 @@ Sage 会直接改价、采购或发布吗？	Will Sage change prices, purchase o
 服务条款	Terms of Service
 看见 Sage 如何工作	See how Sage works
 一个经营问题，从提出到交付，每一步都可以检查。	From question to delivery, every step of a business task can be checked.
-提出经营问题	Ask a business question
-专业岗位接力	Specialists work in relay
-按问题组建岗位，分头研究、交叉复核。每次交接都写明来源、范围与待验证项。	Sage assembles the roles the question needs. They research in parallel and review each other, and every handoff states its sources, scope and open assumptions.
-交付可核验的成果	Receive verifiable deliverables
 53 位数字员工，各有专长	53 digital employees, each a specialist
 3 位管理职能统筹方向，50 个专业岗位分布在 8 个专业域。每个岗位都有明确的职责、方法与交付标准。	Three management roles set direction. Fifty specialist roles span eight domains, each with defined responsibilities, methods and delivery standards.
  个专业岗位</span>	 specialist roles</span>
@@ -847,7 +912,6 @@ FDE 实施和持续服务单独界定，不包含在自助订阅承诺中。当�
 数据和授权现状	Current data and authorization
 受控试点	Controlled pilot
 有限范围验证	Limited-scope validation
-交付验收	Acceptance
 产物与证据确认	Deliverable and evidence review
 持续运行	Ongoing operation
 责任与迭代机制	Responsibilities and iteration process

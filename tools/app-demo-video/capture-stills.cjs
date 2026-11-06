@@ -7,7 +7,9 @@ const path = require('node:path');
 const design = process.env.SAGE_APP_DESIGN, out = process.argv[2];
 if (!design || !out) throw new Error('Set SAGE_APP_DESIGN and pass an output directory');
 // [file name, screen id, clip within the 1440×900 screen]; clips drop the global sidebar.
-const STILLS = [['collaboration-inbox', 'screen-collab', { x: 256, y: 0, width: 1184, height: 560 }]];
+const CLIP = { x: 256, y: 0, width: 1184, height: 680 };
+const STILLS = [['enterprise-inbox', 'screen-collab'], ['enterprise-rules', 'screen-ws-rules'], ['enterprise-members', 'screen-ws-members'],
+  ['enterprise-knowledge', 'screen-kb-detail'], ['enterprise-graph', 'screen-kg'], ['enterprise-admin', 'screen-ent-policy']].map(([name, id]) => [name, id, CLIP]);
 
 (async () => {
   const browser = await chromium.launch({ channel: 'chrome' });

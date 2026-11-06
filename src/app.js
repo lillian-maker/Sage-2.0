@@ -227,7 +227,8 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
  let userPaused=false,inView=false;
  function label(){const playing=!video.paused;toggle.setAttribute('aria-pressed',String(playing));toggle.querySelector('.work-video-label').textContent=playing?(en?'Pause demo':'暂停演示'):(en?'Play demo':'播放演示');toggle.classList.toggle('is-playing',playing);}
  function play(){video.preload='auto';const attempt=video.play();if(attempt)attempt.catch(()=>{});}
- function chapter(){let index=0;starts.forEach((start,i)=>{if(video.currentTime>=start)index=i;});steps.forEach((step,i)=>step.classList.toggle('is-active',i===index));}
+ const live=document.querySelector('#work-live');
+ function chapter(){const t=video.currentTime,end=video.duration||starts[starts.length-1]+8;let index=0;starts.forEach((start,i)=>{if(t>=start)index=i;});steps.forEach((step,i)=>{const from=starts[i],to=starts[i+1]??end;step.classList.toggle('is-active',i===index);step.style.setProperty('--p',i<index?1:i>index?0:Math.min(1,(t-from)/(to-from)).toFixed(3));});if(live)live.textContent=steps[index].querySelector('p').textContent;}
  video.addEventListener('play',label);video.addEventListener('pause',label);video.addEventListener('timeupdate',chapter);
  toggle.addEventListener('click',()=>{if(video.paused){userPaused=false;play();}else{userPaused=true;video.pause();}});
  steps.forEach((step,i)=>step.querySelector('.work-step-seek').addEventListener('click',()=>{video.currentTime=starts[i];chapter();userPaused=false;play();}));
