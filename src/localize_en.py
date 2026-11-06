@@ -12,6 +12,9 @@ from pathlib import Path
 
 COPY = r"""
 下载	Download
+洞察 · 决策 · 执行	Insight · Decisions · Execution
+你的<span class="hero-team-emphasis">出海 AI 团队</span>	Your <span class="hero-team-emphasis">AI Team for Global Commerce</span>
+53 位数字员工组成完整的出海经营组织，覆盖战略、产品、供应、渠道、品牌、服务、财务与数据全链路。按任务组队、分工协作、交叉复核，结论有出处，执行经你授权。	53 digital employees form a complete business organization for global commerce, spanning strategy, product, supply, channels, brand, service, finance and data. They team up around each task, divide the work and review one another: every conclusion is sourced, and nothing is executed without your authorization.
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
 真人与数字专家，在同一个工作区里协作	People and digital specialists working in one workspace
@@ -259,8 +262,6 @@ Sage 会直接改价、采购或发布吗？	Will Sage change prices, purchase o
 播放：专业岗位接力	Play: Specialists work in relay
 播放：交付可核验的成果	Play: Receive verifiable deliverables
 服务条款	Terms of Service
-把出海经营决策<br>交给<span class="hero-team-emphasis">你的 AI 团队</span>	Hand your global commerce decisions to <span class="hero-team-emphasis">your AI team</span>
-选品、渠道、补货、合规——53 位专业数字员工分头研究、交叉复核，交给你有出处的结论。每一步执行，都等你批准。	Product selection, channels, replenishment, compliance: 53 specialist digital employees research in parallel and review each other's work, then hand you conclusions with their sources. Nothing is executed without your approval.
 看见 Sage 如何工作	See how Sage works
 一个经营问题，从提出到交付，每一步都可以检查。	From question to delivery, every step of a business task can be checked.
 提出经营问题	Ask a business question
@@ -772,7 +773,6 @@ Sage App，即将上线。	The Sage app is coming soon.
 先看 Sage 如何工作。	See how Sage works first.
 在 AI 团队页观看一个任务的完整过程：计划确认、多专家编排、真人审核、授权与验收。	Watch one complete task on the AI team page: plan confirmation, multi-specialist orchestration, human review, authorization and acceptance.
 观看交互演示	Watch the walkthrough
-先看交互演示	Watch the walkthrough first
 正式发布时，一并提供。	Included with the official release.
 更新说明	Release notes
 版本变更与已知问题	Version changes and known issues

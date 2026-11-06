@@ -85,3 +85,7 @@ body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--su
 .v1 .nav.nav-light .brand .sage-logo-dark{display:none}
 .v1 .nav.nav-light .brand .sage-logo-light{display:block}
 @media(max-width:600px){.v1 .brand img.sage-logo{width:96px;height:42px}}
+
+.v1 .contact-section .contact-trial{background:#fff;color:#396397;border:1px solid #396397;font-weight:600}.v1 .contact-section .contact-trial:hover{background:#edf3f9;color:#2f5480;border-color:#2f5480}
+.v1 .hero-body{text-wrap:pretty}
+@media(min-width:761px){html[lang="zh-CN"] .v1 .hero-body{word-break:keep-all}}
