@@ -307,6 +307,9 @@ SELECT 'setting',COALESCE(r.rolname,''),s.setconfig::text FROM pg_db_role_settin
         probe_config = (ROOT / 'drafts/restricted-deploy/docker-nginx.conf').read_text()
         default_server = '    server {\n        listen 8443 ssl default_server;\n        ssl_reject_handshake on;\n    }\n'
         assert default_server in probe_config, 'Log probe default-server fixture drift'
+        redirects = re.compile(r'    # public-redirects:begin.*?    # public-redirects:end\n', re.S)
+        assert len(redirects.findall(probe_config)) == 1, 'Public redirect block drift'
+        probe_config = redirects.sub('', probe_config)
         probe_config = probe_config.replace(default_server, '').replace('listen 8443 ssl;', 'listen 8080;')
         probe_config = '\n'.join(line for line in probe_config.splitlines()
                                  if not line.strip().startswith(('ssl_', 'auth_basic')))
