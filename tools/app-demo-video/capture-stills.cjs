@@ -16,7 +16,8 @@ const STILLS = [['collaboration-inbox', 'screen-collab', { x: 256, y: 0, width: 
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => {
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    for (let n; (n = walker.nextNode());) if (n.textContent.includes('Jungle Scout')) n.textContent = n.textContent.replaceAll('Jungle Scout', '销量数据连接器');
+    const generic = { 'Jungle Scout': '销量数据连接器', Keepa: '价格数据连接器' };
+    for (let n; (n = walker.nextNode());) for (const [name, plain] of Object.entries(generic)) if (n.textContent.includes(name)) n.textContent = n.textContent.replaceAll(name, plain);
   });
   for (const [name, id, clip] of STILLS) {
     await page.locator('#' + id).scrollIntoViewIfNeeded();

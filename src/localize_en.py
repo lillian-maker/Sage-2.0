@@ -12,28 +12,49 @@ from pathlib import Path
 
 COPY = r"""
 下载	Download
+需要你审批、补充信息或验收的事项进入“需要我决定”；在收件或任务详情中处理，两处状态同步，通知中心只提醒一次。	Anything you need to approve, supply or accept goes to Needs my decision; handle it in the Inbox or the task and both stay in sync, while the notification center reminds you once.
+收件	Inbox
+Sage App 收件页：左侧是“需要我决定”列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Inbox (interface in Chinese): on the left, the Needs my decision list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
+Sage App 收件 · 需要我决定 · 设计稿 · 示例数据	Sage app Inbox · Needs my decision · Design prototype · Sample data
+Sage App 的收件是唯一的待处理队列：需要我决定、@ 与指派、外部消息，分组排列，审批永远置顶。	The Inbox is the single queue of everything waiting for you, grouped into Needs my decision, Mentions and assignments, and External messages, with approvals always on top.
+验收清单逐条附证据，成果带版本、可复用为 Playbook。涉及店铺、资金或发布的动作，经你批准后才执行。	Every acceptance item links to its evidence; results are versioned and can be reused as a Playbook. Actions involving stores, funds or publishing run only after you approve them.
+说清目标与约束，主责用开工确认卡和你对齐问题、交付物与验收清单，你确认后才开始。例如：家用小家电进入德国市场，是否值得投入？	State the goal and constraints; the lead aligns with you on questions, deliverables and an acceptance checklist in a kick-off card, and work starts only after you confirm. For example: is it worth bringing small home appliances to Germany?
+任务详情里有主对话、侧聊和进度；编排视图显示每位专家在做什么，开工确认卡与授权卡插在对话流中，需要你处理的事同步进入收件。	A task has a main conversation, side chats and progress; the orchestration view shows what each specialist is doing, kick-off and authorization cards appear in the conversation, and anything that needs you also lands in the Inbox.
+复杂任务先出开工确认卡：澄清问题、任务说明、验收清单与执行计划。	Complex tasks start with a kick-off card: clarifying questions, task brief, acceptance checklist and plan.
+Sage App 交互演示：开工确认、多专家编排、并行协作、授权把关、收件里拍板、交付验收、版本留痕与沉淀复用	Sage app walkthrough: kick-off, multi-specialist orchestration, parallel work, authorization, deciding in the Inbox, acceptance, versions and reuse
+播放：沉淀复用	Play: Reuse
+验收通过的执行图存为 Playbook，换个市场或品类就能复用，也可以交给自动化按计划运行。	Save an accepted execution graph as a Playbook to reuse for another market or category, or hand it to an automation to run on a schedule.
+沉淀复用	Reuse
+播放：版本留痕	Play: Versions
+每次修改生成新版本，可以逐处对比差异；恢复旧版本也会生成新版本，不覆盖历史。	Every change creates a new version you can compare line by line; restoring an old version creates a new one too, so history is never overwritten.
+版本留痕	Versions
+播放：交付验收	Play: Acceptance
+验收清单逐条附证据，指向报告段落或资料；全部满足才验收，退回时写明原因，主责只返工相关部分。	Every item on the acceptance checklist links to its evidence in the report or materials; accept when all are met, or send it back with a reason and the lead reworks only that part.
+播放：收件里拍板	Play: Decide in the Inbox
+审批、补充信息、验收和邀请都进入“收件 · 需要我决定”；在这里批准，任务详情同步更新。	Approvals, requests for information, acceptance and invitations all arrive in Inbox · Needs my decision; approve there and the task updates too.
+收件里拍板	Decide in the Inbox
+每位专家在做什么、读到哪份资料、用了多久，实时可见；主对话里只有主责向你汇报。	See what each specialist is doing, which material they are reading and for how long; in the main conversation only the lead reports to you.
+播放：开工确认	Play: Kick-off
+主责先用开工确认卡对齐：澄清问题、任务说明、验收清单与执行计划；缺少的技能或连接由你确认，点“开始执行”后才动。	The lead aligns with you on a kick-off card: clarifying questions, task brief, acceptance checklist and plan; missing skills or connections wait for your confirmation, and nothing runs until you press Start.
+开工确认	Kick-off
 洞察 · 决策 · 执行	Insight · Decisions · Execution
 你的<span class="hero-team-emphasis">出海 AI 团队</span>	Your <span class="hero-team-emphasis">AI Team for Global Commerce</span>
 53 位数字员工组成完整的出海经营组织，覆盖战略、产品、供应、渠道、品牌、服务、财务与数据全链路。按任务组队、分工协作、交叉复核，结论有出处，执行经你授权。	53 digital employees form a complete business organization for global commerce, spanning strategy, product, supply, channels, brand, service, finance and data. They team up around each task, divide the work and review one another: every conclusion is sourced, and nothing is executed without your authorization.
 下载 Sage	Download Sage
 隐私政策	Privacy Policy
 真人与数字专家，在同一个工作区里协作	People and digital specialists working in one workspace
-Sage App 的协作入口集中了团队要处理的事：待我处理、@我的、指派给我、共享给我与讨论。	The Collaboration area of the Sage app gathers what your team needs to handle: needs my action, mentions, assigned to me, shared with me and discussions.
 工作区	Workspaces
-Sage App 协作页 · 设计稿 · 示例数据	Sage app Collaboration · Design prototype · Sample data
 Sage App 协作页：左侧是待我处理列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Collaboration page (interface in Chinese): on the left, the Needs my action list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
 待我处理	Needs my action
 审批与授权	Approvals and authorization
 企业管理	Business admin
 资料、任务和成员放在同一个工作区。企业工作区默认只有创建者可以访问，其他成员需要明确授权。	Materials, tasks and members live in one workspace. A business workspace is visible only to its creator until other members are explicitly granted access.
-需要你审批、补充信息或验收的事项集中在一处；在协作、任务详情或通知中任一处处理，其他地方同步更新。	Everything you need to approve, supplement or accept is in one place; handle it in Collaboration, the task or a notification and the others update.
 外部动作先出确认卡，写明发起人、动作、范围、预计消耗与有效期；批准只对确认卡上的范围有效，可以修改范围或拒绝。	External actions start with a confirmation card naming the requester, action, scope, estimated usage and validity; approval covers only that scope, and you can change the scope or decline.
 管理员管理成员、席位与权限；个人工作区的资料不会自动共享给企业。	Admins manage members, seats and permissions; materials in personal workspaces are never shared with the business automatically.
 多人审批等协作规则仍在确认中，以 Sage App 正式版本为准。	Collaboration rules such as multi-person approval are still being finalized; the released Sage app prevails.
 多位专家协作完成，	Specialists work together,
 关键处由你把关	and you decide at the key moments
 每个任务由一位主责专家牵头，按需组织协作与复核专家；需要判断、授权和验收的地方，交给你和你的团队。下面是 Sage App 中一个任务的完整过程。	Each task is led by one specialist who brings in contributors and reviewers as needed; judgments, authorizations and acceptance stay with you and your team. Below is one complete task in the Sage app.
-Sage App 交互演示：计划确认、多专家编排、并行协作、真人审核、授权把关与验收成果	Sage app walkthrough: plan confirmation, multi-specialist orchestration, parallel work, human review, authorization and acceptance
 Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Design prototype · Sample data
 主责专家把任务拆成 8 步、交给 5 位专家，标出依赖、预计消耗和需要授权的步骤；你点“开始执行”后才动。	The lead specialist breaks the task into 8 steps for 5 specialists, with dependencies, estimated usage and the steps that need authorization; nothing runs until you press Start.
 执行图按理解、研究、分析、复核、交付分阶段；三位专家并行研究，遇到需要授权的节点自动停下等你。	The execution graph runs through understand, research, analyze, review and deliver; three specialists research in parallel, and any node that needs authorization stops and waits for you.
@@ -63,7 +84,6 @@ Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Desig
 Sage 助手置顶，53 位数字专家按专业域分组；可按名称、岗位与技能搜索，选择一位作为任务主责。	Sage Assistant is pinned on top and 53 digital specialists are grouped by domain; search by name, role or skill and pick one to lead a task.
 查看专家的职责、技能、可用工具与协作网络：常与谁交接、由谁复核。	See a specialist’s responsibilities, skills, available tools and collaboration network: who they hand off to and who reviews them.
 从身份与职责、协作方式、专业技能、工具与连接、知识与用户背景五步，创建贴合你业务的专家，可先测试再启用。	Create a specialist for your business in five steps: identity and responsibilities, collaboration style, skills, tools and connections, knowledge and context; test before enabling.
-任务详情里有主对话、侧聊和进度；编排视图显示每位专家在做什么，计划确认卡与授权卡插在对话流中。	A task has a main conversation, side chats and progress; the orchestration view shows what each specialist is doing, and plan and authorization cards appear in the conversation.
 页面内容依据 Sage App 产品设计，演示画面来自设计稿；相关能力随 App 版本逐步开放。	This page follows the Sage app product design and the demo uses design frames; capabilities open with app releases.
 什么是 Sage	What is Sage
 适用人群与使用边界	Who it is for and usage boundaries
@@ -204,7 +224,6 @@ AI 组织	for global commerce
 交付与沉淀	Deliver and retain
 建立任务账本：目标、验收标准、已知事实、待查事实与约束。	Build a task ledger: goal, acceptance criteria, known facts, open questions and constraints.
 在专家图谱上选出主责与协作专家，把步骤编译成有依赖关系的执行图。	Pick the lead and contributors on the specialist graph, then compile the steps into an execution graph with dependencies.
-复杂任务先出计划确认卡：步骤、负责专家、预计消耗与所需授权。	Complex tasks start with a plan card: steps, owners, estimated usage and the authorizations needed.
 没有依赖的步骤并行推进，每一步只拿到与它相关、且有权访问的知识。	Independent steps run in parallel, and each step sees only the knowledge it needs and may access.
 每一步按验收条件自检，关键结论由复核专家交叉检查。	Each step checks itself against its acceptance criteria; key conclusions are cross-checked by a reviewer.
 只在失败处局部重做；没有进展或接近预算时暂停，交给你决定。	Only failed steps are redone; with no progress or near the budget, Sage pauses and hands the decision to you.
@@ -265,11 +284,9 @@ Sage 会直接改价、采购或发布吗？	Will Sage change prices, purchase o
 看见 Sage 如何工作	See how Sage works
 一个经营问题，从提出到交付，每一步都可以检查。	From question to delivery, every step of a business task can be checked.
 提出经营问题	Ask a business question
-说清目标与约束，主责专家给出执行计划，你确认后才开始。例如：家用小家电进入德国市场，是否值得投入？	State the goal and constraints; the lead specialist proposes a plan, and work starts only after you confirm. For example: is it worth bringing small home appliances to Germany?
 专业岗位接力	Specialists work in relay
 按问题组建岗位，分头研究、交叉复核。每次交接都写明来源、范围与待验证项。	Sage assembles the roles the question needs. They research in parallel and review each other, and every handoff states its sources, scope and open assumptions.
 交付可核验的成果	Receive verifiable deliverables
-结论、依据与行动方案一起交付。涉及店铺、资金或发布的动作，经你批准后才执行。	Conclusions arrive with their evidence and an action plan. Anything that touches your store, funds or publishing runs only after you approve it.
 53 位数字员工，各有专长	53 digital employees, each a specialist
 3 位管理职能统筹方向，50 个专业岗位分布在 8 个专业域。每个岗位都有明确的职责、方法与交付标准。	Three management roles set direction. Fifty specialist roles span eight domains, each with defined responsibilities, methods and delivery standards.
  个专业岗位</span>	 specialist roles</span>
@@ -830,7 +847,7 @@ FDE 实施和持续服务单独界定，不包含在自助订阅承诺中。当�
 数据和授权现状	Current data and authorization
 受控试点	Controlled pilot
 有限范围验证	Limited-scope validation
-交付验收	Delivery acceptance
+交付验收	Acceptance
 产物与证据确认	Deliverable and evidence review
 持续运行	Ongoing operation
 责任与迭代机制	Responsibilities and iteration process
