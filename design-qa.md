@@ -338,3 +338,17 @@ Historical results below describe the previous hero composition. Latest review i
   - Google 等第三方登录开放后才显示。
 - **自审中发现的回归**：清理旧架构样式时，正则误删了 `.ep-collab .ep-arch-note` 的规则体，留下的选择器片段使 1000px 断点的媒体查询失效，平板宽度下协作四列不能变为两列。`git diff --check` 发现后已修复，并在 1440 / 900 / 390 三个宽度下复核了列数，同时检查了所有改动样式文件的括号配对。
 - **验证**：7 个页面，中文桌面 + 手机、英文桌面，共 21 种组合，axe 0 违规，无溢出、无脚本错误、无图片加载失败。构建、`content-pages-audit`、`bilingual-content-audit`（40 篇，节与块对等）、`website-account-contract`、`release-audit`（含 `--keyboard`）、`website-account-ui`、`bilingual-content-ui`、`purchase-ui-audit`、`order-review-audit` 全部通过。只在本地提交，未推送、未部署。
+
+## 2026-11-06 · 按最新 PRD 与 Figma 重录演示视频
+
+- 依据：App PRD 2026-11-06 版（D75 收件与协作合并、D76 开工确认卡与两层验收、Playbook 与自动化）和 Figma `dnmr3E1NLP19pX3X3ZSRxo`。画框清单经 Figma MCP 核对，与 `sage-all-screens-final.html` 的 99 个画框一一对应。
+- 视频改为 68.5 秒、8 章：开工确认、多专家编排、并行协作、授权把关、收件里拍板、交付验收、版本留痕、沉淀复用（Playbook + 自动化）。每一章都在画面里驱动真实状态变化。AI 团队页用 4×2 章节栏，手机上改为 2 列并只显示当前章节说明；首页 3 章起点为 0 / 9.5 / 41 秒。
+- 第三方名称“Jungle Scout”“Keepa”分别替换为“销量数据连接器”“价格数据连接器”。
+- 同步替换已被 PRD 取代的表述：
+  - “计划确认卡”改为“开工确认卡”（团队页闭环、App 映射、首页第 1 步、文档“开工确认与授权”）。
+  - “协作 / 待我处理”改为“收件 · 需要我决定”（企业服务页说明与截图、文档“协作与审批”），并补充两层验收和“主对话只有主责汇报”。
+- 修复两处录制问题：
+  - Playbook 画面自带 `position: relative`，导致画面被挤出舞台。
+  - 弹窗原有的居中变换被动画覆盖，遮罩也不随弹窗淡出。
+- 修复一个交互问题：点击第二排章节时页面滚动，视频可见比例低于 40%，播放被自动暂停。可见比例门槛改为 25%，首页同步调整。
+- 验证：构建，以及 content-pages、bilingual-content、website-account-contract、release-audit（含 `--keyboard`）、website-account-ui、bilingual-content-ui、purchase-ui、order-review 全部通过。首页、AI 团队、企业服务、文档 4 个页面 × 中文桌面 / 手机 + 英文桌面，axe 0 违规，无溢出、无脚本错误。视频跳转、进度、暂停、减少动态效果时不自动播放均实测通过。

@@ -85,7 +85,7 @@ const teamHero=read('src/pages/team.html').split('<section class="at-hero"')[1].
 const enterpriseHero=read('src/pages/enterprise.html').match(/<header class="ep-hero"[\s\S]*?<\/header>/)[0];
 assert.ok(teamHero.includes('关键处由你把关')&&teamHero.includes('id="at-demo-video"'),'Team hero plays the App orchestration and review demo');
 for(const hero of [teamHero,enterpriseHero])assert.ok(!hero.includes('<a '),'Hero actions must stay removed');
-assert.equal((teamHero.match(/<li data-start=/g)||[]).length,6,'Six demo chapters: plan, orchestration, parallel work, human review, authorization, acceptance');
+assert.equal((teamHero.match(/<li data-start=/g)||[]).length,8,'Eight demo chapters: kick-off, orchestration, parallel work, authorization, inbox decision, acceptance, versions, reuse');
 assert.ok(!read('src/pages/team.html').includes('at-business-heading'),'Remove the screenshot business-problem section entirely');
 assert.ok(!read('src/pages/ai-team.css').includes('at-business-reading'),'No orphan styles for the removed section');
 assert.ok(!teamHero.includes('at-staff-directory'),'Hero does not repeat the roster');

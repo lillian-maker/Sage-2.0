@@ -231,7 +231,7 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
  video.addEventListener('play',label);video.addEventListener('pause',label);video.addEventListener('timeupdate',chapter);
  toggle.addEventListener('click',()=>{if(video.paused){userPaused=false;play();}else{userPaused=true;video.pause();}});
  steps.forEach((step,i)=>step.querySelector('.work-step-seek').addEventListener('click',()=>{video.currentTime=starts[i];chapter();userPaused=false;play();}));
- new IntersectionObserver(entries=>entries.forEach(entry=>{inView=entry.isIntersecting;if(inView&&!userPaused&&!motion.matches)play();else if(!inView)video.pause();}),{threshold:.4}).observe(video);
+ new IntersectionObserver(entries=>entries.forEach(entry=>{inView=entry.isIntersecting;if(inView&&!userPaused&&!motion.matches)play();else if(!inView)video.pause();}),{threshold:.25}).observe(video);
  motion.addEventListener?.('change',()=>{if(motion.matches)video.pause();else if(inView&&!userPaused)play();});
  chapter();label();
 })();
