@@ -37,7 +37,7 @@ body.v1[data-theme=dark] .nav{background:rgba(3,4,8,.94)}
 @media(max-width:760px){.v1 #hero-title{font-size:39px}.v1 .nav-tools{gap:14px}.v1 .nav-tools>a,.v1 .nav-tools>button{font-size:12px}}
 body.v1[data-theme=dark]{--bg:#0b1220;--surface:#142033;--ink:#f4f7fb;--muted:#aab8ca;--accent:#c4d0dc;--line:#26344a;--on-accent:#0b1220}
 body.v1[data-theme=light]{color-scheme:light;--bg:#ffffff;--surface:#f4f7fb;--surface2:#edf3f9;--ink:#202b38;--muted:#526171;--accent:#396397;--line:#e4e9ef;--on-accent:#ffffff}
-.v1 .btn{background:#fff;color:#202b38;border-color:#e4e9ef}
+.v1 .btn{background:#fff;color:#202b38;border-color:#b9c7d6}.v1 .btn:not(.primary):hover{border-color:#396397;color:#396397}
 .v1 .btn:hover{background:#edf3f9}
 .v1 .btn.primary{background:#396397;color:#fff;border-color:transparent;box-shadow:0 4px 14px #1b3a6526}
 .v1 .btn.primary:hover,.v1 .btn.primary:focus-visible{background:#2f5585;color:#fff;filter:none}

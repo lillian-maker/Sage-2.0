@@ -36,7 +36,6 @@ Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Desig
 执行图按理解、研究、分析、复核、交付分阶段；三位专家并行研究，遇到需要授权的节点自动停下等你。	The execution graph runs through understand, research, analyze, review and deliver; three specialists research in parallel, and any node that needs authorization stops and waits for you.
 每位专家在做什么、读到哪份资料、用了多久，实时可见；完成的部分交回主责汇总。	See what each specialist is doing, which material they are reading and for how long; finished work goes back to the lead to combine.
 审批、补充信息、验收和邀请集中到“待我处理”；任务负责人或团队成员处理后，各处状态同步。	Approvals, requests for information, acceptance and invitations gather in “Needs my action”; once the task owner or a teammate handles one, every view updates.
-批准时选择范围：仅本次、本任务内或本工作区内；写入外部系统的动作不提供长期授权。	When approving, choose the scope: this time only, this task or this workspace; actions that write to external systems never get standing approval.
 结论逐条标注出处，可回到原始资料核对；验收后锁定为 v1，之后的修改生成新版本。	Every conclusion cites its source so you can check the original; on acceptance it is locked as v1, and later edits create a new version.
 画面由 Sage App 设计稿录制，数据为示例；第三方数据工具以通用名称示意，界面与能力以 App 正式版本为准。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; third-party data tools are shown under a generic name, and the released app prevails.
 多专家编排	Multi-specialist orchestration
@@ -104,29 +103,68 @@ Sage 助手置顶，53 位数字专家按专业域分组；可按名称、岗位
 在专家图谱上选出主责与协作专家，把步骤编排成有依赖关系的执行图。	Pick the lead and contributors on the specialist graph and orchestrate the steps into an execution graph with dependencies.
 没有依赖的步骤同时推进，每一步只拿到与它相关、且有权访问的知识。	Independent steps run at the same time, and each sees only the knowledge it needs and may access.
 只在失败处局部重做；连续多轮没有进展时暂停，交给你决定。	Only failed steps are redone; after several rounds without progress, Sage pauses and hands the decision to you.
-成果附带出处交你验收；验收后的事实写回知识图谱。	Results arrive with sources for your acceptance; accepted facts flow back to the knowledge graph.
 专家之间的常见交接、上下游与复核关系。用于组队：简单任务不拉很多人，关键结论一定有人复核。	Common handoffs, upstream and downstream work, and review relationships between specialists. Used to assemble teams: simple tasks stay small, and key conclusions always get a reviewer.
 每项技能都有前置条件与产出。执行前先编排成执行图，并检查所需连接与授权；某项技能失败时换用可替代技能。	Every skill has preconditions and outputs. Steps are orchestrated into an execution graph and checked for connections and authorizations first; a failed skill is replaced by an alternative.
 品牌、商品、市场、渠道、竞品与法规等经营实体，带生效时间、出处与访问权限，为每一步提供依据并提示矛盾。	Business entities such as brands, products, markets, channels, competitors and regulations, with effective dates, sources and access rights, grounding each step and flagging conflicts.
-验收后的新事实带出处写回知识图谱，下一个任务直接引用。	Newly accepted facts flow back to the knowledge graph with their sources, ready for the next task.
 每次合作的验收结果回写专家与技能之间的关系，组队越来越准。	The outcome of every collaboration updates the links between specialists and skills, so teams get assembled more accurately.
 跑通的执行图可以存为 Playbook，下次一键复用，或交给自动化定期运行。	A proven execution graph can be saved as a Playbook, reused in one step or run on a schedule by automation.
 经营场景	Business workflows
 数字员工	Digital employees
 企业级架构	Enterprise architecture
+执行图	Execution graph
+交叉复核	Cross-review
+每次读取与动作都核验主体、组织与资源	Every read and action checks the person, organization and resource
+资料按工作区授权，不跨工作区继承	Materials are authorized per workspace and never inherited across workspaces
+专家只拿到当前任务所需的资料与动作	Specialists get only the materials and actions the current task needs
+结果以权威回执为准，操作可追溯	Results are judged by authoritative receipts, and every action is traceable
+成果带版本，验收后经确认回写；跑通的流程可以复用。	Results are versioned and written back only after acceptance and confirmation; proven flows can be reused.
+每个外部动作先确认、以回执为准，关键决策由人把关。	Every external action is confirmed first and judged by its receipt; people make the key decisions.
+主责专家牵头，把任务编译成执行图，并行执行、交叉校验。	A lead specialist compiles the task into an execution graph, runs steps in parallel and cross-checks them.
+业务事实带出处、时间与权限，为每一步提供依据。	Business facts carry their source, date and access rights, giving every step its evidence.
+按授权读取企业系统与外部渠道，读写分开、只读优先。	Business systems and external channels are read with authorization; reads and writes are separate, read-only first.
+带版本的成果	Versioned results
+验收与版本对比	Acceptance and version compare
+确认后回写	Write-back after confirmation
+自动化	Automation
+计划确认卡	Plan card
+授权确认卡	Authorization card
+授权范围	Approval scope
+执行回执	Execution receipts
+审计记录	Audit records
+知识库	Knowledge bases
+工作区规则	Workspace rules
+记忆	Memory
+连接器	Connectors
+插件	Plugins
+资料导入	Material import
+收件来源	Inbox sources
+读写分离	Read/write separation
+交付层的组成	Delivery layer components
+治理层的组成	Governance layer components
+编排层的组成	Orchestration layer components
+知识层的组成	Knowledge layer components
+连接层的组成	Connection layer components
+你和你的团队	You and your team
+提出目标 · 确认计划 · 审批授权 · 验收成果	Set goals · Confirm plans · Approve actions · Accept results
+贯穿各层的控制	Controls across every layer
+贯穿每一层	Across every layer
+身份与成员权限	Identity and member permissions
+工作区隔离	Workspace isolation
+最小范围授权	Least-scope authorization
+回执与审计留痕	Receipts and audit trail
+企业业务系统与数据	Business systems and data
+ERP · CRM · HR · 店铺与渠道 · 文档与报表	ERP · CRM · HR · Stores and channels · Documents and reports
+各层能力按项目范围与 Sage App 版本交付；连接的系统与动作逐项评估、单独授权。	Each layer is delivered according to project scope and Sage app releases; every connected system and action is assessed and authorized on its own.
+成果附带出处交你验收；跑通的流程可以存为 Playbook 复用。	Results arrive with sources for your acceptance; proven flows can be saved as Playbooks and reused.
+验收后的新事实带出处写回知识图谱，下一个任务直接引用（二期规划）。	Newly accepted facts flow back to the knowledge graph with their sources, ready for the next task (planned for phase two).
+批准时选择范围：仅本次、本任务内或本工作区内；写入外部系统的动作不能在整个工作区内长期允许。	When approving, choose the scope: this time only, this task or this workspace; actions that write to external systems can never be always allowed across a workspace.
 五层架构，把 AI 接进真实业务	Five layers that bring AI into real operations
 从数据连接到结果回写，每一层都有清楚的边界、权限与审计。	From data connections to results written back, every layer has clear boundaries, permissions and audit.
-各层能力按项目范围与 Sage App 版本交付。	Each layer is delivered according to project scope and Sage app releases.
 交付层	Delivery
 治理层	Governance
 编排层	Orchestration
 知识层	Knowledge
 连接层	Connection
-成果带版本，验收后回写业务系统；跑通的执行图存为 Playbook 复用。	Results are versioned and written back to business systems after acceptance; proven execution graphs are saved as Playbooks.
-授权卡、预算上限、执行回执与审计记录，关键决策始终由人把关。	Authorization cards, budget limits, execution receipts and audit records; people always make the key decisions.
-主责专家牵头，按“专家 × 技能 × 知识”编译执行图，并行执行、交叉校验。	A lead specialist compiles an execution graph of specialist × skill × knowledge, runs steps in parallel and cross-checks them.
-业务规则、指标口径、流程约束与知识图谱，每条事实带出处、时间与权限。	Business rules, metric definitions, process constraints and a knowledge graph; every fact carries its source, time and access rights.
-ERP、CRM、HR 等业务系统与文档、报表，通过标准连接按授权读取。	Business systems such as ERP, CRM and HR, plus documents and reports, read through standard connections with authorization.
 岗位职责、方法与授权	Roles, methods and authorization
 一支为出海经营而生的	An AI organization built
 AI 组织	for global commerce
@@ -734,6 +772,7 @@ Sage App，即将上线。	The Sage app is coming soon.
 先看 Sage 如何工作。	See how Sage works first.
 在 AI 团队页观看一个任务的完整过程：计划确认、多专家编排、真人审核、授权与验收。	Watch one complete task on the AI team page: plan confirmation, multi-specialist orchestration, human review, authorization and acceptance.
 观看交互演示	Watch the walkthrough
+先看交互演示	Watch the walkthrough first
 正式发布时，一并提供。	Included with the official release.
 更新说明	Release notes
 版本变更与已知问题	Version changes and known issues

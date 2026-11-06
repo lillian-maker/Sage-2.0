@@ -460,7 +460,7 @@ window.SAGE_CATALOG = {
       "id": "BVS-01",
       "title": "Grow existing revenue",
       "product": "存量GMV联营舱",
-      "deliverables": ["经营Opportunities信号", "增长约束诊断", "联合Business action plan", "逐对象执行回执", "增量归因记录"],
+      "deliverables": ["经营Opportunities信号", "增长约束诊断", "联合Business action plan", "逐对象Execution receipts", "增量归因记录"],
       "question": "增长受什么约束, 下一步先改哪里？",
       "output": "Business action plan",
       "owner": "AGT-023",
@@ -870,7 +870,7 @@ window.SAGE_CATALOG = {
       "question": "客户在哪里遇到问题, 如何修复体验？",
       "output": "Customer recovery and retention plan",
       "owner": "AGT-034",
-      "input": "去重客户事件, Authorization范围内的售前/售后/退货/CRM/反馈；Personal details最小化处理.",
+      "input": "去重客户事件, Approval scope内的售前/售后/退货/CRM/反馈；Personal details最小化处理.",
       "boundary": "未同意营销触达不发送；投诉高风险转关联事件；短期回复不能当复购效果.",
       "script": "0–10 选旅程断点；10–22 展开同类反馈与服务事件；22–32 看Xuyuan/Tinglan/Jieyou形成修复分工；32–42 预览Know the boundaries的触达Draft；42–50 查看回执和后续观察位置, 不伪造复购提升.",
       "steps": [
@@ -1078,7 +1078,7 @@ window.SAGE_CATALOG = {
         {
           "label": "范围与保护",
           "artifact": "Containment Plan",
-          "detail": "最小必要保护与Authorization范围"
+          "detail": "最小必要保护与Approval scope"
         },
         {
           "label": "受控处置",
