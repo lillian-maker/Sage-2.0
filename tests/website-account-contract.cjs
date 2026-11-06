@@ -16,14 +16,15 @@ assert.ok(read('src/pages/content-pages.css').includes('.nav-account:not([open])
 assert.ok(read('src/pages/content-pages.css').includes('.nav-account .account-dropdown{right:0;max-width:calc(100vw - 32px)}'), 'Account dropdown stays within the narrow viewport');
 for(const name of ['index.template.html','pages/profile.html','pages/trial.html']){
  const header=read('src/'+name).match(/<header\b[\s\S]*?<\/header>/)[0];
- assert.ok(header.includes('download.html'), `${name}: navigation links to download`);
+ assert.ok(/href="(?:pages\/)?download\.html" data-app-soon>下载/.test(header), `${name}: navigation download announces the upcoming app`);
  assert.ok(!header.includes('咨询和演示'), `${name}: consultation stays out of the top navigation`);
 }
 for(const name of ['billing']){
  const header=read('src/pages/'+name+'.js').match(/<header\b[\s\S]*?<\/header>/)[0];
- assert.ok(header.includes("page('download')"), `${name}: bilingual download route`);
+ assert.ok(header.includes("href=\"${page('download')}\" data-app-soon>"), `${name}: bilingual download route announces the upcoming app`);
  assert.ok(!header.includes('咨询和演示'), `${name}: navigation download replaces consultation`);
 }
+assert.ok(shell.includes("event.target.closest('[data-app-soon]')") && shell.includes("text('Sage App 即将上线，敬请期待。','The Sage app is coming soon.')"), 'Download entries announce the upcoming app');
 assert.ok(shell.includes("fetch('/api/consultations'"), 'Shared consultation must persist through the API');
 assert.ok(shell.includes("'Idempotency-Key'"), 'Unknown submit outcomes must retain the same request identity');
 assert.ok(shell.includes("receipt_id"), 'Do not display success without a saved receipt');

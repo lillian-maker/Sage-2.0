@@ -21,7 +21,7 @@ const homeRoles={"BVS-01":{"owner":"AGT-023","scope":["AGT-002","AGT-003","AGT-0
 const sceneNotes=[['先找增长的突破口。','把增长约束，变成行动。'],['从真实需求出发。','让新品想法，有据可依。'],['补多少，何时到？','让补货计划接上交付。'],['先看清市场的门槛。','准备齐了，再迈出去。'],['沿着客户的脚步看。','找到体验中断的地方。'],['先把业务问题说清。','让数据成为趁手的工具。'],['先控制影响范围。','恢复之后，还要复核。'],['一起回看这一轮。','把经验带进下一轮。'],['从这家店的现状开始。','先诊断，再决定怎么改。']];
 function workflow(scene){return homeRoles[scene.id]?.workflow||scene.team.map(t=>({...t,lead:[t.lead]}))}
 function members(step){return [...new Set([...step.lead,...step.contributors,...step.assurance])]}
-for(const id of new Set(scenes.flatMap(s=>workflow(s).flatMap(members)))){const img=new Image();img.src=people.get(id).avatar;}
+addEventListener('load',()=>(window.requestIdleCallback||setTimeout)(()=>{for(const id of new Set(scenes.flatMap(s=>workflow(s).flatMap(members)))){const img=new Image();img.decoding='async';img.src=people.get(id).avatar;}}),{once:true});
 function paint(){
  const scene=scenes[current],steps=workflow(scene),step=steps[batch],ids=members(step);
  $('#scene-title').textContent=scene.title;$('#relay-title').textContent=step.label;
@@ -64,7 +64,7 @@ function readGlobeMaterial(){
 function initEarth(){
  const globeRoles=window.SAGE_CATALOG.people;
  const canvas=$('#earth-canvas'),stage=$('#globe-stage'),gl=canvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:false});
- const textureImage=new Image();textureImage.src='{{WORLD_PILOT_ASSET:earth-texture.png}}';
+ const textureImage=new Image();textureImage.src='assets/earth-texture.webp';
  const goalLabels=[0,1,2].map((_,j)=>{const b=document.createElement('div');b.className='orbit-goal';b.innerHTML='<span class="signal-point" aria-hidden="true"></span><span class="orbit-text"><b></b><small class="orbit-kind"></small></span>';$('#orbit-goals').append(b);return b;});
  let material=readGlobeMaterial();
  let render=()=>{},ready=false,globeInView=true,last=0,lastDraw=0,lastTextureTime=-1,lastWidth=0;
@@ -218,5 +218,22 @@ if(moving)v1.globeFrame=requestAnimationFrame(draw);
  wake();
 }
 
+
+// App demo: plays only while visible, never under reduced motion, and the visitor can always pause it.
+(function workDemo(){
+ const video=document.querySelector('#work-video'),toggle=document.querySelector('#work-video-toggle'),steps=[...document.querySelectorAll('#work-steps li')];if(!video||!toggle)return;
+ const motion=matchMedia('(prefers-reduced-motion: reduce)');
+ const en=document.documentElement.lang==='en',starts=steps.map(step=>Number(step.dataset.start));
+ let userPaused=false,inView=false;
+ function label(){const playing=!video.paused;toggle.setAttribute('aria-pressed',String(playing));toggle.querySelector('.work-video-label').textContent=playing?(en?'Pause demo':'暂停演示'):(en?'Play demo':'播放演示');toggle.classList.toggle('is-playing',playing);}
+ function play(){video.preload='auto';const attempt=video.play();if(attempt)attempt.catch(()=>{});}
+ function chapter(){let index=0;starts.forEach((start,i)=>{if(video.currentTime>=start)index=i;});steps.forEach((step,i)=>step.classList.toggle('is-active',i===index));}
+ video.addEventListener('play',label);video.addEventListener('pause',label);video.addEventListener('timeupdate',chapter);
+ toggle.addEventListener('click',()=>{if(video.paused){userPaused=false;play();}else{userPaused=true;video.pause();}});
+ steps.forEach((step,i)=>step.querySelector('.work-step-seek').addEventListener('click',()=>{video.currentTime=starts[i];chapter();userPaused=false;play();}));
+ new IntersectionObserver(entries=>entries.forEach(entry=>{inView=entry.isIntersecting;if(inView&&!userPaused&&!motion.matches)play();else if(!inView)video.pause();}),{threshold:.25}).observe(video);
+ motion.addEventListener?.('change',()=>{if(motion.matches)video.pause();else if(inView&&!userPaused)play();});
+ chapter();label();
+})();
 
 initEarth();document.querySelector('.menu-toggle').addEventListener('click',e=>{const m=$('#mobile-nav');m.hidden=!m.hidden;e.currentTarget.setAttribute('aria-expanded',String(!m.hidden));});$('#mobile-nav').addEventListener('click',()=>{$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#mobile-nav').hidden){$('#mobile-nav').hidden=true;const toggle=document.querySelector('.menu-toggle');toggle.setAttribute('aria-expanded','false');toggle.focus();}});document.addEventListener('click',e=>{if(!e.target.closest('.nav,#mobile-nav')){$('#mobile-nav').hidden=true;document.querySelector('.menu-toggle').setAttribute('aria-expanded','false');}});})();

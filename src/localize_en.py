@@ -12,11 +12,293 @@ from pathlib import Path
 
 COPY = r"""
 下载	Download
-Sage · 你的出海 AI 团队	Sage · Your AI Team for Global Commerce
-Sage，53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	Sage brings 53 digital employees into one business organization. Evidence-backed decisions. Human-authorized execution.
+需要你审批、补充信息或验收的事项进入“需要我决定”；在收件或任务详情中处理，两处状态同步，通知中心只提醒一次。	Anything you need to approve, supply or accept goes to Needs my decision; handle it in the Inbox or the task and both stay in sync, while the notification center reminds you once.
+收件	Inbox
+Sage App 收件页：左侧是“需要我决定”列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Inbox (interface in Chinese): on the left, the Needs my decision list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
+Sage App 收件 · 需要我决定 · 设计稿 · 示例数据	Sage app Inbox · Needs my decision · Design prototype · Sample data
+Sage App 的收件是唯一的待处理队列：需要我决定、@ 与指派、外部消息，分组排列，审批永远置顶。	The Inbox is the single queue of everything waiting for you, grouped into Needs my decision, Mentions and assignments, and External messages, with approvals always on top.
+验收清单逐条附证据，成果带版本、可复用为 Playbook。涉及店铺、资金或发布的动作，经你批准后才执行。	Every acceptance item links to its evidence; results are versioned and can be reused as a Playbook. Actions involving stores, funds or publishing run only after you approve them.
+说清目标与约束，主责用开工确认卡和你对齐问题、交付物与验收清单，你确认后才开始。例如：家用小家电进入德国市场，是否值得投入？	State the goal and constraints; the lead aligns with you on questions, deliverables and an acceptance checklist in a kick-off card, and work starts only after you confirm. For example: is it worth bringing small home appliances to Germany?
+任务详情里有主对话、侧聊和进度；编排视图显示每位专家在做什么，开工确认卡与授权卡插在对话流中，需要你处理的事同步进入收件。	A task has a main conversation, side chats and progress; the orchestration view shows what each specialist is doing, kick-off and authorization cards appear in the conversation, and anything that needs you also lands in the Inbox.
+复杂任务先出开工确认卡：澄清问题、任务说明、验收清单与执行计划。	Complex tasks start with a kick-off card: clarifying questions, task brief, acceptance checklist and plan.
+Sage App 交互演示：开工确认、多专家编排、并行协作、授权把关、收件里拍板、交付验收、版本留痕与沉淀复用	Sage app walkthrough: kick-off, multi-specialist orchestration, parallel work, authorization, deciding in the Inbox, acceptance, versions and reuse
+播放：沉淀复用	Play: Reuse
+验收通过的执行图存为 Playbook，换个市场或品类就能复用，也可以交给自动化按计划运行。	Save an accepted execution graph as a Playbook to reuse for another market or category, or hand it to an automation to run on a schedule.
+沉淀复用	Reuse
+播放：版本留痕	Play: Versions
+每次修改生成新版本，可以逐处对比差异；恢复旧版本也会生成新版本，不覆盖历史。	Every change creates a new version you can compare line by line; restoring an old version creates a new one too, so history is never overwritten.
+版本留痕	Versions
+播放：交付验收	Play: Acceptance
+验收清单逐条附证据，指向报告段落或资料；全部满足才验收，退回时写明原因，主责只返工相关部分。	Every item on the acceptance checklist links to its evidence in the report or materials; accept when all are met, or send it back with a reason and the lead reworks only that part.
+播放：收件里拍板	Play: Decide in the Inbox
+审批、补充信息、验收和邀请都进入“收件 · 需要我决定”；在这里批准，任务详情同步更新。	Approvals, requests for information, acceptance and invitations all arrive in Inbox · Needs my decision; approve there and the task updates too.
+收件里拍板	Decide in the Inbox
+每位专家在做什么、读到哪份资料、用了多久，实时可见；主对话里只有主责向你汇报。	See what each specialist is doing, which material they are reading and for how long; in the main conversation only the lead reports to you.
+播放：开工确认	Play: Kick-off
+主责先用开工确认卡对齐：澄清问题、任务说明、验收清单与执行计划；缺少的技能或连接由你确认，点“开始执行”后才动。	The lead aligns with you on a kick-off card: clarifying questions, task brief, acceptance checklist and plan; missing skills or connections wait for your confirmation, and nothing runs until you press Start.
+开工确认	Kick-off
 洞察 · 决策 · 执行	Insight · Decisions · Execution
 你的<span class="hero-team-emphasis">出海 AI 团队</span>	Your <span class="hero-team-emphasis">AI Team for Global Commerce</span>
-53个数字员工组建完整的经营组织。结论有证据，执行经人授权。	53 digital employees. One complete business organization. Evidence-backed decisions. Human-authorized execution.
+53 位数字员工组成完整的出海经营组织，覆盖战略、产品、供应、渠道、品牌、服务、财务与数据全链路。按任务组队、分工协作、交叉复核，结论有出处，执行经你授权。	53 digital employees form a complete business organization for global commerce, spanning strategy, product, supply, channels, brand, service, finance and data. They team up around each task, divide the work and review one another: every conclusion is sourced, and nothing is executed without your authorization.
+下载 Sage	Download Sage
+隐私政策	Privacy Policy
+真人与数字专家，在同一个工作区里协作	People and digital specialists working in one workspace
+工作区	Workspaces
+Sage App 协作页：左侧是待我处理列表（待你审批、待你补充、待你验收、邀请），右侧是一条只读数据查询的审批详情，写明发起人、动作、范围、预计消耗与有效期。	Sage app Collaboration page (interface in Chinese): on the left, the Needs my action list (approve, supply information, accept, invitations); on the right, the approval detail for a read-only data query naming the requester, action, scope, estimated usage and validity.
+待我处理	Needs my action
+审批与授权	Approvals and authorization
+企业管理	Business admin
+资料、任务和成员放在同一个工作区。企业工作区默认只有创建者可以访问，其他成员需要明确授权。	Materials, tasks and members live in one workspace. A business workspace is visible only to its creator until other members are explicitly granted access.
+外部动作先出确认卡，写明发起人、动作、范围、预计消耗与有效期；批准只对确认卡上的范围有效，可以修改范围或拒绝。	External actions start with a confirmation card naming the requester, action, scope, estimated usage and validity; approval covers only that scope, and you can change the scope or decline.
+管理员管理成员、席位与权限；个人工作区的资料不会自动共享给企业。	Admins manage members, seats and permissions; materials in personal workspaces are never shared with the business automatically.
+多人审批等协作规则仍在确认中，以 Sage App 正式版本为准。	Collaboration rules such as multi-person approval are still being finalized; the released Sage app prevails.
+多位专家协作完成，	Specialists work together,
+关键处由你把关	and you decide at the key moments
+每个任务由一位主责专家牵头，按需组织协作与复核专家；需要判断、授权和验收的地方，交给你和你的团队。下面是 Sage App 中一个任务的完整过程。	Each task is led by one specialist who brings in contributors and reviewers as needed; judgments, authorizations and acceptance stay with you and your team. Below is one complete task in the Sage app.
+Sage App 交互演示 · 设计稿 · 示例数据	Sage app walkthrough · Design prototype · Sample data
+主责专家把任务拆成 8 步、交给 5 位专家，标出依赖、预计消耗和需要授权的步骤；你点“开始执行”后才动。	The lead specialist breaks the task into 8 steps for 5 specialists, with dependencies, estimated usage and the steps that need authorization; nothing runs until you press Start.
+执行图按理解、研究、分析、复核、交付分阶段；三位专家并行研究，遇到需要授权的节点自动停下等你。	The execution graph runs through understand, research, analyze, review and deliver; three specialists research in parallel, and any node that needs authorization stops and waits for you.
+每位专家在做什么、读到哪份资料、用了多久，实时可见；完成的部分交回主责汇总。	See what each specialist is doing, which material they are reading and for how long; finished work goes back to the lead to combine.
+审批、补充信息、验收和邀请集中到“待我处理”；任务负责人或团队成员处理后，各处状态同步。	Approvals, requests for information, acceptance and invitations gather in “Needs my action”; once the task owner or a teammate handles one, every view updates.
+结论逐条标注出处，可回到原始资料核对；验收后锁定为 v1，之后的修改生成新版本。	Every conclusion cites its source so you can check the original; on acceptance it is locked as v1, and later edits create a new version.
+画面由 Sage App 设计稿录制，数据为示例；第三方数据工具以通用名称示意，界面与能力以 App 正式版本为准。	Recorded from Sage app design prototypes (interface in Chinese) with sample data; third-party data tools are shown under a generic name, and the released app prevails.
+多专家编排	Multi-specialist orchestration
+并行协作	Parallel work
+真人审核	Human review
+授权把关	Authorization
+验收成果	Accept results
+播放：计划确认	Play: Confirm the plan
+播放：多专家编排	Play: Multi-specialist orchestration
+播放：并行协作	Play: Parallel work
+播放：真人审核	Play: Human review
+播放：授权把关	Play: Authorization
+播放：验收成果	Play: Accept results
+在 Sage App 中	In the Sage app
+在 App 中	In the app
+找到专家、了解专家、创建专家	Find, understand and create specialists
+团队协作落在 App 的具体位置，下面四处是你最常用到的。	Team collaboration lives in specific places in the app; these are the four you will use most.
+专家目录	Specialist directory
+专家资料	Specialist profile
+新建专家	Create a specialist
+任务中的协作	Collaboration in a task
+Sage 助手置顶，53 位数字专家按专业域分组；可按名称、岗位与技能搜索，选择一位作为任务主责。	Sage Assistant is pinned on top and 53 digital specialists are grouped by domain; search by name, role or skill and pick one to lead a task.
+查看专家的职责、技能、可用工具与协作网络：常与谁交接、由谁复核。	See a specialist’s responsibilities, skills, available tools and collaboration network: who they hand off to and who reviews them.
+从身份与职责、协作方式、专业技能、工具与连接、知识与用户背景五步，创建贴合你业务的专家，可先测试再启用。	Create a specialist for your business in five steps: identity and responsibilities, collaboration style, skills, tools and connections, knowledge and context; test before enabling.
+页面内容依据 Sage App 产品设计，演示画面来自设计稿；相关能力随 App 版本逐步开放。	This page follows the Sage app product design and the demo uses design frames; capabilities open with app releases.
+什么是 Sage	What is Sage
+适用人群与使用边界	Who it is for and usage boundaries
+提交任务与查看成果	Submit tasks and review results
+注册与登录	Sign up and sign in
+了解产品定位、服务范围和使用边界。	Learn the product positioning, scope and usage boundaries.
+先判断问题是否适合，再准备具体任务。	Check whether a question fits before preparing a task.
+验证身份后，再进入个人或企业计费账户。	Verify your identity, then enter a personal or business billing account.
+让输入、结果和下一步都可以核对。	Keep inputs, results and next steps verifiable.
+协作	Contributor
+进行中	In progress
+已完成	Done
+需你授权	Needs your authorization
+闭环执行	Closed loop
+能力深度	Capability depth
+岗位目录	Role directory
+四种角色，责任从不含糊	Four roles, never an unclear owner
+没有合适的细分专家时，由 Sage 助手担任主责；它与其他专家一样受可调用性与授权约束。	When no specialist fits, Sage Assistant becomes the lead, under the same availability and authorization checks as every specialist.
+主责专家	Lead specialist
+协作专家	Contributing specialists
+复核专家	Reviewers
+你	You
+七步闭环，你在关键处拍板	A seven-step loop, with you deciding at the key moments
+每一步都可以查看、可以干预。	Every step can be inspected and adjusted.
+你确认	You confirm
+你决定	You decide
+你验收	You accept
+组队与编排	Assemble and orchestrate
+越用，越懂你的业务	The more you use it, the better it knows your business
+事实沉淀	Facts that stay
+协作进化	Collaboration that improves
+流程复用	Workflows you reuse
+50 个专业岗位，覆盖出海经营全链路	50 specialist roles across the whole global commerce chain
+3 位管理者统筹方向，岗位分布在经营、产品、供应、渠道、品牌、服务、财务与数据 8 个专业域。	Three leaders set direction; roles span eight domains: business, product, supply, channels, brand, service, finance and data.
+从一个经营问题开始	Start with one business question
+每个任务开始前有且只有一位主责：理解目标、拆解步骤、组织协作并交付。系统自动推荐，你可以随时切换。	Each task has exactly one lead before it starts: it understands the goal, breaks down the steps, organizes collaboration and delivers. Sage recommends one and you can switch at any time.
+在主责之下接受明确的子目标，并行推进；子结果由主责引用汇总，不会被当作独立完成或直接对外发布。	They take clear sub-goals under the lead and work in parallel; the lead cites and combines their results, which are never treated as finished on their own or published directly.
+关键结论交叉检查：数字由清账核对，合规结论由安界把关，整体由守衡或求证独立复核。	Key conclusions are cross-checked: numbers by Qingzhang, compliance by Anjie, and the whole by Shouheng or Qiuzheng as independent reviewers.
+提出目标与约束，确认计划，批准受控动作，验收成果。每次批准只覆盖确认卡上的对象、动作、范围和时效。	You set goals and constraints, confirm the plan, approve controlled actions and accept results. Each approval covers only the targets, actions, scope and time on the confirmation card.
+在专家图谱上选出主责与协作专家，把步骤编排成有依赖关系的执行图。	Pick the lead and contributors on the specialist graph and orchestrate the steps into an execution graph with dependencies.
+没有依赖的步骤同时推进，每一步只拿到与它相关、且有权访问的知识。	Independent steps run at the same time, and each sees only the knowledge it needs and may access.
+只在失败处局部重做；连续多轮没有进展时暂停，交给你决定。	Only failed steps are redone; after several rounds without progress, Sage pauses and hands the decision to you.
+专家之间的常见交接、上下游与复核关系。用于组队：简单任务不拉很多人，关键结论一定有人复核。	Common handoffs, upstream and downstream work, and review relationships between specialists. Used to assemble teams: simple tasks stay small, and key conclusions always get a reviewer.
+每项技能都有前置条件与产出。执行前先编排成执行图，并检查所需连接与授权；某项技能失败时换用可替代技能。	Every skill has preconditions and outputs. Steps are orchestrated into an execution graph and checked for connections and authorizations first; a failed skill is replaced by an alternative.
+品牌、商品、市场、渠道、竞品与法规等经营实体，带生效时间、出处与访问权限，为每一步提供依据并提示矛盾。	Business entities such as brands, products, markets, channels, competitors and regulations, with effective dates, sources and access rights, grounding each step and flagging conflicts.
+每次合作的验收结果回写专家与技能之间的关系，组队越来越准。	The outcome of every collaboration updates the links between specialists and skills, so teams get assembled more accurately.
+跑通的执行图可以存为 Playbook，下次一键复用，或交给自动化定期运行。	A proven execution graph can be saved as a Playbook, reused in one step or run on a schedule by automation.
+经营场景	Business workflows
+数字员工	Digital employees
+企业级架构	Enterprise architecture
+执行图	Execution graph
+交叉复核	Cross-review
+每次读取与动作都核验主体、组织与资源	Every read and action checks the person, organization and resource
+资料按工作区授权，不跨工作区继承	Materials are authorized per workspace and never inherited across workspaces
+专家只拿到当前任务所需的资料与动作	Specialists get only the materials and actions the current task needs
+结果以权威回执为准，操作可追溯	Results are judged by authoritative receipts, and every action is traceable
+成果带版本，验收后经确认回写；跑通的流程可以复用。	Results are versioned and written back only after acceptance and confirmation; proven flows can be reused.
+每个外部动作先确认、以回执为准，关键决策由人把关。	Every external action is confirmed first and judged by its receipt; people make the key decisions.
+主责专家牵头，把任务编译成执行图，并行执行、交叉校验。	A lead specialist compiles the task into an execution graph, runs steps in parallel and cross-checks them.
+业务事实带出处、时间与权限，为每一步提供依据。	Business facts carry their source, date and access rights, giving every step its evidence.
+按授权读取企业系统与外部渠道，读写分开、只读优先。	Business systems and external channels are read with authorization; reads and writes are separate, read-only first.
+带版本的成果	Versioned results
+验收与版本对比	Acceptance and version compare
+确认后回写	Write-back after confirmation
+自动化	Automation
+计划确认卡	Plan card
+授权确认卡	Authorization card
+授权范围	Approval scope
+执行回执	Execution receipts
+审计记录	Audit records
+知识库	Knowledge bases
+工作区规则	Workspace rules
+记忆	Memory
+连接器	Connectors
+插件	Plugins
+资料导入	Material import
+收件来源	Inbox sources
+读写分离	Read/write separation
+交付层的组成	Delivery layer components
+治理层的组成	Governance layer components
+编排层的组成	Orchestration layer components
+知识层的组成	Knowledge layer components
+连接层的组成	Connection layer components
+你和你的团队	You and your team
+提出目标 · 确认计划 · 审批授权 · 验收成果	Set goals · Confirm plans · Approve actions · Accept results
+贯穿各层的控制	Controls across every layer
+贯穿每一层	Across every layer
+身份与成员权限	Identity and member permissions
+工作区隔离	Workspace isolation
+最小范围授权	Least-scope authorization
+回执与审计留痕	Receipts and audit trail
+企业业务系统与数据	Business systems and data
+ERP · CRM · HR · 店铺与渠道 · 文档与报表	ERP · CRM · HR · Stores and channels · Documents and reports
+各层能力按项目范围与 Sage App 版本交付；连接的系统与动作逐项评估、单独授权。	Each layer is delivered according to project scope and Sage app releases; every connected system and action is assessed and authorized on its own.
+成果附带出处交你验收；跑通的流程可以存为 Playbook 复用。	Results arrive with sources for your acceptance; proven flows can be saved as Playbooks and reused.
+验收后的新事实带出处写回知识图谱，下一个任务直接引用（二期规划）。	Newly accepted facts flow back to the knowledge graph with their sources, ready for the next task (planned for phase two).
+批准时选择范围：仅本次、本任务内或本工作区内；写入外部系统的动作不能在整个工作区内长期允许。	When approving, choose the scope: this time only, this task or this workspace; actions that write to external systems can never be always allowed across a workspace.
+五层架构，把 AI 接进真实业务	Five layers that bring AI into real operations
+从数据连接到结果回写，每一层都有清楚的边界、权限与审计。	From data connections to results written back, every layer has clear boundaries, permissions and audit.
+交付层	Delivery
+治理层	Governance
+编排层	Orchestration
+知识层	Knowledge
+连接层	Connection
+岗位职责、方法与授权	Roles, methods and authorization
+一支为出海经营而生的	An AI organization built
+AI 组织	for global commerce
+按岗位分工，按方法工作，按授权行动。	Organized by role, working by method, acting only with authorization.
+每个任务有唯一主责，每个结论附带出处。	Every task has one lead; every conclusion comes with its sources.
+位数字专家	digital specialists
+个专业域	specialist domains
+个经营场景	business workflows
+个协作阶段	collaboration stages
+组织架构	Organization
+协作闭环	Closed loop
+三张图	Three graphs
+3 位管理者统筹，50 个岗位各司其职	Three leaders set direction; fifty roles each own their work
+岗位覆盖经营、产品、供应、渠道、品牌、服务、财务与数据 8 个专业域。	Roles span eight domains: business, product, supply, channels, brand, service, finance and data.
+一个任务，七步闭环	One task, a seven-step loop
+一位主责专家牵头，协作专家并行推进，复核专家交叉检查。	One lead specialist owns the task, contributors work in parallel, and reviewers cross-check.
+每一步都看得见、改得了，并受预算和轮次上限约束。	Every step is visible and adjustable, within budget and iteration limits.
+编排架构	Orchestration
+三张图，让每一次编排都有依据	Three graphs ground every orchestration
+执行图中的每个节点 = 一位专家 × 一项技能 × 一组有权访问的知识	Each node in the execution graph = one specialist × one skill × the knowledge they are allowed to use
+谁来做	Who
+怎么做	How
+凭什么	On what basis
+专业性，写进每个岗位的工作方式	Expertise built into how every role works
+把你的第一个经营问题交给 Sage	Bring your first business question to Sage
+说清目标与约束，剩下的交给一支分工明确的团队。	State the goal and constraints; a team with clear roles takes it from there.
+协作闭环与三张图为 Sage 产品架构，相关能力随 App 版本逐步开放。	The closed loop and three graphs describe Sage’s product architecture; capabilities open with app releases.
+理解	Understand
+组队与编译	Assemble and compile
+计划确认	Confirm the plan
+并行执行	Execute in parallel
+交叉校验	Cross-check
+修复与重新规划	Repair and replan
+交付与沉淀	Deliver and retain
+建立任务账本：目标、验收标准、已知事实、待查事实与约束。	Build a task ledger: goal, acceptance criteria, known facts, open questions and constraints.
+在专家图谱上选出主责与协作专家，把步骤编译成有依赖关系的执行图。	Pick the lead and contributors on the specialist graph, then compile the steps into an execution graph with dependencies.
+没有依赖的步骤并行推进，每一步只拿到与它相关、且有权访问的知识。	Independent steps run in parallel, and each step sees only the knowledge it needs and may access.
+每一步按验收条件自检，关键结论由复核专家交叉检查。	Each step checks itself against its acceptance criteria; key conclusions are cross-checked by a reviewer.
+只在失败处局部重做；没有进展或接近预算时暂停，交给你决定。	Only failed steps are redone; with no progress or near the budget, Sage pauses and hands the decision to you.
+成果附带出处交你验收；验收后的事实写回知识图谱，执行图可存为 Playbook。	Results arrive with sources for your acceptance; accepted facts flow back to the knowledge graph, and the execution graph can be saved as a Playbook.
+专家图谱	Specialist graph
+技能图谱	Skill graph
+知识图谱	Knowledge graph
+53 位数字专家与自建专家，以常见交接、上下游与复核关系相连。用于组队：简单任务不拉很多人，关键结论一定有人复核。	53 digital specialists and custom specialists, linked by common handoffs, upstream and downstream work, and review relationships. Used to assemble teams: simple tasks stay small, and key conclusions always get a reviewer.
+每项技能都有前置条件与产出。执行前先编译成执行图，并检查所需连接与授权；某项技能失败时换用可替代技能。	Every skill has preconditions and outputs. Steps are compiled into an execution graph and checked for required connections and authorizations before running; a failed skill is replaced by an alternative.
+品牌、商品、市场、渠道、竞品与法规等经营实体，带生效时间、出处与访问权限。为每一步提供依据，并提示相互矛盾的事实。	Business entities such as brands, products, markets, channels, competitors and regulations, with effective dates, sources and access rights. They ground each step and flag conflicting facts.
+职责	Responsibility
+方法	Method
+上下文	Context
+工具	Tools
+授权	Authorization
+每个岗位明确要解决的决策、可用资料、必须检查的约束与交付标准。	Each role defines the decisions it owns, the materials it may use, the constraints it must check and its delivery standard.
+可复用的分析步骤与判断规则，带版本、适用条件与测试样本。	Reusable analysis steps and judgment rules, with versions, conditions of use and test samples.
+先理解这家企业：定位、市场、渠道、商品结构、资金约束与历史决策。	Understand this business first: positioning, markets, channels, assortment, funding constraints and past decisions.
+通过 MCP 等标准连接查询与计算，读取可核对的业务依据，权限另行授予。	Query and calculate through standard connections such as MCP to read verifiable business evidence; access is granted separately.
+独立核对来源、计算、遗漏条件与反例，可以退回成果或要求补证。	Independently check sources, calculations, missing conditions and counterexamples, and return work or request more evidence.
+建议与执行分开授权；涉及资金、发布或外部系统变更，必须由你确认。	Advice and execution are authorized separately; anything touching funds, publishing or external systems needs your confirmation.
+数字员工团队	SAGE AI TEAM
+组织设计	SAGE ORGANIZATION DESIGN
+专业方法	WHAT MAKES AN AI EMPLOYEE PROFESSIONAL
+协作机制	COLLABORATION WITH A REASON
+验收标准	JUDGE THE WORK, NOT THE PERSONA
+开始合作	START WITH A REAL BUSINESS QUESTION
+面向企业	SAGE FOR BUSINESS
+交付内容	WHAT WE BUILD TOGETHER
+实施方法	OUR APPROACH
+合作方式	TWO WAYS TO WORK WITH SAGE
+本页导航	On this page
+组织与岗位	Organization and roles
+协作 · 留痕 · 授权	Collaborate · Trace · Authorize
+读取企业依据，按审批规则	Reads company evidence and, following approval rules,
+把结果交付到业务系统	delivers results to business systems
+在 Sage App 中使用标准经营场景与数字员工，	Use standard business workflows and digital employees in the Sage app,
+无需项目实施即可开始。	with no implementation project required.
+常见问题	FAQ
+开始合作前，你可能想先了解	Before we start working together
+数据存在哪里？会被用来训练模型吗？	Where is data stored? Is it used to train models?
+实施前需要准备什么？	What do we need before implementation?
+一定要建设知识图谱吗？	Do we have to build a knowledge graph?
+Sage 会直接改价、采购或发布吗？	Will Sage change prices, purchase or publish on its own?
+费用怎么计算？	How is pricing structured?
+可以私有化部署吗？	Can Sage be deployed privately?
+个人信息存储在中国境内（腾讯云上海地域），任务内容不会用于训练模型。企业另有合同约定的，按合同执行。	Personal information is stored in mainland China (Tencent Cloud, Shanghai region), and task content is never used to train models. Where a business contract says otherwise, the contract applies.
+明确数据来源、访问范围、交付物、验收方式和双方责任，再从一项业务问题开始受控试点。	Agree on data sources, access scope, deliverables, acceptance and each side’s responsibilities, then start a controlled pilot with one business question.
+不一定。先判断任务输入或配置能否解决；知识图谱并非所有项目的必选项。	Not necessarily. We first check whether task inputs or configuration can solve the problem; a knowledge graph is not required for every project.
+只在你授权的对象、范围和预算内执行，需要人工确认的步骤不会被跳过，授权可以随时撤回。	Sage acts only within the targets, scope and budget you authorize, never skips steps that need human confirmation, and you can withdraw authorization at any time.
+订阅、实施、模型与资源消耗、持续维护分别约定，具体以合同为准。	Subscriptions, implementation, model and resource usage, and ongoing maintenance are agreed separately, as set out in the contract.
+企业订阅不默认包含私有化部署、无限定制或终身维护；如有需要，在专项实施中单独评估范围与费用。	Business subscriptions do not include private deployment, unlimited customization or lifetime maintenance by default; if you need them, scope and cost are assessed in a dedicated implementation.
+播放演示	Play demo
+播放：提出经营问题	Play: Ask a business question
+播放：专业岗位接力	Play: Specialists work in relay
+播放：交付可核验的成果	Play: Receive verifiable deliverables
+服务条款	Terms of Service
+看见 Sage 如何工作	See how Sage works
+一个经营问题，从提出到交付，每一步都可以检查。	From question to delivery, every step of a business task can be checked.
+提出经营问题	Ask a business question
+专业岗位接力	Specialists work in relay
+按问题组建岗位，分头研究、交叉复核。每次交接都写明来源、范围与待验证项。	Sage assembles the roles the question needs. They research in parallel and review each other, and every handoff states its sources, scope and open assumptions.
+交付可核验的成果	Receive verifiable deliverables
+53 位数字员工，各有专长	53 digital employees, each a specialist
+3 位管理职能统筹方向，50 个专业岗位分布在 8 个专业域。每个岗位都有明确的职责、方法与交付标准。	Three management roles set direction. Fifty specialist roles span eight domains, each with defined responsibilities, methods and delivery standards.
+ 个专业岗位</span>	 specialist roles</span>
+查看全部岗位与职责	See all roles and responsibilities
+从一个场景开始，<br>接入你的业务。	Start with one workflow.<br>Connect it to your business.
+从标准产品直接启用，到接入企业数据与系统的专项实施。<br>按你当前的阶段选择路径。	Use the standard product as it is, or bring in your data and systems through a dedicated implementation.<br>Choose the path that fits your stage.
+告诉我们，<br>你最想先解决的经营问题。	Tell us the business problem you want to solve first.
+留下联系方式，我们会与你联系，并按你的业务准备演示。	Leave your details and we will get in touch with a demo prepared for your business.
+联系方式仅用于处理本次咨询。已完成咨询的联系方式和问题内容将在完成后90天清除。	Contact details are used only to handle this inquiry. Contact details and question content are cleared 90 days after the inquiry is completed.
+首席增长官 CGO	Chief Growth Officer · CGO
+首席治理官 CGOV	Chief Governance Officer · CGOV
+Sage · 你的出海 AI 团队	Sage · Your AI Team for Global Commerce
 正在读取通知…	Loading notifications…
 跳转到正文	Skip to content
 主导航	Main navigation
@@ -26,7 +308,6 @@ Sage 首页	Sage home
 订阅方案	Subscription plans
 >产品</a>	>Product</a>
 打开导航菜单	Open navigation menu
-下载Sage	Download Sage
 免费体验	Try Sage
 咨询和演示	Talk to us
 提交预约	Submit request
@@ -37,15 +318,10 @@ AI 团队	AI Team
 登录	Log in
 账户	Account
 订阅与账单	Billing
-产品</span>	Product</span>
 九个经营场景的协作演示	Team collaboration across nine business workflows
 切换经营场景	Next business workflow
 持续转动的地球，点亮全球经营目标	Rotating globe showing global business roles
 持续转动的地球，展示全球经营目标	Rotating globe showing global business roles
-看见Sage如何工作	See Sage at work
-Sage 产品录屏占位	Sage product recording placeholder
-AI 团队协作录屏占位	AI team collaboration recording placeholder
-各有专长，一起把事做好	Specialists working as one
 依据可追溯，行动有边界	Traceable evidence. Controlled action.
 分身资产	Reusable expertise
 专业可积累	Expertise that grows
@@ -62,22 +338,16 @@ Agent 治理	Agent governance
 独立复核	Independent review
 人的决策权	Human decision rights
 版本与审计	Versioning and audit
-在你的企业中，<br>真正落地。	Built for your business.<br>Deployed with purpose.
-从既有产品启用，到深度接入业务。<br>选择与你当前阶段相符的路径。	Start with the product or integrate it into your operations.<br>Choose the path that fits your business.
 产品采购	Product procurement
 FDE 落地	FDE deployment
 场景选择 → 组织与数据 → 权限 → 验收	Workflow → Organization and data → Permissions → Acceptance
 问题界定 → 受控试点 → 联合验收 → 持续运行	Scope → Controlled pilot → Joint acceptance → Ongoing operation
-下一项业务挑战，<br>一起开始。	Your next business challenge.<br>Start with Sage.
 聊聊你的业务	Tell us about your business
 公司 / 品牌	Company / brand
 访客手机号	Phone number
 工作邮箱（选填）	Work email (optional)
 想解决的经营问题	What business problem would you like to solve?
-联系方式仅用于业务咨询。当前预览未接通接收服务，填写内容不会发送或保存。	Contact details are for business inquiries only. This preview has no connected submission service. Nothing you enter is sent or saved.
-咨询接收服务尚未接通。内容未发送、未保存，请勿在预览中填写敏感资料。	The inquiry service is not connected. Your information was not sent or saved. Please do not enter sensitive information in this preview.
 AI 团队，立足真实业务。	An AI team grounded in real business.
-本地产品预览 · 认证、支付与真实任务尚未接入	Product preview · Authentication, payments and live tasks are not connected
 场景资料未加载	Workflow data failed to load
 牵头	Lead
 保障	Assurance
@@ -508,23 +778,18 @@ Shopify 店铺诊断	Shopify store diagnosis
 权限、积分与保存规则	Permissions, credits and retention rules
 官网中的方案和流程图是产品设计说明，不代表相应能力已接入或上线。	Website plans and diagrams describe the product design. They do not imply that the corresponding capabilities are connected or live.
 返回产品	Back to product
-下载 Sage。	Download Sage
-下载 Sage	Download Sage
-把业务分析放在手边。也可以直接从网页体验开始。	Keep your business work close at hand. Or start with the web preview.
 桌面客户端	Desktop app
+Sage App，即将上线。	The Sage app is coming soon.
+桌面客户端正在完成最后的开发与测试。上线前，你可以先观看产品交互演示，或预约一次一对一演示。	We are finishing development and testing of the desktop app. Until it ships, watch the product walkthrough or book a one-to-one demo.
+即将上线	Coming soon
+安装包、支持平台与文件校验信息，将在发布时一并公布。	Installers, supported platforms and file checksums will be published with the release.
 尚未发布	Not released
-安装包和平台支持信息待提供。正式发布前，不提供有效下载入口。	Installers and platform support details are not yet available. Downloads will open after the official release.
-当前版本	Current version
-待发布	Pending release
-支持平台 / 系统要求	Supported platforms / System requirements
 待确认	To be confirmed
-发布时间 / 文件校验	Release date / File verification
-待提供	Not yet available
 一个经营问题	One business question
 一份可检查的成果	One reviewable deliverable
-先在网页里体验。	Start with the web preview.
-无需安装、无需先注册。从 VOC 机会洞察或 Shopify 店铺诊断的有限范围示例开始。	No installation or registration required. Explore a limited-scope VOC insight or Shopify diagnosis example.
-当前为本地交互示例，真实分析服务尚未接入。	This is a local interactive example. Live analysis services are not connected.
+先看 Sage 如何工作。	See how Sage works first.
+在 AI 团队页观看一个任务的完整过程：计划确认、多专家编排、真人审核、授权与验收。	Watch one complete task on the AI team page: plan confirmation, multi-specialist orchestration, human review, authorization and acceptance.
+观看交互演示	Watch the walkthrough
 正式发布时，一并提供。	Included with the official release.
 更新说明	Release notes
 版本变更与已知问题	Version changes and known issues
@@ -582,7 +847,7 @@ FDE 实施和持续服务单独界定，不包含在自助订阅承诺中。当�
 数据和授权现状	Current data and authorization
 受控试点	Controlled pilot
 有限范围验证	Limited-scope validation
-交付验收	Delivery acceptance
+交付验收	Acceptance
 产物与证据确认	Deliverable and evidence review
 持续运行	Ongoing operation
 责任与迭代机制	Responsibilities and iteration process
@@ -738,45 +1003,45 @@ CONTENT_COPY = r"""
 管理账户与订阅	Manage your account and subscription
 我的账户	My account
 从专业岗位，到有序协作	From specialist roles to coordinated collaboration
-不是让更多 AI 给出更多答案，	Not more AI producing more answers,
-而是让不同专业共同看清，一项经营决策是否成立。	but different disciplines testing whether a business decision stands up.
+让不同专业一起看清，	Different specialists look together
+一项经营决策是否成立、是否值得投入。	at whether a business decision holds up and is worth the investment.
 人与 AI 数字员工共同讨论业务方案，背景中的更多团队成员在不同工作位协作	People and AI digital employees discuss a business proposal, with more teams collaborating across the workspace
 专业性，落实在判断的方法与标准里	Professional judgment starts with methods and standards
 Agent、Skills 与 MCP 是实现手段。对业务而言，更重要的是它们支持什么判断、留下什么依据。	Agents, Skills and MCP are implementation tools. What matters to the business is the judgment they support and the evidence they preserve.
 职责决定问题的问法	Responsibilities shape the questions
 专业岗位不仅有角色名称，还要明确要解决的决策、允许使用的资料、必须检查的约束与交付标准。机会研究先问证据是否成立；商业判断再问成立后是否值得投入。	A specialist role needs more than a name: it defines the decision, permitted information, required constraint checks and deliverable standards. Opportunity research first tests the evidence; commercial judgment then asks whether the supported opportunity merits investment.
-同一个模型可以承担不同岗位，但岗位身份本身不证明专业能力。能力要在具体任务中接受验收。	One model may serve different roles, but a role label does not prove expertise. Capability must be evaluated on specific tasks.
-方法不能只靠临场发挥	Methods must be repeatable
-Skills 将可复用的分析步骤、判断规则和成果要求交给岗位。VOC 研究不能只归类情绪，还应核对样本、需求频次、现有替代方案与反证；经营分析不能只读增长率，还应核对口径与约束。	Skills give roles reusable analytical steps, judgment rules and output requirements. VOC research checks samples, demand frequency, alternatives and contrary evidence, not just sentiment. Business analysis checks definitions and constraints, not just growth rates.
-方法需要版本、适用条件和测试样本。更新一段提示词，不等于改善了业务判断。	Methods need versions, applicability conditions and test samples. Editing a prompt does not itself improve business judgment.
+每个岗位的能力，都要在具体任务中接受验收，而不只靠一个角色名称。	Every role earns its place through acceptance on real tasks, not through a title alone.
+方法可复用，结果才稳定	Reusable methods, reliable results
+Skills 将可复用的分析步骤、判断规则和成果要求交给岗位。VOC 研究在归类情绪之外，还会核对样本、需求频次、现有替代方案与反证；经营分析在增长率之外，还会核对口径与约束。	Skills give roles reusable analytical steps, judgment rules and output requirements. VOC research checks samples, demand frequency, alternatives and contrary evidence, not just sentiment. Business analysis checks definitions and constraints, not just growth rates.
+每套方法都有版本、适用条件和测试样本，改进要在相同样本上验证。	Every method has a version, conditions of use and test samples, and each improvement is verified on the same samples.
 先理解这家企业，再讨论行业经验	Understand the company before applying industry knowledge
 品牌定位、目标市场、渠道、商品结构、资金约束与历史决策共同构成业务上下文。通用行业知识无法替代这些条件；同一建议，对不同品牌可能有相反的结果。	Positioning, markets, channels, product mix, financial constraints and prior decisions form the business context. General industry knowledge cannot replace these conditions; the same recommendation may have opposite effects for different brands.
 共享上下文要保留资料来源、时间和权限，并把事实、推断与缺失信息分开，避免把过期经验当成当前事实。	Shared context preserves sources, dates and permissions, separating facts, inferences and missing information so outdated experience is not mistaken for current evidence.
-工具提供依据，而不是授予权力	Tools provide evidence, not authority
+工具提供依据，权限另行授予	Tools provide evidence; authority is granted separately
 MCP 用于规范工具与数据连接。查询记录、执行计算、检索资料，让判断能够接触可核对的业务依据，而不是仅依赖模型记忆。	MCP standardizes tool and data connections. Record queries, calculations and retrieval ground judgments in checkable business evidence rather than model memory alone.
-连接成功不代表数据准确，也不代表可以改价、采购或发布。访问权限、执行授权与真实结果必须分别确认。	A successful connection does not prove data accuracy or authorize price changes, procurement or publishing. Access, execution permission and actual results must be confirmed separately.
+数据准确性、访问权限、执行授权与真实结果分别确认；改价、采购或发布，都需要你单独授权。	Data accuracy, access, execution permission and actual results are each confirmed separately; price changes, purchases and publishing each need your explicit authorization.
 交接的是可使用的成果	Handoff work that others can use
-研究岗位不能只交一份长报告。下一岗位需要知道：证据来自哪里，覆盖什么范围，哪些假设未验证，什么条件下才能继续决策。	A research role cannot hand over only a long report. The next role needs to know where evidence comes from, what it covers, which assumptions remain untested and when the decision can proceed.
+每次交接都写明下一岗位需要的信息：证据来自哪里，覆盖什么范围，哪些假设未验证，什么条件下才能继续决策。	Every handoff tells the next role what it needs: where the evidence comes from, what it covers, which assumptions remain untested and when the decision can proceed.
 交接标准决定成果能否被复用。清晰的来源、约束与未决问题，比更多聊天记录更重要。	Handoff standards determine reusability. Clear sources, constraints and unresolved questions matter more than a longer chat history.
 复核需要不同的检查职责	Review needs a distinct checking responsibility
-让另一个 AI 重复问同一个问题，并不等于独立复核。复核岗位应检查来源、计算、遗漏条件、反例和授权范围，并有能力提出退回或需要补证。	Asking another AI the same question is not independent review. Reviewers check sources, calculations, missing conditions, counterexamples and authorization, and can return work or request more evidence.
-多岗位也可能共享同一种偏差。重要结论仍需外部证据、确定性校验和人工判断共同支持。	Multiple roles can share the same bias. Important conclusions still need external evidence, deterministic checks and human judgment.
-判断与业务执行不是同一权限	Judgment and execution require different authority
+复核岗位承担独立的检查职责：核对来源、计算、遗漏条件、反例和授权范围，并可以退回成果或要求补证。	Reviewers carry their own checking duties: they verify sources, calculations, missing conditions, counterexamples and authorization, and can return work or request more evidence.
+重要结论还会结合外部证据、确定性校验和人工判断共同确认。	Important conclusions are also confirmed with external evidence, deterministic checks and human judgment.
+建议与执行，分开授权	Advice and execution are authorized separately
 提出方案、批准方案、执行动作和确认完成，分别承担不同责任。涉及资金、公开发布或外部系统变更时，应明确负责人、预算和可撤回条件。	Proposing, approving, executing and confirming completion have distinct responsibilities. Financial actions, publishing and external system changes require an owner, budget and revocation conditions.
-AI 的建议不能代替企业授权；工具返回成功，也不能直接证明经营目标已经实现。	AI advice does not replace company authorization. A successful tool response does not prove that a business goal has been achieved.
+AI 提出建议，企业做出授权；经营目标是否实现，以真实的业务结果为准。	AI proposes, the business authorizes, and real business results show whether a goal was met.
 专业能力必须能被反复检验	Expertise must withstand repeated evaluation
-任务验收应覆盖事实正确性、计算口径、证据充分性、约束遵守与交接可用性。版本变化后，需要在相同任务上比较，不能用一次顺利演示证明稳定。	Acceptance checks factual accuracy, calculation definitions, sufficient evidence, constraints and usable handoffs. Compare versions on the same tasks; one successful demonstration does not establish reliability.
-评估结果支持方法改进，不支持“绝不出错”或“保证增长”的承诺。	Evaluation informs method improvements, not promises of zero errors or guaranteed growth.
-团队的意义，不是意见更多	A team is not about more opinions
-而是让判断经得起不同专业的追问	It is about judgments that withstand cross-disciplinary scrutiny
+任务验收应覆盖事实正确性、计算口径、证据充分性、约束遵守与交接可用性。版本变化后，在相同任务上重新比较，用持续的结果说明稳定性。	Acceptance checks factual accuracy, calculation definitions, sufficient evidence, constraints and usable handoffs. After each version change, the same tasks are compared again so reliability rests on sustained results.
+评估结果用于持续改进方法，让每一次升级都有据可查。	Evaluation drives continuous method improvement, so every upgrade is backed by evidence.
+让每个判断	Every judgment
+经得起不同专业的追问	stands up to cross-disciplinary scrutiny
 需要协作的，是相互影响的判断	Collaborate where judgments influence one another
 当需求证据、产品可行性、利润条件与进入风险相互牵制时，分专业研究能保持各自的检查深度。汇总时不应抹平分歧，而应指出结论依赖哪些条件、缺什么证据、由谁确认。	When demand evidence, product feasibility, profitability and entry risks constrain one another, specialist research maintains depth. Synthesis should preserve disagreement, identify conditions and evidence gaps, and name the person who must confirm them.
 岗位按问题组织，不是让全部员工同时运行。研究可以并行，依赖同一结论的工作则需要明确接收条件。	Organize roles around the question, not run every employee at once. Research may proceed in parallel; dependent work needs explicit acceptance conditions.
 不需要团队的，保持简单	Keep simple work simple
 明确的字段校验、计算、单次检索或短文案任务，可以用规则、工具或单个岗位完成。只有增加协作能够改善覆盖范围、复核质量或交接可靠性时，才值得承担额外耗时与 Sage Credits 消耗。	Field validation, calculations, a single retrieval or short copy may need only a rule, tool or one role. Extra time and Sage Credits are worthwhile only when collaboration improves coverage, review quality or handoff reliability.
-团队数量不等于结果质量。Sage 的组织设计应服务于任务，而不是为了展示更多 Agent。	Team size is not output quality. Sage’s organization design serves the task rather than showcasing more agents.
+Sage 按任务组建团队，用最合适的岗位组合完成工作。	Sage builds each team around the task, with the combination of roles that fits it best.
 如何判断 AI 团队真的帮上了忙	How to judge whether an AI team helped
-不要只看报告是否完整，要看它是否支持下一项真实决策。	Look beyond report completeness: does it support the next real decision?
+好的成果，能直接支持下一项真实决策。	Good work directly supports the next real decision.
 依据可核对	Checkable evidence
 关键结论能找到来源、时间、计算口径与适用范围；不能确认的信息明确保留。	Key conclusions identify sources, time, calculation definitions and applicability. Unconfirmed information remains explicitly unresolved.
 取舍说得清	Clear trade-offs
@@ -784,10 +1049,11 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 成果能接手	Usable handoffs
 下一位负责人知道需要验证什么、谁来确认、接收什么成果，而不需要重新研究全部背景。	The next owner knows what to validate, who confirms it and what to receive without researching the whole background again.
 边界不混淆	Distinct boundaries
-分析完成、方案批准、执行完成与经营改善分别有证据，不用一份报告替代业务结果。	Analysis, approval, execution and business improvement each need their own evidence. A report is not a substitute for business outcomes.
+分析完成、方案批准、执行完成与经营改善，分别有证据可查。	Analysis, approval, execution and business improvement each have their own evidence.
 组织有分工，职责有依据	Defined roles, grounded responsibilities
 53 个数字员工的组织设计，包含 3 个管理职能与 50 个专业岗位。	The design includes 53 digital employees: 3 management functions and 50 specialist roles.
-岗位配置与协作范围随具体经营问题确定，不以头像数量衡量专业性。	Role combinations and collaboration depend on the question. Avatar count is not a measure of expertise.
+岗位配置与协作范围，随具体经营问题确定。	Role combinations and the scope of collaboration depend on the business question.
+各岗位的开放范围以 Sage App 正式版本为准。	Which roles are available follows the released Sage app.
 管理职能	Management functions
 首席执行官 CEO	Chief Executive Officer · CEO
 天时	Tianshi
@@ -803,7 +1069,7 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 了解企业服务 →	Explore enterprise services →
 先明确需要做什么决策，再确定需要哪些专业与依据。	Define the decision first, then the expertise and evidence it requires.
 数字员工目录暂未加载，请刷新重试。	The digital employee directory could not be loaded. Refresh to retry.
-让 AI 理解业务，而不只是做工具	Let AI understand the business, not just supply tools
+让 AI 读懂你的业务，而不只是一个工具	Let AI understand your business, not just act as a tool
 从标准 Sage 开始。	Start with standard Sage.
 把企业特有的数据、知识、流程与系统，转化为可交付的能力。	Turn company-specific data, knowledge, processes and systems into deliverable capabilities.
 01 / 企业依据	01 / Business evidence
@@ -843,9 +1109,6 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 系统	Systems
 结果	Results
 明确目标、范围	Define objectives, scope
-理解 · 推理 · 执行	Understand · Reason · Execute
-连接企业知识与业务系统	Connect enterprise knowledge and business systems
-让 AI 成为可交付的生产力	Make AI a deliverable business capability
 人工审批	Human approval
 关键决策，始终由人把关	People retain control of key decisions
 审批意见示意，非操作按钮	Illustrative approval decision, not interactive controls
@@ -942,13 +1205,9 @@ AI 的建议不能代替企业授权；工具返回成功，也不能直接证�
 验证结果与推广条件	Verify outcomes and expansion criteria
 选择适合你当前阶段的合作方式	Choose the right way to work together
 标准 Sage 产品	Standard Sage product
-开箱即用，适用标准经营场景，	Ready to use for standard scenarios,
-从当前已开放的产品能力开始。	starting with currently released capabilities.
 专项实施与定制	Dedicated implementation and customization
 基于你的业务需求、数据、知识与场景，	Based on your needs, data, knowledge and scenarios,
 按范围交付，稳步推进。	delivered within agreed scope, step by step.
-一起定义你的第一项业务任务	Define your first business task together
-让企业数据、业务知识与 AI 能力，真正服务于你的团队与业务。	Put company data, business knowledge and AI capabilities to work for your team.
 文档目录	Documentation contents
 搜索文档	Search documentation
 placeholder="搜索"	placeholder="Search"
@@ -989,7 +1248,7 @@ def translate(text):
     return pattern.sub(lambda match: pairs[match.group()], text).replace('。', '.').replace('，', ', ').replace('、', ', ').replace('：', ': ')
 
 def english_links(text):
-    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile|notifications)\.html', r'\1-en.html', text)
+    return re.sub(r'(?<![\w-])(index|team|enterprise|pricing|checkout|billing|docs|download|trial|auth|profile|notifications|privacy|terms)\.html', r'\1-en.html', text)
 
 def language_dropdown(html, page, english=False):
     label = 'Select language' if english else '选择语言'
@@ -1044,10 +1303,43 @@ def static_documentation(source, english=False):
         return markup
     return '<h1>' + escape(articles[0][2]) + '</h1>' + body(articles[0]) + '<noscript>' + ''.join('<details id="doc-readable-' + article[0] + '"><summary>' + escape(article[2]) + '</summary>' + body(article) + '</details>' for article in articles) + '</noscript>'
 
+def write_content_page(source, destination, name, html, titles, english_body=None):
+    """Wrap a content fragment in the shared content-page shell and emit both languages."""
+    css = {'team':'ai-team', 'enterprise':'enterprise-page', 'docs':'docs-page'}.get(name)
+    dependencies = ['catalog-data', 'ai-team'] if name == 'team' else [css] if css else []
+    assets = ['content-pages.css'] + ([css + '.css'] if css else []) + [item + '.js' for item in ['content-pages'] + dependencies]
+    versions = {item: sha256((source / item).read_bytes()).hexdigest()[:12] for item in assets}
+    styles = ''.join(f'<link rel="stylesheet" href="{item}.css?v={versions[item + ".css"]}">' for item in ['content-pages'] + ([css] if css else []))
+    js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
+    items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
+    nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
+    header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="download.html" data-app-soon>下载</a></div></header>'
+    footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#cooperation">企业合作</a></div></footer>'
+    document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
+    (destination / (name + '.html')).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
+    localized = english_links(translate(document.replace(html, '{{SAGE_ENGLISH_BODY}}') if english_body else document)).replace('lang="zh-CN"', 'lang="en"')
+    if english_body:
+        localized = localized.replace('{{SAGE_ENGLISH_BODY}}', english_body)
+    localized = re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="Explore Sage specialist roles, enterprise implementation and product usage rules.">', localized)
+    localized = localized.replace('lang="en" aria-label="Switch language">中文 ⌄', 'lang="zh-CN" aria-label="Switch language">English ⌄')
+    localized = localized.replace(f'href="{name}-en.html" lang="zh-CN" aria-label="Switch language">English ⌄', f'href="{name}.html" lang="zh-CN" aria-label="Switch to Chinese">Chinese ⌄')
+    for item in ['content-pages'] + dependencies:
+        if item != 'docs-page':
+            localized = localized.replace(f'src="{item}.js', f'src="{item}-en.js')
+    if name == 'docs':
+        localized = localized.replace('<script src="docs-page.js', '<script src="docs-articles-en.js" defer></script><script src="docs-page.js')
+        localized = localized.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source, True))
+    # Fail closed rather than publish mixed-language content from an old page.
+    # The operator's registered Chinese name is kept verbatim inside lang="zh-CN" spans.
+    untranslated = re.findall(r'[\u4e00-\u9fff]+', re.sub(r'<span lang="zh-CN">[^<]*</span>', '', localized))
+    if untranslated:
+        raise ValueError(f'{name}: English content remains untranslated: {sorted(set(untranslated))}')
+    (destination / (name + '-en.html')).write_text(localized, encoding='utf-8')
+
 def build_localized_pages(root):
     """Wrap legacy page fragments and emit reviewed English routes and scripts."""
     source, destination = root / 'src/pages', root / 'pages'
-    titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'下载 Sage','product':'产品方案'}
+    titles = {'team':'AI 团队','enterprise':'企业服务','pricing':'价格','docs':'文档','download':'Sage App','product':'产品方案','privacy':'隐私政策','terms':'服务条款'}
     scripts = {'team':['catalog-data','team-page'], 'enterprise':['info-pages'], 'pricing':['info-pages'], 'product':['catalog-data','catalog']}
     for path in source.glob('*.js'):
         if path.stem in {'billing', 'auth', 'profile', 'notifications', 'docs-page', 'docs-articles-en'}:
@@ -1055,41 +1347,11 @@ def build_localized_pages(root):
         if path.stem == 'catalog':
             continue  # Unreleased product-design route; not linked from English navigation.
         code = english_links(translate(path.read_text(encoding='utf-8')))
-        if path.stem == 'site-shell':
-            code = re.sub(r"language\?\.addEventListener\('click',\(\)=>\{.*?\}\);", "language?.addEventListener('click',()=>{location.href=location.pathname.replace('-en.html','.html')+location.search+location.hash;});", code)
         (destination / (path.stem + '-en.js')).write_text(code, encoding='utf-8')
     for path in source.glob('*.html'):
         html = path.read_text(encoding='utf-8')
         if path.stem in {'team', 'enterprise', 'docs'}:
-            # Both languages use the same approved structure and reviewed full copy.
-            name = path.stem
-            css = {'team':'ai-team', 'enterprise':'enterprise-page', 'docs':'docs-page'}[name]
-            dependencies = ['catalog-data', 'ai-team'] if name == 'team' else [css]
-            assets = ['content-pages.css', css + '.css'] + [item + '.js' for item in ['content-pages'] + dependencies]
-            versions = {item: sha256((source / item).read_bytes()).hexdigest()[:12] for item in assets}
-            styles = ''.join(f'<link rel="stylesheet" href="{item}.css?v={versions[item + ".css"]}">' for item in ['content-pages', css])
-            js = ''.join(f'<script src="{item}.js?v={versions[item + ".js"]}" defer></script>' for item in ['content-pages'] + dependencies)
-            items = [('产品','../index.html#product'),('AI 团队','team.html'),('企业服务','enterprise.html'),('价格','pricing.html'),('文档','docs.html')]
-            nav = ''.join(f'<a href="{url}"' + (' aria-current="page"' if url == name + '.html' else '') + f'>{label}</a>' for label,url in items)
-            header = f'<a class="cp-skip" href="#main">跳至内容</a><header class="cp-nav"><a class="cp-brand" href="../index.html" aria-label="Sage 首页"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button class="cp-menu" type="button" aria-expanded="false" aria-controls="cp-navigation">菜单</button><nav id="cp-navigation" class="cp-links" aria-label="主导航">{nav}</nav><div class="cp-tools"><a href="{name}-en.html" lang="en" aria-label="切换到英文版">中文 ⌄</a><a class="cp-account" href="auth.html">登录</a><a class="cp-consult" href="download.html">下载</a></div></header>'
-            footer = '<footer class="cp-footer"><a href="../index.html">Sage · 你的出海 AI 团队</a><div><a href="docs.html">产品文档</a><a href="pricing.html">订阅方案</a><a href="enterprise.html#contact">企业合作</a></div><p>具体开放能力以产品内说明为准</p></footer>'
-            document = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles[name]} · Sage</title><meta name="description" content="Sage 的{titles[name]}：了解专业岗位、企业实施与产品使用规则。"><link rel="icon" href="../assets/favicon.svg">{styles}{js}</head><body class="content-site content-{name}">{header}{html}{footer}</body></html>'
-            (destination / path.name).write_text(document.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source)) if name == 'docs' else document, encoding='utf-8')
-            localized = english_links(translate(document)).replace('lang="zh-CN"', 'lang="en"')
-            localized = re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="Explore Sage specialist roles, enterprise implementation and product usage rules.">', localized)
-            localized = localized.replace('lang="en" aria-label="Switch language">中文 ⌄', 'lang="zh-CN" aria-label="Switch language">English ⌄')
-            localized = localized.replace(f'href="{name}-en.html" lang="zh-CN" aria-label="Switch language">English ⌄', f'href="{name}.html" lang="zh-CN" aria-label="Switch to Chinese">Chinese ⌄')
-            for item in ['content-pages'] + dependencies:
-                if item != 'docs-page':
-                    localized = localized.replace(f'src="{item}.js', f'src="{item}-en.js')
-            if name == 'docs':
-                localized = localized.replace('<script src="docs-page.js', '<script src="docs-articles-en.js" defer></script><script src="docs-page.js')
-                localized = localized.replace('{{SAGE_DOCS_STATIC}}', static_documentation(source, True))
-            # Fail closed rather than publish mixed-language content from an old page.
-            untranslated = re.findall(r'[\u4e00-\u9fff]+', localized)
-            if untranslated:
-                raise ValueError(f'{name}: English content remains untranslated: {sorted(set(untranslated))}')
-            (destination / (name + '-en.html')).write_text(localized, encoding='utf-8')
+            write_content_page(source, destination, path.stem, html, titles)
             continue
         if path.stem == 'auth':
             (destination / path.name).write_text(html, encoding='utf-8')
@@ -1109,10 +1371,10 @@ def build_localized_pages(root):
         if '<!doctype' not in html.lower():
             styles = ''.join(f'<link rel="stylesheet" href="{name}.css">' for name in ['redesign','pages','catalog','team-page','info-pages'])
             nav = '<nav id="r-menu" class="r-links" aria-label="主导航"><a href="../index.html#product">产品</a><a href="team.html">AI 团队</a><a href="enterprise.html">企业服务</a><a href="pricing.html">价格</a><a href="docs.html">文档</a></nav>'
-            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="download.html">下载</a></div></header>'
-            footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p><small>本地产品预览 · 认证、支付与真实任务尚未接入</small></footer>'
+            header = f'<header class="r-nav"><a class="r-brand" href="../index.html"><img class="sage-logo" src="../assets/brand/sage-logo-product.svg" width="112" height="49" alt="Sage"></a><button id="r-menu-toggle" type="button" aria-expanded="false" aria-controls="r-menu" aria-label="打开导航菜单">☰</button>{nav}<div class="r-tools"><a class="page-language" href="{path.stem}-en.html">English</a><a href="auth.html">登录</a><a class="r-button small" href="download.html" data-app-soon>下载</a></div></header>'
+            footer = '<footer class="r-footer"><a href="../index.html">Sage</a><p>AI 团队，立足真实业务。</p></footer>'
             js = ''.join(f'<script src="{name}.js" defer></script>' for name in scripts.get(path.stem,[]) + ['site-shell'])
-            layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 5%;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
+            layout = '<style>.r-links{display:flex;align-items:center;gap:24px}.r-links a,.r-tools a{white-space:nowrap}.r-tools{display:flex;align-items:center;gap:24px}.r-footer{padding:48px 0;display:flex;gap:24px;align-items:center;flex-wrap:wrap}html[lang="en"] .info-page-head h1{font-size:clamp(36px,4.5vw,64px)}html[lang="en"] .tp-person span{line-height:1.5}html[lang="en"] .tp-constellation h3{font-size:22px}@media(max-width:900px){.r-nav{flex-wrap:wrap;gap:18px}.r-links{order:3;width:100%;overflow:auto;gap:24px;padding-bottom:8px}.r-tools{margin-left:auto;gap:16px}.r-footer{display:block}.r-footer>*{margin-bottom:16px}}</style>'
             html = f'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{titles.get(path.stem,"Sage")} · Sage</title>{styles}{layout}{js}</head><body>{header}{html}{footer}</body></html>'
         else:
             # Auth and trial already have their own shell; keep that layout intact.
@@ -1130,3 +1392,8 @@ def build_localized_pages(root):
                 en = en.replace(chinese, english)
         en = en.replace(f'href="{path.stem}-en.html">English',f'href="{path.stem}.html" lang="zh-CN">中文')
         (destination / (path.stem + '-en.html')).write_text(language_dropdown(en, path.stem, True),encoding='utf-8')
+    # Legal documents keep separately reviewed Chinese and English bodies.
+    for name in ('privacy', 'terms'):
+        legal = root / 'src/legal'
+        write_content_page(source, destination, name, (legal / f'{name}.zh.html').read_text(encoding='utf-8'), titles,
+                           (legal / f'{name}.en.html').read_text(encoding='utf-8'))

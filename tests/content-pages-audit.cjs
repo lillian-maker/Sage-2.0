@@ -22,7 +22,7 @@ assert.ok(!read('src/pages/ai-team.css').includes('repeat(auto-fit,minmax(78px,1
 assert.ok(read('src/index.template.html').includes('data-account-entry href="pages/auth.html?return=%2Findex.html">登录</a>'));
 assert.ok(read('src/pages/content-pages.js').includes("account.textContent = '登录'; account.title = '使用邮箱或手机号验证登录'"));
 assert.ok(read('src/pages/billing.js').includes("document.querySelector('.nav-login').textContent = t('登录','Sign in');"));
-assert.ok(read('src/pages/content-pages.css').includes('.pricing-page .segmented button[aria-pressed=true]{background:#aec8e2'));
+assert.ok(read('src/pages/content-pages.css').includes('.pricing-page .segmented button[aria-pressed=true]{background:#fff;color:#396397;'),'Selected pricing toggle uses the brand blue text on a white pill');
 const context = {window:{}};
 vm.runInNewContext(read('src/pages/catalog-data.js'), context);
 const catalog = context.window.SAGE_CATALOG;
@@ -55,11 +55,11 @@ assert.equal(slugs.length,40);
 assert.equal(new Set(slugs).size,40);
 for (const slug of ['gmv-growth','new-product','supply-delivery','market-entry','customer-journey','data-tools','major-events','business-review','shopify']) assert.ok(slugs.includes(slug));
 for (const name of ['team','enterprise','docs']) {
-  const fragment = read(`src/pages/${name}.html`), built = read(`pages/${name}.html`);
+  const unversioned=text=>text.replace(/\?v=[a-f0-9]{12}/g,''),fragment = read(`src/pages/${name}.html`), built = read(`pages/${name}.html`);
   if(name==='docs'){
-    for(const part of fragment.split('{{SAGE_DOCS_STATIC}}'))assert.ok(built.includes(part),`${name}: build must preserve the source around generated static articles`);
+    for(const part of fragment.split('{{SAGE_DOCS_STATIC}}'))assert.ok(unversioned(built).includes(unversioned(part)),`${name}: build must preserve the source around generated static articles`);
     assert.equal((built.match(/id="doc-readable-/g)||[]).length,40,'All document bodies must be readable without JavaScript');
-  }else assert.ok(built.includes(fragment),`${name}: build must include current source`);
+  }else{assert.ok(unversioned(built).includes(unversioned(fragment)),`${name}: build must include current source (content-hash versions aside)`);}
   assert.ok(built.includes('class="content-site'));
   assert.ok(built.includes(`href="${name}.html" aria-current="page"`));
   assert.ok(!built.includes('认证、支付与真实任务尚未接入'));
@@ -78,24 +78,24 @@ for (const name of ['team','enterprise','docs']) {
     if(article)assert.ok(slugs.includes(article),`Unknown article: ${article}`);
   }
 }
-assert.ok(read('src/pages/team.html').includes('<strong>CMO</strong>'));
-assert.ok(read('src/pages/team.html').includes('<strong>CHO</strong>'));
+assert.ok(read('src/pages/team.html').includes('<strong>首席增长官 CGO</strong>'),'Management titles follow the App: CGO');
+assert.ok(read('src/pages/team.html').includes('<strong>首席治理官 CGOV</strong>'),'Management titles follow the App: CGOV');
 assert.ok(!read('src/pages/team.html').includes('CGOv'));
 const teamHero=read('src/pages/team.html').split('<section class="at-hero"')[1].split('</section>')[0];
 const enterpriseHero=read('src/pages/enterprise.html').match(/<header class="ep-hero"[\s\S]*?<\/header>/)[0];
-assert.ok(teamHero.includes('从专业岗位，到有序协作'));
+assert.ok(teamHero.includes('关键处由你把关')&&teamHero.includes('id="at-demo-video"'),'Team hero plays the App orchestration and review demo');
 for(const hero of [teamHero,enterpriseHero])assert.ok(!hero.includes('<a '),'Hero actions must stay removed');
-assert.ok(teamHero.includes('at-professional-visual'));
+assert.equal((teamHero.match(/<li data-start=/g)||[]).length,8,'Eight demo chapters: kick-off, orchestration, parallel work, authorization, inbox decision, acceptance, versions, reuse');
 assert.ok(!read('src/pages/team.html').includes('at-business-heading'),'Remove the screenshot business-problem section entirely');
 assert.ok(!read('src/pages/ai-team.css').includes('at-business-reading'),'No orphan styles for the removed section');
-assert.ok(teamHero.includes('icons/team-human-ai-workspace.png'),'Use the user-approved meeting illustration');
-assert.ok(read('src/pages/ai-team.css').includes('.at-professional-visual::after'),'Blend the illustration edges into the white page');
+assert.ok(!teamHero.includes('at-staff-directory'),'Hero does not repeat the roster');
+assert.ok(!read('src/pages/ai-team.css').includes('at-constellation'),'No orphan constellation styles');
 for(const home of ['index.html','index-en.html'])assert.ok(read(home).includes('data-theme="dark"'),'Homepage hero keeps its approved dark background');
 const homePalette=read('src/visual-draft.css');
-assert.ok(homePalette.includes('.v1 .btn.primary{background:#aec8e2;'));
-assert.ok(homePalette.includes('.v1 .btn.primary:hover{background:#c2d8ec}'));
+assert.ok(homePalette.includes('.v1 .btn.primary{background:#396397;color:#fff;'),'Launch primary buttons use brand blue');
+assert.ok(homePalette.includes('.v1 .btn.primary:hover,.v1 .btn.primary:focus-visible{background:#2f5585;color:#fff;'),'Primary hover keeps white text on brand blue');
 assert.ok(!homePalette.includes('body.v1[data-theme=light] .hero{background:#fff}'),'Do not override the approved hero background');
-assert.ok(!teamHero.includes('at-orbit'));
+assert.ok(read('src/pages/team.html').includes('相关能力随 App 版本逐步开放'),'Architecture claims are marked as rolling out with app releases');
 assert.ok(!read('src/pages/team.html').includes('经营工作'));
 assert.ok(!read('src/pages/ai-team.css').includes('at-orbit-turn'));
 assert.ok(read('src/pages/team.html').indexOf('id="at-staff-directory"')>read('src/pages/team.html').indexOf('class="at-management"'));
@@ -104,18 +104,20 @@ assert.ok(read('src/pages/ai-team.css').includes('repeat(var(--staff-count),minm
 for(const note of ['工程方法参考','以上为业务判断示例','外部工程资料不代表'])assert.ok(!read('src/pages/team.html').includes(note),note);
 for(const note of ['企业实施结构示意，非实时操作界面','以上为实施与交付结构示意'])assert.ok(!read('src/pages/enterprise.html').includes(note),note);
 for(const removed of ['at-work-scene','at-domain-grid','data-person='])assert.ok(!read('src/pages/team.html').includes(removed),removed);
-for(const content of ['职责决定问题的问法','方法不能只靠临场发挥','复核需要不同的检查职责','不需要团队的，保持简单','如何判断 AI 团队真的帮上了忙'])assert.ok(read('src/pages/team.html').includes(content),content);
-assert.ok(!teamHero.includes('assets/people/'),'Hero must show work, not an employee roster');
+assert.ok(!read('src/pages/team.html').includes('方案参数'),'Unconfirmed orchestration limits stay off the page');
+for(const content of ['四种角色，责任从不含糊','七步闭环，你在关键处拍板','三张图，让每一次编排都有依据','越用，越懂你的业务','找到专家、了解专家、创建专家','50 个专业岗位，覆盖出海经营全链路'])assert.ok(read('src/pages/team.html').includes(content),content);
+assert.equal((read('src/pages/team.html').match(/<span class="at-loop-index">/g)||[]).length,7,'Seven-step closed loop');
 for(const removed of ['at-toolbar','at-scene-tools','id="at-status"','id="at-search"'])assert.ok(!read('src/pages/team.html').includes(removed),removed);
 assert.ok(!read('src/pages/ai-team.js').includes('at-ensemble-left'));
 assert.ok(enterpriseHero.includes('ep-business-chain'));
 const enterpriseSource=read('src/pages/enterprise.html');
-assert.ok(enterpriseSource.includes('href="trial.html">免费体验'));
+assert.ok(enterpriseSource.includes('href="download.html" data-app-soon>下载 Sage'),'Standard product path leads to the app, not an unreleased trial');
 assert.ok(!enterpriseSource.includes('查看产品'));
 assert.ok(!enterpriseSource.includes('讨论企业需求'));
-assert.ok(!enterpriseSource.split('<section id="contact"')[1].includes('<button'),'No duplicate closing consultation button');
+assert.ok(!enterpriseSource.split('class="ep-section ep-faq"')[1].includes('<button'),'No duplicate closing consultation button');
+assert.equal((enterpriseSource.split('class="ep-faq-list"')[1].split('</dl>')[0].match(/<div><dt>/g)||[]).length,6,'Enterprise FAQ answers six documented questions');
 assert.ok(read('src/pages/trial.html').includes('id="r-menu-toggle"'));
-for(const copy of ['打通企业现有系统与多源数据','沉淀企业的核心业务资产','理解 · 推理 · 执行','生成结果并回写到业务系统','业务执行结果','审批意见','驳回','通过','制度规范','决策规则','合规要求','业务指标定义','统计口径','计算逻辑','业务流程','审批规则','角色与权限','相关文档与过程记录','执行结果与数据指标','更新企业业务系统'])assert.ok(enterpriseHero.includes(copy),copy);
+for(const copy of ['打通企业现有系统与多源数据','沉淀企业的核心业务资产','协作 · 留痕 · 授权','生成结果并回写到业务系统','业务执行结果','审批意见','驳回','通过','制度规范','决策规则','合规要求','业务指标定义','统计口径','计算逻辑','业务流程','审批规则','角色与权限','相关文档与过程记录','执行结果与数据指标','更新企业业务系统'])assert.ok(enterpriseHero.includes(copy),copy);
 assert.ok(enterpriseHero.includes('非操作按钮'));
 for(const label of ['业务系统与数据','企业知识','人工审批','验证与交付'])assert.ok(enterpriseHero.includes(label));
 assert.ok(!enterpriseHero.includes('hero-collaboration.png'));
@@ -126,6 +128,8 @@ assert.ok(read('src/pages/content-pages.js').includes("auth.html?return='"));
 for (const icon of ['person','file-earmark-text','database','diagram-3','people','search','shield-lock','bar-chart']) assert.ok(fs.existsSync(path.join(root,'pages/icons',icon+'.svg')));
 const sharedRoutes=['team','enterprise','docs','pricing','trial','download','checkout','billing','auth','profile'].flatMap(name=>[name,name+'-en']).concat('product');
 const publicNames=new Set(['index','team','enterprise','docs','pricing','download']);
+const indexedNames=new Set(['index','team','enterprise','docs']);
+const publicURL=filename=>'https://sagegogo.com/'+(filename==='index.html'?'':filename);
 for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'pages/'+name+'.html')]){
   const html=read(filename),head=html.split('</head>')[0],english=filename.endsWith('-en.html'),name=path.basename(filename,'.html').replace(/-en$/,'');
   assert.equal((head.match(/<title>/g)||[]).length,1,filename+': unique title');
@@ -134,15 +138,16 @@ for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'p
   assert.ok(description.length>20,filename+': meaningful description');
   if(english)assert.ok(!/[\u4e00-\u9fff]/.test(description),filename+': localized description');
   assert.equal((head.match(/rel="canonical"/g)||[]).length,1,filename+': unique canonical');
-  assert.ok(head.includes(`<link rel="canonical" href="https://sagegogo.com/${filename}">`),filename+': query-free canonical');
+  assert.ok(head.includes(`<link rel="canonical" href="${publicURL(filename)}">`),filename+': query-free canonical');
   assert.equal((head.match(/name="robots"/g)||[]).length,1,filename+': unique indexing policy');
-  assert.ok(head.includes(`<meta name="robots" content="noindex,${publicNames.has(name)?'follow':'nofollow'}">`),filename+': release candidate must remain unindexed');
+  const robots=indexedNames.has(name)?'index,follow':`noindex,${publicNames.has(name)?'follow':'nofollow'}`;
+  assert.ok(head.includes(`<meta name="robots" content="${robots}">`),filename+': launch indexing policy');
   const stem=filename.replace(/-en\.html$/,'.html').replace(/\.html$/,'');
   if(name!=='product'){
-    assert.equal((head.match(/rel="alternate" hreflang=/g)||[]).length,2,filename+': bilingual head links');
+    assert.equal((head.match(/rel="alternate" hreflang=/g)||[]).length,3,filename+': bilingual head links with x-default');
     for(const [lang,suffix] of [['zh-CN',''],['en','-en']]){
       const target=stem+suffix+'.html';assert.ok(fs.existsSync(path.join(root,target)),filename+': alternate exists');
-      assert.ok(head.includes(`<link rel="alternate" hreflang="${lang}" href="https://sagegogo.com/${target}">`),filename+': alternate language');
+      assert.ok(head.includes(`<link rel="alternate" hreflang="${lang}" href="${publicURL(target)}">`),filename+': alternate language');
     }
   }
   if(publicNames.has(name)){
@@ -152,8 +157,10 @@ for(const filename of ['index.html','index-en.html',...sharedRoutes.map(name=>'p
     assert.ok(head.includes('<meta name="twitter:card" content="summary_large_image">'));
   }else assert.ok(!head.includes('property="og:'),filename+': no private-page share data');
 }
-assert.ok(!fs.existsSync(path.join(root,'dist/robots.txt')), 'Release flag must not publish a crawler allow policy');
-assert.ok(!fs.existsSync(path.join(root,'dist/sitemap.xml')), 'Indexing samples remain review-only');
+for(const file of ['robots.txt','sitemap.xml'])assert.equal(read('dist/'+file),read(file),file+': published with the release');
+assert.ok(read('robots.txt').includes('Disallow: /api/')&&read('robots.txt').includes('Sitemap: https://sagegogo.com/sitemap.xml'));
+for(const name of indexedNames)for(const file of name==='index'?['index.html','index-en.html']:[`pages/${name}.html`,`pages/${name}-en.html`])assert.ok(read('sitemap.xml').includes(`<loc>${publicURL(file)}</loc>`),file+': listed in sitemap');
+assert.ok(!read('sitemap.xml').includes('pricing')&&!read('sitemap.xml').includes('auth'),'Unindexed routes stay out of the sitemap');
 for(const route of sharedRoutes){
   const html=read('pages/'+route+'.html');
   assert.ok(html.includes('content-pages.css'),route+': shared visual foundation');
