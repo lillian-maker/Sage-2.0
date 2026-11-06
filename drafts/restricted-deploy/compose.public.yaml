@@ -1,0 +1,9 @@
+# Public opening of sagegogo.com: append only in the approved go-live window, after the server
+# update has passed its checks. Publishes HTTPS on 443 and plain HTTP on 80 (which only
+# redirects to https://sagegogo.com); the loopback 9443 binding stays for on-host checks.
+# The cloud security group must allow inbound TCP 80/443 separately; IPv6 stays closed.
+services:
+  web:
+    ports:
+      - "0.0.0.0:443:8443"
+      - "0.0.0.0:80:8080"

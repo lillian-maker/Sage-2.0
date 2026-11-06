@@ -14,7 +14,7 @@ for name, filename in (('SAGE_SECRET_KEY', 'django_key'), ('SAGE_DB_PASSWORD', '
 auth_keys = {
     'SAGE_SES_SECRET_ID', 'SAGE_SES_SECRET_KEY',
     'SAGE_CAPTCHA_SECRET_ID', 'SAGE_CAPTCHA_SECRET_KEY', 'SAGE_CAPTCHA_APP_SECRET_KEY',
-    'SAGE_GOOGLE_CLIENT_SECRET',
+    'SAGE_GOOGLE_CLIENT_SECRET', 'SAGE_SMS_SECRET_ID', 'SAGE_SMS_SECRET_KEY',
 }
 auth_path = Path('/run/secrets/auth_credentials.json')
 credentials = {}
@@ -37,7 +37,8 @@ try:
             ('SAGE_AUTH_EMAIL_ENABLED', ('SAGE_SES_SECRET_ID', 'SAGE_SES_SECRET_KEY')),
             ('SAGE_AUTH_CAPTCHA_ENABLED', ('SAGE_CAPTCHA_SECRET_ID', 'SAGE_CAPTCHA_SECRET_KEY',
                                           'SAGE_CAPTCHA_APP_SECRET_KEY')),
-            ('SAGE_AUTH_GOOGLE_ENABLED', ('SAGE_GOOGLE_CLIENT_SECRET',))):
+            ('SAGE_AUTH_GOOGLE_ENABLED', ('SAGE_GOOGLE_CLIENT_SECRET',)),
+            ('SAGE_AUTH_PHONE_ENABLED', ('SAGE_SMS_SECRET_ID', 'SAGE_SMS_SECRET_KEY'))):
         if os.environ.get(gate) == '1' and (
                 any(not credentials.get(key) for key in required)):
             raise ValueError
