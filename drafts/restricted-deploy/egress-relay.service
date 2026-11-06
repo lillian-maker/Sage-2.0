@@ -1,0 +1,27 @@
+# Google relay outside mainland China (for example a small Hong Kong instance), running the same
+# egress_proxy.py. It only tunnels to Google's OAuth token and certificate hosts.
+# The cloud security group must allow TCP 3128 inbound from the Sage server's public IP only.
+# Install: copy egress_proxy.py to /opt/sage-egress/, this file to /etc/systemd/system/, then
+#   systemctl daemon-reload && systemctl enable --now egress-relay
+[Unit]
+Description=Sage Google egress relay (CONNECT allowlist)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+DynamicUser=yes
+Environment=SAGE_EGRESS_LISTEN=0.0.0.0:3128
+Environment=SAGE_EGRESS_ALLOW=oauth2.googleapis.com,www.googleapis.com
+ExecStart=/usr/bin/python3 /opt/sage-egress/egress_proxy.py
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6
+MemoryMax=128M
+
+[Install]
+WantedBy=multi-user.target
