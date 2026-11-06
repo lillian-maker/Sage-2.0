@@ -5,6 +5,11 @@
 # Check actual container-visible ownership/readability; Compose does not remap them.
 # Non-secret values below are supplied through the operator's environment.
 # This overlay does not enable authentication, supplier egress or Google callbacks.
+# Phone SMS: SAGE_SMS_SECRET_ID/SAGE_SMS_SECRET_KEY go in the same JSON; the region, SDK app,
+# signature, country codes and per-purpose template IDs come from the operator environment.
+# Template approval and real-delivery flags stay "0" here until each is verified separately.
+# Legal URLs and the terms version default to the published pages; registration stays closed
+# until SAGE_AUTH_REGISTRATION_TERMS_READY is set after legal review.
 services:
   app:
     environment:
@@ -18,11 +23,30 @@ services:
       SAGE_AUTH_GOOGLE_BIND_SES_TEMPLATE_ID: ${SAGE_AUTH_GOOGLE_BIND_SES_TEMPLATE_ID:-}
       SAGE_GOOGLE_CLIENT_ID: ${SAGE_GOOGLE_CLIENT_ID:-}
       SAGE_GOOGLE_REDIRECT_URI: ${SAGE_GOOGLE_REDIRECT_URI:-}
-      SAGE_AUTH_REGISTRATION_TERMS_VERSION: ${SAGE_AUTH_REGISTRATION_TERMS_VERSION:-}
-      SAGE_AUTH_REGISTRATION_TERMS_URL: ${SAGE_AUTH_REGISTRATION_TERMS_URL:-}
-      SAGE_AUTH_REGISTRATION_PRIVACY_URL: ${SAGE_AUTH_REGISTRATION_PRIVACY_URL:-}
+      SAGE_AUTH_REGISTRATION_TERMS_VERSION: ${SAGE_AUTH_REGISTRATION_TERMS_VERSION:-2026-11-05}
+      SAGE_AUTH_REGISTRATION_TERMS_URL: ${SAGE_AUTH_REGISTRATION_TERMS_URL:-https://sagegogo.com/pages/terms.html}
+      SAGE_AUTH_REGISTRATION_PRIVACY_URL: ${SAGE_AUTH_REGISTRATION_PRIVACY_URL:-https://sagegogo.com/pages/privacy.html}
+      SAGE_SMS_REGION: ${SAGE_SMS_REGION:-}
+      SAGE_SMS_SDK_APP_ID: ${SAGE_SMS_SDK_APP_ID:-}
+      SAGE_SMS_SIGN: ${SAGE_SMS_SIGN:-}
+      SAGE_SMS_ALLOWED_COUNTRY_CODES: ${SAGE_SMS_ALLOWED_COUNTRY_CODES:-}
+      SAGE_SMS_TEMPLATE_ID: ${SAGE_SMS_TEMPLATE_ID:-}
+      SAGE_SMS_REGISTRATION_TEMPLATE_ID: ${SAGE_SMS_REGISTRATION_TEMPLATE_ID:-}
+      SAGE_SMS_PASSWORD_TEMPLATE_ID: ${SAGE_SMS_PASSWORD_TEMPLATE_ID:-}
+      SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_ID: ${SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_ID:-}
+      SAGE_SMS_DELETION_TEMPLATE_ID: ${SAGE_SMS_DELETION_TEMPLATE_ID:-}
+      SAGE_SMS_BUSINESS_TEMPLATE_ID: ${SAGE_SMS_BUSINESS_TEMPLATE_ID:-}
+      SAGE_SMS_BINDING_TEMPLATE_ID: ${SAGE_SMS_BINDING_TEMPLATE_ID:-}
       SAGE_AUTH_REGISTRATION_TERMS_READY: "0"
       SAGE_GOOGLE_BRAND_READY: "0"
+      SAGE_SMS_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_REGISTRATION_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_PASSWORD_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_PASSWORD_CHANGED_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_DELETION_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_BUSINESS_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_BINDING_TEMPLATE_APPROVED: "0"
+      SAGE_SMS_REAL_DELIVERY_VERIFIED: "0"
     secrets:
       - source: auth_credentials
         target: auth_credentials.json
