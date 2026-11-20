@@ -24,7 +24,9 @@ def main():
                    SAGE_APP_IP='192.0.2.3', SAGE_AUTH_EMAIL_ENABLED='1',
                    SAGE_AUTH_GOOGLE_ENABLED='1', SAGE_AUTH_CAPTCHA_ENABLED='1',
                    SAGE_SES_REGION='ap-hongkong', SAGE_CAPTCHA_APP_ID='123',
-                   SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID='31')
+                   SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID='31', SAGE_AUTH_PHONE_ENABLED='1',
+                   SAGE_SMS_REGION='ap-guangzhou', SAGE_SMS_SDK_APP_ID='1400000000',
+                   SAGE_SMS_REGISTRATION_TEMPLATE_ID='41')
         base = ['docker', 'compose', '--env-file', '/dev/null', '--profile', 'tools', '-p', 'sage-auth-config-audit',
                 '-f', str(DEPLOY / 'compose.yaml')]
         plain = subprocess.run(base + ['config', '--format', 'json'], env=env,
@@ -46,11 +48,14 @@ def main():
         for key in ('SAGE_AUTH_EMAIL_ENABLED', 'SAGE_AUTH_GOOGLE_ENABLED',
                     'SAGE_AUTH_CAPTCHA_ENABLED', 'SAGE_AUTH_REGISTRATION_ENABLED',
                     'SAGE_AUTH_PHONE_ENABLED', 'SAGE_ACCOUNT_DELETION_ENABLED',
-                    'SAGE_AUTH_REGISTRATION_TERMS_READY', 'SAGE_GOOGLE_BRAND_READY'):
+                    'SAGE_AUTH_REGISTRATION_TERMS_READY', 'SAGE_GOOGLE_BRAND_READY',
+                    'SAGE_SMS_TEMPLATE_APPROVED', 'SAGE_SMS_REGISTRATION_TEMPLATE_APPROVED',
+                    'SAGE_SMS_REAL_DELIVERY_VERIFIED'):
             assert app['environment'][key] == '0'
         assert not any('SECRET' in key for key in app['environment'])
         for key in ('SAGE_SES_REGION', 'SAGE_CAPTCHA_APP_ID',
-                    'SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID'):
+                    'SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID', 'SAGE_SMS_REGION',
+                    'SAGE_SMS_SDK_APP_ID', 'SAGE_SMS_REGISTRATION_TEMPLATE_ID'):
             assert app['environment'][key] == env[key]
 
     # All fixture files live in this new container's tmpfs, with actual Linux UID/modes.
@@ -65,7 +70,8 @@ for name in ('django_key', 'db_password'):
     os.chown(path, 10001, 10001)
 path = root / 'auth_credentials.json'
 keys = ('SAGE_SES_SECRET_ID', 'SAGE_SES_SECRET_KEY', 'SAGE_CAPTCHA_SECRET_ID',
-        'SAGE_CAPTCHA_SECRET_KEY', 'SAGE_CAPTCHA_APP_SECRET_KEY', 'SAGE_GOOGLE_CLIENT_SECRET')
+        'SAGE_CAPTCHA_SECRET_KEY', 'SAGE_CAPTCHA_APP_SECRET_KEY', 'SAGE_GOOGLE_CLIENT_SECRET',
+        'SAGE_SMS_SECRET_ID', 'SAGE_SMS_SECRET_KEY')
 values = {key: 'synthetic-value-' + str(index) for index, key in enumerate(keys)}
 baseline = {'PATH': os.environ['PATH'], 'PYTHONDONTWRITEBYTECODE': '1'}
 checks = []
@@ -104,13 +110,14 @@ run('closed-migration-without-file', gates={'SAGE_DB_USER': 'sage_migrate'}, suc
 run('valid-file-keeps-closed-gates', json.dumps(values), success=True, loaded=True)
 run('enabled-with-complete-file', json.dumps(values), gates={
     'SAGE_AUTH_EMAIL_ENABLED': '1', 'SAGE_AUTH_CAPTCHA_ENABLED': '1',
-    'SAGE_AUTH_GOOGLE_ENABLED': '1'}, success=True, loaded=True)
+    'SAGE_AUTH_GOOGLE_ENABLED': '1', 'SAGE_AUTH_PHONE_ENABLED': '1'}, success=True, loaded=True)
 run('email-only-does-not-require-google', json.dumps({key: values[key] for key in keys[:2]}),
     gates={'SAGE_AUTH_EMAIL_ENABLED': '1'}, success=True, loaded=True)
 for gate, required in (
         ('SAGE_AUTH_EMAIL_ENABLED', keys[:2]),
         ('SAGE_AUTH_CAPTCHA_ENABLED', keys[2:5]),
-        ('SAGE_AUTH_GOOGLE_ENABLED', keys[5:])):
+        ('SAGE_AUTH_GOOGLE_ENABLED', keys[5:6]),
+        ('SAGE_AUTH_PHONE_ENABLED', keys[6:])):
     run(gate + '-missing-file', gates={gate: '1'})
     for key in required:
         partial = {name: value for name, value in values.items() if name != key}

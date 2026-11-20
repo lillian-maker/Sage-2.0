@@ -46,3 +46,10 @@
     requestAnimationFrame(() => target.scrollIntoView({ behavior: 'instant', block: 'start' }));
   }
 })();
+
+// Business edition showcase: WAI-ARIA tabs (arrow keys, Home and End move between tabs).
+(function showcase(){
+ const tabs=[...document.querySelectorAll('.ep-tabs [role=tab]')];if(!tabs.length)return;
+ const select=(tab,focus)=>{tabs.forEach(t=>{const on=t===tab;t.setAttribute('aria-selected',String(on));t.tabIndex=on?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});if(focus)tab.focus();};
+ tabs.forEach((tab,i)=>{tab.addEventListener('click',()=>select(tab));tab.addEventListener('keydown',e=>{const n={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[e.key];if(n===undefined)return;e.preventDefault();select(tabs[(n+tabs.length)%tabs.length],true);});});
+})();

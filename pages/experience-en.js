@@ -36,11 +36,11 @@
       name: t('Shopify store diagnosis', 'Shopify store diagnosis'),
       description: t('梳理购买信息与页面优化顺序', 'Review buying information and page improvements'),
       input: t('Shopify 店铺链接', 'Shopify store URL'),
-      scope: t('检查公开可访问的店铺页面, 无需店铺后台授权；不据此推断实际订单, 转化率, 广告或库存.', 'Review publicly accessible storefront pages without admin access. These pages cannot establish actual orders, conversion rates, ad performance or inventory.'),
+      scope: t('检查公开可访问的店铺页面, 无需店铺后台Authorization；不据此推断实际订单, 转化率, 广告或库存.', 'Review publicly accessible storefront pages without admin access. These pages cannot establish actual orders, conversion rates, ad performance or inventory.'),
       example: [
         [t('页面依据', 'Page evidence'), t('每项观察对应页面位置, URL 与读取时间；受限页面不绕过访问限制.', 'Link observations to page locations, URLs and access dates. Do not bypass access restrictions.')],
         [t('购买信息', 'Buying information'), t('检查商品说明, Specifications, shipping and returns, 区分缺失信息和待商家确认的事实.', 'Review product details, specifications, shipping and returns, distinguishing missing information from facts the merchant must confirm.')],
-        [t('优化建议', 'Recommendations'), t('给出有Evidence的建议和验证顺序；改价, 发布与广告操作需另行授权.', 'Provide evidence-led recommendations and validation priorities. Price changes, publishing and advertising require separate authorization.')]
+        [t('优化建议', 'Recommendations'), t('给出有Evidence的建议和验证顺序；改价, 发布与广告操作需另行Authorization.', 'Provide evidence-led recommendations and validation priorities. Price changes, publishing and advertising require separate authorization.')]
       ]
     }
   };
@@ -54,10 +54,10 @@
         ${Object.entries(scenes).map(([key, item]) => `<button type="button" class="xp-scene" data-scene="${key}" aria-pressed="false"><img class="xp-scene-symbol" src="icons/${key === 'voc' ? 'search' : 'boxes'}.svg" width="30" height="30" alt=""><strong>${item.name}</strong><span>${item.description}</span></button>`).join('')}
       </div>
       <section class="xp-prompt trial-scope" aria-labelledby="scope-title">
-        <span class="xp-eyebrow">${t('你需要准备', 'What to prepare')}</span>
+        <span class="xp-eyebrow">${t('You需要准备', 'What to prepare')}</span>
         <h2 id="scope-title"></h2><p id="scope-description"></p>
         <div class="xp-note" id="trial-availability" role="status"><strong>${t('真实体验暂未开放', 'Live trials are not available yet')}</strong>
-          <p>${t('分析服务尚未开放, 当前不接收品牌或店铺链接, 也不会创建任务或占用体验资格.你可以先了解报告结构, 或进入Account与账单.', 'The analysis service is not available yet. This page does not accept brand names or store URLs, create tasks or use a trial entitlement. You can review the report structure or visit account and billing.')}</p></div>
+          <p>${t('分析服务尚未开放, 当前不接收品牌或店铺链接, 也不会创建任务或占用体验资格.You可以先了解报告结构, 或进入Account与账单.', 'The analysis service is not available yet. This page does not accept brand names or store URLs, create tasks or use a trial entitlement. You can review the report structure or visit account and billing.')}</p></div>
         <div class="xp-actions"><button type="button" class="r-button" id="start-trial" disabled aria-describedby="trial-availability">${t('暂不可开始', 'Not available yet')}</button><button type="button" class="r-button secondary" id="view-example" aria-expanded="false" aria-controls="trial-example">${t('查看示例结构', 'View example structure')}</button><a class="xp-text-button" href="${page('billing')}">${t('进入Account与账单', 'Go to account and billing')} →</a></div>
       </section>
       <section class="trial-policy" aria-labelledby="trial-policy-title"><h2 id="trial-policy-title">${t('Try Sage如何计算', 'How the free trial works')}</h2>
@@ -69,7 +69,7 @@
     <section id="trial-example" class="trial-example" aria-labelledby="example-title" hidden>
       <span class="xp-eyebrow">${t('静态结构示例 · 不是实际分析Results', 'Static structure example · Not an analysis result')}</span>
       <h2 id="example-title" tabindex="-1"></h2>
-      <p>${t('以下只说明正式报告将如何组织信息, 未读取任何品牌或店铺, 也不代表你已完成Try Sage.', 'This illustrates how a report is organized. No brand or store has been analyzed, and no free trial has been completed.')}</p>
+      <p>${t('以下只说明正式报告将如何组织信息, 未读取任何品牌或店铺, 也不代表YouDoneTry Sage.', 'This illustrates how a report is organized. No brand or store has been analyzed, and no free trial has been completed.')}</p>
       <div class="xp-chain" id="example-content"></div>
     </section>
     <section class="xp-note trial-record" aria-labelledby="saved-trial-title"><h2 id="saved-trial-title">${t('我的体验记录', 'My trial')}</h2><div id="saved-trial" aria-live="polite"></div><button type="button" class="xp-text-button" id="refresh-trial">${t('刷新记录', 'Refresh record')}</button></section>`;
@@ -176,7 +176,7 @@
     const target = $('#saved-trial'), refresh = $('#refresh-trial');
     clearReportDownload();
     refresh.disabled = true;
-    target.textContent = t('正在读取你的体验记录…', 'Loading your trial…');
+    target.textContent = t('正在读取You的体验记录…', 'Loading your trial…');
     try {
       const response = await fetch('/api/trial', {credentials: 'same-origin', cache: 'no-store', signal: AbortSignal.timeout(15000)});
       if (version !== trialReadVersion) return;
@@ -186,7 +186,7 @@
         // destination allowlist. Never forward a caller-supplied return URL.
         const updateReturn = () => { link.href = page('auth') + '?return=' + encodeURIComponent(location.pathname + location.search + location.hash); };
         updateReturn(); link.addEventListener('click', updateReturn);
-        link.textContent = t('Log in后查看你的体验资格与Original task', 'Sign in to view your trial entitlement and original task');
+        link.textContent = t('Log in后查看You的体验资格与Original task', 'Sign in to view your trial entitlement and original task');
         target.replaceChildren(link); return;
       }
       if (!response.ok) throw new Error('TRIAL_READ_FAILED');
@@ -198,15 +198,15 @@
         running: t('Original task处理中, 刷新可查看最新状态.', 'Your original task is in progress. Refresh for an update.'),
         cancelled: t('Original task已取消, 体验对象仍锁定.当前暂不支持恢复任务.', 'The original task was cancelled. Its subject remains locked; resuming is not available yet.'),
         recoverable_failure: t('Original task遇到可恢复问题, 尚未核销资格.当前暂不支持重试.', 'The original task has a recoverable issue. Your entitlement has not been used; retry is not available yet.'),
-        completed: t('报告已保存, 本次Try Sage已完成.', 'Your report is saved and your free trial is complete.')
+        completed: t('报告已保存, 本次Try SageDone.', 'Your report is saved and your free trial is complete.')
       };
       if (!attempt) {
         if (data.eligibility === 'consumed' && attempt === null) {
-          target.textContent = t('你的Try Sage已使用, 当前账号没有可查看的体验报告.', 'Your free trial has already been used. No trial report is available for this account.');
+          target.textContent = t('You的Try Sage已使用, 当前账号没有可查看的体验报告.', 'Your free trial has already been used. No trial report is available for this account.');
           return;
         }
         if (data.eligibility !== 'available') throw new Error('INVALID_TRIAL_RESPONSE');
-        target.textContent = t('你仍有一次Try Sage资格.分析服务开放后, 可选择一个Scenarios开始.', 'You have one free trial available. Choose a scenario when the analysis service opens.');
+        target.textContent = t('You仍有一次Try Sage资格.分析服务开放后, 可选择一个Scenarios开始.', 'You have one free trial available. Choose a scenario when the analysis service opens.');
         return;
       }
       if (!states[attempt.task_state] || typeof attempt.input_value !== 'string' ||

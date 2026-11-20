@@ -1,4 +1,4 @@
-Asset: enterprise-services-illustrations.png
+Asset: enterprise-services-illustrations.webp
 Created: 2026-10-05
 Method: OpenAI native ImageGen tool; project illustration generation.
 Reference: User-approved Sage enterprise service page screenshot, used as visual style and composition reference.
@@ -6,3 +6,4 @@ Purpose: Four decorative service illustrations; the page uses the four sprite qu
 Quadrants: data documents and database / business knowledge nodes / role handoff / system integration and checked output.
 Prompt: A square 2x2 production website illustration sprite, no text or logo, pure white background, thin navy and silver-gray strokes with restrained teal. Four independent centered illustrations: layered documents linked to database; document surrounded by six knowledge nodes; three outlined role glyphs with directional handoffs; stacked existing systems linked through an integration hub to a checked result document. No 3D, chrome, shadows, borders or UI.
 Provenance: Generated raster, not an imported Bootstrap icon or third-party library asset. The adjacent Bootstrap MIT LICENSE applies to the Bootstrap SVG files, not to this image. No third-party certification, product integration or customer case is implied.
+Format: 2026-11-05 converted at original size (1254x1254) to WebP q90 for delivery; the original PNG remains in git history at d305de6.

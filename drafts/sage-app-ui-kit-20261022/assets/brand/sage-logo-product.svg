@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 6 384 168" width="112" height="49" fill="none" role="img" aria-labelledby="sage-title sage-desc">
+  <title id="sage-title">Sage</title>
+  <desc id="sage-desc">A flowing blue ribbon S with a four-point star beside the Sage wordmark. Product palette for light backgrounds.</desc>
+  <defs>
+    <linearGradient id="ribbon-body" x1="19" y1="55" x2="133" y2="193" gradientUnits="userSpaceOnUse"><stop stop-color="#AEC8E2"/><stop offset="1" stop-color="#7396BC"/></linearGradient>
+    <linearGradient id="ribbon-upper" x1="61" y1="89" x2="117" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#396397"/><stop offset="1" stop-color="#7396BC"/></linearGradient>
+    <linearGradient id="ribbon-fold" x1="68" y1="94" x2="96" y2="146" gradientUnits="userSpaceOnUse"><stop stop-color="#7396BC"/><stop offset="1" stop-color="#396397"/></linearGradient>
+    <linearGradient id="ribbon-lower" x1="17" y1="207" x2="99" y2="151" gradientUnits="userSpaceOnUse"><stop stop-color="#7396BC"/><stop offset="1" stop-color="#396397"/></linearGradient>
+  </defs>
+  <g transform="translate(2 10) scale(.771 .72)">
+    <path fill="url(#ribbon-body)" d="M101 27C72 32 38 49 18 72C3 89 3 108 20 121C35 133 58 141 79 147C54 157 28 164 12 176C-7 189-3 209 16 217C39 227 85 213 117 194C142 179 151 160 139 143C128 126 104 112 63 95C85 85 111 76 125 61C143 42 132 22 101 27Z"/>
+    <path fill="url(#ribbon-upper)" d="M101 27C87 29 76 33 65 39C43 52 34 69 43 82C47 88 54 92 63 95C85 85 111 76 125 61C143 42 132 22 101 27Z"/>
+    <path fill="url(#ribbon-fold)" d="M63 95C84 103 107 112 117 120C124 133 106 145 79 147C85 136 57 109 63 95Z"/>
+    <path fill="url(#ribbon-lower)" d="M79 147C105 153 120 165 112 183C104 201 76 212 45 219C33 222 23 220 16 217C-3 209-7 189 12 176C28 164 54 157 79 147Z"/>
+    <path fill="#7396BC" d="M144 0C148 15 150 18 165 22C150 26 148 29 144 44C140 29 138 26 123 22C138 18 140 15 144 0Z"/>
+  </g>
+  <g fill="#14243A" transform="translate(74.555 36.661) scale(.5431 .5498)">
+    <path d="M237 52C226 39 212 34 194 34C168 34 151 47 151 67C151 86 165 95 188 101L205 106C216 109 220 112 220 120C220 128 212 133 198 133C181 133 169 126 159 116L145 132C158 147 176 154 198 154C226 154 244 141 244 120C244 100 231 91 207 85L190 80C177 77 173 74 173 68C173 60 181 55 194 55C206 55 217 60 225 69L237 52Z"/>
+    <path fill-rule="evenodd" d="M329 70H350V154H329V144C321 152 311 156 298 156C273 156 255 137 255 112C255 87 273 68 298 68C311 68 322 73 329 81V70ZM329 112C329 98 318 88 303 88C288 88 278 98 278 112C278 126 288 136 303 136C318 136 329 126 329 112Z"/>
+    <path fill-rule="evenodd" d="M435 70H456V151C456 181 438 199 408 199C388 199 372 191 363 177L379 163C386 173 395 179 408 179C426 179 435 170 435 153V144C427 152 417 156 405 156C380 156 362 137 362 112C362 87 380 68 405 68C418 68 428 73 435 81V70ZM435 112C435 98 424 88 409 88C394 88 385 98 385 112C385 126 394 136 409 136C424 136 435 126 435 112Z"/>
+    <path fill-rule="evenodd" d="M565 117H492C494 130 504 137 519 137C531 137 540 132 548 123L564 136C553 150 538 156 518 156C490 156 470 138 470 112C470 87 490 68 516 68C544 68 565 89 565 112V117ZM492 100H543C540 89 531 84 517 84C504 84 496 90 492 100Z"/>
+  </g>
+</svg>

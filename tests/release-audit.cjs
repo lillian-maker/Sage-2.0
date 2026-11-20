@@ -160,9 +160,15 @@ async function consultationAudit(browser) {
       console.log(JSON.stringify({ keyboard: report.keyboard, consultations: report.consultations, pageErrors: errors.length }, null, 2));
       return;
     }
-    await page.route('**/assets/people/**', route => route.abort());
     for (const entry of ['index.html', 'index-en.html']) {
-      await page.goto(`${base}/${entry}`);
+      const homepage = await page.goto(`${base}/${entry}`);
+      // Portraits and the globe texture are cacheable versioned files, not inline data.
+      const source = await homepage.text();
+      assert.ok(Buffer.byteLength(source) < 600000, `${entry}: homepage HTML stays under 600 KB`);
+      assert.ok(!source.includes('data:image/webp') && !source.includes('data:image/png'), `${entry}: no inline raster images`);
+      assert.match(source, /assets\/people\/AGT-001\.webp\?v=[a-f0-9]{12}/, `${entry}: versioned portrait URLs`);
+      assert.match(source, /assets\/earth-texture\.webp\?v=[a-f0-9]{12}/, `${entry}: versioned globe texture`);
+      assert.match(source, /粤ICP备2026173751号/, `${entry}: ICP filing in footer`);
       const languageButton = page.locator('.sage-language-toggle');
       const languageMenu = page.locator('.sage-language-menu');
       await languageButton.click();
@@ -228,7 +234,6 @@ async function consultationAudit(browser) {
       assert.equal(focus.visible, true);
       assert.ok(focus.width >= 2 && focus.style !== 'none' && focus.contrastOnWhite >= 3, `${entry}: light header focus must remain visible: ${JSON.stringify(focus)}`);
     }
-    await page.unroute('**/assets/people/**');
     const links = await page.locator('a[href]').evaluateAll(nodes => [...new Set(nodes.map(x => x.href).filter(x => x.startsWith(location.origin) && !x.includes('#')))]);
     // The last homepage is English; its links alone omit the Chinese pages and
     // account/checkout entry points. Verify the complete shared release routes.

@@ -1,0 +1,49 @@
+# Supplier egress: append after compose.yaml (and compose.auth.yaml) only when authentication
+# suppliers must be reachable. The app keeps its internal-only networks; its HTTPS traffic goes
+# through the egress service, which tunnels CONNECT requests to the named hosts below and nothing
+# else (no private addresses, port 443 only, TLS end to end).
+# Google endpoints are not reachable from mainland China: they are tunnelled through the relay
+# in SAGE_EGRESS_UPSTREAM (host:port of egress-relay.service outside mainland China). Without it,
+# Google hosts are refused and Google sign-in stays unavailable; Tencent suppliers still work.
+services:
+  app:
+    environment:
+      HTTPS_PROXY: http://egress:3128
+      NO_PROXY: localhost,127.0.0.1,db
+    networks:
+      egress_internal: {}
+    depends_on:
+      egress: {condition: service_healthy}
+
+  egress:
+    image: sage-app:${SAGE_IMAGE_TAG:?Set a reviewed image tag}
+    platform: linux/amd64
+    user: "10001:10001"
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    cpus: 0.5
+    mem_limit: 128m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+    entrypoint: [python, /app/deploy/egress_proxy.py]
+    environment:
+      SAGE_EGRESS_LISTEN: 0.0.0.0:3128
+      SAGE_EGRESS_ALLOW: ses.tencentcloudapi.com,captcha.tencentcloudapi.com,sms.tencentcloudapi.com
+      SAGE_EGRESS_UPSTREAM_HOSTS: oauth2.googleapis.com,www.googleapis.com
+      SAGE_EGRESS_UPSTREAM: ${SAGE_EGRESS_UPSTREAM:-}
+    networks: [egress_internal, egress_external]
+    healthcheck:
+      test: [CMD, python, -c, "import socket; socket.create_connection(('127.0.0.1', 3128), 3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+networks:
+  egress_internal:
+    internal: true
+  egress_external: {}

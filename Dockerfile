@@ -17,7 +17,7 @@ COPY --from=build /opt/venv /opt/venv
 COPY --from=build /app/backend /app/backend
 COPY --from=build /app/manage.py /app/manage.py
 COPY --from=build /app/src/pages/billing-catalog.json /app/src/pages/billing-catalog.json
-COPY drafts/restricted-deploy/docker-entrypoint.py drafts/restricted-deploy/docker-gunicorn.conf.py /app/deploy/
+COPY drafts/restricted-deploy/docker-entrypoint.py drafts/restricted-deploy/docker-gunicorn.conf.py drafts/restricted-deploy/egress_proxy.py /app/deploy/
 USER 10001:10001
 ENTRYPOINT ["python", "/app/deploy/docker-entrypoint.py"]
 CMD ["gunicorn", "backend.wsgi:application", "--config", "/app/deploy/docker-gunicorn.conf.py"]
