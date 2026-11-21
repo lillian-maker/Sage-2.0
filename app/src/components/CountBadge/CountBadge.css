@@ -1,0 +1,14 @@
+.sg-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  font: var(--type-manrope-11-600-lh15-03);
+  letter-spacing: var(--type-manrope-11-600-lh15-03-ls);
+}
+.sg-count--brand { background: var(--color-neutral-50-2); color: var(--color-blue-590); }
+.sg-count--accent { background: var(--color-blue-590); color: var(--color-neutral-0); }

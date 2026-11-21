@@ -1,0 +1,50 @@
+.sg-approval {
+  width: 100%;
+  max-width: 680px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-slate-100);
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-0);
+}
+.sg-approval__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-orange-660);
+  font: var(--type-sans-sc-13-500-lh15-6);
+}
+.sg-approval__title {
+  margin: 0;
+  padding-top: 8px;
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-14-400-lh22);
+}
+.sg-approval__grid {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 7px 16px;
+  margin: 0;
+  padding-top: 12px;
+}
+.sg-approval__grid > div { display: contents; }
+.sg-approval__grid dt { color: var(--color-slate-540); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-approval__grid dd { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-approval--inbox .sg-approval__grid { grid-template-columns: 64px 1fr; }
+.sg-approval__footer { display: flex; align-items: center; gap: 12px; }
+.sg-approval__footer > :first-child { flex: 1 1 auto; min-width: 0; }
+.sg-approval__note, .sg-approval__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 10px;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+}
+.sg-approval__open { flex: none; padding-top: 0; }
+
+.sg-authblock { display: flex; flex-direction: column; gap: 8px; }
+.sg-authblock__scope { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.sg-authblock__revise { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--color-neutral-60); border-radius: var(--radius-card); }
+.sg-authblock__revise-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.sg-authblock__current { margin: 0; white-space: pre-line; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-authblock__hint { margin: 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }

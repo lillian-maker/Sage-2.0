@@ -1,0 +1,11 @@
+.sg-backlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+  letter-spacing: var(--type-sans-sc-12-400-lh14-4-ls);
+}
+.sg-backlink--s44 { height: 44px; }
+.sg-backlink--s30 { height: 30px; padding-bottom: 14px; box-sizing: border-box; }
+.sg-backlink:hover { color: var(--color-blue-840); }

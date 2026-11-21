@@ -1,0 +1,314 @@
+/* 用量与账单: content column 304–1400 inside the 1184 wide main area (48 left, 40 right). */
+.sg-bill {
+  padding: 56px 40px 48px 48px;
+  min-width: 0;
+}
+.sg-bill__head {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.sg-bill__headtext { flex: 1 1 auto; min-width: 0; }
+.sg-bill__crumb { padding-bottom: 18px; }
+.sg-bill__head h1 {
+  margin: 0;
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-24-500-lh28-8);
+}
+.sg-bill__head h1.is-strong { font: var(--type-manrope-24-600-lh32-78); }
+.sg-bill__head p {
+  margin: 0;
+  padding-top: 6px;
+  color: var(--color-slate-600);
+  font: var(--type-sans-sc-13-400-lh15-6);
+}
+.sg-bill__switch { flex: none; }
+.sg-bill__switch.is-busy { opacity: 0.6; pointer-events: none; }
+.sg-bill__state { padding-top: 40px; }
+
+.sg-bill__cards {
+  display: grid;
+  grid-template-columns: 440fr 314fr 314fr;
+  gap: 14px;
+  padding-top: 18px;
+}
+.sg-bill__card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 145px;
+  padding: 16px;
+  border: 1px solid var(--color-neutral-60);
+  border-radius: var(--radius-card);
+}
+.sg-bill__cardlabel { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-bill__big {
+  padding-top: 6px;
+  color: var(--color-blue-840);
+  font: var(--type-manrope-26-600-lh35-52);
+}
+.sg-bill__big-total { color: var(--color-slate-540); font: var(--type-manrope-13-400-lh17-76); }
+.sg-bill__plan {
+  padding-top: 6px;
+  color: var(--color-blue-840);
+  font: var(--type-manrope-20-600-lh27-32);
+}
+.sg-bill__meter {
+  height: 6px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--color-neutral-50);
+}
+.sg-bill__meter > span { display: block; height: 100%; border-radius: 3px; background: var(--color-blue-590); }
+.sg-bill__cardfoot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh16-39);
+}
+.sg-bill__cardnote {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh16-39);
+}
+.sg-bill__bars {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 72px;
+  margin-top: auto;
+  border-bottom: 1px solid var(--color-neutral-60);
+}
+.sg-bill__bars > span {
+  flex: 1 1 0;
+  max-width: 18px;
+  border-radius: 2px 2px 0 0;
+  background: var(--color-neutral-50);
+}
+.sg-bill__bars > span.is-current { background: var(--color-blue-590); }
+.sg-bill__bars > em {
+  position: absolute;
+  inset: auto 0 24px;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+  font-style: normal;
+  text-align: center;
+}
+.sg-bill__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-blue-590);
+  font: var(--type-sans-sc-13-400-lh16-9);
+  cursor: pointer;
+}
+.sg-bill__link:hover { text-decoration: underline; }
+.sg-bill__link--small { font: var(--type-sans-sc-12-400-lh14-4); }
+
+.sg-bill__section { padding-top: 26px; }
+.sg-bill__sectionhead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 18px;
+}
+.sg-bill__sectionhead h2 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-13-500-lh15-6); }
+.sg-bill__sectionhead span { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+
+/* Usage table: 任务 | 工作区 130 | 时间 130 | Credits 70 (right aligned). */
+.sg-bill__table { display: flex; flex-direction: column; }
+.sg-bill__tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px 130px 70px;
+  gap: 0 12px;
+  align-items: center;
+  min-height: 46px;
+  border-bottom: 1px solid var(--color-neutral-60);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-400-lh16-9);
+}
+.sg-bill__tr--head {
+  min-height: 34px;
+  border-top: 1px solid var(--color-neutral-60);
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+}
+.sg-bill__tr .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+.sg-bill__tr.is-link { cursor: pointer; }
+.sg-bill__tr.is-link:hover { background: var(--color-neutral-20); }
+.sg-bill__tr.is-link:focus-visible { outline: 2px solid var(--color-blue-590); outline-offset: -2px; }
+.sg-bill__more { display: flex; justify-content: center; padding-top: 12px; }
+
+/* 账单列表 */
+.sg-bill__paycard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-neutral-60);
+  border-radius: var(--radius-card);
+}
+.sg-bill__paytext { flex: 1 1 auto; min-width: 0; }
+.sg-bill__paytext b { display: block; color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh16-8); }
+.sg-bill__paytext span { display: block; padding-top: 2px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-bill__paylink { color: var(--color-slate-600); }
+.sg-bill__orders { display: flex; flex-direction: column; padding-top: 14px; }
+.sg-bill__orow {
+  display: grid;
+  grid-template-columns: 195px 213px 217px 121px 144px minmax(0, 1fr);
+  align-items: center;
+  min-height: 52px;
+  border-bottom: 1px solid var(--color-neutral-60);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-400-lh16-9);
+}
+.sg-bill__orow > * { min-width: 0; padding: 0 12px; }
+.sg-bill__orow > :first-child { padding-left: 0; }
+.sg-bill__orow--head { min-height: 36px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-bill__orow .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+.sg-bill__orow.is-link { cursor: pointer; }
+.sg-bill__orow.is-link:hover { background: var(--color-neutral-20); }
+.sg-bill__orow.is-link:focus-visible { outline: 2px solid var(--color-blue-590); outline-offset: -2px; }
+.sg-bill__status--success { color: var(--color-green-660); }
+.sg-bill__status--muted { color: var(--color-slate-600); }
+.sg-bill__status--warning { color: var(--color-orange-660); }
+.sg-bill__status--danger { color: var(--color-red-500); }
+.sg-bill__status--neutral { color: var(--color-blue-840); }
+.sg-bill__muted { color: var(--color-slate-540); }
+.sg-bill__footnote {
+  max-width: 720px;
+  margin-top: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-neutral-20);
+  color: var(--color-slate-600);
+  font: var(--type-sans-sc-12-400-lh22);
+}
+
+/* 账单详情: 788 main column + 300 side column. */
+.sg-bill__detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  padding-top: 14px;
+}
+.sg-bill__lines { display: flex; flex-direction: column; }
+.sg-bill__lrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 59px 125px;
+  align-items: center;
+  min-height: 48px;
+  border-bottom: 1px solid var(--color-neutral-60);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-400-lh16-9);
+}
+.sg-bill__lrow--head { min-height: 34px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-bill__lrow .is-num { text-align: right; font-variant-numeric: tabular-nums; }
+.sg-bill__lrow small { display: block; color: var(--color-slate-540); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-bill__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: flex-end;
+  width: 360px;
+  margin-top: 15px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--color-neutral-20);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-400-lh16-9);
+}
+.sg-bill__totals > div { display: flex; justify-content: space-between; }
+.sg-bill__totals > div.is-total { padding-top: 6px; border-top: 1px solid var(--color-neutral-60); font: var(--type-sans-sc-13-500-lh16-9); }
+.sg-bill__totals > div.is-total b { font: var(--type-manrope-13-600-lh17-76); }
+.sg-bill__side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 24px;
+  border-left: 1px solid var(--color-neutral-60);
+}
+.sg-bill__side h3 { margin: 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-500-lh14-4); }
+.sg-bill__kv {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--color-neutral-60);
+  font: var(--type-sans-sc-13-400-lh16-9);
+}
+.sg-bill__kv > span { color: var(--color-slate-540); flex: none; }
+.sg-bill__kv > b { min-width: 0; overflow: hidden; color: var(--color-blue-840); font-weight: 400; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.sg-bill__sidenote { margin: 0; color: var(--color-slate-600); font: var(--type-sans-sc-12-400-lh19); }
+
+/* 加购 dialog summary box */
+.sg-bill__sumbox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--color-neutral-20);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-400-lh16-9);
+}
+.sg-bill__sumbox > div { display: flex; justify-content: space-between; gap: 12px; }
+.sg-bill__dialognote { margin: 12px 0 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); line-height: 1.2; }
+
+/* 62 额度用量 spec board (no app shell). */
+.sg-usageboard {
+  min-height: 100vh;
+  padding: 56px 64px;
+  background: var(--color-neutral-20);
+}
+.sg-usageboard h1 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-22-500-lh26-4); }
+.sg-usageboard > p { margin: 10px 0 0; color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-usageboard__states { display: flex; gap: 24px; padding-top: 28px; }
+.sg-usageboard__state { display: flex; flex-direction: column; gap: 10px; width: 232px; }
+.sg-usageboard__label { display: flex; align-items: center; gap: 6px; height: 16px; color: var(--color-slate-600); font: var(--type-sans-sc-12-500-lh14-4); }
+.sg-usageboard__bar {
+  padding: 6px;
+  border: 1px solid var(--color-neutral-60);
+  border-radius: 10px;
+  background: var(--color-neutral-20);
+}
+.sg-usageboard__note { margin: 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh15-31); }
+.sg-usageboard__row2 { display: flex; gap: 40px; padding-top: 28px; }
+.sg-usageboard__lowline { display: flex; align-items: center; gap: 8px; padding: 20px 0 0 21px; font: var(--type-sans-sc-12-400-lh16-39); }
+.sg-usageboard__lowline > span { color: var(--color-orange-660); }
+
+/* 额度浮层（侧栏额度按钮展开） */
+.sg-usagepop {
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--color-neutral-0);
+  box-shadow: var(--shadow-0_16_40-blue-840-a18);
+}
+.sg-usagepop__head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sg-usagepop__head b { color: var(--color-blue-840); font: var(--type-sans-sc-15-500-lh18); }
+.sg-usagepop__head span,
+.sg-usagepop__meta,
+.sg-usagepop__label,
+.sg-usagepop__asof { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh16-39); }
+.sg-usagepop__meta { display: flex; justify-content: space-between; gap: 8px; padding-top: 9px; }
+.sg-usagepop .sg-bill__meter { margin-top: 8px; }
+.sg-usagepop__label { padding-top: 16px; }
+.sg-usagepop__top { display: flex; flex-direction: column; gap: 11px; padding-top: 12px; }
+.sg-usagepop__top > div { display: flex; justify-content: space-between; gap: 12px; color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh16-9); }
+.sg-usagepop__top > div > span:last-child { color: var(--color-slate-600); font: var(--type-manrope-12-400-lh16-39); }
+.sg-usagepop__asof { display: flex; align-items: center; gap: 4px; padding-top: 16px; }
+.sg-usagepop__asof button { display: inline-flex; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.sg-usagepop__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-top: 14px; }
+.sg-usagepop__unavailable { padding: 18px 0 4px; color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh16-9); }

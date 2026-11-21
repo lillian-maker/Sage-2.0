@@ -1,0 +1,3 @@
+.sg-hma { display: flex; align-items: center; gap: 8px; }
+.sg-hma__stack { display: inline-flex; }
+.sg-hma__stack > .sg-avatar + .sg-avatar { margin-left: -6px; }

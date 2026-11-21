@@ -1,0 +1,23 @@
+.sg-field {
+  display: block;
+  border: 1px solid var(--color-slate-100);
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-0);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-14-400-lh22);
+  letter-spacing: var(--type-sans-sc-14-400-lh22-ls);
+  padding: 9px 11px;
+  outline: none;
+  resize: vertical;
+}
+.sg-field::placeholder { color: var(--color-slate-540); }
+.sg-field:focus { border-color: var(--color-blue-590); box-shadow: var(--ring-3-blue-590-a16); }
+.sg-field.is-invalid { border-color: var(--color-red-500); }
+.sg-field--s42 { height: 42px; }
+.sg-field--s32 {
+  height: 32px;
+  padding: 0 9px;
+  border-radius: var(--radius-control);
+  font: var(--type-sans-sc-13-400-lh15-6);
+}
+.sg-field--multi { height: 72px; }

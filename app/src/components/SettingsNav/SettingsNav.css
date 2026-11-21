@@ -1,0 +1,19 @@
+.sg-settingsnav {
+  display: flex;
+  align-items: center;
+  width: 160px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-control);
+  color: var(--color-slate-600);
+  font: var(--type-sans-sc-13-400-lh15-6);
+  letter-spacing: var(--type-sans-sc-13-400-lh15-6-ls);
+  text-decoration: none;
+  text-align: left;
+}
+.sg-settingsnav:hover { background: var(--color-neutral-20); }
+.sg-settingsnav.is-active {
+  background: var(--color-neutral-50);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-500-lh15-6);
+}

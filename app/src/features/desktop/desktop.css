@@ -1,0 +1,92 @@
+/* Desktop-only surfaces: local index (16/19), sidebar workspace card and edit dialog (24), update and mobile (25). */
+.sg-dsk-index__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+.sg-dsk-index__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sg-dsk-index__state { color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-dsk-index__state.is-error { color: var(--color-red-500); }
+.sg-dsk-index__sub { color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }
+.sg-dsk-progress { height: 4px; margin-top: 10px; border-radius: var(--radius-round); background: var(--color-neutral-60); overflow: hidden; }
+.sg-dsk-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--color-blue-590); transition: width 120ms linear; }
+.sg-dsk-error { margin: 8px 0 0; color: var(--color-red-500); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-note { margin: 8px 0 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-link { padding: 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-link:hover:not(:disabled) { color: var(--color-blue-840); }
+.sg-dsk-link:disabled { opacity: 0.5; cursor: default; }
+
+.sg-dsk-reg { padding-top: 16px; border-top: 1px solid var(--color-neutral-60); }
+.sg-dsk-reg__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+}
+.sg-dsk-reg__toggle > .sg-icon { transition: transform 120ms ease; }
+.sg-dsk-reg__toggle.is-open > .sg-icon { transform: rotate(180deg); }
+.sg-dsk-reg__body { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; }
+.sg-dsk-reg__add { align-self: flex-start; }
+
+.sg-dsk-folder { display: flex; flex-direction: column; gap: 2px; }
+.sg-dsk-folder__head { display: flex; align-items: center; gap: 8px; min-height: 26px; color: var(--color-blue-840); }
+.sg-dsk-folder__head > .sg-icon { flex: none; color: var(--color-slate-540); }
+.sg-dsk-folder__path { flex: 1 1 auto; min-width: 0; padding: 0; text-align: left; color: inherit; font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-dsk-folder__meta { padding-left: 22px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-folder.is-unavailable .sg-dsk-folder__meta { color: var(--color-red-500); }
+.sg-dsk-folder__actions { display: flex; gap: 12px; padding-left: 22px; }
+.sg-dsk-dir { display: flex; flex-direction: column; margin: 4px 0 0 22px; padding: 6px 0 6px 10px; list-style: none; border-left: 1px solid var(--color-neutral-60); }
+.sg-dsk-dir__item { display: flex; align-items: center; gap: 6px; width: 100%; min-height: 22px; padding: 0; text-align: left; color: var(--color-slate-600); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-dir__item > .truncate { flex: 1 1 auto; min-width: 0; }
+.sg-dsk-dir__size { flex: none; color: var(--color-slate-540); }
+.sg-dsk-dir__empty { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+
+.sg-dsk-card {
+  position: fixed;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  padding: 12px 8px 8px;
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-0);
+  box-shadow: var(--shadow-0_16_40-blue-840-a14);
+}
+.sg-dsk-card__head { display: flex; align-items: center; gap: 8px; padding: 0 8px; color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh16-8); }
+.sg-dsk-card__sub { display: flex; align-items: center; gap: 6px; padding: 6px 8px 0 8px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-card__divider { height: 1px; margin: 10px 8px; background: var(--color-neutral-60); }
+.sg-dsk-card__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: var(--radius-card);
+  text-align: left;
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-13-400-lh15-6);
+}
+.sg-dsk-card__row > .sg-icon { flex: none; color: var(--color-slate-540); }
+button.sg-dsk-card__row:hover:not(:disabled) { background: var(--color-neutral-40); }
+.sg-dsk-card__row.is-muted { color: var(--color-slate-540); }
+
+.sg-dsk-edit__head { display: flex; align-items: center; justify-content: space-between; }
+.sg-dsk-edit__head h2 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-16-500-lh19-2); }
+.sg-dsk-sources { display: flex; flex-direction: column; border: 1px solid var(--color-neutral-60); border-radius: var(--radius-card); }
+.sg-dsk-sources__row { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 8px 0 14px; color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-dsk-sources__row + .sg-dsk-sources__row { border-top: 1px solid var(--color-neutral-60); }
+.sg-dsk-sources__row > .sg-icon { flex: none; color: var(--color-slate-540); }
+.sg-dsk-sources__row > .truncate { flex: 1 1 auto; min-width: 0; }
+.sg-dsk-sources__row.is-muted { color: var(--color-slate-540); }
+.sg-dsk-sources__row.is-unavailable > .truncate { color: var(--color-slate-540); }
+.sg-dsk-sources__warn { flex: none; color: var(--color-red-500); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-sources__link { flex: 1 1 auto; min-width: 0; padding: 0; text-align: left; color: inherit; font: inherit; }
+.sg-dsk-sources__manage { flex: none; padding-right: 6px; color: var(--color-blue-590); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-sources__choices { display: flex; gap: 8px; padding: 0 14px 12px 38px; }
+
+.sg-dsk-update { display: inline-flex; }
+
+.sg-dsk-mobile { display: flex; flex-direction: column; gap: 6px; padding: 16px; border-radius: var(--radius-card); background: var(--color-neutral-0); box-shadow: var(--shadow-0_16_40-blue-840-a14); }
+.sg-dsk-mobile__title { color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh16-8); }
+.sg-dsk-mobile__sub { padding-bottom: 6px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-dsk-mobile__note { color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }

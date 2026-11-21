@@ -1,0 +1,13 @@
+.sg-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: var(--color-neutral-50);
+  color: var(--color-slate-600);
+  font: var(--type-manrope-11-500-lh15-03);
+  letter-spacing: var(--type-manrope-11-500-lh15-03-ls);
+}
+.sg-step--circle { border-radius: 50%; border: 1px solid var(--color-neutral-50); }
+.sg-step--square { border-radius: var(--radius-control); font: var(--type-manrope-11-400-lh21); }
+.sg-step--current { background: var(--color-blue-590); border-color: var(--color-blue-590); color: var(--color-neutral-0); }

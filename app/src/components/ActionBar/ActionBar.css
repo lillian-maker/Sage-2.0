@@ -1,0 +1,22 @@
+.sg-actionbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sg-actionbar--decision { padding-top: 14px; }
+.sg-actionbar--footer {
+  padding: 12px 16px;
+  background: var(--color-neutral-20);
+}
+.sg-actionbar--toolbar { justify-content: flex-end; }
+.sg-actionbar__hint {
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+  letter-spacing: var(--type-sans-sc-12-400-lh14-4-ls);
+  min-width: 0;
+}
+.sg-actionbar__spacer { flex: 1 1 auto; }
+.sg-actionbar__link {
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-12-400-lh14-4);
+}

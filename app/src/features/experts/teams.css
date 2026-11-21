@@ -1,0 +1,20 @@
+.sg-tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.sg-tcard { display: flex; flex-direction: column; gap: 10px; min-height: 168px; padding: 16px; border: 1px solid var(--color-neutral-60); border-radius: 12px; background: var(--color-neutral-0); }
+.sg-tcard__name { color: var(--color-blue-840); font: var(--type-sans-sc-15-500-lh18); }
+.sg-tcard__desc { display: -webkit-box; margin: 0; overflow: hidden; color: var(--color-slate-540); font: var(--type-sans-sc-13-400-lh20); -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sg-tcard__stack { display: flex; margin-top: auto; }
+.sg-tcard__stack .sg-avatar { margin-left: -6px; }
+.sg-tcard__stack .sg-avatar:first-child { margin-left: 0; }
+.sg-tcard__foot { display: flex; align-items: center; justify-content: space-between; color: var(--color-slate-540); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-tcard--new { align-items: center; justify-content: center; gap: 6px; border-style: dashed; color: var(--color-slate-540); cursor: pointer; }
+.sg-tcard--new:hover { border-color: var(--color-slate-340); background: var(--color-neutral-20); }
+.sg-tcard--new b { color: var(--color-blue-840); font: var(--type-sans-sc-13-500-lh15-6); }
+.sg-tcard--new span { font: var(--type-sans-sc-12-400-lh14-4); }
+/* 成员 token field (31 屏) */
+.sg-members { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 40px; padding: 6px 8px; border: 1px solid var(--color-slate-100); border-radius: var(--radius-control); }
+.sg-members:focus-within { border-color: var(--color-blue-590); }
+.sg-member { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 3px; border-radius: var(--radius-pill); background: var(--color-neutral-50); color: var(--color-blue-840); font: var(--type-sans-sc-12-400-lh14-4); cursor: pointer; }
+.sg-member.is-lead { background: var(--color-blue-90, #e8f0fb); }
+.sg-member small { color: var(--color-slate-540); }
+.sg-member .sg-icon { color: var(--color-slate-540); }
+.sg-members input { flex: 1; min-width: 140px; border: 0; outline: none; color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); background: transparent; }

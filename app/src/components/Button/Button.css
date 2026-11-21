@@ -1,0 +1,88 @@
+.sg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  white-space: nowrap;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  font: var(--type-sans-sc-13-400-lh15-6);
+  letter-spacing: var(--type-sans-sc-13-400-lh15-6-ls);
+}
+.sg-btn--primary {
+  background: var(--color-blue-590);
+  color: var(--color-neutral-0);
+  font: var(--type-sans-sc-13-500-lh15-6);
+  padding: 0 13px;
+}
+.sg-btn--secondary {
+  background: var(--color-neutral-0);
+  border-color: var(--color-slate-100);
+  color: var(--color-blue-840);
+  padding: 0 11px;
+}
+.sg-btn--ghost {
+  color: var(--color-slate-600);
+  padding: 0 7px;
+}
+.sg-btn--tonal {
+  background: var(--color-neutral-50);
+  color: var(--color-blue-840);
+  padding: 0 9px;
+}
+.sg-btn--danger {
+  background: var(--color-red-500);
+  color: var(--color-neutral-0);
+  font: var(--type-sans-sc-13-500-lh15-6);
+  padding: 0 13px;
+}
+.sg-btn--danger.sg-btn--s24, .sg-btn--danger.sg-btn--s26, .sg-btn--danger.sg-btn--s28 {
+  font: var(--type-sans-sc-12-500-lh14-4);
+}
+.sg-btn--danger.sg-btn--s42 {
+  font: var(--type-sans-sc-14-400-lh16-8);
+}
+.sg-btn--primary:hover:not(:disabled),
+.sg-btn--danger:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.sg-btn--secondary:hover:not(:disabled),
+.sg-btn--ghost:hover:not(:disabled) {
+  background: var(--color-neutral-20);
+}
+.sg-btn:disabled {
+  opacity: 0.4;
+}
+.sg-btn--s24 { height: 24px; }
+.sg-btn--s26 { height: 26px; }
+.sg-btn--s28 { height: 28px; }
+.sg-btn--s30 { height: 30px; }
+.sg-btn--s32 { height: 32px; }
+.sg-btn--s34 { height: 34px; }
+.sg-btn--s36 { height: 36px; border-radius: var(--radius-card); }
+.sg-btn--s42 { height: 42px; gap: 8px; border-radius: var(--radius-card); }
+.sg-btn--s24, .sg-btn--s26, .sg-btn--s28 {
+  font: var(--type-sans-sc-12-400-lh14-4);
+}
+.sg-btn--primary.sg-btn--s24, .sg-btn--primary.sg-btn--s26, .sg-btn--primary.sg-btn--s28 {
+  font: var(--type-sans-sc-12-500-lh14-4);
+}
+.sg-btn--s42, .sg-btn--primary.sg-btn--s42 {
+  font: var(--type-sans-sc-14-400-lh16-8);
+  padding: 0 15px;
+}
+.sg-btn--block {
+  display: flex;
+  width: 100%;
+}
+.sg-btn__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sg-spin {
+  animation: sg-spin 0.9s linear infinite;
+}
+@keyframes sg-spin {
+  to { transform: rotate(360deg); }
+}

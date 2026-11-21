@@ -1,0 +1,28 @@
+.sg-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(22 40 60 / 0.24);
+}
+.sg-modal { outline: none; }
+
+/* Form dialogs over a page (2736:43 调整本次查询范围、2089:2924 填写退回原因). */
+.sg-formdialog {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: calc(100vw - 48px);
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: var(--color-neutral-0);
+  box-shadow: 0 12px 32px rgb(22 40 60 / 0.16);
+}
+.sg-formdialog__title { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh16-8); }
+.sg-formdialog__sub { margin: -8px 0 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-formdialog__label { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-formdialog__text { margin: 0; white-space: pre-line; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh18); }
+.sg-formdialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }

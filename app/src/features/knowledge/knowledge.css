@@ -1,0 +1,12 @@
+.sg-docpreview {
+  width: 100%;
+  max-width: 788px;
+  padding: 22px 26px;
+  border: 1px solid var(--color-slate-100);
+  border-radius: var(--radius-panel);
+  background: var(--color-neutral-0);
+}
+.sg-docpreview h2 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-16-700-lh22); }
+.sg-docpreview p { margin: 0; padding-top: 10px; color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh22); }
+.sg-docpreview mark { background: none; color: var(--color-blue-840); }
+.sg-docpreview__page { padding: 10px 0; color: var(--color-slate-540); font: var(--type-sans-sc-13-400-lh22); }

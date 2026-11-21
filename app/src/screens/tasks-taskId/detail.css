@@ -1,0 +1,24 @@
+.sg-taskpage { display: flex; height: 100%; min-height: 0; }
+.sg-taskpage__state { padding: 40px; }
+.sg-taskpage__main { position: relative; flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--color-neutral-60); }
+.sg-taskpage__header { position: relative; }
+.sg-taskpage__more { position: absolute; top: 52px; right: 44px; z-index: 20; }
+.sg-taskpage__scroll { flex: 1 1 auto; overflow: auto; }
+.sg-taskpage__column { display: flex; flex-direction: column; gap: 20px; max-width: 760px; margin: 0 auto; padding: 24px 20px 32px; }
+.sg-taskpage__parallel { padding: 4px 16px 8px; border: 1px solid var(--color-neutral-60); border-radius: var(--radius-card); }
+.sg-taskpage__parallel > h3 { margin: 10px 0 2px; }
+.sg-taskpage__composer { display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 760px; margin: 0 auto; padding: 0 20px 14px; }
+.sg-taskpage__suggest { display: flex; flex-wrap: wrap; gap: 8px; }
+.sg-taskpage__sidewrap { display: flex; flex-direction: column; min-height: 0; }
+.sg-taskpage__sidewrap > .sg-menu { margin: 8px 12px 0; }
+.sg-menu__note { margin: 4px 0 0; padding: 6px 10px 2px; border-top: 1px solid var(--color-neutral-60); color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+
+.sg-taskpage__origin { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--color-neutral-60); border-radius: var(--radius-panel); }
+.sg-taskpage__origin-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-taskpage__origin-text { margin: 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); white-space: pre-wrap; }
+
+.sg-taskpage__rejected { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--color-neutral-60); border-radius: var(--radius-panel); }
+.sg-taskpage__rejected-source { display: flex; flex-direction: column; gap: 2px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-taskpage__rejected-steps { display: flex; flex-direction: column; gap: 4px; font: var(--type-sans-sc-13-400-lh16); }
+.sg-taskpage__rejected-estimate { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-taskpage__rejected .sg-conv__link { align-self: flex-start; }

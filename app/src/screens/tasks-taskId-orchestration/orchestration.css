@@ -1,0 +1,52 @@
+.sg-orch { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.sg-orch__state { padding: 40px; }
+.sg-orch__head { display: flex; align-items: center; gap: 16px; height: 56px; padding: 0 20px 0 32px; border-bottom: 1px solid var(--color-neutral-60); }
+.sg-orch__head h1 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-18-500-lh21-6); letter-spacing: var(--type-sans-sc-18-500-lh21-6-ls); }
+.sg-orch__stats { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 14px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-orch__stats b { color: var(--color-blue-840); font-weight: 500; }
+.sg-orch__notice { padding: 8px 32px 0; }
+.sg-orch__body { flex: 1 1 auto; display: flex; min-height: 0; }
+.sg-orch__board { position: relative; flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; overflow: auto; background: var(--color-neutral-20); }
+.sg-orch__cols { position: relative; flex: 1 1 auto; display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); }
+.sg-orch__edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.sg-orch__edges path { fill: none; stroke: var(--color-slate-100); stroke-width: 1.5; }
+.sg-orch__edges path.is-current { stroke: var(--color-blue-590); stroke-width: 2; }
+.sg-orch__legendline { display: inline-block; width: 16px; height: 2px; border-radius: 1px; background: var(--color-blue-590); }
+.sg-orch__upstream { display: inline-flex; align-items: center; gap: 6px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-orch__node { position: relative; }
+.sg-orch__col { display: flex; flex-direction: column; gap: 14px; padding: 0 12px 20px; border-right: 1px solid var(--color-neutral-60); }
+.sg-orch__col > h2 { margin: 0; padding: 12px 0 18px; color: var(--color-slate-600); font: var(--type-sans-sc-12-500-lh14-4); }
+.sg-orch__node {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-neutral-60);
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-0);
+  text-align: left;
+  box-shadow: var(--shadow-0_1_2-blue-840-a4);
+}
+.sg-orch__node:hover { border-color: var(--color-slate-100); }
+.sg-orch__node.is-waiting { border-color: var(--color-orange-300); background: var(--color-orange-60); }
+.sg-orch__node.is-selected { border-color: var(--color-blue-590); box-shadow: 0 0 0 1px var(--color-blue-590); }
+.sg-orch__nodehead { display: flex; align-items: center; gap: 6px; color: var(--color-slate-600); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-orch__nodehead > .truncate { flex: 1 1 auto; }
+.sg-orch__nodetitle { color: var(--color-blue-840); font: var(--type-sans-sc-13-500-lh16-9); }
+.sg-orch__nodemeta { display: flex; justify-content: space-between; color: var(--color-slate-540); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-orch__node.is-waiting .sg-orch__nodemeta > span:first-child { color: var(--color-orange-660); }
+.sg-orch__legend { position: sticky; bottom: 0; display: flex; gap: 18px; padding: 10px 16px; background: var(--color-neutral-20); color: var(--color-slate-600); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-orch__legend > span { display: inline-flex; align-items: center; gap: 4px; }
+.sg-orch__detail { flex: none; display: flex; flex-direction: column; gap: 18px; width: 400px; overflow: auto; padding: 16px 20px 24px; border-left: 1px solid var(--color-neutral-60); background: var(--color-neutral-0); }
+.sg-orch__detailhead { display: flex; align-items: flex-start; gap: 10px; }
+.sg-orch__detailtext { flex: 1 1 auto; min-width: 0; }
+.sg-orch__detailtext h2 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh17-86); }
+.sg-orch__detailtext p { margin: 2px 0 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-orch__detail section > h3 { margin: 0 0 8px; }
+.sg-orch__inputs { display: flex; flex-wrap: wrap; gap: 6px; }
+.sg-orch__muted { margin: 0; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-orch__deps { display: flex; flex-direction: column; gap: 8px; margin: 0; }
+.sg-orch__deps > div { display: flex; justify-content: space-between; gap: 12px; }
+.sg-orch__deps dt { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-orch__deps dd { margin: 0; text-align: right; color: var(--color-blue-840); font: var(--type-sans-sc-12-400-lh14-4); }

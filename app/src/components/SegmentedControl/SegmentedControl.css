@@ -1,0 +1,24 @@
+.sg-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--color-neutral-50);
+}
+.sg-seg__item {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  color: var(--color-slate-600);
+  font: var(--type-sans-sc-12-400-lh14-4);
+  letter-spacing: var(--type-sans-sc-12-400-lh14-4-ls);
+  white-space: nowrap;
+}
+.sg-seg__item.is-selected {
+  background: var(--color-neutral-0);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-12-500-lh14-4);
+  box-shadow: var(--shadow-0_1_2-blue-840-a8);
+}

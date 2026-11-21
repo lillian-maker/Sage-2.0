@@ -1,0 +1,25 @@
+.sg-shell {
+  display: flex;
+  height: 100vh;
+  min-width: 0;
+  background: var(--color-neutral-20);
+}
+.sg-shell > .sg-sidebar { flex: none; height: 100%; }
+.sg-shell__main {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow: auto;
+  background: var(--color-neutral-0);
+}
+.sg-shell__main.has-search { overflow: hidden; }
+/* Same spot as the bell in the 52px top bar of the pages that draw their own (Figma 52 / 61 / 645 …). */
+.sg-shell__bell {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 40;
+}
+/* 78 办理离职 (760:2) is a route drawn as a dialog; its window top-bar bell stays clickable (3374:7988 → 61). */
+.sg-shell:has(.sg-offboard-dialog) .sg-shell__bell { z-index: 101; }

@@ -1,0 +1,22 @@
+.sg-kbd-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.sg-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border: 1px solid var(--color-slate-100);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-control);
+  background: var(--color-neutral-0);
+  color: var(--color-blue-840);
+  font: var(--type-manrope-12-400-lh16-39);
+  letter-spacing: var(--type-manrope-12-400-lh16-39-ls);
+}

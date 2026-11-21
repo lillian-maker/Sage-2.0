@@ -1,0 +1,20 @@
+.sg-placeholder {
+  padding: 32px 40px;
+  color: var(--color-blue-840);
+}
+.sg-placeholder h1 {
+  margin: 0 0 6px;
+  font: var(--type-manrope-22-600-lh30-05);
+}
+.sg-placeholder__path {
+  margin: 0 0 16px;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-13-400-lh15-6);
+}
+.sg-placeholder ul {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font: var(--type-sans-sc-12-400-lh20);
+}
+.sg-placeholder code { font: var(--type-mono-12-400-lh20); }
+.sg-placeholder__meta { color: var(--color-slate-540); }

@@ -1,0 +1,4 @@
+.sg-active { max-width: 1060px; padding: 32px 40px 40px; }
+.sg-active .sg-pageheader { padding-bottom: 20px; }
+.sg-active__list { display: flex; flex-direction: column; gap: 8px; }
+.sg-active__more { display: flex; justify-content: center; padding-top: 8px; }

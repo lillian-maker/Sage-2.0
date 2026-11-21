@@ -1,0 +1,25 @@
+.sg-pageheader {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.sg-pageheader__text { min-width: 0; }
+.sg-pageheader h1 {
+  margin: 0;
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-24-500-lh28-8);
+  letter-spacing: var(--type-sans-sc-24-500-lh28-8-ls);
+}
+.sg-pageheader p {
+  margin: 0;
+  padding-top: 6px;
+  color: var(--color-slate-540);
+  font: var(--type-sans-sc-13-400-lh17-76);
+  letter-spacing: var(--type-sans-sc-13-400-lh17-76-ls);
+}
+.sg-pageheader__actions {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

@@ -1,0 +1,94 @@
+/*
+ * Corner radii per theme style. Values come from comparing each theme-variant master component
+ * with its default counterpart in the locked Figma file (radius 6 / 9-11 / 10 groups);
+ * styles.csv carries no radius styles, so these are not generated into tokens.css.
+ */
+:root {
+  --radius-xs: 3px;
+  --radius-control: 6px;
+  /* Pills are fully rounded by default (Figma radius = height / 2); some themes square them off. */
+  --radius-pill: 999px;
+  --radius-card: 10px;
+  --radius-panel: 12px;
+  --radius-dialog: 14px;
+  --radius-round: 999px;
+}
+[data-theme="neo_electric"] {
+  --radius-control: 10px;
+  --radius-pill: 999px;
+  --radius-card: 16px;
+}
+[data-theme="fashion_editorial"] {
+  --radius-control: 0px;
+  --radius-pill: 0px;
+  --radius-card: 2px;
+}
+[data-theme="comfort_readable"] {
+  --radius-control: 8px;
+  --radius-pill: 8px;
+  --radius-card: 12px;
+}
+[data-theme="minimal_focus"] {
+  --radius-control: 4px;
+  --radius-pill: 4px;
+  --radius-card: 6px;
+}
+
+/*
+ * Sage logo colours per theme style (Figma 732:2 "产品图标 · 随主题风格变化"): the light values are the
+ * exported 紫/墨/青/灰 masters; dark mode lifts each ramp the way the business 浅 master does
+ * (deep and light ends swap, the star keeps the theme accent).
+ */
+:root {
+  --sg-logo-a: #396397;
+  --sg-logo-b: #7396bc;
+  --sg-logo-c: #aec8e2;
+  --sg-logo-star: #7396bc;
+}
+[data-theme="neo_electric"] { --sg-logo-a: #5b3df5; --sg-logo-b: #7b61ff; --sg-logo-c: #c9beff; --sg-logo-star: #9bc70a; }
+[data-theme="fashion_editorial"] { --sg-logo-a: #111111; --sg-logo-b: #6b665e; --sg-logo-c: #d9d3c7; --sg-logo-star: #c8102e; }
+[data-theme="comfort_readable"] { --sg-logo-a: #0f5e6b; --sg-logo-b: #3e8c99; --sg-logo-c: #9fd0d8; --sg-logo-star: #c98a2e; }
+[data-theme="minimal_focus"] { --sg-logo-a: #111111; --sg-logo-b: #71717a; --sg-logo-c: #d4d4d8; --sg-logo-star: #ff5b1f; }
+[data-appearance="dark"] { --sg-logo-a: #d6e4f2; --sg-logo-b: #aec8e2; --sg-logo-c: #7396bc; --sg-logo-star: #aec8e2; }
+[data-appearance="dark"][data-theme="neo_electric"] { --sg-logo-a: #e4deff; --sg-logo-b: #c9beff; --sg-logo-c: #7b61ff; --sg-logo-star: #9bc70a; }
+[data-appearance="dark"][data-theme="fashion_editorial"] { --sg-logo-a: #f2eee6; --sg-logo-b: #d9d3c7; --sg-logo-c: #6b665e; --sg-logo-star: #c8102e; }
+[data-appearance="dark"][data-theme="comfort_readable"] { --sg-logo-a: #d5ecef; --sg-logo-b: #9fd0d8; --sg-logo-c: #3e8c99; --sg-logo-star: #c98a2e; }
+[data-appearance="dark"][data-theme="minimal_focus"] { --sg-logo-a: #f4f4f5; --sg-logo-b: #d4d4d8; --sg-logo-c: #71717a; --sg-logo-star: #ff5b1f; }
+
+
+/*
+ * 舒适 · 易读 maps the light brand tint (neutral-50-2) to solid teal 760, the same colour as the brand
+ * text (blue-590); fills that pair the two would hide their label (Figma 698/699 draw white text on teal).
+ */
+[data-theme="comfort_readable"] :is(.sg-count--brand, .sg-tag--info, .sg-tasklist__state.is-info, .sg-cap__kind.is-connector, .sg-chip.is-selected) {
+  color: var(--color-neutral-0);
+}
+
+
+/* 窄窗口（Figma 709/712、708/711）：右栏收为抽屉，从右侧滑出 */
+.sg-btn.sg-taskheader__railtoggle,
+.sg-btn.sg-ws__railtoggle { display: none; }
+.sg-railbackdrop { position: fixed; inset: 0; z-index: 44; background: var(--color-blue-900-a32); }
+@media (max-width: 1099px) {
+  .sg-btn.sg-taskheader__railtoggle,
+  .sg-btn.sg-ws__railtoggle { display: inline-flex; }
+  .sg-taskpage__sidewrap,
+  .sg-ws__side {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    background: var(--color-neutral-0);
+    box-shadow: var(--shadow-0_24_60-blue-840-a24);
+    transform: translateX(102%);
+    transition: transform 0.2s ease;
+  }
+  .sg-taskpage__sidewrap.is-open,
+  .sg-ws__side.is-open { transform: translateX(0); }
+  .sg-taskpage__sidewrap .sg-taskside__tabs > :not(.sg-taskside__add) { display: none; }
+  .sg-taskpage__sidewrap .sg-taskside__tabs { justify-content: flex-end; border-bottom: 0; }
+  .sg-taskpage__sidewrap .sg-taskside__tabselect { display: flex; }
+}
+.sg-taskside__tabselect { display: none; padding: 10px 16px; border-bottom: 1px solid var(--color-neutral-60); }
+.sg-taskside__tabselect > * { flex: 1 1 auto; }

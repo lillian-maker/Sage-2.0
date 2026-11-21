@@ -1,0 +1,21 @@
+.sg-icontile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 8px;
+}
+.sg-icontile--s32, .sg-icontile--s36, .sg-icontile--s44 {
+  border-radius: var(--radius-card);
+}
+.sg-icontile--circle {
+  border-radius: var(--radius-round);
+}
+.sg-icontile--neutral {
+  background: var(--color-neutral-50);
+  color: var(--color-slate-600);
+}
+.sg-icontile--warning {
+  background: var(--color-orange-60);
+  color: var(--color-orange-660);
+}

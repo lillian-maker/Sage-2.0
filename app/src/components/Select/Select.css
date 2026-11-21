@@ -1,0 +1,39 @@
+.sg-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  border: 1px solid var(--color-slate-100);
+  border-radius: var(--radius-control);
+  color: var(--color-blue-840);
+  background: var(--color-neutral-0);
+  font: var(--type-sans-sc-13-400-lh15-6);
+  letter-spacing: var(--type-sans-sc-13-400-lh15-6-ls);
+  cursor: pointer;
+}
+.sg-select > .sg-icon { color: var(--color-slate-540); }
+.sg-select > select {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+.sg-select.is-placeholder .sg-select__value { color: var(--color-slate-540); }
+.sg-select.is-disabled { opacity: 0.4; cursor: default; }
+.sg-select__value { flex: 1 1 auto; }
+.sg-select__prefix { flex: none; color: var(--color-slate-540); }
+.sg-select--s26 {
+  height: 26px;
+  gap: 4px;
+  padding: 0 7px;
+  font: var(--type-sans-sc-12-400-lh14-4);
+}
+.sg-select--s32 { height: 32px; padding: 0 9px; }
+.sg-select--s34 { height: 34px; padding: 0 9px; }
+.sg-select--s36 {
+  height: 36px;
+  padding: 0 11px;
+  border-radius: var(--radius-card);
+}

@@ -1,0 +1,13 @@
+.sg-cap { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+.sg-cap > .sg-icon { color: var(--color-slate-600); }
+.sg-cap__name { color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); letter-spacing: var(--type-sans-sc-13-400-lh15-6-ls); }
+.sg-cap__kind {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--radius-control);
+  background: var(--color-neutral-50);
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-10-400-lh12);
+}
+.sg-cap__kind.is-connector { background: var(--color-neutral-50-2); color: var(--color-blue-590); }
+.sg-cap__spacer { flex: 1 1 auto; }

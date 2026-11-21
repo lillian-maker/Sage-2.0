@@ -1,0 +1,36 @@
+.sg-composer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--layout-composer-max-width);
+  padding: 12px 12px 10px 16px;
+  border: 1px solid var(--color-slate-100);
+  border-radius: 16px;
+  background: var(--color-neutral-0);
+  box-shadow: var(--shadow-0_8_24-blue-840-a6), var(--shadow-0_1_2-blue-840-a4);
+}
+.sg-composer__input {
+  border: none;
+  outline: none;
+  resize: none;
+  min-height: 22px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-blue-840);
+  font: var(--type-sans-sc-14-400-lh22);
+  letter-spacing: var(--type-sans-sc-14-400-lh22-ls);
+  caret-color: var(--color-blue-590);
+}
+.sg-composer__input::placeholder { color: var(--color-slate-540); }
+.sg-composer__bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 10px;
+}
+.sg-composer__tool.sg-btn--ghost { padding: 0 8px; }
+.sg-composer__spacer { flex: 1 1 auto; }
+.sg-composer__send .sg-icon { transform: rotate(-90deg); }
+.sg-composer__send.sg-iconbtn--tonal { background: var(--color-neutral-50); color: var(--color-slate-340); }
+.sg-composer__send.sg-iconbtn:disabled { opacity: 1; }
+.sg-composer__chips { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; }

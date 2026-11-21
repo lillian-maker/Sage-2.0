@@ -1,0 +1,52 @@
+.sg-result {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  border-radius: var(--radius-control);
+  text-align: left;
+}
+.sg-result:hover, .sg-result.is-active { background: var(--color-neutral-20); }
+/* Fixed 16px box: some masters (folder) are taller than wide and would stretch one-line rows. */
+.sg-result__icon { flex: none; height: 16px; padding-top: 3px; display: inline-flex; color: var(--color-slate-540); }
+.sg-result__text { display: flex; flex-direction: column; min-width: 0; }
+.sg-result__line { display: flex; align-items: baseline; gap: 8px; }
+.sg-result__title { color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh19-12); }
+.sg-result__meta { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh16-39); }
+.sg-result__snippet { padding-top: 3px; color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh20); }
+.sg-result mark { background: none; color: var(--color-blue-590); }
+
+.sg-result mark { padding: 0 1px; border-radius: 3px; background: var(--color-neutral-50); color: inherit; }
+.sg-result__more { display: inline-flex; align-items: center; gap: 2px; padding-top: 4px; color: var(--color-blue-590); font: var(--type-manrope-12-400-lh16-39); }
+
+.sg-gsearch { position: absolute; left: 0; right: 0; height: 100%; z-index: 30; display: flex; flex-direction: column; overflow: auto; background: var(--color-neutral-0); }
+.sg-gsearch__top { display: flex; flex: none; align-items: center; justify-content: flex-end; gap: 6px; height: 52px; padding: 0 20px; }
+.sg-gsearch__body { width: 100%; max-width: 880px; margin: 0 auto; padding: 8px 24px 40px; box-sizing: content-box; }
+.sg-gsearch__box {
+  display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px;
+  border: 1px solid var(--color-blue-590); border-radius: 10px; box-shadow: 0 0 0 3px rgb(57 99 151 / 0.16); box-sizing: border-box;
+}
+.sg-gsearch__box > .sg-icon { color: var(--color-slate-600); flex: none; }
+.sg-gsearch__input { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: none; color: var(--color-blue-840); font: var(--type-sans-sc-16-400-lh19-2); }
+.sg-gsearch__input::placeholder { color: var(--color-slate-540); }
+.sg-gsearch__clear { display: inline-flex; padding: 0; border: 0; background: none; color: var(--color-slate-540); cursor: pointer; }
+.sg-gsearch__esc { padding: 1px 5px; border: 1px solid var(--color-slate-100); border-radius: 4px; color: var(--color-slate-540); font: var(--type-manrope-11-400-lh15-03); }
+.sg-gsearch__chips { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 16px; }
+.sg-gsearch__chip {
+  display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; box-sizing: border-box;
+  border: 1px solid var(--color-neutral-60); border-radius: 14px; background: var(--color-neutral-0);
+  color: var(--color-slate-600); font: var(--type-sans-sc-12-400-lh14-4); cursor: pointer;
+}
+.sg-gsearch__chip > b { font: var(--type-manrope-12-400-lh16-39); color: var(--color-slate-540); }
+.sg-gsearch__chip.is-active { border-color: var(--color-blue-840); background: var(--color-blue-840); color: var(--color-neutral-0); }
+.sg-gsearch__chip.is-active > b { color: var(--color-slate-170); }
+.sg-gsearch__head { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 6px; color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }
+.sg-gsearch__all { display: inline-flex; align-items: center; gap: 2px; padding: 0; border: 0; background: none; color: var(--color-slate-600); font: var(--type-sans-sc-12-400-lh14-4); cursor: pointer; }
+.sg-gsearch__all > .sg-icon { color: var(--color-slate-540); }
+.sg-gsearch__unavail { display: flex; align-items: center; gap: 8px; padding: 8px; color: var(--color-slate-600); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-gsearch__unavail > .sg-icon { color: var(--color-slate-540); }
+.sg-gsearch__unavail button { padding: 0; border: 0; background: none; color: var(--color-blue-590); font: inherit; cursor: pointer; }
+.sg-gsearch__note { padding: 24px 8px; color: var(--color-slate-540); font: var(--type-sans-sc-13-400-lh20); }
+.sg-gsearch__keys { display: flex; gap: 16px; padding-top: 18px; color: var(--color-slate-540); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-gsearch__loadmore { margin-top: 8px; padding: 0 8px; border: 0; background: none; color: var(--color-blue-590); font: var(--type-sans-sc-12-400-lh14-4); cursor: pointer; }
+.sg-result { border: 0; background: none; cursor: pointer; }

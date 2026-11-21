@@ -1,0 +1,18 @@
+.sg-ctxbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 6px 0;
+  height: 30px;
+}
+.sg-ctxbar__pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-slate-600);
+  font: var(--type-sans-sc-12-400-lh14-4);
+  letter-spacing: var(--type-sans-sc-12-400-lh14-4-ls);
+}
+.sg-ctxbar__pick > .sg-icon { color: var(--color-slate-540); }
+.sg-ctxbar__sep { color: var(--color-slate-230); font: var(--type-manrope-12-400-lh16-39); }
+.sg-ctxbar__end { flex: 1 1 auto; display: flex; justify-content: flex-end; }

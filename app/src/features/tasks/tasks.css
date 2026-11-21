@@ -1,0 +1,43 @@
+.sg-tasklist {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-neutral-60);
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-0);
+  text-align: left;
+}
+.sg-tasklist:hover { border-color: var(--color-slate-100); }
+.sg-tasklist__text { display: flex; flex-direction: column; min-width: 0; }
+.sg-tasklist__title { color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); letter-spacing: var(--type-sans-sc-13-400-lh15-6-ls); }
+.sg-tasklist__sub { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-tasklist__end { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+.sg-tasklist__state { padding: 2px 8px; border-radius: 8px; font: var(--type-sans-sc-11-500-lh13-2); }
+.sg-tasklist__state.is-warning { background: var(--color-orange-60); color: var(--color-orange-660); }
+.sg-tasklist__state.is-info { background: var(--color-neutral-50-2); color: var(--color-blue-590); }
+.sg-tasklist__time { min-width: 38px; text-align: right; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+
+.sg-activerow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 54px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-neutral-60);
+  border-radius: var(--radius-card);
+  background: var(--color-neutral-0);
+  cursor: pointer;
+}
+.sg-activerow:hover { border-color: var(--color-slate-100); }
+.sg-activerow__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sg-activerow__title { color: var(--color-blue-840); font: var(--type-sans-sc-13-500-lh15-6); letter-spacing: var(--type-sans-sc-13-500-lh15-6-ls); }
+.sg-activerow__sub { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-activerow__end { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+.sg-activerow__bar { position: relative; width: 120px; height: 4px; border-radius: var(--radius-pill); background: var(--color-neutral-50); overflow: hidden; }
+.sg-activerow__bar > span { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--color-blue-590); }
+.sg-activerow__avatars { display: inline-flex; }
+.sg-activerow__avatars > .sg-avatar + .sg-avatar { margin-left: -4px; }
+.sg-activerow__time { min-width: 44px; text-align: right; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }

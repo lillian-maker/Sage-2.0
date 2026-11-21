@@ -1,0 +1,8 @@
+.sg-accountcard { padding: 8px 10px 10px; }
+.sg-accountcard__line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sg-accountcard__name { color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh16-8); }
+.sg-accountcard__plan { flex: none; color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }
+.sg-accountcard__email { padding-top: 4px; color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }
+.sg-renamedialog { gap: 14px; }
+.sg-renamedialog .sg-dialog__actions { justify-content: flex-end; }
+.sg-shell__toast { position: fixed; right: 24px; bottom: 24px; z-index: 120; }
