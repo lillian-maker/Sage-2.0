@@ -56,7 +56,8 @@ def register_session(request):
     address = client_ip(request) or None
     record, _ = AccountSession.objects.get_or_create(session_key=request.session.session_key,
         defaults={'user': request.user, 'client': browser + (' / ' + os if os else ''), 'ip': address})
-    return record
+    from .workbench.services.account import touch_session
+    return touch_session(record, request)
 
 
 def revoke_current_session(request):
@@ -84,10 +85,13 @@ def profile_data(user):
     identity = LoginIdentity.objects.filter(user=user, method='email').order_by('id').first()
     google = LoginIdentity.objects.filter(user=user,method='google').order_by('id').first() if identity is None else None
     phone = LoginIdentity.objects.filter(user=user,method='phone').order_by('id').first()
-    return {'display_name': user.first_name, 'phone': phone.identifier if phone else '',
+    data = {'display_name': user.first_name, 'phone': phone.identifier if phone else '',
             'password_reset_method': 'email' if identity else 'phone' if phone else None,
             'email': identity.identifier if identity else google.provider_email if google else '',
             'avatar_url': avatar_url(profile), 'email_read_only': True}
+    from .workbench.services.account import profile_extra
+    data.update(profile_extra(user, profile))
+    return data
 
 
 def _lock_current(request):
@@ -1309,15 +1313,8 @@ def dispatch(request, path):
             return _invoice_dispatch(request,path)
         if path == 'account/profile':
             if request.method == 'PATCH':
-                name = payload(request, ('display_name',))['display_name']
-                if (not isinstance(name, str) or not name.strip() or len(name.strip()) > 80 or
-                        any(ord(char) < 32 or ord(char) == 127 for char in name)):
-                    raise ValueError('INVALID_REQUEST')
-                with transaction.atomic():
-                    _lock_current(request)
-                    request.user.first_name = name.strip()
-                    request.user.save(update_fields=['first_name'])
-                    _audit(request, 'profile.name_updated')
+                from .workbench.services.account import patch_profile
+                patch_profile(request)
             return JsonResponse(profile_data(request.user))
         if path == 'account/preferences':
             with transaction.atomic():
@@ -1337,13 +1334,13 @@ def dispatch(request, path):
             offset = request.GET.get('offset', '0')
             if set(request.GET) - {'offset'} or len(request.GET.getlist('offset')) > 1 or not re.fullmatch(r'\d{1,9}', offset):
                 raise ValueError('INVALID_REQUEST')
-            rows = list(AccountSession.objects.filter(user=request.user, revoked_at__isnull=True,
+            sessions = AccountSession.objects.filter(user=request.user, revoked_at__isnull=True,
                 session_key__in=Session.objects.filter(expire_date__gt=timezone.now()).values('session_key'))
-                .order_by('-created_at', '-id')[int(offset):int(offset)+51])
-            return JsonResponse({'items': [{'id': str(row.pk), 'client': row.client,
-                'location': '未知', 'ip': row.ip or '', 'created_at': row.created_at.isoformat(),
-                'is_current': row.session_key == request.session.session_key} for row in rows[:50]],
-                'next_offset': int(offset)+50 if len(rows) > 50 else None})
+            rows = list(sessions.order_by('-created_at', '-id')[int(offset):int(offset)+51])
+            from .workbench.services.account import session_item
+            return JsonResponse({'items': [session_item(row, request) for row in rows[:50]],
+                'next_offset': int(offset)+50 if len(rows) > 50 else None,
+                'offset': int(offset), 'total': sessions.count()})
         if path == 'account/sessions/revoke':
             # Two explicit input forms prevent accidentally revoking current credentials.
             try:

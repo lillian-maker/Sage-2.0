@@ -33,6 +33,7 @@ NOTICE_TITLES = {
     'service_refund_refunded': '订阅退款已确认', 'service_refund_failed': '订阅退款需核对',
     'seats_purchased': '新增使用名额已开通', 'seat_capacity_ending': '本期新增名额即将到期',
     'next_seats_purchased': '下一期新增名额已购买', 'seats_reduced': '本期购买名额已减少',
+    'credits_usage_25': '本期额度已使用 25%',
 }
 _ATTEMPTED_NOTICE_STATES = ('sending', 'unknown', 'sent', 'delivered')
 

@@ -74,6 +74,7 @@ class Order(models.Model):
     status = models.CharField(max_length=32, default="pending_payment")
     paid_at = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    display_number = models.CharField(max_length=20, null=True, unique=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["account", "idempotency_key"], name="commerce_order_idempotency_unique")]
@@ -81,6 +82,10 @@ class Order(models.Model):
 
     def save(self, *args, **kwargs):
         _unchanged(self, ["account_id", "created_by_id", "quote_id", "idempotency_key", "request_hash", "snapshot", "amount_minor", "currency"])
+        # display_number is assigned after payment, so it may go from null to a value once and never change after.
+        if not self._state.adding and type(self).objects.filter(pk=self.pk).exclude(display_number=None).exclude(
+                display_number=self.display_number).exists():
+            raise ValueError("IMMUTABLE_BILLING_SNAPSHOT")
         return super().save(*args, **kwargs)
 
 
@@ -724,12 +729,14 @@ class TaskCostEvent(models.Model):
     payload = models.JSONField()
     request_hash = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
+    # TaskStep.public_id; a cross-app FK would make billing depend on workbench.
+    step_key = models.CharField(max_length=26, null=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['account','source','event_key'], name='commerce_task_cost_event_unique')]
 
     def save(self, *args, **kwargs):
-        _unchanged(self, ['account_id','reservation_id','source','event_key','payload','request_hash'])
+        _unchanged(self, ['account_id','reservation_id','source','event_key','payload','request_hash','step_key'])
         super().save(*args, **kwargs)
 
 
@@ -745,7 +752,7 @@ class BillingNotification(models.Model):
              'renewal_reminder','renewal_notice_blocked','invoice_requested','invoice_sent',
              'account_security','member_removed','member_role_changed','plan_changed',
              'service_refund_requested','service_refund_refunded','service_refund_failed','seats_purchased','seat_capacity_ending',
-             'next_seats_purchased','seats_reduced')
+             'next_seats_purchased','seats_reduced','credits_usage_25')
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     account = models.ForeignKey('backend.BillingAccount', null=True, on_delete=models.PROTECT)
     recipient_user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.PROTECT)
@@ -809,3 +816,28 @@ class CreditEntry(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["batch", "event_key"], name="commerce_credit_event_unique")]
+
+class Department(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    account = models.ForeignKey('backend.BillingAccount', on_delete=models.PROTECT, related_name='departments')
+    name = models.CharField(max_length=40)
+    monthly_quota = models.PositiveIntegerField(null=True)
+    per_member_share = models.PositiveIntegerField(null=True)
+    pooling_enabled = models.BooleanField(default=False)
+    quota_version = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['account', 'name'], name='commerce_department_name_unique')]
+
+
+class DepartmentMember(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    department = models.ForeignKey(Department, on_delete=models.PROTECT, related_name='members')
+    membership = models.ForeignKey('backend.Membership', on_delete=models.PROTECT, related_name='department_memberships')
+    is_lead = models.BooleanField(default=False)
+    effective_period = models.ForeignKey(SubscriptionPeriod, null=True, on_delete=models.PROTECT, related_name='+')
+    ended_period = models.ForeignKey(SubscriptionPeriod, null=True, on_delete=models.PROTECT, related_name='+')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['membership', 'effective_period'],
+                                               name='commerce_department_member_period_unique')]

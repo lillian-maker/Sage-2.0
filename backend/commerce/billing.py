@@ -212,6 +212,7 @@ def _order_dict(order):
         "paid_at": order.paid_at.isoformat() if order.paid_at else None,
         "plan_code": order.snapshot.get("code"), "billing_cycle": order.snapshot.get("billing_cycle"),
         "seat_quantity": order.snapshot.get("seat_quantity"),
+        "display_number": order.display_number,
     }
 
 
@@ -362,9 +363,23 @@ def list_orders(account):
     return orders_page(account)['items']
 
 
+def _order_list_item(order):
+    from backend.models import InvoiceRequest
+    from .models import SubscriptionPeriod
+    period = SubscriptionPeriod.objects.filter(order=order).first()
+    invoice = InvoiceRequest.objects.filter(order=order).order_by('-created_at').first()
+    attempt = PaymentAttempt.objects.filter(order=order).first()
+    return {**_order_dict(order),
+            'service_period': {'start': period.starts_at.isoformat(), 'end': period.ends_at.isoformat()} if period else None,
+            'needs_review': bool(order.payment_facts.exclude(disposition='accepted').exists() or
+                                 (attempt and attempt.needs_reconciliation)),
+            'invoice_state': invoice.status if invoice else None}
+
+
 def orders_page(account, offset=0):
-    rows = list(Order.objects.filter(account=account).order_by('-created_at', '-id')[offset:offset+51])
-    return {'account_id': str(account.pk), 'items': [_order_dict(order) for order in rows[:50]],
+    query = Order.objects.filter(account=account)
+    rows = list(query.order_by('-created_at', '-id')[offset:offset+51])
+    return {'account_id': str(account.pk), 'items': [_order_list_item(order) for order in rows[:50]],
             'next_offset': offset+50 if len(rows) > 50 else None}
 
 
@@ -416,14 +431,17 @@ def notifications_page(account, offset=0):
 
 
 @transaction.atomic
-def order_detail(account, order_id):
+def order_detail(account, order_id, *, extended=False):
+    """extended adds the App-only keys (C-C-12); the default shape is pinned by commerce contract tests."""
     from .models import CreditRefund
     account = _lock_account(account)
     order = _get(Order.objects.filter(account=account), pk=order_id)
     review_states = {'duplicate_payment_review', 'identity_mismatch_review',
                      'amount_mismatch_review', 'late_payment_review'}
     payments = [{"id": str(fact.pk), "status": fact.disposition if fact.disposition in review_states | {'accepted'} else 'payment_review_required', "amount_minor": fact.amount_minor,
-                 "currency": fact.currency, "paid_at": fact.paid_at.isoformat()}
+                 "currency": fact.currency, "paid_at": fact.paid_at.isoformat(),
+                 **({"channel": fact.channel, "confirmed_at": fact.created_at.isoformat(),
+                     "transaction_reference_masked": "****" + fact.transaction_reference[-4:]} if extended else {})}
                 for fact in order.payment_facts.all().order_by("created_at", "id")]
     delivery = "completed" if order.status == "fulfilled" else "pending" if order.paid_at else "not_started"
     attempt = PaymentAttempt.objects.filter(order=order).first()
@@ -438,9 +456,16 @@ def order_detail(account, order_id):
     refunds = [{**_credit_refund_dict(item),'created_at':item.created_at.isoformat(),
                 'resolved_at':item.resolved_at.isoformat() if item.resolved_at else None}
                for item in CreditRefund.objects.filter(payment__order=order).order_by('created_at','id')]
-    return {"order": _order_dict(order), "payments": payments, "delivery": {"status": delivery},
-            "payment_attempt": attempt_data, "refunds":refunds,
-            "needs_review": bool(review_reasons), "review_reasons": sorted(review_reasons)}
+    result = {"order": _order_dict(order), "payments": payments, "delivery": {"status": delivery},
+              "payment_attempt": attempt_data, "refunds":refunds,
+              "needs_review": bool(review_reasons), "review_reasons": sorted(review_reasons)}
+    if extended:
+        batch = CreditBatch.objects.filter(order=order).first()
+        result["delivery"]["credit_batch"] = {"quantity": batch.initial_quantity, "granted_at": batch.created_at.isoformat(),
+                                              "expires_at": batch.expires_at.isoformat()} if batch else None
+        # Q-C-11 B: discounts are not stored yet, so the key is always null.
+        result["order"]["discount"] = None
+    return result
 
 
 @transaction.atomic
@@ -984,6 +1009,13 @@ def set_shared_limit(account, actor, membership_id, quantity, *, expected_versio
             raise ValueError('SUBSCRIPTION_EXPIRED')
     change = SharedLimitChange.objects.create(membership=member,actor=actor,quantity=limit,
                                               version=expected_version+1,request_key=request_key)
+    import uuid
+    from backend.models import AuditEvent
+    def _label(value):
+        return '部门人均' if value is None else f'{int(_quantity(value)):,}' if _quantity(value).denominator == 1 else value
+    AuditEvent.objects.create(actor=actor,account=account,action='org.quota.adjust',request_id=uuid.uuid4(),
+        target_type='membership',target_id=str(member.pk),
+        summary=f'{member.user.get_full_name() or "成员"} 单独额度 {_label(latest.quantity if latest else None)} → {_label(limit)}'[:200])
     from .models import BillingNotification
     BillingNotification.objects.create(account=account,type='shared_limit_changed',
         source_event=f'shared-limit:{change.pk}',occurred_at=change.created_at)
@@ -1312,7 +1344,28 @@ def settle_credits(account, reservation_id, actual_quantity):
     reservation.state = "settled"
     reservation.settled_quantity = _text(actual)
     reservation.save(update_fields=["state", "settled_quantity"])
+    _notify_usage_threshold(account)
     return _reservation_dict(reservation)
+
+
+def _notify_usage_threshold(account):
+    """C-C-14: one credits_usage_25 notice per subscription period once settled use reaches 25% of its total."""
+    from .models import BillingNotification
+    from .subscriptions import active_subscription_periods
+    now = timezone.now()
+    period = active_subscription_periods(account, now).order_by('starts_at').first()
+    source_event = f'credits_usage:{period.pk}:25' if period else None
+    if period is None or BillingNotification.objects.filter(account=account, source_event=source_event).exists():
+        return
+    used = sum((_quantity(value) for value in CreditEntry.objects.filter(batch__account=account, kind='settle',
+        created_at__gte=period.starts_at, created_at__lt=period.ends_at).values_list('quantity', flat=True)), Fraction(0))
+    remaining = Fraction(0)
+    for batch in CreditBatch.objects.filter(account=account, expires_at__gt=now):
+        balance = _balances(batch)
+        remaining += balance['available'] + balance['reserved']
+    if used and used * 4 >= used + remaining:
+        BillingNotification.objects.create(account=account, type='credits_usage_25', source_event=source_event,
+                                           occurred_at=now)
 
 
 @transaction.atomic
@@ -1378,6 +1431,7 @@ def _persist_confirmed_payment(account, order_id, *, channel, merchant_reference
         order.paid_at = paid_at
         order.status = "paid_pending_entitlement"
         order.save(update_fields=["paid_at", "status"])
+        _assign_display_number(order)
         from .models import BillingNotification, TopupBudget
         attempt = PaymentAttempt.objects.filter(account=account,order=order).first()
         receipt_type = 'payment_received'
@@ -1390,6 +1444,24 @@ def _persist_confirmed_payment(account, order_id, *, channel, merchant_reference
             subscription_id=attempt.subscription_id if attempt else None,
             currency=fact.currency,occurred_at=fact.paid_at)
     return {"id": str(fact.pk), "disposition": fact.disposition}
+
+
+def _assign_display_number(order):
+    """Q-C-14 A: SG-YYYY-MM-NNNN, one sequence per paid month across all accounts, assigned once at payment."""
+    if order.display_number:
+        return
+    prefix = timezone.localtime(order.paid_at).strftime('SG-%Y-%m-')
+    for _ in range(5):
+        numbers = Order.objects.filter(display_number__startswith=prefix).values_list('display_number', flat=True)
+        order.display_number = prefix + '%04d' % (max((int(value[len(prefix):]) for value in numbers), default=0) + 1)
+        try:
+            # Accounts are locked separately, so two accounts can race for the same number.
+            with transaction.atomic():
+                order.save(update_fields=['display_number'])
+            return
+        except IntegrityError:
+            order.display_number = None
+    raise ValueError('DISPLAY_NUMBER_UNAVAILABLE')
 
 
 def record_confirmed_payment(account, order_id, **verified_fact):

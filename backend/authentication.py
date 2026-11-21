@@ -257,14 +257,15 @@ def start(request, purpose):
 @sensitive_variables()
 def _send_code(request, flow):
     if ((flow.purpose == 'registration' and not registration_ready(flow.method)) or
-            (flow.purpose == 'recovery' and not recovery_ready(flow.method))):
+            (flow.purpose == 'recovery' and not recovery_ready(flow.method)) or
+            (flow.purpose == 'email_code' and not email_ready())):
         return error(request, 'CHANNEL_UNAVAILABLE', 503)
     _live(flow)
     now, code, challenge_id = timezone.now(), f'{secrets.randbelow(1000000):06d}', uuid.uuid4()
     if flow.challenge_id:
         LoginChallenge.objects.filter(pk=flow.challenge_id).update(consumed_at=now)
     item = LoginChallenge.objects.create(id=challenge_id,
-        purpose='registration' if flow.purpose == 'registration' else 'password_reset',
+        purpose=_challenge_purpose(flow.purpose),
         password_user=flow.user, method=flow.method, identifier=flow.identifier,
         code_digest=digest(str(challenge_id)+':'+code), session_digest=flow.session_digest,
         expires_at=flow.expires_at)
@@ -272,6 +273,12 @@ def _send_code(request, flow):
     flow.save(update_fields=['challenge','stage'])
     result = flow_data(flow)
     result.update(challenge_id=str(item.pk), resend_after=settings.AUTH_RESEND_SECONDS)
+    if flow.purpose == 'email_code':
+        result.update(expires_at=flow.expires_at.isoformat(),
+            resend_available_at=(now+timedelta(seconds=settings.AUTH_RESEND_SECONDS)).isoformat())
+        if not flow.user_id:
+            # Unknown or inactive address: same public state, no delivery (no implicit signup).
+            return JsonResponse(result,status=201)
     if flow.method == 'phone' and flow.purpose == 'recovery' and (not flow.user_id or
             not LoginIdentity.objects.filter(user_id=flow.user_id,method='phone',identifier=flow.identifier,user__is_active=True).exists()):
         # Same public state, but no SMS cost or delivery claim for unknown identities.
@@ -281,10 +288,12 @@ def _send_code(request, flow):
             from .sms import send_code
             sent = send_code(flow.identifier,code,purpose='registration' if flow.purpose=='registration' else 'password_reset')
         elif settings.AUTH_EMAIL_TRANSPORT == 'ses':
-            from .email import send_registration_code, send_password_code
-            sent = (send_registration_code if flow.purpose == 'registration' else send_password_code)(flow.identifier, code)
+            from .email import send_registration_code, send_password_code, send_login_code
+            sent = (send_registration_code if flow.purpose == 'registration' else send_login_code
+                if flow.purpose == 'email_code' else send_password_code)(flow.identifier, code)
         else:
-            label = '注册验证码 / Registration code' if flow.purpose == 'registration' else '密码重置验证码 / Password reset code'
+            label = '注册验证码 / Registration code' if flow.purpose == 'registration' else (
+                '登录验证码 / Sign-in code' if flow.purpose == 'email_code' else '密码重置验证码 / Password reset code')
             sent = send_mail('Sage '+label, 'Sage '+label+': '+code+'\n5 分钟内有效，请勿分享。',
                 settings.DEFAULT_FROM_EMAIL, [flow.identifier], fail_silently=False)
     except (smtplib.SMTPException, OSError):
@@ -400,9 +409,13 @@ def _locked_challenge(flow,data,purpose):
     if (item is None or str(item.pk) != data['challenge_id'] or not item.delivered or
             item.consumed_at or item.expires_at <= timezone.now() or
             item.session_digest != flow.session_digest or item.identifier != flow.identifier or item.method != flow.method or
-            item.purpose != ('registration' if purpose == 'registration' else 'password_reset')):
+            item.purpose != _challenge_purpose(purpose)):
         raise ValueError('INVALID_CODE')
     return item
+
+
+def _challenge_purpose(flow_purpose):
+    return {'registration': 'registration', 'email_code': 'login'}.get(flow_purpose, 'password_reset')
 
 
 @sensitive_variables()

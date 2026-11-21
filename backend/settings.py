@@ -26,7 +26,7 @@ if not ALLOWED_HOSTS or '*' in ALLOWED_HOSTS:
 INSTALLED_APPS = ['django.contrib.auth', 'django.contrib.contenttypes',
                   'django.contrib.sessions', 'django.contrib.messages', 'django.contrib.staticfiles',
                   'django.contrib.admin', 'backend.apps.BackendConfig',
-                  'backend.commerce.apps.CommerceConfig']
+                  'backend.commerce.apps.CommerceConfig', 'backend.workbench.apps.WorkbenchConfig']
 MIDDLEWARE = ['django.middleware.security.SecurityMiddleware',
               'backend.http.RequestContextMiddleware',
               'django.contrib.sessions.middleware.SessionMiddleware',
@@ -88,6 +88,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # A missing delivery configuration must never fall back to a displayed/logged OTP.
 AUTH_EMAIL_ENABLED = os.environ.get('SAGE_AUTH_EMAIL_ENABLED') == '1'
+# App passwordless email-code sign-in stays closed until real delivery is accepted.
+AUTH_EMAIL_CODE_LOGIN_ENABLED = os.environ.get('SAGE_AUTH_EMAIL_CODE_LOGIN_ENABLED') == '1'
 ACCOUNT_DELETION_ENABLED = os.environ.get('SAGE_ACCOUNT_DELETION_ENABLED') == '1'
 ACCOUNT_DELETION_POLICY_VERSION = os.environ.get('SAGE_ACCOUNT_DELETION_POLICY_VERSION', '')
 ACCOUNT_DELETION_POLICY_REVIEWED_AT = os.environ.get('SAGE_ACCOUNT_DELETION_POLICY_REVIEWED_AT', '')

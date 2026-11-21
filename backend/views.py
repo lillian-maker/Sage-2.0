@@ -200,7 +200,8 @@ def session_data(request):
             selected = ids[0] if ids else None
             request.session['active_account_id'] = selected
         data['active_account_id'] = selected
-    return data
+    from .workbench.services.account import session_extra
+    return session_extra(request, data)
 
 
 def throttle(key, limit, cooldown=0):
@@ -475,7 +476,7 @@ def _api_request(request, path):
         'auth/session': ('GET',), 'auth/challenges': ('POST',), 'auth/verify': ('POST',),
         'auth/logout': ('POST',), 'billing/accounts/select': ('POST',),
         'auth/password-login': ('POST',), 'auth/password-challenges': ('POST',), 'auth/password-reset': ('POST',),
-        'auth/invitation-check': ('POST',),
+        'auth/invitation-check': ('POST',), 'auth/handoff': ('GET',),
         'auth/register/start': ('POST',), 'auth/register/verify': ('POST',),
         'auth/captcha': ('POST',), 'auth/recovery/start': ('POST',),
         'auth/recovery/verify': ('POST',), 'auth/recovery/complete': ('POST',),
@@ -529,6 +530,8 @@ def _api_request(request, path):
         methods = ('GET',)
     if re.fullmatch(r'billing/orders/[^/]+/refunds', path):
         methods = ('POST',)
+    if re.fullmatch(r'billing/org/(departments|members)/[^/]+/quota', path):
+        methods = ('POST',)
     if methods and request.method not in methods:
         result = error(request, 'METHOD_NOT_ALLOWED', 405)
         result['Allow'] = ', '.join(methods)
@@ -547,6 +550,9 @@ def _api_request(request, path):
             return check_request(request)
         if path == 'auth/session':
             return JsonResponse(session_data(request))
+        if path == 'auth/handoff':
+            from .workbench.services.handoff import redeem
+            return redeem(request)
         if path.startswith('auth/google/') and path in routes:
             from . import google_auth
             return {'auth/google/start':google_auth.start,'auth/google/callback':google_auth.callback,
@@ -556,8 +562,9 @@ def _api_request(request, path):
                 'auth/google/bind-code/verify':google_auth.bind_code_verify,
                 'auth/google/bind':google_auth.bind}[path](request)
         if path in ('auth/challenges', 'auth/verify'):
-            payload(request, ('method', 'identifier') if path == 'auth/challenges' else ('challenge_id', 'code'))
-            return error(request, 'AUTH_FLOW_REQUIRED', 403, '请使用注册、密码登录或找回密码流程。')
+            data = payload(request, ('method', 'identifier') if path == 'auth/challenges' else ('challenge_id', 'code'))
+            from .workbench.services.account import email_code_request
+            return email_code_request(request, path, data)
         from . import authentication
         if path in ('auth/register/start', 'auth/password-login', 'auth/recovery/start'):
             return authentication.start(request, {'auth/register/start':'registration',
@@ -586,6 +593,9 @@ def _api_request(request, path):
             return error(request, 'CHANNEL_UNAVAILABLE', 503)
         if not request.user.is_authenticated:
             return error(request, 'AUTH_REQUIRED', 401, '请先登录。')
+        if path.startswith('app/'):
+            from .workbench.api import dispatch as app_dispatch
+            return app_dispatch(request, path)
         if path in ('account/business-invitations', 'account/business-invitations/accept'):
             from .commerce import subscriptions
             if request.method == 'GET':
@@ -750,7 +760,7 @@ def _api_request(request, path):
             require_sensitive(request, member.account)
             fields = ('membership_id', 'role', 'expected_version', 'request_key', 'confirm') if path.endswith('/role') else (
                 'seat_id', 'membership_id', 'expected_version', 'request_key', 'confirm')
-            data = payload(request, fields)
+            data = payload(request, fields, optional=('is_security_admin',) if path.endswith('/role') else ())
             if data.pop('confirm') is not True:
                 raise ValueError('INVALID_REQUEST')
             if path.endswith('/role'):
@@ -761,13 +771,19 @@ def _api_request(request, path):
         if path == 'billing/organization/members/remove':
             if request.GET:
                 raise ValueError('INVALID_REQUEST')
-            data = payload(request, ('membership_id', 'request_key', 'confirm'))
+            data = payload(request, ('membership_id', 'request_key', 'confirm'),
+                           optional=('successor_membership_id', 'memory_purge_acknowledged'))
             if data['confirm'] is not True or type(data['membership_id']) is not int or data['membership_id'] < 1:
                 raise ValueError('INVALID_REQUEST')
             from .account import require_sensitive
             require_sensitive(request, member.account)
-            return JsonResponse(subscriptions.remove_member(member.account,request.user,
-                data['membership_id'],request_key=data['request_key'],request_id=request.request_id))
+            result = subscriptions.remove_member(member.account,request.user,
+                data['membership_id'],request_key=data['request_key'],request_id=request.request_id,
+                successor_membership_id=data.get('successor_membership_id'),
+                memory_purge_acknowledged=data.get('memory_purge_acknowledged'))
+            from .workbench.services.billing import offboard
+            result['handoff_item_count'] = offboard(member.account, request.user, result['removal_id'])
+            return JsonResponse(result)
         if path == 'billing/organization/usage':
             raw_member, raw_offset = request.GET.get('membership_id', ''), request.GET.get('offset', '0')
             if (set(request.GET)-{'membership_id', 'offset'} or
@@ -829,7 +845,14 @@ def _api_request(request, path):
             raw_offset = request.GET.get('offset','0')
             if not re.fullmatch(r'\d{1,9}',raw_offset):
                 raise ValueError('INVALID_REQUEST')
-            result = subscriptions.organization_summary(member.account,offset=int(raw_offset),admin_actor=request.user)
+            raw_department = request.GET.get('department')
+            if raw_department is not None and raw_department != 'none':
+                try:
+                    raw_department = str(uuid.UUID(raw_department))
+                except ValueError as exc:
+                    raise ValueError('INVALID_REQUEST') from exc
+            result = subscriptions.organization_summary(member.account,offset=int(raw_offset),admin_actor=request.user,
+                department=raw_department)
             next_items = (result.get('next_paid_period') or {}).get('uncovered_seat_items', [])
             next_members = dict(Membership.objects.filter(account=member.account,
                 pk__in=[item['membership_id'] for item in next_items if item['membership_id']]).values_list('pk', 'user_id'))
@@ -956,7 +979,7 @@ def _api_request(request, path):
                 result['can_submit'] = bool(result['status'] == 'assessment_ready' and result.get('reference_minor') and
                     int(result['reference_minor']) > 0)
                 return JsonResponse(result)
-            result = commerce.order_detail(member.account, order_id)
+            result = commerce.order_detail(member.account, order_id, extended=True)
             from .payments import payment_start_capability, payment_qr
             capability = payment_start_capability(member.account, order_id)
             if capability:
@@ -965,6 +988,16 @@ def _api_request(request, path):
             if qr:
                 result['payment_qr'] = qr
             return JsonResponse(result)
+        matched_quota = re.fullmatch(r'billing/org/(departments|members)/([^/]+)/quota', path)
+        if matched_quota:
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            from .workbench.services import billing as org_billing
+            if matched_quota.group(1) == 'departments':
+                data = payload(request, ('monthly_quota', 'per_member_share', 'pooling_enabled', 'expected_version', 'request_key'))
+                return JsonResponse(org_billing.department_quota(member.account, request.user, matched_quota.group(2), data))
+            data = payload(request, ('quantity', 'expected_version', 'request_key'))
+            return JsonResponse(org_billing.member_quota(member.account, request.user, matched_quota.group(2), data))
         if path.startswith('billing/'):
             return error(request, 'FEATURE_UNAVAILABLE', 503, '该功能尚未开放，不会产生扣款或变更。')
         return error(request, 'NOT_FOUND', 404)
@@ -1015,6 +1048,16 @@ def _api_request(request, path):
             return error(request, code, 422, '无效邀请码，请检查')
         if code == 'INVITATION_CODES_UNAVAILABLE':
             return error(request, code, 503, '邀请码校验服务暂未就绪，请稍后重试。')
+        if code in ('INSUFFICIENT_CREDITS', 'TASK_RESUME_FORBIDDEN', 'TASK_COMPLETED', 'LIMIT_CHANGED',
+                'STATE_CONFLICT', 'VERSION_CONFLICT', 'AUTHORIZATION_REQUIRED', 'AUTHORIZATION_EXPIRED',
+                'CONNECTION_REQUIRED', 'POLICY_APPROVAL_REQUIRED'):
+            return error(request, code, 409)
+        if code in ('INVALID_LIMIT_VERSION', 'QUOTA_BELOW_USED', 'SUCCESSOR_INVALID', 'VALIDATION_FAILED'):
+            return error(request, code, 422)
+        if code in ('PERMISSION_DENIED', 'EXTENSION_NOT_ALLOWED'):
+            return error(request, code, 403)
+        if code == 'SOURCE_UNAVAILABLE':
+            return error(request, code, 503)
         if code not in permitted:
             logger.error('unexpected_validation request_id=%s', request.request_id)
             return error(request, 'REQUEST_FAILED', 500)

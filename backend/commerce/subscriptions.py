@@ -1604,8 +1604,17 @@ def accept_business_invitation(user, invitation_id):
     return {'invitation':_invitation_dict(row, recipient=user), 'membership_id':member.pk, 'account_id':str(account.pk)}
 
 
+def current_department_members(account, at=None):
+    """DepartmentMember rows in force: a row starts when effective_period ends (null = at once) and stops when ended_period ends."""
+    from .models import DepartmentMember
+    at = at or timezone.now()
+    return DepartmentMember.objects.filter(department__account=account).filter(
+        Q(effective_period__isnull=True)|Q(effective_period__ends_at__lte=at)).filter(
+        Q(ended_period__isnull=True)|Q(ended_period__ends_at__gt=at))
+
+
 @transaction.atomic
-def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
+def organization_summary(account, *, offset=0, viewer=None, admin_actor=None, department=None):
     """Admin roster or authenticated viewer's own limits; never returns funds."""
     from fractions import Fraction
     from backend.models import Membership, MemberRemoval
@@ -1643,9 +1652,18 @@ def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
         members = members.filter(user=viewer,is_active=True)
         if not viewer.is_active or not members.exists():
             raise ValueError('FORBIDDEN')
+    departments = {row.membership_id:row for row in current_department_members(account, now).select_related('department')}
+    if department == 'none':
+        members = members.exclude(pk__in=list(departments))
+    elif department is not None:
+        members = members.filter(pk__in=[key for key,row in departments.items() if str(row.department_id) == department])
     total = members.count()
     items = []
     page_members = list(members[offset:offset+50])
+    from django.db.models import Max
+    from backend.models import AccountSession
+    last_seen = dict(AccountSession.objects.filter(user_id__in=[member.user_id for member in page_members]).values(
+        'user_id').annotate(seen=Max('last_seen_at')).values_list('user_id','seen'))
     removals = {row.membership_id:row for row in MemberRemoval.objects.filter(account=account,
         membership_id__in=[member.pk for member in page_members]).order_by('created_at', 'pk')}
     for member in page_members:
@@ -1688,10 +1706,16 @@ def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
             'seat_release_pending':bool(pending and not member.is_active),
             'total_credits':_text(total_credits),
             'seat_position':seat.position if seat else None,'shared_limit':limit.quantity if limit else None,
+            'shared_limit_version':limit.version if limit else 0,
             'shared_used':_text(used) if start else None,'shared_reserved':_text(reserved) if start else None,
             'can_remove':bool(can_remove and member.is_active and member.role != 'owner' and member.user_id != admin_actor.pk),
             'removed_at':removals[member.pk].created_at.isoformat() if member.pk in removals else None,
             'handoff_pending':removals[member.pk].handoff_pending if member.pk in removals else False})
+        assigned = departments.get(member.pk)
+        items[-1].update({'display_name':member.user.get_full_name() or None,
+            'last_seen_at':last_seen[member.user_id].isoformat() if last_seen.get(member.user_id) else None,
+            'department':{'id':str(assigned.department_id),'name':assigned.department.name} if assigned else None,
+            'is_security_admin':member.is_security_admin,'is_lead':bool(assigned and assigned.is_lead)})
     if viewer is not None:
         return {'account_id':str(account.pk),'member':items[0],
             'subscription_active':bool(period),'period_start':start.isoformat() if start else None,
@@ -1723,7 +1747,7 @@ def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
 
 
 @transaction.atomic
-def change_member_role(account, actor, membership_id, role, *, expected_version, request_key):
+def change_member_role(account, actor, membership_id, role, *, expected_version, request_key, is_security_admin=None):
     from backend.models import Membership
     from .models import MembershipRoleChange, BillingNotification
     account = _lock_account(account)
@@ -1741,6 +1765,8 @@ def change_member_role(account, actor, membership_id, role, *, expected_version,
         is_active=True, user__is_active=True)
     if member.role == 'owner':
         raise ValueError('OWNER_ROLE_PROTECTED')
+    if is_security_admin is not None and type(is_security_admin) is not bool:
+        raise ValueError('INVALID_REQUEST')
     previous = MembershipRoleChange.objects.filter(account=account, request_key=request_key).first()
     if previous:
         if (previous.actor_id, previous.membership_id, previous.after_role, previous.expected_version) != (
@@ -1752,6 +1778,12 @@ def change_member_role(account, actor, membership_id, role, *, expected_version,
         raise ValueError('MEMBER_ROLE_CHANGED')
     before, member.role = member.role, role
     member.save(update_fields=['role'])
+    if is_security_admin is not None:
+        member.is_security_admin = is_security_admin
+        member.save(update_fields=['is_security_admin'])
+    AuditEvent.objects.create(actor=actor, account=account, action='member.role.change', request_id=uuid.uuid4(),
+        target_type='membership', target_id=str(member.pk),
+        summary=f'{member.user.get_full_name() or "成员"} 角色 {before} → {role}'[:200])
     change = MembershipRoleChange.objects.create(account=account, membership=member, actor=actor,
         before_role=before, after_role=role, request_key=request_key,
         expected_version=expected_version, resulting_version=expected_version+1)
@@ -1767,7 +1799,8 @@ def _member_removal_dict(record):
 
 
 @transaction.atomic
-def remove_member(account, actor, membership_id, *, request_key, request_id=None):
+def remove_member(account, actor, membership_id, *, request_key, request_id=None, successor_membership_id=None,
+                  memory_purge_acknowledged=None):
     """Revoke access immediately; release only seats without unsettled holds."""
     from backend.models import Membership, MemberRemoval
     from .models import Reservation, SharedTask
@@ -1782,7 +1815,8 @@ def remove_member(account, actor, membership_id, *, request_key, request_id=None
         raise ValueError('INVALID_REQUEST')
     existing = MemberRemoval.objects.filter(account=account,request_key=request_key).first()
     if existing:
-        if existing.membership_id != membership_id or existing.actor_id != actor.pk:
+        if existing.membership_id != membership_id or existing.actor_id != actor.pk or (
+                successor_membership_id is not None and existing.successor_membership_id != successor_membership_id):
             raise ValueError('IDEMPOTENCY_CONFLICT')
         return _member_removal_dict(existing)
     target = _get(Membership.objects.select_for_update(),account=account,pk=membership_id)
@@ -1790,6 +1824,16 @@ def remove_member(account, actor, membership_id, *, request_key, request_id=None
         raise ValueError('OWNER_REMOVAL_FORBIDDEN')
     if not target.is_active:
         raise ValueError('MEMBER_ALREADY_REMOVED')
+    successor = None
+    if successor_membership_id is not None or memory_purge_acknowledged is not None:
+        # Q-S5 A: a handoff names an active colleague and needs the memory-deletion acknowledgement.
+        if memory_purge_acknowledged is not True:
+            raise ValueError('INVALID_REQUEST')
+        if type(successor_membership_id) is int:
+            successor = Membership.objects.filter(account=account, pk=successor_membership_id, is_active=True,
+                user__is_active=True).exclude(pk=target.pk).first()
+        if successor is None:
+            raise ValueError('SUCCESSOR_INVALID')
     reservations = [str(pk) for pk in Reservation.objects.filter(account=account,membership=target,
         state='reserved').order_by('id').values_list('id',flat=True)]
     target.is_active = False
@@ -1798,7 +1842,8 @@ def remove_member(account, actor, membership_id, *, request_key, request_id=None
     BusinessInvitation.objects.filter(creator=target, state='pending').update(state='invalidated')
     SharedTask.objects.filter(account=account,membership=target).update(resume_blocked=True)
     record = MemberRemoval.objects.create(account=account,membership=target,actor=actor,request_key=request_key,
-        pending_reservation_ids=reservations,handoff_pending=bool(reservations))
+        pending_reservation_ids=reservations,handoff_pending=bool(reservations),successor_membership=successor,
+        memory_purge_acknowledged_at=timezone.now() if successor else None)
     from .models import BillingNotification, PaidSeat
     for seat in PaidSeat.objects.filter(subscription__account=account,membership=target).select_related('subscription'):
         if not _seat_usage_state(seat,timezone.now())[0]:
@@ -2393,6 +2438,8 @@ def _describe(subscription, now):
                 next_grant = boundary
     return {
         'id': str(subscription.pk), 'plan_code': shown.snapshot['code'] if shown else '',
+        'unit_amount_minor': shown.snapshot.get('unit_amount_minor') if shown else None,
+        'currency': shown.snapshot.get('currency') if shown else None,
         'billing_cycle': subscription.billing_cycle,
         'status': 'active' if current else 'scheduled' if future else 'expired',
         'period_start': shown.starts_at.isoformat() if shown else None,

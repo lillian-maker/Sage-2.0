@@ -53,6 +53,7 @@ class Membership(models.Model):
     role = models.CharField(max_length=20, choices=[('owner', 'owner'),
                            ('billing_admin', 'billing_admin'), ('member', 'member')])
     is_active = models.BooleanField(default=True)
+    is_security_admin = models.BooleanField(default=False)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['account', 'user'], name='billing_membership_unique')]
@@ -112,7 +113,7 @@ class AuthFlow(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     method = models.CharField(max_length=10, default='email')
     purpose = models.CharField(max_length=16, choices=[('registration', 'registration'),
-        ('login', 'login'), ('recovery', 'recovery'), ('google', 'google')])
+        ('login', 'login'), ('recovery', 'recovery'), ('google', 'google'), ('email_code', 'email_code')])
     stage = models.CharField(max_length=12, default='captcha')
     identifier = models.CharField(max_length=254)
     session_digest = models.CharField(max_length=64, db_index=True)
@@ -258,6 +259,13 @@ class AuditEvent(models.Model):
     action = models.CharField(max_length=60)
     request_id = models.UUIDField()
     created_at = models.DateTimeField(auto_now_add=True)
+    target_type = models.CharField(max_length=40, null=True)
+    target_id = models.CharField(max_length=64, null=True)
+    summary = models.CharField(max_length=200, null=True)
+
+    class Meta:
+        indexes = [models.Index(fields=['account', 'created_at'], name='audit_account_created'),
+                   models.Index(fields=['account', 'target_type', 'target_id'], name='audit_account_target')]
 
 
 class TrialAttempt(models.Model):
@@ -303,6 +311,33 @@ class AccountProfile(models.Model):
     preference_changed_at = models.DateTimeField(null=True)
     agreement_version = models.CharField(max_length=128, blank=True)
     agreement_accepted_at = models.DateTimeField(null=True)
+    assistant_name = models.CharField(max_length=8, blank=True, default='')
+    business_markets = models.JSONField(default=list, blank=True)
+    business_channels = models.JSONField(default=list, blank=True)
+    business_categories = models.JSONField(default=list, blank=True)
+    onboarding_completed_at = models.DateTimeField(null=True, blank=True)
+    theme_style = models.CharField(max_length=24, default='business_steady', choices=[(value, value) for value in (
+        'business_steady', 'neo_electric', 'fashion_editorial', 'comfort_readable', 'minimal_focus')])
+    appearance_mode = models.CharField(max_length=8, default='system',
+        choices=[('system', 'system'), ('light', 'light'), ('dark', 'dark')])
+    density = models.CharField(max_length=12, default='theme',
+        choices=[('theme', 'theme'), ('comfortable', 'comfortable'), ('compact', 'compact')])
+    language = models.CharField(max_length=16, default='system')
+    memory_auto_enabled = models.BooleanField(default=True)
+    memory_model = models.CharField(max_length=16, default='standard')
+    default_model = models.CharField(max_length=16, default='auto',
+        choices=[('auto', 'auto'), ('standard', 'standard'), ('deep', 'deep')])
+    complexity_hint_enabled = models.BooleanField(default=True)
+    ext_auto_invoke = models.BooleanField(default=True)
+    ext_auto_update = models.BooleanField(default=True)
+    ext_show_needs_connection = models.BooleanField(default=True)
+    dnd_enabled = models.BooleanField(default=False)
+    dnd_start = models.TimeField(null=True, blank=True)
+    dnd_end = models.TimeField(null=True, blank=True)
+    badge_enabled = models.BooleanField(default=True)
+    two_step_on_new_device = models.BooleanField(default=False)
+    idle_lock_minutes = models.PositiveSmallIntegerField(null=True, blank=True)
+    preferred_name = models.CharField(max_length=40, null=True, blank=True)
 
 
 class AccountSession(models.Model):
@@ -317,6 +352,10 @@ class AccountSession(models.Model):
     sensitive_method = models.CharField(max_length=16, blank=True)
     sensitive_account_id = models.UUIDField(null=True)
     google_verified_at = models.DateTimeField(null=True)
+    device_name = models.CharField(max_length=80, null=True)
+    app_version = models.CharField(max_length=32, null=True)
+    location_label = models.CharField(max_length=40, null=True)
+    last_seen_at = models.DateTimeField(null=True)
 
 
 class AccountPasskey(models.Model):
@@ -379,6 +418,8 @@ class MemberRemoval(models.Model):
     handoff_pending = models.BooleanField(default=False)
     pending_reservation_ids = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
+    successor_membership = models.ForeignKey(Membership, null=True, on_delete=models.PROTECT, related_name='+')
+    memory_purge_acknowledged_at = models.DateTimeField(null=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['account', 'request_key'], name='member_removal_request_unique')]
