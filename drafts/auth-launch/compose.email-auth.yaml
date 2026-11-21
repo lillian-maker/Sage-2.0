@@ -1,0 +1,20 @@
+# Draft for synthetic review only. Do not apply to a running service until the
+# actual Compose combination, credentials, rollback and approval are verified.
+services:
+  app:
+    environment:
+      SAGE_AUTH_EMAIL_TRANSPORT: ses
+      SAGE_SES_REGION: ap-guangzhou
+      SAGE_EMAIL_FROM: noreply@notify.sagegogo.com
+      SAGE_CAPTCHA_APP_ID: ${SAGE_CAPTCHA_APP_ID:-}
+      SAGE_AUTH_REGISTRATION_SES_TEMPLATE_ID: "70178"
+      SAGE_AUTH_PASSWORD_SES_TEMPLATE_ID: "70213"
+      SAGE_AUTH_PASSWORD_CHANGED_SES_TEMPLATE_ID: "70214"
+      SAGE_AUTH_REGISTRATION_TERMS_READY: "0"
+    secrets:
+      - source: auth_credentials
+        target: auth_credentials.json
+
+secrets:
+  auth_credentials:
+    file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/auth_credentials.json"

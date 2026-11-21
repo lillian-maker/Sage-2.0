@@ -1,5 +1,90 @@
 # 受限部署候选与迁移清单
 
+## 2026-11-14：广州邮箱受限联调预检与回滚清单
+
+用户选择广州邮件地域，备案通过及五个模板审核通过均为用户确认；用途、ID 和控制台收信证据见 `../auth-launch/review.md` 顶部。当前工作区有其他未提交改动，现有历史镜像、云端状态及迁移数量不能作为本次候选或目标的实时事实。本节是本地审阅准备，不授权或证明部署、迁移、开放公网或真实供应商调用。
+
+本地 `compose.yaml` 中 app 仅连接 `frontend` 和 `backend` 两个 internal 网络；`compose.auth.yaml` 本身不提供供应商外联，也不启用认证。要从服务器调用 SES 和 CAPTCHA，需要先确认可审阅的受限出站方案与本人可访问的受限 HTTPS 入口，核对目的地和边界；不能为联通而取消数据库隔离或关闭校验。候选方案需在目标环境实测，当前尚无已批准的具体出站配置。
+
+执行前按以下顺序形成绑定目标与证据的执行单：
+
+1. **只读预检**：确认目标实例、预览项目、候选源码与镜像摘要；记录容器与监听、实际数据库迁移历史、网络和认证开关的非秘密状态。不读取或输出环境变量全集、凭据、用户数据或原始敏感日志。
+2. **数据保护与迁移**：核对目标库与私有文件的备份，在独立获准环境恢复并验证 schema、数据完整性和角色；审阅针对实际目标的迁移计划及兼容性。历史记录称候选比旧预览多 18 项项目迁移，只能作为核对线索；实际计划以目标数据库为准。`commerce.0035` 存在保护性回退约束，不绕过。
+3. **网络与配置**：经确认后配置受限 HTTPS 和 SES/CAPTCHA 所需出站；验证 app 实际出口、TLS、入口限制和数据库不对外暴露。本人通过安全入口提供 SES/CAPTCHA 凭据，核对容器可读性与最小权限，不输出值。按 `../auth-launch/review.md` 的广州 ID 配置各用途；Google、注销和手机不作为本轮邮箱前置。
+4. **配置检查与真实验收**：批准的协议版本、内容和 URL 就绪后，运行 `check_auth_readiness --scope email`；结果只是配置证据。随后在受限网站逐次验证人机挑战、邮箱注册和收件、退出、密码登录、找回、旧会话撤销及密码变更通知，检查邮件显示和退信；区分平台受理与真实收件。
+5. **失败与回滚**：停止新业务写入并保留现场；只有实测旧应用与现有 schema 兼容时才回退应用。数据库恢复须先验证备份可恢复且确认没有新增业务写入；有新增写入时不得用旧备份直接覆盖，先评估保留数据的方案。正式公开另行完成协议、安全与发布审批。
+
+本地提供合成的必填镜像、网络及私有目录占位值后，执行 Compose 合并结构检查通过（`docker compose --env-file /dev/null -f drafts/restricted-deploy/compose.yaml -f drafts/restricted-deploy/compose.auth.yaml config --quiet`）；不证明凭据可读取、网络可达或服务可发送。重跑时须先提供 Compose 所需的非秘密占位值，不能把上面的命令当成无需输入即可复现。
+
+本轮认证回归复现（在仓库根目录；测试进程覆盖数据库为内存并阻断 socket 连接，不读取真实凭据）：
+
+```sh
+env -i PATH=/usr/bin:/bin SAGE_ENV=test DJANGO_SETTINGS_MODULE=backend.settings PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B - <<'PY'
+import django
+from unittest.mock import patch
+django.setup()
+from django.db import connections
+config = connections['default'].settings_dict
+config['NAME'] = ':memory:'
+config['TEST']['NAME'] = ':memory:'
+from django.core.management import call_command
+with patch('socket.socket.connect', side_effect=AssertionError('Network blocked for test')), patch('socket.create_connection', side_effect=AssertionError('Network blocked for test')):
+    call_command('test', 'backend.authentication_tests.EmailAuthenticationTests', 'backend.email_tests', 'backend.auth_readiness_tests', verbosity=1)
+PY
+```
+
+实际输出 `Ran 77 tests in 3.978s`、`OK`、`System check identified no issues (0 silenced).`；测试使用替身，不等于网站真实注册或收信。首次并行验证因覆盖 Django 测试数据库字典在运行前发生 `KeyError: 'MIRROR'`，改用上述方式后通过。
+
+## 2026-10-28 既有内部预览恢复
+
+用户授权启动 Docker 并核对内部预览。目标服务器 Docker 已启动，既有 web、app、db 三个容器均为 running/healthy；运行中的 3 个容器均属于 `sage-preview`。检查的端口中 9443 仅回环监听；未登录访问回环 HTTPS 首页通过正常证书校验并返回 401。首次其他容器计数因 Docker 过滤条件错误失败，已用全部运行容器和预览运行容器的独立计数重查，均为 3；不能将初次管道退出 0 当作计数通过。开机自启仍为 disabled，再次重启后不能依赖其自动恢复。没有运行迁移、重新部署或开放公网，认证后页面及真实服务未验证。完整记录见 `../../docs/BILLING_DEVELOPMENT.md`。
+
+## 2026-10-27 官方摘要复核与服务器状态
+
+Pillow本轮已从PyPI官方元数据独立复核，与两份本地wheel大小及SHA-256均一致；此前缓存来源限制已解决，证据见`../../tmp/sage-offline-build-9s1o319f/pillow-official-verification.json`。离线构建与原Dockerfile逐字复建的区别仍存在。
+
+目标实例只读检查：实例运行，但Docker及PostgreSQL inactive/disabled，旧站服务inactive，旧Nginx服务not-found；Docker socket不可用，尚不能检查实际容器。当前旧站路径仍为历史版本。实际重启原因未确认；未经用户同意，不启动Docker（可能触发既有容器重启策略）、不迁移或公开服务。腾讯云保存了两条本轮只读检查命令及其执行记录，未修改目标服务器。
+
+
+## 2026-10-27 固定依赖离线构建
+
+已用固定基础镜像及30个本地依赖文件构建amd64应用/网页镜像。29个依赖的摘要来自本轮PyPI官方元信息；Pillow来自清华镜像，摘要匹配此前PyPI索引缓存，本轮未能实时复核官方摘要，正式部署前补核。Dockerfile只改变依赖下载为本地文件，不是原Dockerfile逐字复建。14项认证及28项凭据保护检查在本地无网络容器通过；网页镜像158文件与冻结静态构建一致。证据在`../../tmp/sage-offline-build-9s1o319f/offline-build-evidence.json`。未部署、连接真实服务或检查目标数据库。
+
+
+## 2026-10-27 本地登录候选检查
+
+当前工作区的345个白名单输入已冻结于`../../tmp/auth-candidate-20261027-y3h7bw54`并核对哈希。完整Dockerfile在下载固定依赖时长时间停滞而取消，未形成正式镜像。离线复用已有amd64测试镜像（先核对30个依赖版本与锁定清单一致），覆盖冻结backend和入口，建立只用于本地验证的镜像；只读、无网络下认证检查14项、凭据保护模拟28项通过。这个镜像没有经过完整Dockerfile复建，也没有云端部署、真实服务连接或数据库迁移，不可作为生产包。目标库迁移历史及恢复仍需实际只读核对与演练。
+
+
+## 2026-10-27 邮箱优先配置检查（本地）
+
+现有`check_auth_readiness`增加`--scope email`：先检查邮箱注册、密码登录与找回、验证码、密码变更通知和条款声明，不把Google、手机、注销或普通通知计入这一范围。默认完整检查行为不变。检查仅反映当前配置，不发送消息、不接数据库、不代表真实可达、模板获批或准许公开上线；`ready_for_public_launch`仍为false。严格模式按当前实际开关状态检查，开关仍关闭时会如实报告缺项，不能为了使检查通过而提前放行生产。
+
+本地隔离测试：`env -i PATH=/usr/bin:/bin SAGE_ENV=test PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -B manage.py test backend.auth_readiness_tests --verbosity 1`通过14项；`tests/auth-config-audit.py`合成权限与脱敏28项通过。无网络容器额外证明Google缺项时完整检查失败、邮箱范围可单独通过；仅使用合成配置。实际服务器仍待部署新版本、凭据安全配置及实测外联和受限HTTPS。
+
+## 2026-10-27 认证安全配置入口（已本地验证，未部署）
+
+本次增加可选的`compose.auth.yaml`，仅在明确准备好配置后追加到既有Compose命令；基础`compose.yaml`、网络、迁移服务和Google回调规则不变。原先完全关闭认证的部署不需要新增文件，也不会因此失效。
+
+- 仅app只读挂载私有目录中的`auth_credentials.json`到`/run/secrets/auth_credentials.json`。文件由本人在安全终端编辑，不进聊天、参数、仓库或输出；私有父目录0700，文件按实际Linux容器身份设10001:10001、0400，并在目标主机核验。Compose文件挂载不是加密保险箱，也不自动修正宿主权限。
+- 允许的秘密字段只有现有`SAGE_SES_SECRET_ID`、`SAGE_SES_SECRET_KEY`、`SAGE_CAPTCHA_SECRET_ID`、`SAGE_CAPTCHA_SECRET_KEY`、`SAGE_CAPTCHA_APP_SECRET_KEY`、`SAGE_GOOGLE_CLIENT_SECRET`。邮箱阶段可仅配SES；启用哪个用途就检查该用途所需字段，不强制先取得Google凭据。
+- 非秘密参数沿用既有环境变量：地域、发信地址、模板编号、验证码应用编号、Google客户端编号/回调、已审条款版本/地址。通过操作者环境提供，继续`--env-file /dev/null`；不要输出完整Compose配置或进程环境。所有认证开关、条款就绪和Google品牌就绪默认仍为0。
+- 入口拒绝未知字段、不可读/错误权限或owner、错误格式、空值、控制字符和超长输入；固定脱敏报错，不回显JSON解析内容。migrate/db/web不挂供应商凭据，迁移仍只获既有授权文件。
+
+验证命令：`.venv/bin/python -B tests/auth-config-audit.py 5394ec2889b9`，复用本机已有镜像，仅挂载本次入口源码、无网络、无拉取、无真实凭据、无数据库。28项通过，涵盖兼容旧启动、按用途缺项失败、真实Linux UID与文件权限、不回显，以及注入后既有`check_auth_readiness --strict`。检查输出`configuration_ready=true`仍不等于可发布，`ready_for_public_launch=false`；外部请求0。Compose合并证明migrate/db/web和网络不变、全部门禁关闭。主会话独立重跑同一命令也通过。
+
+后续仍需：把新入口编入经审阅候选，目标主机挂载验证和实际版本更新；在明确方案下接通供应商外联、本人可用受限HTTPS；Google回调和已完成的日志保护一起部署；本人安全填写后再跑只读就绪检查及逐项真实发送/登录。不能仅复制覆盖文件就启用真实业务，也不把本地合成通过记为生产验收。
+
+测试维护经验：合并Compose检查迁移服务要带`--profile tools`；Django联通用的合成密钥也须满足现有至少50字符约束，不放宽应用规则来迁就测试。
+
+## 2026-10-22 候选更新预检
+
+本轮固定候选为 `facc7d06c911bf5b7a8968dbfb9415bdce5c7c8d`。以下10月15日云端记录为历史证据，不能代替当前服务器只读检查，也不能把历史镜像 `cfb411f21edc787f7dab1e75c6d3251287d001ed` 当作最新版本。
+
+源码预检：当前项目迁移为50个（backend 0001–0015，commerce 0001–0035），较上述历史镜像新增18个。`commerce.0035_protect_enterprise_change_history` 含 `RunPython`：正向不改数据，反向在存在企业角色变更、名额减少/退款或下一期补买记录时拒绝回退，以保留历史。下面旧清单的“无RunPython”已不适用，也不能假设任何状态均可直接逆向迁移；实际待执行数量以目标数据库的 `migrate --plan` 为准。
+
+服务器更新前必须形成一份绑定候选、目标库及时间的执行单：①只读核对镜像、已有迁移和服务状态；②备份目标库与私有文件，恢复到独立测试库核验；③审阅实际迁移计划和影响，再执行获批更新；④核对登录保护、业务表权限及旧站。失败时先停止新版本写入；有新业务记录时不能直接回放旧备份覆盖它们，也不能强行删除0035保护。回退采用经核实兼容的旧应用保留新表结构，或在无新增业务写入且备份恢复已通过的范围内恢复，具体路径由实际预检确定后批准。本轮只做本地合成演练，不执行云端变更。
+
 ## 独立Docker执行入口 · 2026-10-15
 
 用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5的新库50项迁移、三容器、运行权限、真实回环HTTPS、重启/DB故障、独立卷恢复及入口安全轮换均通过。轮换后新TAT复验旧服务正常、仅回环9443、迁移50/Session1及其余51张业务表零行。用户确认备案尚未完成，下一步先读执行方案Task6的备案办理清单；公网继续关闭，另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
