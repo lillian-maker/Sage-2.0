@@ -176,7 +176,22 @@ BILLING_APPROVED_CHANNELS = {}
 BILLING_WALLET_TESTS = {}
 # Local SDK URL signing only; all sandbox identity/key/expiry fields are explicit.
 BILLING_ALIPAY_SANDBOX = {}
+# A future production configuration requires independent explicit enablement.
+BILLING_ALIPAY_LIVE_ENABLED = False
+BILLING_ALIPAY_LIVE_REFUND_ENABLED = False
+BILLING_ALIPAY_EGRESS_PROXY = ''
+BILLING_ALIPAY_LIVE = {}
+if ENVIRONMENT == 'production' and os.environ.get('SAGE_ALIPAY_CREDENTIALS_ENABLED') == '1':
+    from backend.alipay_credentials import load_alipay_credentials
+    BILLING_ALIPAY_LIVE = load_alipay_credentials('/run/secrets/alipay_live.json')
 BILLING_WECHAT_NATIVE = {}
+if ENVIRONMENT == 'production' and os.environ.get('SAGE_WECHAT_CREDENTIALS_ENABLED') == '1':
+    from backend.wechat_credentials import load_wechat_credentials
+    BILLING_WECHAT_NATIVE = load_wechat_credentials('/run/secrets/wechat_native.json')
+# Only the reviewed internal egress service may be selected; disabled by default.
+BILLING_WECHAT_EGRESS_PROXY = ''
+# A separate gate for a future reviewed production configuration; default closed.
+BILLING_WECHAT_LIVE_ENABLED = False
 # Approved on 2026-10-16; clients cannot choose their own expiry.
 BILLING_QUOTE_TTL_SECONDS = 600
 BILLING_TOPUP_PRESETS = {}

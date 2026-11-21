@@ -351,12 +351,12 @@ async function wechatNativeAudit(browser) {
   let checks=0;
   for(const language of ['', '-en']) for(const width of [320,1440]) {
     const page=await browser.newPage({viewport:{width,height:1000}});page.setDefaultTimeout(5000);
-    let enabled=true,attempt=null,qr=null,orderState='pending_payment',delivery='not_started',mode='ready',invalid='',releasePayment=null,releaseRead=null,reads=0,pays=0,queries=0,active=account,signedIn=true;
+    let enabled=true,attempt=null,qr=null,orderState='pending_payment',delivery='not_started',mode='ready',invalid='',releasePayment=null,releaseRead=null,reads=0,pays=0,queries=0,active=account,signedIn=true,environment='LOCAL_TEST';
     const errors=[],logs=[],external=[],writes=[];
     const expires=()=>new Date(Date.now()+60000).toISOString();
-    const start=()=>({environment:'LOCAL_TEST',channel:'wechat',available:true,account_id:account,order_id:order});
-    const dispatched=()=>{attempt={id:attemptId,channel:'wechat',status:'pending',expires_at:expires(),needs_reconciliation:false};qr={channel:'wechat',account_id:account,order_id:order,attempt_id:attemptId,expires_at:attempt.expires_at,image_svg_base64:image};};
-    const reset=()=>{enabled=true;attempt=null;qr=null;orderState='pending_payment';delivery='not_started';mode='ready';invalid='';active=account;signedIn=true;};
+    const start=()=>({environment,channel:'wechat',available:true,account_id:account,order_id:order});
+    const dispatched=()=>{attempt={id:attemptId,channel:'wechat',status:'pending',expires_at:expires(),needs_reconciliation:false};qr={environment,channel:'wechat',account_id:account,order_id:order,attempt_id:attemptId,expires_at:attempt.expires_at,image_svg_base64:image};};
+    const reset=()=>{enabled=true;attempt=null;qr=null;orderState='pending_payment';delivery='not_started';mode='ready';invalid='';active=account;signedIn=true;environment='LOCAL_TEST';};
     page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>logs.push(message.text()));
     page.on('request',request=>{if(request.method()!=='GET')writes.push(new URL(request.url()).pathname);});
     await page.route('**/*',route=>{
@@ -384,6 +384,8 @@ async function wechatNativeAudit(browser) {
           if(invalid==='attempt')detail.payment_qr.attempt_id=product;
           if(invalid==='expires')detail.payment_qr.expires_at='2099-01-01T00:00:00Z';
           if(invalid==='channel')detail.payment_qr.channel='alipay';
+          if(invalid==='environment')detail.payment_qr.environment='UNKNOWN';
+          if(invalid==='missing-environment')delete detail.payment_qr.environment;
           if(invalid==='url')detail.payment_qr.image_svg_base64='https://evil.invalid/image.svg';
           if(invalid==='base64')detail.payment_qr.image_svg_base64=image+'\n';
           if(invalid==='svg')detail.payment_qr.image_svg_base64=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><image href="https://evil.invalid/secret"/><script>alert(1)</script></svg>').toString('base64');
@@ -411,8 +413,16 @@ async function wechatNativeAudit(browser) {
     const visit=async()=>{await page.goto(`${base}/pages/checkout${language}.html?quote=${quote}`,{waitUntil:'domcontentloaded'});await page.locator('#purchase-order-link').waitFor();};
     const noQR=async()=>assert.equal(await page.locator('#purchase-payment-qr').count(),0);
     const loaded=async()=>{await page.locator('#purchase-payment-qr').waitFor();await page.waitForFunction(()=>{const image=document.querySelector('#purchase-payment-qr');return image?.complete&&image.naturalWidth>0;});};
+    // LIVE is an explicit server capability and remains identifiable after reload.
+    environment='LIVE';await visit();await page.locator('#purchase-payment-start').waitFor();
+    assert.doesNotMatch(await page.locator('#purchase-payment').innerText(),language?/local test/i:/本地测试/);
+    const livePays=pays;await page.locator('#purchase-payment-start').click();await loaded();
+    assert.doesNotMatch(await page.locator('#purchase-payment').innerText(),language?/local test/i:/本地测试/);
+    await page.reload();await loaded();assert.equal(pays,livePays+1);
+    assert.doesNotMatch(await page.locator('#purchase-payment').innerText(),language?/local test/i:/本地测试/);checks++;
+    reset();
     // Break caught: authorized Native entry never consumes its capability or uses a navigation URL.
-    await visit();await page.locator('#purchase-payment-start').waitFor();assert.equal(pays,0);checks++;
+    const initialPays=pays;await visit();await page.locator('#purchase-payment-start').waitFor();assert.equal(pays,initialPays);checks++;
     const before=pays;await page.locator('#purchase-payment-start').evaluate(button=>{button.click();button.click();});await loaded();assert.equal(pays,before+1);checks++;
     assert.match(await page.locator('#purchase-payment').innerText(),language?/isolated local test.*not.*live/i:/隔离本地测试.*不是已开通正式微信收款/);
     assert.match(await page.locator('#purchase-payment-qr').getAttribute('alt'),language?/WeChat/:/微信/);
@@ -436,7 +446,7 @@ async function wechatNativeAudit(browser) {
     // Break caught: revoked capability or failed reread leaves the old QR on screen.
     for(const revoked of ['disabled','read-failure']){reset();dispatched();await visit();await loaded();if(revoked==='disabled')enabled=false;else mode=revoked;const prior=reads;await page.locator('#purchase-payment-refresh').click();for(let n=0;reads===prior&&n<100;n++)await page.waitForTimeout(10);await noQR();assert.equal(await page.locator('#purchase-payment-start:not([disabled])').count(),0);checks++;}
     // Break caught: malformed image or mismatched financial identity exposes an unverified payment image.
-    for(invalid of ['account','order','attempt','expires','channel','amount','currency','url','base64','svg','non-svg','delivery','attempt-channel','large-image','review','payment-fact']){attempt=null;qr=null;enabled=true;mode='ready';dispatched();const prior=reads;await visit();for(let n=0;reads===prior&&n<100;n++)await page.waitForTimeout(10);await page.waitForTimeout(30);await noQR();assert.equal(await page.locator('#purchase-payment-start:not([disabled])').count(),0);checks++;}
+    for(invalid of ['account','order','attempt','expires','channel','environment','missing-environment','amount','currency','url','base64','svg','non-svg','delivery','attempt-channel','large-image','review','payment-fact']){attempt=null;qr=null;enabled=true;mode='ready';dispatched();const prior=reads;await visit();for(let n=0;reads===prior&&n<100;n++)await page.waitForTimeout(10);await page.waitForTimeout(30);await noQR();assert.equal(await page.locator('#purchase-payment-start:not([disabled])').count(),0);checks++;}
     // Break caught: a failed query revives a stale image or removes the only safe recovery action.
     reset();dispatched();await visit();await loaded();mode='query-failure';await page.locator('#purchase-payment-refresh').click();await noQR();await page.waitForFunction(()=>!document.querySelector('#purchase-payment-refresh')?.disabled);assert.equal(await page.locator('#purchase-payment-start').count(),0);mode='ready';await page.locator('#purchase-payment-refresh').click();await loaded();checks++;
     // Break caught: terminal/review states retain a payable QR; client invents fulfillment.
@@ -460,13 +470,15 @@ async function alipaySandboxAudit(browser) {
   for(const language of ['', '-en']) {
     const page=await browser.newPage({viewport:{width:320,height:1000}});
     page.setDefaultTimeout(5000);
-    let capability='ready',response='ready',attempt=null,posts=0,reads=0,releasePayment=null;
+    let capability='ready',response='ready',attempt=null,posts=0,reads=0,queries=0,queryMode='ready',releaseQuery=null,releasePayment=null;
     const errors=[],navigation=[];
     const sandboxURL='https://openapi.alipaydev.com/gateway.do?app_id=fixture&method=alipay.trade.page.pay&sign=fixture';
+    const liveURL='https://openapi.alipay.com/gateway.do?app_id=fixture&method=alipay.trade.page.pay&sign=fixture';
     let paymentURL=sandboxURL;
     page.on('pageerror',error=>errors.push(error.message));
     await page.route(/\/billing\.js(?:\?.*)?$/,route=>route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'../src/pages/billing.js'),'utf8')}));
     await page.route('https://openapi.alipaydev.com/**',route=>{navigation.push(route.request().url());return route.fulfill({contentType:'text/html',body:'<p>Navigation intercepted; no provider request.</p>'});});
+    await page.route('https://openapi.alipay.com/**',route=>{navigation.push(route.request().url());return route.fulfill({contentType:'text/html',body:'<p>Navigation intercepted; no provider request.</p>'});});
     await page.route('**/api/**',async route=>{
       const request=route.request(),endpoint=new URL(request.url()).pathname;
       const json=value=>route.fulfill({contentType:'application/json',body:JSON.stringify(value)});
@@ -477,8 +489,8 @@ async function alipaySandboxAudit(browser) {
       if(endpoint===`/api/billing/orders/${order}`){
         reads++;assert.equal(request.method(),'GET');assert.equal(request.headers()['x-billing-account'],account);
         if(capability==='read-failure')return route.fulfill({status:503,contentType:'application/json',body:'{"error":{"code":"CHANNEL_UNAVAILABLE"}}'});
-        const start={environment:capability==='production'?'PRODUCTION':'SANDBOX',channel:'alipay',available:true,order_id:capability==='wrong-order'?product:order,account_id:capability==='wrong-account'?product:account};
-        return json({order:{id:order,account_id:account,status:'pending_payment',amount_minor:731,currency:'CNY',paid_at:null,snapshot:{kind:capability==='subscription'?'subscription':'credits',billing_cycle:capability==='subscription'?'monthly':''}},payments:[],delivery:{status:'not_started'},payment_attempt:attempt,refunds:[],...(capability==='disabled'||(attempt&&attempt.status!=='created'&&capability!=='force-cap')?{}:{payment_start:start})});
+        const start={environment:capability==='live'?'LIVE':capability==='production'?'PRODUCTION':'SANDBOX',channel:'alipay',available:true,order_id:capability==='wrong-order'?product:order,account_id:capability==='wrong-account'?product:account};
+        return json({order:{id:order,account_id:account,status:'pending_payment',amount_minor:731,currency:'CNY',paid_at:null,snapshot:{channel:capability==='wrong-channel'?'card':'alipay',kind:capability==='subscription'?'subscription':'credits',billing_cycle:capability==='subscription'?'monthly':''}},payments:[],delivery:{status:'not_started'},payment_attempt:attempt,refunds:[],...(capability==='disabled'||(attempt&&attempt.status!=='created'&&capability!=='force-cap')?{}:{payment_start:start})});
       }
       if(endpoint===`/api/billing/orders/${order}/pay`){
         posts++;assert.equal(request.method(),'POST');assert.deepEqual(request.postDataJSON(),{});
@@ -488,6 +500,13 @@ async function alipaySandboxAudit(browser) {
         if(response==='lost'||response==='lost-created')return route.abort('failed');
         if(response==='error')return route.fulfill({status:503,contentType:'application/json',body:'{"error":{"code":"CHANNEL_UNAVAILABLE"}}'});
         return json({payment_attempt:attempt,...(['pending','unknown'].includes(response)?{}:{payment_url:paymentURL})});
+      }
+      if(endpoint===`/api/billing/orders/${order}/payment-status`){
+        queries++;assert.equal(request.method(),'POST');assert.deepEqual(request.postDataJSON(),{});
+        assert.equal(request.headers()['x-csrftoken'],'fixture-csrf');assert.equal(request.headers()['x-billing-account'],account);
+        if(queryMode==='delayed')await new Promise(resolve=>{releaseQuery=resolve;});
+        if(queryMode==='failure')return route.fulfill({status:503,contentType:'application/json',body:'{"error":{"code":"CHANNEL_UNAVAILABLE"}}'});
+        return json({payment_attempt:attempt});
       }
       return route.fulfill({status:503,contentType:'application/json',body:'{"error":{"code":"CHANNEL_UNAVAILABLE"}}'});
     });
@@ -516,8 +535,27 @@ async function alipaySandboxAudit(browser) {
     assert.equal(await page.locator('#purchase-payment-start').count(),0);assert.equal(posts,1);
     await page.reload();await page.locator('#purchase-payment-status').waitFor();
     assert.equal(await page.locator('#purchase-payment-start').count(),0);assert.equal(posts,1);checks++;
+    // A dispatched original attempt must query the provider once, not only reread local state.
+    queryMode='delayed';const beforeQuery=queries,beforeQueryPosts=posts;
+    await page.locator('#purchase-payment-refresh').evaluate(button=>{button.click();button.click();});
+    for(let n=0;!releaseQuery&&n<100;n++)await page.waitForTimeout(10);
+    assert.ok(releaseQuery);assert.equal(queries,beforeQuery+1);assert.equal(posts,beforeQueryPosts);
+    queryMode='ready';releaseQuery();releaseQuery=null;await page.locator('#purchase-payment-status').waitFor();
+    assert.equal(await page.locator('#purchase-payment-start').count(),0);checks++;
+    // A failed query keeps the recovery button usable but does not revive payment.
+    queryMode='failure';const failedQuery=queries;await page.locator('#purchase-payment-refresh').click();
+    await page.waitForFunction(()=>!document.querySelector('#purchase-payment-refresh')?.disabled);
+    assert.equal(queries,failedQuery+1);assert.equal(await page.locator('#purchase-payment-start').count(),0);assert.equal(posts,beforeQueryPosts);
+    queryMode='ready';checks++;
+    // A late query response cannot restore the panel after the user leaves.
+    await visit();await page.locator('#purchase-payment-status').waitFor();queryMode='delayed';
+    await page.locator('#purchase-payment-refresh').click();
+    for(let n=0;!releaseQuery&&n<100;n++)await page.waitForTimeout(10);
+    assert.ok(releaseQuery);await page.evaluate(()=>window.dispatchEvent(new Event('pagehide')));
+    const readsAfterLeave=reads;queryMode='ready';releaseQuery();releaseQuery=null;await page.waitForTimeout(100);
+    assert.equal(reads,readsAfterLeave);assert.equal(await page.locator('#purchase-payment').count(),0);assert.equal(posts,beforeQueryPosts);checks++;
     // Break caught: production/client flags, mismatched identities or subscriptions expose a payment button.
-    for(capability of ['disabled','production','wrong-account','wrong-order','subscription']){
+    for(capability of ['disabled','production','wrong-account','wrong-order','wrong-channel','subscription']){
       attempt=null;const previous=reads;await visit();
       await page.waitForFunction(()=>document.querySelector('#purchase-order-link'));
       for(let n=0;reads===previous&&n<100;n++)await page.waitForTimeout(10);
@@ -562,9 +600,20 @@ async function alipaySandboxAudit(browser) {
     for(let n=0;!releasePayment&&n<100;n++)await page.waitForTimeout(10);
     assert.ok(releasePayment);await page.evaluate(()=>window.dispatchEvent(new Event('pagehide')));releasePayment();
     await page.waitForTimeout(100);assert.equal(navigation.length,1);checks++;
+    // LIVE must use the official production endpoint and never navigate to sandbox.
+    capability='live';attempt=null;response='ready';paymentURL=sandboxURL;
+    await visit();await page.locator('#purchase-payment-start').waitFor();
+    assert.doesNotMatch(await page.locator('#purchase-payment').innerText(),language?/sandbox/i:/沙箱/);
+    await page.locator('#purchase-payment-start').click();
+    await page.waitForFunction(()=>document.querySelector('#purchase-payment-status')?.textContent.match(/未确认|unconfirmed/i));
+    assert.equal(navigation.length,1);checks++;
+    attempt=null;paymentURL=liveURL;await visit();
+    const liveDestination=page.waitForURL('https://openapi.alipay.com/gateway.do?*');
+    await page.locator('#purchase-payment-start').click();await liveDestination;
+    assert.equal(navigation.at(-1),liveURL);checks++;
     assert.deepEqual(errors,[]);await page.close();
   }
-  console.log(JSON.stringify({layer:'Alipay sandbox checkout DOM and intercepted navigation; no real gateway request',checks}));
+  console.log(JSON.stringify({layer:'Alipay sandbox and LIVE checkout DOM fixtures with intercepted navigation; no real gateway request',checks}));
 }
 (async()=>{
   const browser = await chromium.launch({channel:'chrome',headless:true});

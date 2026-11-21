@@ -82,7 +82,7 @@ class WechatNativeHTTPTests(TransactionTestCase):
         self.assertEqual(urlsplit(prepared.url).netloc, 'api.mch.weixin.qq.com')
         self.assertEqual(kwargs['verify'], True)
         self.assertEqual(kwargs['timeout'], (5, 15))
-        self.assertFalse(kwargs.get('proxies'))
+        self.assertEqual(dict(kwargs.get('proxies') or {}), getattr(self, 'expected_proxy', {}))
         self.sent.append((prepared.method, prepared.url, prepared.body))
         authorization = dict(re.findall(r'(\w+)="([^"]*)"', prepared.headers['Authorization']))
         body = prepared.body or b''
@@ -163,6 +163,7 @@ class WechatNativeHTTPTests(TransactionTestCase):
         self.assertEqual(request['amount'], {'total':731, 'currency':'CNY'})
         self.assertEqual(request['notify_url'], 'https://fixture.example/api/payments/webhooks/wechat')
         qr = data['payment_qr']
+        self.assertEqual(qr['environment'], 'LOCAL_TEST')
         self.assertEqual(qr['attempt_id'], str(attempt.pk))
         self.assertEqual(qr['account_id'], str(self.account.pk))
         self.assertEqual(qr['order_id'], str(self.order.pk))
@@ -209,6 +210,51 @@ class WechatNativeHTTPTests(TransactionTestCase):
                 self.assertEqual(self.notify({'out_trade_no':uuid.uuid4().hex}).status_code, 503)
         self.assertEqual(self.sent, [])
         self.assertFalse(PaymentAttempt.objects.exists())
+
+    def test_production_native_requires_explicit_gate_and_reconciles_after_sales_stop(self):
+        with override_settings(ENVIRONMENT='production', BILLING_WECHAT_LIVE_ENABLED=True):
+            self.assertEqual(self.detail().json()['payment_start']['environment'], 'LIVE')
+            attempt, data = self.native()
+            self.assertEqual(data['payment_qr']['environment'], 'LIVE')
+            self.assertEqual(self.detail().json()['payment_qr']['environment'], 'LIVE')
+            fields = self.fields()
+            with override_settings(BILLING_SALES_ENABLED=False, BILLING_APPROVED_CHANNELS={}):
+                self.assertEqual(self.notify(fields).status_code, 204)
+                self.responses.append((200, fields))
+                self.assertEqual(self.post('payment-status').status_code, 200)
+            self.assertEqual(PaymentFact.objects.count(), 1)
+            self.assertEqual(CreditBatch.objects.count(), 1)
+            attempt.refresh_from_db()
+            self.assertEqual(attempt.state, 'succeeded')
+
+    def test_explicit_egress_reaches_transport_and_invalid_configuration_never_dispatches(self):
+        with override_settings(BILLING_WECHAT_EGRESS_PROXY='http://untrusted:3128'):
+            self.assertNotIn('payment_start', self.detail().json())
+            self.assertEqual(self.post().status_code, 503)
+            self.assertFalse(PaymentAttempt.objects.exists())
+        self.expected_proxy = {'https':'http://egress:3128'}
+        with override_settings(BILLING_WECHAT_EGRESS_PROXY='http://egress:3128'):
+            self.native()
+        self.assertEqual(len(self.sent), 1)
+
+    def test_live_gate_rejects_truthy_values_and_other_environments(self):
+        for environment, gate in (('production', False), ('production', 1),
+                                  ('production', '1'), ('development', True)):
+            with self.subTest(environment=environment, gate=repr(gate)), override_settings(
+                    ENVIRONMENT=environment, BILLING_WECHAT_LIVE_ENABLED=gate):
+                self.assertEqual(self.post().status_code, 503)
+                self.assertNotIn('payment_start', self.detail().json())
+        self.assertEqual(self.sent, [])
+        self.assertFalse(PaymentAttempt.objects.exists())
+
+    def test_production_gate_does_not_override_sales_stop_or_bad_notification(self):
+        with override_settings(ENVIRONMENT='production', BILLING_WECHAT_LIVE_ENABLED=True):
+            with override_settings(BILLING_SALES_ENABLED=False):
+                self.assertEqual(self.post().status_code, 503)
+                self.assertFalse(PaymentAttempt.objects.exists())
+            self.native()
+            self.assertEqual(self.notify(mutate_signature=True).status_code, 400)
+            self.assert_empty_money()
 
     def test_anonymous_csrf_financial_role_and_account_context_are_required(self):
         for action in ('pay', 'payment-status'):

@@ -1570,10 +1570,16 @@ def claim_payment_dispatch(account, attempt_id, *, request=None, dispatch_contex
             alipay_identity = (type(dispatch_context) is dict and set(dispatch_context) == {
                     'channel', 'environment', 'app_id', 'seller_id', 'merchant_entity'})
             alipay_identity = (alipay_identity and dispatch_context.get('channel') == 'alipay' and
-                dispatch_context.get('environment') == 'SANDBOX' and
+                dispatch_context.get('environment') in ('SANDBOX', 'LIVE') and
                 all(isinstance(dispatch_context.get(key), str) and
                     re.fullmatch(r'[0-9]{1,64}', dispatch_context[key]) for key in ('app_id', 'seller_id')))
-            if (not (wechat_identity or alipay_identity) or settings.ENVIRONMENT != 'test' or
+            environment_allowed = ((settings.ENVIRONMENT == 'test' and
+                (wechat_identity or (alipay_identity and dispatch_context['environment'] == 'SANDBOX'))) or
+                (settings.ENVIRONMENT == 'production' and
+                 ((wechat_identity and getattr(settings, 'BILLING_WECHAT_LIVE_ENABLED', False) is True) or
+                  (alipay_identity and dispatch_context['environment'] == 'LIVE' and
+                   getattr(settings, 'BILLING_ALIPAY_LIVE_ENABLED', False) is True))))
+            if (not (wechat_identity or alipay_identity) or not environment_allowed or
                     not isinstance(dispatch_context.get('merchant_entity'), str) or
                     not dispatch_context['merchant_entity'].strip() or
                     len(dispatch_context['merchant_entity']) > 128 or

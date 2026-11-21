@@ -451,11 +451,12 @@
       const order=detail.order, capability=detail.payment_start;
       if(order?.id!==orderId || order.account_id!==accountId || order.currency!=='CNY' || !Number.isSafeInteger(order.amount_minor) || order.amount_minor<=0 || order.amount_minor!==quoteData?.amount_minor)return;
       const wechat=order.snapshot?.channel==='wechat' || detail.payment_attempt?.channel==='wechat' || capability?.channel==='wechat';
-      const allowedChannel=wechat ? capability?.environment==='LOCAL_TEST' && capability.channel==='wechat' && order.snapshot?.channel==='wechat' : capability?.environment==='SANDBOX' && capability.channel==='alipay';
+      const environment=capability?.environment || detail.payment_qr?.environment;
+      const allowedChannel=wechat ? ['LOCAL_TEST','LIVE'].includes(capability?.environment) && capability.channel==='wechat' && order.snapshot?.channel==='wechat' : ['SANDBOX','LIVE'].includes(capability?.environment) && capability.channel==='alipay' && order.snapshot?.channel==='alipay';
       const available=allowedChannel && capability.available===true && capability.order_id===orderId && capability.account_id===accountId && order.status==='pending_payment' && !order.paid_at && order.snapshot?.kind==='credits' && order.snapshot.billing_cycle==='' && (!detail.payment_attempt || detail.payment_attempt.status==='created') && paymentRequested!==orderId;
       if(!available && !detail.payment_attempt && paymentRequested!==orderId)return;
       const panel=document.createElement('section');panel.id='purchase-payment';panel.className='policy-block';
-      panel.innerHTML=`<h3>${t('原订单支付状态','Original order payment status')}</h3><p id="purchase-payment-status" role="status" aria-live="polite"></p>${wechat?`<p>${t('隔离本地测试，不是已开通正式微信收款；付款与交付以原订单服务端记录为准。','Isolated local test; not enabled for live WeChat collection. Payment and delivery follow the original server order.')}</p>`:''}${available?`${!wechat?`<p>${t('仅用于获准的一次性 Credits 沙箱测试，不是正式收款或订阅续费。付款与交付状态以原订单服务端记录为准。','Approved one-time Credits sandbox test only; not live collection or subscription renewal. Payment and delivery status come from the original server order.')}</p>`:''}<button type="button" class="button" id="purchase-payment-start">${wechat?t('生成微信本地测试二维码','Generate WeChat local test QR'):t('支付宝沙箱测试付款','Alipay sandbox test payment')}</button>`:''}<button type="button" class="button" id="purchase-payment-refresh">${t('查询原交易状态','Check original payment status')}</button>`;
+      panel.innerHTML=`<h3>${t('原订单支付状态','Original order payment status')}</h3><p id="purchase-payment-status" role="status" aria-live="polite"></p>${wechat?`<p>${environment==='LOCAL_TEST'?t('隔离本地测试，不是已开通正式微信收款；付款与交付以原订单服务端记录为准。','Isolated local test; not enabled for live WeChat collection. Payment and delivery follow the original server order.'):t('付款与交付以原订单服务端记录为准。','Payment and delivery follow the original server order.')}</p>`:''}${available?`${!wechat?`<p>${environment==='SANDBOX'?t('仅用于获准的一次性 Credits 沙箱测试，不是正式收款或订阅续费。付款与交付状态以原订单服务端记录为准。','Approved one-time Credits sandbox test only; not live collection or subscription renewal. Payment and delivery status come from the original server order.'):t('付款与交付状态以原订单服务端记录为准。','Payment and delivery status come from the original server order.')}</p>`:''}<button type="button" class="button" id="purchase-payment-start">${wechat?(environment==='LOCAL_TEST'?t('生成微信本地测试二维码','Generate WeChat local test QR'):t('生成微信支付二维码','Generate WeChat payment QR')):(environment==='SANDBOX'?t('支付宝沙箱测试付款','Alipay sandbox test payment'):t('支付宝付款','Pay with Alipay'))}</button>`:''}<button type="button" class="button" id="purchase-payment-refresh">${t('查询原交易状态','Check original payment status')}</button>`;
       controls.append(panel);
       let operation=0,querying=false;
       const active=()=>current() && panel.isConnected;
@@ -465,7 +466,7 @@
         panel.querySelector('#purchase-payment-qr')?.remove();
         clearTimeout(paymentTimer);paymentTimer=null;
         const qr=result.payment_qr, attempt=result.payment_attempt;
-        if(!wechat || !active() || order.status!=='pending_payment' || order.paid_at || detail.delivery?.status!=='not_started' || detail.needs_review===true || !Array.isArray(detail.payments) || detail.payments.length || !attempt || attempt.status!=='pending' || (attempt.channel!==undefined && attempt.channel!=='wechat') || attempt.needs_reconciliation!==false || !validId(attempt.id) || !qr || qr.channel!=='wechat' || qr.account_id!==accountId || qr.order_id!==orderId || qr.attempt_id!==attempt.id || qr.expires_at!==attempt.expires_at || !Number.isFinite(Date.parse(attempt.expires_at)))return;
+        if(!wechat || !active() || order.status!=='pending_payment' || order.paid_at || detail.delivery?.status!=='not_started' || detail.needs_review===true || !Array.isArray(detail.payments) || detail.payments.length || !attempt || attempt.status!=='pending' || (attempt.channel!==undefined && attempt.channel!=='wechat') || attempt.needs_reconciliation!==false || !validId(attempt.id) || !qr || !['LOCAL_TEST','LIVE'].includes(qr.environment) || (environment && qr.environment!==environment) || qr.channel!=='wechat' || qr.account_id!==accountId || qr.order_id!==orderId || qr.attempt_id!==attempt.id || qr.expires_at!==attempt.expires_at || !Number.isFinite(Date.parse(attempt.expires_at)))return;
         const expiry=Date.parse(attempt.expires_at);
         const expired=()=>note(t('二维码已过期，请查询原交易；过期不代表付款失败，不要重新付款。','The QR has expired. Check the original payment; expiry does not mean payment failed. Do not pay again.'));
         if(expiry<=Date.now()){expired();return;}
@@ -481,22 +482,22 @@
           const attributes=new Set(['xmlns','width','height','viewBox','version','d','id','fill','fill-opacity','fill-rule','stroke','x','y']);
           if(svg.documentElement.localName!=='svg' || svg.documentElement.namespaceURI!=='http://www.w3.org/2000/svg' || svg.querySelector('parsererror') || [...svg.querySelectorAll('*')].some(node=>!['svg','path','rect'].includes(node.localName) || node.namespaceURI!=='http://www.w3.org/2000/svg' || [...node.attributes].some(attr=>!attributes.has(attr.name) || (attr.name==='xmlns' ? attr.value!=='http://www.w3.org/2000/svg' : attr.namespaceURI || (['fill','stroke'].includes(attr.name) && !/^(?:#[0-9a-f]{3,8}|black|white|none)$/i.test(attr.value)) || /[<>&"'()\\]|(?:https?|javascript|weixin):/i.test(attr.value)))) || svg.documentElement.textContent.trim())return;
         }catch(_){return;}
-        const img=document.createElement('img');img.id='purchase-payment-qr';img.alt=t('微信原订单隔离本地测试二维码','WeChat original order isolated local test QR');img.setAttribute('aria-describedby','purchase-payment-status');img.width=240;img.height=240;img.style.cssText='display:block;width:240px;max-width:100%;height:auto;background:#fff';img.src=`data:image/svg+xml;base64,${image}`;
+        const img=document.createElement('img');img.id='purchase-payment-qr';img.alt=qr.environment==='LOCAL_TEST'?t('微信原订单隔离本地测试二维码','WeChat original order isolated local test QR'):t('微信原订单支付二维码','WeChat original order payment QR');img.setAttribute('aria-describedby','purchase-payment-status');img.width=240;img.height=240;img.style.cssText='display:block;width:240px;max-width:100%;height:auto;background:#fff';img.src=`data:image/svg+xml;base64,${image}`;
         panel.querySelector('#purchase-payment-refresh').before(img);
-        note(t('请仅核对本地测试二维码；有效至 ','Review the local test QR only; valid until ')+dateLabel(attempt.expires_at)+t('。扫码不代表已付款，请查询原交易确认。','. Scanning does not confirm payment. Check the original payment.'));
+        note((qr.environment==='LOCAL_TEST'?t('请仅核对本地测试二维码；有效至 ','Review the local test QR only; valid until '):t('请使用微信扫码付款；有效至 ','Scan with WeChat to pay; valid until '))+dateLabel(attempt.expires_at)+t('。扫码不代表已付款，请查询原交易确认。','. Scanning does not confirm payment. Check the original payment.'));
         const expire=()=>{if(!active()){clearTimeout(paymentTimer);return;}if(expiry>Date.now()){paymentTimer=setTimeout(expire,Math.min(expiry-Date.now(),2147483647));return;}img.remove();expired();};
         paymentTimer=setTimeout(expire,Math.min(expiry-Date.now(),2147483647));
       }
-      note(available?t('沙箱入口已由服务端允许；尚未发起付款。','The server allows this sandbox entry; payment has not been started.'):detail.payment_attempt?t('服务端已记录原交易，请查询原交易；不重新发起付款。','The server recorded the original payment. Check the original payment; do not start another payment.'):unconfirmed);
+      note(available?(environment==='SANDBOX'?t('沙箱入口已由服务端允许；尚未发起付款。','The server allows this sandbox entry; payment has not been started.'):t('尚未发起付款。','Payment has not been started.')):detail.payment_attempt?t('服务端已记录原交易，请查询原交易；不重新发起付款。','The server recorded the original payment. Check the original payment; do not start another payment.'):unconfirmed);
       if(wechat){
         if(order.status==='fulfilled' || detail.delivery?.status==='completed')note(t('服务端已确认付款与交付，请查看原订单。','The server confirmed payment and delivery. View the original order.'));
         else if(order.paid_at || order.status==='paid')note(t('付款已确认，交付仍在处理中；不要重新付款，请查询原订单。','Payment is confirmed; delivery is processing. Do not pay again. Check the original order.'));
-        else if(available)note(t('服务端已允许隔离本地测试；尚未发起微信付款。','The server allows the isolated local test; WeChat payment has not been started.'));
+        else if(available)note(environment==='LOCAL_TEST'?t('服务端已允许隔离本地测试；尚未发起微信付款。','The server allows the isolated local test; WeChat payment has not been started.'):t('尚未发起微信付款。','WeChat payment has not been started.'));
         showQR(detail);
       }
       panel.querySelector('#purchase-payment-refresh').onclick=async()=>{
         if(!active() || querying)return;
-        if(!wechat){renderPaymentStart(controls,orderId);return;}
+        if(!wechat && (!detail.payment_attempt || detail.payment_attempt.status==='created') && paymentRequested!==orderId){renderPaymentStart(controls,orderId);return;}
         querying=true;operation++;paymentRequested=orderId;
         panel.querySelector('#purchase-payment-qr')?.remove();panel.querySelector('#purchase-payment-start')?.remove();clearTimeout(paymentTimer);paymentTimer=null;
         const refresh=panel.querySelector('#purchase-payment-refresh');refresh.disabled=true;note(unconfirmed);
@@ -508,7 +509,7 @@
         if(!active() || paymentRequested===orderId)return;
         paymentRequested=orderId;button.disabled=true;
         const paymentOperation=++operation;
-        note(wechat?t('正在请求原订单的本地测试二维码，请勿重复点击。','Requesting the original order local test QR. Do not click again.'):t('正在请求沙箱付款入口，请勿重复点击。','Requesting the sandbox payment entry. Do not click again.'));
+        note(wechat?(environment==='LOCAL_TEST'?t('正在请求原订单的本地测试二维码，请勿重复点击。','Requesting the original order local test QR. Do not click again.'):t('正在请求原订单的微信支付二维码，请勿重复点击。','Requesting the original order WeChat payment QR. Do not click again.')):(environment==='SANDBOX'?t('正在请求沙箱付款入口，请勿重复点击。','Requesting the sandbox payment entry. Do not click again.'):t('正在请求支付宝付款入口，请勿重复点击。','Requesting Alipay payment. Do not click again.')));
         try {
           const result=await api(`/api/billing/orders/${encodeURIComponent(orderId)}/pay`,{});
           if(!active() || paymentOperation!==operation)return;
@@ -517,7 +518,7 @@
           if(result.payment_url===undefined || result.payment_attempt.status==='unknown'){note(unconfirmed);return;}
           if(typeof result.payment_url!=='string')throw new Error('INVALID_PAYMENT_URL');
           const url=new URL(result.payment_url);
-          if(url.origin!=='https://openapi.alipaydev.com' || url.pathname!=='/gateway.do' || url.username || url.password || url.hash)throw new Error('INVALID_PAYMENT_URL');
+          if(url.origin!==(environment==='LIVE'?'https://openapi.alipay.com':'https://openapi.alipaydev.com') || url.pathname!=='/gateway.do' || url.username || url.password || url.hash)throw new Error('INVALID_PAYMENT_URL');
           if(active())location.assign(url.href);
         }catch(error){if(active())note(requestError(error,unconfirmed));}
       };
