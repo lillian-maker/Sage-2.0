@@ -10,3 +10,13 @@ node_modules/
 .env
 .env.*
 tmp/
+*.log
+*.pem
+*.p12
+*.pfx
+*.key
+secrets/
+app/release/
+app/out/
+test-results/
+playwright-report/
