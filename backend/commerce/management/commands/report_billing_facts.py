@@ -127,7 +127,7 @@ class Command(BaseCommand):
         # current state disagrees; do not substitute attempt.created_at. IDs
         # preserve this attempt's serialized application order across clock skew.
         events = PaymentAttemptEvent.objects.filter(attempt_id__in=unknown_starts, applied=True
-            ).order_by('attempt_id','id').values_list('attempt_id','outcome','created_at')
+            ).order_by('attempt_id','id').values_list('attempt_id','outcome','created_at').iterator()
         for attempt_id, outcome, at in events:
             if outcome != 'unknown':
                 unknown_starts[attempt_id] = None

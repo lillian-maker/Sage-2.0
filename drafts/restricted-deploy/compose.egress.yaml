@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     logging:
       driver: json-file
-      options: {max-size: "10m", max-file: "3"}
+      options: {max-size: "10m", max-file: "36"}
     entrypoint: [python, /app/deploy/egress_proxy.py]
     environment:
       SAGE_EGRESS_LISTEN: 0.0.0.0:3128

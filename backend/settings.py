@@ -86,6 +86,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# Explicit dependency declaration: all backend FKs use settings.AUTH_USER_MODEL.
+AUTH_USER_MODEL = 'auth.User'
+
 # A missing delivery configuration must never fall back to a displayed/logged OTP.
 AUTH_EMAIL_ENABLED = os.environ.get('SAGE_AUTH_EMAIL_ENABLED') == '1'
 ACCOUNT_DELETION_ENABLED = os.environ.get('SAGE_ACCOUNT_DELETION_ENABLED') == '1'

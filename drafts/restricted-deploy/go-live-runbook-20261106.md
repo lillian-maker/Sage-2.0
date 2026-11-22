@@ -9,6 +9,13 @@ scope: ins-5ag0h225 上的 sage-preview 项目更新、公网开放、邮箱/Goo
 
 先读 `docker-deployment-acceptance-plan-20261015.md` 第 6、7 节（验收矩阵、回滚与禁止动作）。本执行单只补充这次更新的具体步骤，不替代其中的规则：只停止本项目、不执行全局 prune 或 `down -v`、数据库恢复先到独立卷验证、凭据不进聊天、仓库和日志。
 
+> **2026-11-12 勘误（公网架构）**：阶段 B 实际未采用 `compose.public.yaml` 直绑（与宿主
+> nginx 已占用的 80/443 冲突，见 `prod-20261107/acceptance-report-phase-0AB.md`）。
+> 实际公网架构 = 宿主 nginx vhost（listen 80 → 301 主域名；listen 443 → proxy_pass
+> https://127.0.0.1:9444）→ 容器 8443。**重按下表阶段 B 原样执行会端口冲突/停机**；
+> `compose.public.yaml` 已被取代，勿在现网执行。阶段 A-C 已于 2026-11-07 执行完成；
+> 阶段 D-F 仍未执行。
+
 ## 0. 已确认的决定（2026-11-06）
 
 - 邮箱、Google、手机三种登录同时上线；人机验证正式套餐在真人验收前购买。
@@ -29,7 +36,7 @@ scope: ins-5ag0h225 上的 sage-preview 项目更新、公网开放、邮箱/Goo
 | 阶段 | 内容 | 需要谁批准或操作 | 通过条件 |
 |---|---|---|---|
 | A 服务器更新（仍不公开） | 只读预检 → 备份并在独立卷恢复核验 → 迁移计划审阅 → 迁移 → 更新 app/web 镜像。所有登录开关保持关闭，只用 `compose.yaml` | 用户批准维护窗口 | 回环 9443 首页与新构建一致，健康检查 200，旧数据完整，原有宿主机服务不受影响 |
-| B 公网开放 | 追加 `compose.public.yaml`；安全组新增入站 TCP 80/443（IPv4），IPv6 保持拒绝；DNS 核对 `@`、`www` 指向 81.68.192.59，保留全部 MX/TXT | 用户批准安全组与 DNS 变更 | 外部网络访问 `https://sagegogo.com` 证书校验通过；`http://` 与 `www` 都 301 到主域名；22/5432/8000/9443 从公网不可达 |
+| B 公网开放 ✅2026-11-07 已完成（实际用宿主 nginx vhost，见顶部勘误） | 追加 `compose.public.yaml`（未采用，仅存档）；安全组新增入站 TCP 80/443（IPv4），IPv6 保持拒绝；DNS 核对 `@`、`www` 指向 81.68.192.59，保留全部 MX/TXT | 用户批准安全组与 DNS 变更 | 外部网络访问 `https://sagegogo.com` 证书校验通过；`http://` 与 `www` 都 301 到主域名；22/5432/8000/9443 从公网不可达 |
 | C 出口代理 | 追加 `compose.egress.yaml`；先不配置 `SAGE_EGRESS_UPSTREAM` | 用户批准 | egress 日志只出现三类腾讯云主机；其他主机被拒绝；app 仍无直连外网 |
 | D 香港中转 | 用户购买香港实例，安全组只放行来自 81.68.192.59 的 TCP 3128；安装 `egress_proxy.py` 与 `egress-relay.service`；把 `SAGE_EGRESS_UPSTREAM` 设为 `<香港内网或公网 IP>:3128` | 用户购买并批准 | 从 egress 容器经中转访问 `www.googleapis.com/oauth2/v1/certs` 返回 200；中转日志只出现两个 Google 主机；其他来源连接 3128 被安全组拒绝 |
 | E 凭据与参数 | 用户在服务器私有目录编辑 `auth_credentials.json`（SES、CAPTCHA、Google、SMS 密钥，属主 10001:10001、权限 0400）；操作者环境填写非秘密参数（见第 3 节）；运行 `check_auth_readiness` | 用户本人填写密钥 | 只读就绪检查按用途报告齐全；输出不含任何密钥 |
@@ -45,7 +52,7 @@ scope: ins-5ag0h225 上的 sage-preview 项目更新、公网开放、邮箱/Goo
 | `SAGE_CAPTCHA_APP_ID` | `197617419` | 已核验的应用 |
 | `SAGE_GOOGLE_CLIENT_ID` / `SAGE_GOOGLE_REDIRECT_URI` | 正式客户端 ID / `https://sagegogo.com/api/auth/google/callback` | 公网开放后创建正式客户端 |
 | `SAGE_SMS_REGION` / `SAGE_SMS_SDK_APP_ID` / `SAGE_SMS_SIGN` / `SAGE_SMS_ALLOWED_COUNTRY_CODES` / 各用途模板 ID | 待短信资质、签名和模板审核通过 | 用户提供 |
-| `SAGE_AUTH_REGISTRATION_TERMS_*` | 默认指向已发布的条款与隐私政策，版本 `2026-11-05` | 法务审阅后如有修改，更新版本号 |
+| `SAGE_AUTH_REGISTRATION_TERMS_*` | 默认值见 `compose.auth.yaml`（版本号单一来源，勿在文档另记数值） | 法务审阅后如有修改，更新 compose.auth.yaml 中的版本号 |
 | `SAGE_EGRESS_UPSTREAM` | `<香港中转地址>:3128` | 阶段 D |
 
 ## 4. 验收矩阵（阶段 F，真人执行）
@@ -61,7 +68,7 @@ scope: ins-5ag0h225 上的 sage-preview 项目更新、公网开放、邮箱/Goo
 
 ## 5. 回滚
 
-- 阶段 B 出问题：先在安全组撤销 80/443 入站，再去掉 `compose.public.yaml` 重新启动 web；DNS 回滚不能代替立即隔离。
+- 阶段 B 出问题：先在安全组撤销 80/443 入站；现网已无 compose.public.yaml（2026-11-12 勘误），实际回滚 = 停用宿主 nginx 的 sagegogo vhost 或回切 127.0.0.1:9443 回环口；DNS 回滚不能代替立即隔离。
 - 阶段 C/D 出问题：去掉 `compose.egress.yaml`，app 回到无出口状态，登录开关保持关闭；香港中转可直接停止服务。
 - 阶段 F 出问题：关闭对应开关即可停止该登录方式，已注册账号与会话保留；不回退数据库。
 - 阶段 A 出问题：按验收方案第 7 节，用记录的旧镜像与配置恢复；存在新写入时不能直接用旧备份覆盖。

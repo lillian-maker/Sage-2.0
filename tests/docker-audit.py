@@ -254,26 +254,49 @@ SELECT 'setting',COALESCE(r.rolname,''),s.setconfig::text FROM pg_db_role_settin
                        if not any(candidate.version == other.version and candidate.overlaps(other)
                                   for other in occupied)), None)
         assert subnet, 'No non-overlapping local audit subnet available'
-        with socket.socket() as listener:
-            listener.bind(('127.0.0.1', 0))
-            port = listener.getsockname()[1]
+        edge_subnet = next((candidate for candidate in candidates
+                            if candidate != subnet
+                            and not any(candidate.version == other.version and candidate.overlaps(other)
+                                        for other in occupied + [subnet])), None)
+        assert edge_subnet, 'No second non-overlapping local audit subnet available'
+        def free_loopback_port(excluded=()):
+            while True:
+                with socket.socket() as listener:
+                    listener.bind(('127.0.0.1', 0))
+                    candidate = listener.getsockname()[1]
+                if candidate not in excluded:
+                    return candidate
+
+        port = free_loopback_port()
+        public_port = free_loopback_port((port,))
         gateway_ip, app_ip = str(subnet.network_address + 2), str(subnet.network_address + 3)
         env.update(SAGE_DOCKER_SECRETS_DIR=str(secret_dir), SAGE_FRONTEND_SUBNET=str(subnet),
+                   SAGE_EDGE_SUBNET=str(edge_subnet),
                    SAGE_GATEWAY_IP=gateway_ip, SAGE_APP_IP=app_ip,
                    SAGE_IMAGE_TAG='audit-' + token, SAGE_HTTPS_PORT=str(port),
+                   SAGE_PUBLIC_HTTPS_PORT=str(public_port),
                    DOCKER_DEFAULT_PLATFORM='linux/amd64', PYTHONDONTWRITEBYTECODE='1')
         for filename, value in synthetic.items():
             suffix = '\r\n' if filename == 'db_migrate_password' else '\n'
             (secret_dir / filename).write_bytes((value + suffix).encode())
         apr1 = run(['openssl', 'passwd', '-apr1', '-stdin'], data=basic_password + '\n', private_output=True).stdout.strip()
         (secret_dir / 'preview_htpasswd').write_text('audit:' + apr1 + '\n')
+        # OpenSSL 3.6+ strict verification (Python 3.14 ssl) requires the chain to carry
+        # SKI/AKI; LibreSSL and OpenSSL 4.x both accept -addext here.
         run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '2',
-             '-subj', '/CN=Sage synthetic audit CA', '-keyout', str(directory / 'ca.key'),
+             '-subj', '/CN=Sage synthetic audit CA',
+             '-addext', 'basicConstraints=critical,CA:TRUE',
+             '-addext', 'keyUsage=critical,keyCertSign,cRLSign',
+             '-addext', 'subjectKeyIdentifier=hash',
+             '-addext', 'authorityKeyIdentifier=keyid:always',
+             '-keyout', str(directory / 'ca.key'),
              '-out', str(directory / 'ca.crt')])
         run(['openssl', 'req', '-new', '-newkey', 'rsa:2048', '-nodes', '-subj', '/CN=sagegogo.com',
              '-keyout', str(secret_dir / 'tls.key'), '-out', str(directory / 'tls.csr')])
         extension = directory / 'tls-extensions'
-        extension.write_text('subjectAltName=DNS:sagegogo.com\nbasicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\n')
+        extension.write_text('subjectAltName=DNS:sagegogo.com\nbasicConstraints=critical,CA:FALSE\n'
+                             'keyUsage=critical,digitalSignature,keyEncipherment\nextendedKeyUsage=serverAuth\n'
+                             'subjectKeyIdentifier=hash\nauthorityKeyIdentifier=keyid,issuer\n')
         run(['openssl', 'x509', '-req', '-in', str(directory / 'tls.csr'), '-CA', str(directory / 'ca.crt'),
              '-CAkey', str(directory / 'ca.key'), '-CAcreateserial', '-days', '2',
              '-extfile', str(extension), '-out', str(secret_dir / 'tls.crt')])
@@ -305,12 +328,15 @@ SELECT 'setting',COALESCE(r.rolname,''),s.setconfig::text FROM pg_db_role_settin
         # on loopback with no upstream, then a local process that never responds.
         # TLS/Basic remain covered below by the unmodified production topology.
         probe_config = (ROOT / 'drafts/restricted-deploy/docker-nginx.conf').read_text()
-        default_server = '    server {\n        listen 8443 ssl default_server;\n        ssl_reject_handshake on;\n    }\n'
+        default_server = ('    server {\n        listen 8443 ssl default_server;\n'
+                          '        listen 8444 ssl default_server;\n        ssl_reject_handshake on;\n    }\n')
         assert default_server in probe_config, 'Log probe default-server fixture drift'
         redirects = re.compile(r'    # public-redirects:begin.*?    # public-redirects:end\n', re.S)
         assert len(redirects.findall(probe_config)) == 1, 'Public redirect block drift'
         probe_config = redirects.sub('', probe_config)
-        probe_config = probe_config.replace(default_server, '').replace('listen 8443 ssl;', 'listen 8080;')
+        probe_config = (probe_config.replace(default_server, '')
+                        .replace('listen 8443 ssl;', 'listen 8080;')
+                        .replace('    listen 8444 ssl;\n', ''))
         probe_config = '\n'.join(line for line in probe_config.splitlines()
                                  if not line.strip().startswith(('ssl_', 'auth_basic')))
         probe_config = probe_config.replace('http://app:8000', 'http://127.0.0.1:8000')
@@ -591,7 +617,14 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
                 assert item['readonly'], 'Writable application or gateway root filesystem'
             bindings = [binding for values in item['ports'].values() if values for binding in values]
             if service == 'web':
-                assert bindings == [{'HostIp': '127.0.0.1', 'HostPort': str(port)}], 'Unexpected gateway port binding'
+                assert sorted(bindings, key=lambda binding: binding['HostPort']) == \
+                    sorted([{'HostIp': '127.0.0.1', 'HostPort': str(port)},
+                            {'HostIp': '127.0.0.1', 'HostPort': str(public_port)}],
+                           key=lambda binding: binding['HostPort']), 'Unexpected gateway port binding'
+                assert item['ports']['8444/tcp'] == [{'HostIp': '127.0.0.1', 'HostPort': str(port)}], \
+                    'Operations TLS listener moved'
+                assert item['ports']['8443/tcp'] == [{'HostIp': '127.0.0.1', 'HostPort': str(public_port)}], \
+                    'Host reverse-proxy TLS listener moved'
                 assert item['hosts'] == ['app:' + app_ip], 'Gateway upstream is not pinned to the fixed app address'
                 assert gateway_ip in [network['IPAddress'] for network in item['networks'].values()], 'Gateway IP drift'
             else:

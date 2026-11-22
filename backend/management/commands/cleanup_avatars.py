@@ -15,12 +15,17 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         pending = AccountProfile.objects.exclude(pending_avatar_deletions=[])
-        users = list(pending.values_list('user_id', flat=True))
         if options['apply']:
+            # The list must be captured before cleanup runs; a later count would
+            # observe the queue after entries were removed.
+            users = list(pending.values_list('user_id', flat=True))
+            profiles_before = len(users)
             for user_id in users:
                 cleanup_avatar_files(user_id)
+        else:
+            profiles_before = pending.count()
         remaining = AccountProfile.objects.exclude(pending_avatar_deletions=[]).count()
         self.stdout.write(json.dumps({'mode': 'apply' if options['apply'] else 'dry_run',
-            'profiles_before': len(users), 'profiles_remaining': remaining}))
+            'profiles_before': profiles_before, 'profiles_remaining': remaining}))
         if options['apply'] and remaining:
             raise CommandError('AVATAR_CLEANUP_PENDING')

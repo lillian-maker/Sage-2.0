@@ -11,15 +11,22 @@ basis: 分支 feat/website-launch-polish（官网）与 feat/auth-launch（部�
 
 🚫 = 阻塞上线：不处理不应对公众开放。
 
+> **2026-11-12 状态更新**：本表写于 2026-11-06，P0#1–#4 已于 2026-11-07 随生产上线完成
+> （镜像锚点 `2e91d5c`、docker-audit 16/16；公网入口为宿主 nginx vhost；cron 装于服务器
+> `/etc/cron.d/sage-prod`；日志 max-size=10m×36≥180 天），证据见
+> [`drafts/restricted-deploy/prod-20261107/acceptance-report-phase-0AB.md`](../drafts/restricted-deploy/prod-20261107/acceptance-report-phase-0AB.md)。
+> 注意：cron 脚本执行位缺失曾使 11-07~11-11 定时任务静默失败，11-12 已修复（见验收报告勘误节）。
+> **截至更新日仍未关闭的 P0 事项：#5（privacy@ 邮箱验证）。** 各行原文保留作历史记录。
+
 ## P0 · 上线前必须完成
 
 | # | 事项 | 当前状态 | 问题 / 缺口 | 上线影响 | 建议行动 | 依赖 | 验证方式 |
 |---|---|---|---|---|---|---|---|
-| 1 🚫 | 合并代码并从确定的提交重新构建镜像 | **已确认**：官网改动已推送到 PR #1，部署与登录配置在 `feat/auth-launch` 的独立 PR 中，两者都待审阅合并。README 记录服务器镜像源码冻结在 `cfb411f`，早于全部官网改动 | 线上运行的不是当前版本 | 公众看到的仍是旧站 | 先合并 PR #1，再合并部署 PR → 按 `drafts/restricted-deploy/go-live-runbook-20261106.md` 阶段 A 更新服务器 | 你审阅两个 PR | `tests/docker-audit.py` 通过（2026-11-06 因 Docker Hub 超时未跑完，阶段 A 前必须补跑）；线上首页 SHA256 与构建产物一致 |
-| 2 🚫 | 公网入口与证书 | **已确认（配置）**：`feat/auth-launch` 新增 `compose.public.yaml`（发布 80/443）和网关的 HTTP→HTTPS、www→主域名 301 跳转，`tests/gateway-redirect-audit.py` 7 项通过；基础配置仍只发布 `127.0.0.1:9443`。证书 SAN 含 sagegogo.com 与 www，有效期到 2027-01-10。**未验证**：公网解析与外部可达 | 安全组 80/443 入站、DNS 核对需在上线窗口执行 | 外部无法访问 | 执行单阶段 B | 你批准安全组与 DNS 变更 | 外网 `http://` 与 `www` 返回 301，`https://sagegogo.com` 返回 200；SSL Labs 检查 |
-| 3 🚫 | 咨询数据 90 天清理的定时任务 | **已确认**：隐私政策承诺咨询处理完成 90 天后删除；`purge_consultations` 命令已存在，但 `docs/BILLING_DEVELOPMENT.md` 写明“没有创建生产定时任务”；compose 中也没有调度 | 承诺与实际不符 | 开始收集咨询就面临个人信息合规风险 | 在服务器配置每日定时任务：先 dry-run，确认后加 `--apply`；同时安排 `cleanup_account_deletions`、`cleanup_avatars` | 备份恢复已演练；你批准执行删除 | 定时器日志；用合成记录验证到期后被清除 |
-| 4 🚫 | 访问日志留存不少于 6 个月 | **已确认**：compose 日志为 `max-size 10m × 3`，按大小轮转；隐私政策按《网络安全法》写明不少于六个月 | 流量稍大，几天内就会被覆盖 | 法规与隐私政策要求均不满足 | 把网关访问日志落到持久卷或日志服务，按天切分、保留 ≥180 天；继续保持日志不含查询参数 | 存储容量 | 检查 180 天保留策略配置；抽查历史日志 |
-| 5 🚫 | 法律文件审阅与隐私邮箱可用 | **已确认**：中英文隐私政策、服务条款已上线；你于 2026-11-06 告知法务已审阅。注册开关 `SAGE_AUTH_REGISTRATION_TERMS_READY` 仍为 0，在执行单阶段 F 打开。**未验证**：法务是否有修改（有修改需同步页面并更新版本号 2026-11-05）；privacy@sagegogo.com 是否已开通 | 邮箱若不存在，用户无法行使权利 | 合规缺陷 | 确认法务修改；开通并测试 privacy@ 邮箱 | 法务结论；飞书管理员 | 外部发信到 privacy@ 能收到 |
+| 1 ✅ 已于 2026-11-07 完成 | 合并代码并从确定的提交重新构建镜像 | **已确认**：官网改动已推送到 PR #1，部署与登录配置在 `feat/auth-launch` 的独立 PR 中，两者都待审阅合并。README 记录服务器镜像源码冻结在 `cfb411f`，早于全部官网改动 | 线上运行的不是当前版本 | 公众看到的仍是旧站 | 先合并 PR #1，再合并部署 PR → 按 `drafts/restricted-deploy/go-live-runbook-20261106.md` 阶段 A 更新服务器 | 你审阅两个 PR | `tests/docker-audit.py` 通过（2026-11-06 因 Docker Hub 超时未跑完，阶段 A 前必须补跑）；线上首页 SHA256 与构建产物一致 |
+| 2 ✅ 已于 2026-11-07 完成 | 公网入口与证书 | **已确认（配置）**：`feat/auth-launch` 新增 `compose.public.yaml`（发布 80/443）和网关的 HTTP→HTTPS、www→主域名 301 跳转，`tests/gateway-redirect-audit.py` 7 项通过；基础配置仍只发布 `127.0.0.1:9443`。证书 SAN 含 sagegogo.com 与 www，有效期到 2027-01-10。**未验证**：公网解析与外部可达。**2026-11-07 实际**：compose.public.yaml 未采用（与宿主 nginx 冲突）；公网入口 = 宿主 nginx vhost（80→301、443→proxy_pass https://127.0.0.1:9444），证据见验收报告 | 安全组 80/443 入站、DNS 核对需在上线窗口执行 | 外部无法访问 | 执行单阶段 B | 你批准安全组与 DNS 变更 | 外网 `http://` 与 `www` 返回 301，`https://sagegogo.com` 返回 200；SSL Labs 检查 |
+| 3 ✅ 已配置（11-07 安装；11-07~11-11 因脚本执行位缺失未实际执行，11-12 修复恢复） | 咨询数据 90 天清理的定时任务 | **已确认**：隐私政策承诺咨询处理完成 90 天后删除；`purge_consultations` 命令已存在，但 `docs/BILLING_DEVELOPMENT.md` 写明“没有创建生产定时任务”；compose 中也没有调度 | 承诺与实际不符 | 开始收集咨询就面临个人信息合规风险 | 在服务器配置每日定时任务：先 dry-run，确认后加 `--apply`；同时安排 `cleanup_account_deletions`、`cleanup_avatars` | 备份恢复已演练；你批准执行删除 | 定时器日志；用合成记录验证到期后被清除 |
+| 4 ✅ 已于 2026-11-07 完成 | 访问日志留存不少于 6 个月 | **已确认**：compose 日志为 `max-size 10m × 3`，按大小轮转；隐私政策按《网络安全法》写明不少于六个月 | 流量稍大，几天内就会被覆盖 | 法规与隐私政策要求均不满足 | 把网关访问日志落到持久卷或日志服务，按天切分、保留 ≥180 天；继续保持日志不含查询参数 | 存储容量 | 检查 180 天保留策略配置；抽查历史日志 |
+| 5 🚫 | 法律文件审阅与隐私邮箱可用 | **已确认**：中英文隐私政策、服务条款已上线；你于 2026-11-06 告知法务已审阅。注册开关 `SAGE_AUTH_REGISTRATION_TERMS_READY` 仍为 0，在执行单阶段 F 打开。**未验证**：法务是否有修改（有修改需同步页面并更新版本号（单一来源 = `compose.auth.yaml` 的 `SAGE_AUTH_REGISTRATION_TERMS_VERSION`））；privacy@sagegogo.com 是否已开通 | 邮箱若不存在，用户无法行使权利 | 合规缺陷 | 确认法务修改；开通并测试 privacy@ 邮箱 | 法务结论；飞书管理员 | 外部发信到 privacy@ 能收到 |
 
 ## P1 · 上线时或上线后 30 天内
 

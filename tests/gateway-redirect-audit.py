@@ -40,7 +40,7 @@ def main():
         name = f'sage-gateway-redirect-{https_port}'
         subprocess.run(['docker', 'run', '-d', '--rm', '--pull', 'never', '--name', name, '--read-only',
                         '--tmpfs', '/tmp', '--add-host', 'app:127.0.0.1',
-                        '-p', f'127.0.0.1:{https_port}:8443', '-p', f'127.0.0.1:{http_port}:8080',
+                        '-p', f'127.0.0.1:{https_port}:8444', '-p', f'127.0.0.1:{http_port}:8080',
                         '-v', f'{ROOT / "drafts/restricted-deploy/docker-nginx.conf"}:/etc/nginx/nginx.conf:ro',
                         '-v', f'{secrets}:/run/secrets:ro', '--entrypoint', 'nginx', sys.argv[1], '-g', 'daemon off;'],
                        check=True, capture_output=True)
@@ -83,6 +83,7 @@ def main():
             status, location, hsts = request('https', 'www.sagegogo.com', '/docs?x=1')
             assert (status, location) == (301, 'https://sagegogo.com/docs?x=1') and hsts, 'HTTPS www redirect'
             assert request('https', 'sagegogo.com', '/index.html')[0] == 200, 'Apex site unavailable'
+            assert request('https', 'sagegogo.com', '/sales')[:2] == (308, '/sales/'), 'Sales redirect exposed the internal TLS port'
             assert request('https', 'unapproved.invalid', '/index.html', sni='sagegogo.com')[0] in \
                 (400, 403, 404, 421, 444), 'Host mismatch accepted'
             try:
@@ -93,7 +94,7 @@ def main():
                 raise AssertionError('Unknown SNI accepted')
         finally:
             subprocess.run(['docker', 'rm', '-f', name], capture_output=True)
-    print(json.dumps({'result': 'passed', 'checks': 7, 'http_redirects_to': 'https://sagegogo.com',
+    print(json.dumps({'result': 'passed', 'checks': 8, 'http_redirects_to': 'https://sagegogo.com',
                       'www_redirects_to': 'https://sagegogo.com', 'unknown_host_and_sni_refused': True}))
     return 0
 
