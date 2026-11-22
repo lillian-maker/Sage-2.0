@@ -68,7 +68,7 @@ def payload(request, fields, optional=()):
         raise ValueError('JSON_REQUIRED')
     try:
         raw = request.body
-        if len(raw) > 8192:
+        if len(raw) > settings.DATA_UPLOAD_MAX_MEMORY_SIZE:
             raise ValueError('INVALID_BODY_SIZE')
         data = json.loads(raw)
     except (ValueError, UnicodeDecodeError, RequestDataTooBig, RecursionError) as exc:
@@ -368,7 +368,7 @@ def password_reset(request):
             raise ValueError('INVALID_CODE')
         item.attempts += 1
         item.save(update_fields=['attempts'])
-        if not constant_time_compare(item.code_digest, digest(str(item.id) + ':' + data['code'])):
+        if not constant_time_compare(item.code_digest, digest(str(item.pk) + ':' + data['code'])):
             return error(request, 'INVALID_CODE', 422, '验证码无效或已过期，请重新获取。')
     # Persist the attempt before re-locking exact state for business work.
     with transaction.atomic():
@@ -713,7 +713,7 @@ def _api_request(request, path):
             if request.GET:
                 raise ValueError('INVALID_REQUEST')
             from .commerce.models import ServiceRefund, CreditRefund
-            from .commerce.refunds import refund_data
+            from .commerce.refunds import credit_refund_data, refund_data
             try:
                 refund_id = uuid.UUID(path.split('/')[-1])
             except (ValueError, TypeError, AttributeError) as exc:
@@ -722,9 +722,7 @@ def _api_request(request, path):
             if refund:
                 return JsonResponse(refund_data(refund))
             item = commerce._get(CreditRefund.objects, payment__order__account=member.account, pk=refund_id)
-            return JsonResponse({'id': str(item.pk), 'status': 'refunded' if item.state == 'refunded' else
-                'terminated' if item.state == 'released' else item.review_state,
-                'amount_minor': str(item.amount_minor), 'currency': 'CNY'})
+            return JsonResponse(credit_refund_data(item))
         if path in ('billing/organization/invitations', 'billing/organization/invitations/revoke'):
             if request.method == 'GET':
                 raw_offset = request.GET.get('offset', '0')

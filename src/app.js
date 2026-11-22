@@ -11,7 +11,7 @@ if(accountLinks.length)fetch('/api/auth/session',{credentials:'same-origin',cach
  accountLinks.forEach(link=>{link.textContent=session.authenticated?(session.user.display_name||session.user.masked_identifier||(en?'My account':'我的账户')):(en?'Sign in':'登录');link.href=session.authenticated?'pages/profile'+(en?'-en':'')+'.html':'pages/auth'+(en?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);});
 }).catch(()=>accountLinks.forEach(link=>{link.title=document.documentElement.lang==='en'?'Account service is unavailable':'暂时无法读取账户状态';}));
 const data=window.SAGE_CATALOG;
-if(!data){throw new Error('场景资料未加载');return;}
+if(!data){throw new Error('场景资料未加载');}
 
 
 const scenes=data.scenes,people=new Map(data.people.map(p=>[p.id,p]));

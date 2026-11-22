@@ -2871,7 +2871,7 @@ if(accountLinks.length)fetch('/api/auth/session',{credentials:'same-origin',cach
  accountLinks.forEach(link=>{link.textContent=session.authenticated?(session.user.display_name||session.user.masked_identifier||(en?'My account':'My account')):(en?'Sign in':'Log in');link.href=session.authenticated?'pages/profile'+(en?'-en':'')+'.html':'pages/auth'+(en?'-en':'')+'.html?return='+encodeURIComponent(location.pathname+location.search+location.hash);});
 }).catch(()=>accountLinks.forEach(link=>{link.title=document.documentElement.lang==='en'?'Account service is unavailable':'暂时无法读取Account状态';}));
 const data=window.SAGE_CATALOG;
-if(!data){throw new Error('Workflow data failed to load');return;}
+if(!data){throw new Error('Workflow data failed to load');}
 
 
 const scenes=data.scenes,people=new Map(data.people.map(p=>[p.id,p]));

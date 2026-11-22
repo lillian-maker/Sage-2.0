@@ -1,5 +1,19 @@
 # 受限部署候选与迁移清单
 
+## 当前 compose 文件集（权威 · 2026-11-12）
+
+其他文档与脚本中出现 `docker compose … -f …` 命令串时以本表为准。文件集两周内从 2 文件演进到 3 文件，历史文档快照不逐处更正；发现与下表不符的记载以勘误注记指向本表。
+
+| 场景 | 文件集 |
+|---|---|
+| 生产现行（`2e91d5c` 起，cron wrapper 同款） | `-f compose.yaml -f compose.offline.yaml -f compose.egress.yaml` |
+| 本地从源码构建（非离线） | `-f compose.yaml` |
+| 登录阶段 E/F 启用时叠加 | 上一行 + `-f compose.auth.yaml`（当前生产未部署该文件） |
+| ~~compose.public.yaml~~ | 已被宿主 nginx vhost 取代（2026-11-07），勿在现网执行 |
+| ~~compose.logging.yaml~~ | 未部署为独立文件；日志参数已并入 compose.yaml 与 compose.egress.yaml |
+
+统一参数：`--env-file /dev/null -p sage-preview`；云端禁 build/pull；管理命令经 `exec -T app python /app/deploy/docker-entrypoint.py python manage.py …`（exec 不执行 ENTRYPOINT）。cron 实态见服务器 `/etc/cron.d/sage-prod`（`process_notifications` 以注释预留，阶段 E 启用；`check_operations` 行需补 scope 参数，详见 prod-20261107/acceptance-report-phase-0AB.md 勘误节）。
+
 ## 独立Docker执行入口 · 2026-10-15
 
 用户已批准Sage-2.0深色首屏、A独立三容器/新空库、保留旧宿主机Sage，首个目标为受控部署验收。先读本目录`docker-deployment-acceptance-plan-20261015.md`和`../../docs/BILLING_DEVELOPMENT.md`最新记录。Moby/Compose安装启动已获单独批准并完成保护验收；Task5的新库50项迁移、三容器、运行权限、真实回环HTTPS、重启/DB故障、独立卷恢复及入口安全轮换均通过。轮换后新TAT复验旧服务正常、仅回环9443、迁移50/Session1及其余51张业务表零行。用户确认备案尚未完成，下一步先读执行方案Task6的备案办理清单；公网继续关闭，另批确认。下方systemd/Unix socket配置保留供旧环境使用，不与新容器混装。
@@ -16,7 +30,7 @@ web默认入口为`/usr/local/bin/sage-nginx-entrypoint`。原始错误输出只
 
 容器的配置检查与重载分别使用`docker compose … exec -T web /usr/local/bin/sage-nginx-entrypoint -t`、`docker compose … exec -T web /usr/local/bin/sage-nginx-entrypoint -s reload`，省略部分沿用本项目实际已核对的Compose参数。不要在真实操作中用`--entrypoint nginx`、`exec web nginx -t`或直接重载绕过保护；测试旧版本泄漏的隔离反例另行标记。Docker自身保留接收时间，排错使用`docker logs --timestamps`；未知诊断保留“unrecognized message”提示，不以输出原文诊断。未来增加错误类别须用合成反例验证，没有“未知就直接放行”的兜底。
 
-**执行前输入：**通过命令环境显式提供`SAGE_IMAGE_TAG`（审阅候选标识）、`SAGE_DOCKER_SECRETS_DIR`（绝对私有目录）、`SAGE_FRONTEND_SUBNET`、`SAGE_GATEWAY_IP`、`SAGE_APP_IP`（经路由和Docker网络盘点无冲突的子网及准确IP）；需要调整回环端口时提供`SAGE_HTTPS_PORT`。缺必需输入即失败，不提供示例生产凭据或默认网段。
+**执行前输入：**通过命令环境显式提供`SAGE_IMAGE_TAG`（审阅候选标识）、`SAGE_DOCKER_SECRETS_DIR`（绝对私有目录）、`SAGE_FRONTEND_SUBNET`、`SAGE_GATEWAY_IP`、`SAGE_APP_IP`（经路由和Docker网络盘点无冲突的子网及准确IP）；需要调整回环运维端口时提供`SAGE_HTTPS_PORT`，调整宿主 Nginx 反代端口时提供`SAGE_PUBLIC_HTTPS_PORT`并同步更新其 vhost。缺必需输入即失败，不提供示例生产凭据或默认网段。
 
 私有目录含`django_key`、`db_admin_password`、`db_runtime_password`、`db_migrate_password`、`tls.crt`、`tls.key`、`preview_htpasswd`。真实凭据由用户安全配置，不发聊天、不读旧`.env`或私钥正文。Compose secrets是每服务只读文件挂载，不是加密保险箱；file来源不保证uid/gid/mode重映射，必须在目标Linux实测可读性。宿主目录应由管理员所有且0700，逐文件按目标容器身份设最小读权限；本地合成测试用0700父目录隔离、0444绑定文件供非root读取，不能把它当所有生产主机的权限验收。PG初始化容器本身处于数据库管理边界，需要读取两种初始角色口令；应用/迁移进程分别只获自身口令。
 

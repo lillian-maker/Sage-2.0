@@ -2,7 +2,7 @@ name: sage-preview
 
 x-logging: &logging
   driver: json-file
-  options: {max-size: "10m", max-file: "3"}
+  options: {max-size: "10m", max-file: "36"}
 
 x-app: &app
   image: sage-app:${SAGE_IMAGE_TAG:?Set a reviewed image tag}
@@ -116,7 +116,12 @@ services:
     cpus: 0.5
     mem_limit: 128m
     logging: *logging
-    ports: ["127.0.0.1:${SAGE_HTTPS_PORT:-9443}:8443"]
+    # 8444: plain-TLS loopback operations (docker-audit, host-side checks, no real-IP header).
+    # 8443: host nginx public edge (sagegogo.com 443) via 127.0.0.1:9444, carrying the real
+    # client address in X-Sage-Client-IP; see docker-nginx.conf set_real_ip_from.
+    ports:
+      - "127.0.0.1:${SAGE_HTTPS_PORT:-9443}:8444"
+      - "127.0.0.1:${SAGE_PUBLIC_HTTPS_PORT:-9444}:8443"
     extra_hosts:
       app: "${SAGE_APP_IP:?Set the application address}"
     secrets: [tls_certificate, tls_key, preview_htpasswd]
@@ -135,6 +140,10 @@ networks:
   edge:
     driver_opts:
       com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+    # Pinned so docker-nginx.conf set_real_ip_from always matches the edge gateway;
+    # override SAGE_EDGE_SUBNET only together with docker-nginx.conf.
+    ipam:
+      config: [{subnet: "${SAGE_EDGE_SUBNET:-172.20.0.0/16}"}]
   frontend:
     internal: true
     ipam:

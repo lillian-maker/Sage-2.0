@@ -40,7 +40,7 @@ def main():
         name = f'sage-gateway-redirect-{https_port}'
         subprocess.run(['docker', 'run', '-d', '--rm', '--pull', 'never', '--name', name, '--read-only',
                         '--tmpfs', '/tmp', '--add-host', 'app:127.0.0.1',
-                        '-p', f'127.0.0.1:{https_port}:8443', '-p', f'127.0.0.1:{http_port}:8080',
+                        '-p', f'127.0.0.1:{https_port}:8444', '-p', f'127.0.0.1:{http_port}:8080',
                         '-v', f'{ROOT / "drafts/restricted-deploy/docker-nginx.conf"}:/etc/nginx/nginx.conf:ro',
                         '-v', f'{secrets}:/run/secrets:ro', '--entrypoint', 'nginx', sys.argv[1], '-g', 'daemon off;'],
                        check=True, capture_output=True)

@@ -2,6 +2,12 @@
 
 独立中英文官网，并承接 WorldPilot 数字员工设计素材；不替代已有 Sage 仓库。
 
+## 生产部署实态 · 2026-11-07
+
+sagegogo.com 已于 2026-11-07 公网上线：公网入口为宿主 nginx vhost（80→301 跳主域名，443→proxy_pass https://127.0.0.1:9444），`compose.public.yaml` 直绑方案经实测与宿主 nginx 80/443 冲突、未采用；容器日志轮转 max-size=10m max-file=36（≥180 天）；维护 cron 见服务器 `/etc/cron.d/sage-prod`（`process_notifications` 以注释预留，阶段 E 接通通知渠道后启用）。当前部署实态以 [`drafts/restricted-deploy/prod-20261107/acceptance-report-phase-0AB.md`](drafts/restricted-deploy/prod-20261107/acceptance-report-phase-0AB.md) 为准。
+
+2026-11-12 勘误：release 切换后 cron 脚本丢失执行位，11-07 01:35 起全部定时任务静默失败（每日备份中断），当日已在服务器恢复执行位并补验备份成功；根因与防复发修复见该报告的勘误节。下方 2026-11-05 条目中「宿主机仍只在 127.0.0.1:9443 发布容器…需要配置满足六个月的日志留存」描述的是当时状态，已被本条取代，仅作历史保留。
+
 ## 官网上线优化 · 2026-11-05
 
 上线前剩余工作（状态、影响、优先级、依赖与验证方式）以 [`docs/WEBSITE_LAUNCH_READINESS.md`](docs/WEBSITE_LAUNCH_READINESS.md) 为准；演示视频的不足、补充方案与依赖见 [`tools/app-demo-video/README.md`](tools/app-demo-video/README.md)。
@@ -17,7 +23,7 @@ ICP 备案已通过（粤ICP备2026173751号，深圳市众妙之门科技有限
 - 首页、AI 团队、企业服务、文档（中英）开放收录，其余页面维持 `noindex`；首页 canonical 为站点根 `/`，补 `x-default`、`robots.txt`、`sitemap.xml` 与 `assets/og/sage-share.jpg` 分享图。
 - 首页不再内嵌头像和地球贴图：HTML 由 5.78MB 降到约 0.35MB，头像/贴图改为带内容哈希的 WebP 外链，头像在页面空闲时预取。团队与企业插图改为 WebP。经确认删除的未引用素材与旧数据见对应提交说明。
 
-- 法律文件：`src/legal/` 下的中英文隐私政策与服务条款构建为 `pages/privacy(-en).html`、`pages/terms(-en).html`，所有页脚都有入口。运营主体、联系邮箱 privacy@sagegogo.com、腾讯云与 Google 登录、大模型服务商（泛称，承诺不用于训练）由用户确认。发布前建议律师审阅。注册仍由 `SAGE_AUTH_REGISTRATION_TERMS_READY` 控制；审阅后在部署环境设置 `SAGE_AUTH_REGISTRATION_TERMS_VERSION=2026-11-05`、`SAGE_AUTH_REGISTRATION_TERMS_URL=https://sagegogo.com/pages/terms.html`、`SAGE_AUTH_REGISTRATION_PRIVACY_URL=https://sagegogo.com/pages/privacy.html` 再打开开关。
+- 法律文件：`src/legal/` 下的中英文隐私政策与服务条款构建为 `pages/privacy(-en).html`、`pages/terms(-en).html`，所有页脚都有入口。运营主体、联系邮箱 privacy@sagegogo.com、腾讯云与 Google 登录、大模型服务商（泛称，承诺不用于训练）由用户确认。发布前建议律师审阅。注册仍由 `SAGE_AUTH_REGISTRATION_TERMS_READY` 控制；审阅后核对部署环境三件套（版本/条款 URL/隐私 URL）与 [`drafts/restricted-deploy/compose.auth.yaml`](drafts/restricted-deploy/compose.auth.yaml) 默认值一致——版本号单一来源为该文件的 `SAGE_AUTH_REGISTRATION_TERMS_VERSION`——再打开开关。
 - 网关（`drafts/restricted-deploy/docker-nginx.conf`）：全站公开，去掉预览口令；咨询接口放行到后端（后端自带按 IP 与会话的限流和幂等）；销售后台 `/sales/` 仍保留网关口令作为第二道门。缓存：带 `?v=` 内容哈希的 CSS/JS/图片/视频缓存一年（immutable），未带版本的图片缓存一天，HTML、`robots.txt`、`sitemap.xml` 每次协商（ETag）。构建同时为二级页图片加内容哈希。`tests/docker-audit.py` 已同步这些断言。
 
 上线部署仍需另行处理：宿主机仍只在 `127.0.0.1:9443` 发布容器，公网 443 入口、安全组与证书按原部署计划另行开放。隐私政策写明服务器访问日志保存不少于六个月（《网络安全法》要求），而 Docker 日志目前按大小轮转，需要配置满足六个月的日志留存。
