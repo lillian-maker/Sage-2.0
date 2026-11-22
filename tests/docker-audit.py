@@ -621,6 +621,10 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
                     sorted([{'HostIp': '127.0.0.1', 'HostPort': str(port)},
                             {'HostIp': '127.0.0.1', 'HostPort': str(public_port)}],
                            key=lambda binding: binding['HostPort']), 'Unexpected gateway port binding'
+                assert item['ports']['8444/tcp'] == [{'HostIp': '127.0.0.1', 'HostPort': str(port)}], \
+                    'Operations TLS listener moved'
+                assert item['ports']['8443/tcp'] == [{'HostIp': '127.0.0.1', 'HostPort': str(public_port)}], \
+                    'Host reverse-proxy TLS listener moved'
                 assert item['hosts'] == ['app:' + app_ip], 'Gateway upstream is not pinned to the fixed app address'
                 assert gateway_ip in [network['IPAddress'] for network in item['networks'].values()], 'Gateway IP drift'
             else:

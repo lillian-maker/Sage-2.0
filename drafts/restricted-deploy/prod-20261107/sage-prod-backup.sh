@@ -15,7 +15,7 @@ if ! docker exec sage-preview-db-1 pg_dump -U postgres -d sage_preview -Fc > "$T
     echo "$(date -Is) BACKUP EXPORT FAILED $STAMP" >> "$LOG"
     exit 1
 fi
-if ! pg_restore -l "$TMP" >/dev/null 2>&1; then
+if ! pg_restore --file=/dev/null "$TMP" >/dev/null 2>&1; then
     echo "$(date -Is) BACKUP INVALID $STAMP" >> "$LOG"
     exit 1
 fi

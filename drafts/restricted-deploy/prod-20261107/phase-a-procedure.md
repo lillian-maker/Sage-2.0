@@ -28,6 +28,8 @@
 #    记录到 precheck-20261106/migration-plan.txt；出现 RunPython/RunSQL 则暂停上报
 
 # 4. 维护窗口（app/web 中断约 1-3 分钟；db 保持运行）：
+#    4.0 /opt/sage-docker-preview/releases/current/drafts/restricted-deploy/prod-20261107/sage-log-archive.sh
+#        （先归档当前容器日志，再替换 app/web 容器）
 #    4.1 docker compose ... stop app web          （只停本项目两个服务）
 #    4.2 docker compose ... run --rm migrate python manage.py migrate --noinput
 #    4.3 docker compose ... up -d app web         （--pull never --no-build 语义由

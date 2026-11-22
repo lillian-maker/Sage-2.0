@@ -11,14 +11,17 @@ fi
 SHA="$1"; OUT="$2"; ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
 APP_TAG="sage-app:$SHA"; WEB_TAG="sage-web:$SHA"
 CANDIDATE="$OUT/$SHA"
+FINAL_BUNDLE="$OUT/sage-docker-$SHA-deployment.tar.gz"
 
 git -C "$ROOT" cat-file -e "$SHA^{commit}"
 mkdir -p "$OUT"
 [ ! -e "$CANDIDATE" ] || { echo "Candidate already exists: $CANDIDATE" >&2; exit 1; }
+[ ! -e "$FINAL_BUNDLE" ] || { echo "Deployment bundle already exists: $FINAL_BUNDLE" >&2; exit 1; }
 TMP_CANDIDATE=$(mktemp -d "$OUT/.${SHA}.XXXXXX")
 RAW_ARCHIVE="$TMP_CANDIDATE/images-linux-amd64.tar"
 IMAGE_ARCHIVE="$TMP_CANDIDATE/images-linux-amd64.tar.gz"
 TMP_IMAGE_ARCHIVE="$TMP_CANDIDATE/.images-linux-amd64.tar.gz.tmp"
+TMP_BUNDLE="$OUT/.sage-docker-$SHA-deployment.tar.gz.tmp"
 CID=''
 
 cleanup() {
@@ -29,6 +32,10 @@ trap cleanup EXIT HUP INT TERM
 mkdir -p "$TMP_CANDIDATE/drafts/restricted-deploy"
 
 echo "== 导出镜像 =="
+APP_PLATFORM=$(docker image inspect "$APP_TAG" --format '{{.Os}}/{{.Architecture}}')
+WEB_PLATFORM=$(docker image inspect "$WEB_TAG" --format '{{.Os}}/{{.Architecture}}')
+[ "$APP_PLATFORM" = linux/amd64 ] || { echo "Unexpected app image platform: $APP_PLATFORM" >&2; exit 1; }
+[ "$WEB_PLATFORM" = linux/amd64 ] || { echo "Unexpected web image platform: $WEB_PLATFORM" >&2; exit 1; }
 docker save -o "$RAW_ARCHIVE" "$APP_TAG" "$WEB_TAG"
 gzip -c "$RAW_ARCHIVE" > "$TMP_IMAGE_ARCHIVE"
 mv "$TMP_IMAGE_ARCHIVE" "$IMAGE_ARCHIVE"
@@ -78,9 +85,9 @@ echo "== sha256-manifest.json =="
 cat "$TMP_CANDIDATE/sha256-manifest.json"
 
 echo "== 外层包 =="
+tar -czf "$TMP_BUNDLE" -C "$TMP_CANDIDATE" .
+mv "$TMP_BUNDLE" "$FINAL_BUNDLE"
 mv "$TMP_CANDIDATE" "$CANDIDATE"
 TMP_CANDIDATE=''
-tar -czf "$OUT/.sage-docker-$SHA-deployment.tar.gz.tmp" -C "$CANDIDATE" .
-mv "$OUT/.sage-docker-$SHA-deployment.tar.gz.tmp" "$OUT/sage-docker-$SHA-deployment.tar.gz"
-shasum -a 256 "$OUT/sage-docker-$SHA-deployment.tar.gz"
-echo "DONE: $OUT/sage-docker-$SHA-deployment.tar.gz"
+shasum -a 256 "$FINAL_BUNDLE"
+echo "DONE: $FINAL_BUNDLE"

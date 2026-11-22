@@ -1,9 +1,10 @@
 #!/bin/sh
-# 每月访问日志归档快照（合规：访问日志保存不少于六个月）。
+# 每日访问日志归档快照（合规：访问日志保存不少于六个月）。
 # 容器 json-file 轮转上限 10m x 36（约一年以上容量）；本脚本另按月快照到
 # /var/backups/sage/logs/<YYYYMM>/，双保险满足《网络安全法》六个月留存。
 set -eu
-DEST=/var/backups/sage/logs/$(date -u +%Y%m)
+MONTH=/var/backups/sage/logs/$(date -u +%Y%m)
+DEST=$MONTH/$(date -u +%Y%m%d-%H%M%S)
 mkdir -p "$DEST"; chmod 700 "$DEST" 2>/dev/null || true
 for c in sage-preview-web-1 sage-preview-app-1 sage-preview-db-1; do
     p=$(docker inspect "$c" --format '{{.LogPath}}')
