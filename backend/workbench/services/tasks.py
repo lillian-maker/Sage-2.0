@@ -310,6 +310,19 @@ def task_authorization_row(row):
             'requested_by_expert': expert_ref(row.requested_by_expert), 'created_at': row.created_at}
 
 
+def playbook_template(task):
+    template = task.playbook_template
+    if not isinstance(template, dict):
+        return None
+    live = set(task.steps.values_list('public_id', flat=True))
+    variables = [{'name': row['name'], 'default': row.get('default') or ''}
+                 for row in template.get('variables') or [] if isinstance(row, dict) and row.get('name')]
+    names = {row['name'] for row in variables}
+    steps = [{'step': row['step'], 'variable': row.get('variable') if row.get('variable') in names else None}
+             for row in template.get('steps') or [] if isinstance(row, dict) and row.get('step') in live]
+    return {'name': template.get('name') or task.title, 'variables': variables, 'steps': steps}
+
+
 def task_detail(ctx, task):
     state = user_state(task, ctx.user)
     participants = task.participants.filter(state='active').select_related('expert', 'user').order_by('created_at')
@@ -347,6 +360,7 @@ def task_detail(ctx, task):
         'reviews': [{'id': row.public_id, 'state': row.state}
                     for row in ContentReview.objects.filter(task=task).order_by('created_at', 'id')[:5]],
         'pending_delivery': pending_delivery(task),
+        'playbook_template': playbook_template(task),
         'authorizations': [task_authorization_row(row) for row in
                            task.authorization_requests.select_related('extension', 'requested_by_expert')
                            .order_by('-created_at', '-id')[:10]],
@@ -638,7 +652,23 @@ def start_task(ctx, task, data):
     task.status, task.pause_reason = 'running', None
     task.last_activity_at = clock.now()
     task.save(update_fields=['status', 'pause_reason', 'rule_version', 'last_activity_at', 'updated_at'])
+    _ensure_kickoff_card(task)
     return start_response(task)
+
+
+def _ensure_kickoff_card(task):
+    """D96: the read-only 开工确认卡 after 开始执行 keys off the kickoff_card message; tasks created through
+    /tasks/new never got one (only the seeds wrote it), so their confirmed brief disappeared after start."""
+    thread = main_thread(task)
+    if thread.messages.filter(kind='kickoff_card').exists():
+        return
+    expert = task.lead_expert
+    TaskMessage.objects.create(
+        account=task.account, task=task, thread=thread,
+        author_kind='expert' if expert else 'system', author_expert=expert,
+        kind='kickoff_card', body='开始前先和你确认几件事。确认后我才会开始执行，不会提前消耗 Credits。',
+        card_type='kickoff', card_id=task.public_id, sent_at=clock.now(),
+        branch_index=latest_branch_index(thread))
 
 
 @transaction.atomic

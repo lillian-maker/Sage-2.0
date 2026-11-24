@@ -9,12 +9,13 @@ from django.db.models import Max, Q
 from django.utils import timezone
 from .. import clock
 
-from backend.models import Membership
+from backend.models import AuditEvent, Membership
 
 from ..common import iso, json_body, page, query, respond
 from ..ids import PUBLIC_ID_PATTERN
 from ..models import (AcceptanceCriterion, Artifact, Playbook, PlaybookStep, Task, TaskStep, TaskThread,
-                      TaskUserState, Workspace, WorkspaceMember, WorkspaceRuleVersion)
+                      TaskUserState, Workspace, WorkspaceKnowledgeSource, WorkspaceMember, WorkspaceRuleVersion)
+from ..services import knowledge as knowledge_service
 from ..services import workspaces as ws
 
 CREATED_FROM = ('blank', 'copy_rules', 'playbook')
@@ -91,7 +92,7 @@ def workspace_detail(ctx, workspace, member):
         'id': workspace.public_id, 'name': workspace.name, 'description': workspace.description,
         'account_kind': ctx.account.kind, 'role': member.role, 'pinned_at': iso(member.pinned_at),
         'created_from': workspace.created_from, 'created_at': iso(workspace.created_at),
-        'counts': {'tasks': len(tasks), 'documents': ws.workspace_document_count(workspace),
+        'counts': {'tasks': len(tasks), 'documents': knowledge_service.workspace_source_document_count(ctx, workspace),
                    'members': ws.active_member_count(workspace)},
         'unread_count': sum(1 for task in tasks if unread[task.pk]),
         'current_rule_version': rule_ref(workspace.current_rule_version),
@@ -345,6 +346,36 @@ def remove_member(request, ctx, id, mid):
     return {'member': member_row(ctx, row)}
 
 
+# Knowledge sources (D106) -----------------------------------------------------------
+
+def list_knowledge_sources(request, ctx, id):
+    query(request, ('offset',))
+    workspace, member = ws.get_workspace(ctx, id)
+    bases = knowledge_service.sorted_bases(knowledge_service.workspace_sources(ctx, workspace)
+                                           .select_related('workspace', 'editor_department'))
+    stats = knowledge_service.base_stats(bases)
+    body = page(request, bases, lambda kb: knowledge_service.base_item(ctx, kb, stats))
+    body['can_manage'] = member.role == 'owner'
+    return body
+
+
+def remove_knowledge_source(request, ctx, id, kb_id):
+    workspace, member = ws.get_workspace(ctx, id)
+    ws.require_owner(member)
+    with transaction.atomic():
+        row = (WorkspaceKnowledgeSource.objects.select_for_update().select_related('knowledge_base')
+               .filter(workspace=workspace, knowledge_base__public_id=kb_id,
+                       knowledge_base__in=knowledge_service.visible_bases(ctx)).first())
+        if row is None:
+            raise ValueError('NOT_FOUND')
+        kb = row.knowledge_base
+        row.delete()
+        AuditEvent.objects.create(actor=ctx.user, account=ctx.account, action='workspace.knowledge_source.remove',
+                                  request_id=request.request_id, target_type='workspace', target_id=workspace.public_id,
+                                  summary=('移除资料来源“%s”' % kb.name)[:200])
+    return {'knowledge_base': {'id': kb.public_id, 'name': kb.name}}
+
+
 # Rules ------------------------------------------------------------------------------
 
 def rule_version_row(version):
@@ -567,6 +598,8 @@ ROUTES = [
     ('POST', 'workspaces/{id}/members', add_member),
     ('PATCH', 'workspaces/{id}/members/{mid}', patch_member),
     ('DELETE', 'workspaces/{id}/members/{mid}', remove_member),
+    ('GET', 'workspaces/{id}/knowledge-bases', list_knowledge_sources),
+    ('DELETE', 'workspaces/{id}/knowledge-bases/{kb_id}', remove_knowledge_source),
     ('GET', 'workspaces/{id}/rules', get_rules),
     ('POST', 'workspaces/{id}/rules', post_rules),
     ('POST', r'^workspaces/(?P<id>%s)/rules/(?P<v>[0-9]{1,5})/restore$' % ID, restore_rules),

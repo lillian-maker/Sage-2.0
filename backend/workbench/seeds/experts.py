@@ -162,7 +162,7 @@ def seed_experts():
         Expert.objects.filter(pk=experts[code].pk).update(collaboration_note=note)
     Expert.objects.filter(pk=experts['AGT-007'].pk).update(start_description=START_EXAMPLE)
     # 28 屏: "v1.2 · 10月30日"
-    Expert.objects.filter(pk=experts['AGT-007'].pk).update(updated_at=timezone.now() - timezone.timedelta(days=7))
+    Expert.objects.filter(pk=experts['AGT-007'].pk).update(updated_at=timezone.now() - timezone.timedelta(days=20))
     return experts
 
 

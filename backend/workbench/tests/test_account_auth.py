@@ -75,6 +75,14 @@ class EmailCodeLoginTests(TestCase):
         self.assertIsNotNone(row.last_seen_at)
         self.assertIsNotNone(LoginChallenge.objects.get(pk=body['challenge_id']).consumed_at)
 
+    def test_pinned_seed_clock_keeps_flow_live(self):
+        pinned = (timezone.now() - timedelta(days=2)).isoformat()
+        with patch.dict('os.environ', {'SAGE_SEED_NOW': pinned}), override_settings(ENVIRONMENT='development'):
+            body = self.challenge()
+            self.assertEqual(AuthFlow.objects.get(pk=body['flow_id']).expires_at.isoformat()[:10], pinned[:10])
+            response = self.post('verify', {'challenge_id': body['challenge_id'], 'code': self.code()})
+            self.assertEqual(response.status_code, 200, response.content)
+
     def test_code_cannot_be_reused(self):
         body = self.challenge()
         code = self.code()

@@ -17,7 +17,8 @@ from .. import clock
 from backend.commerce.models import Department, DepartmentMember
 from backend.models import Membership
 
-from ..models import Citation, KnowledgeBase, KnowledgeDocument, KnowledgeEntity, KnowledgeFact, KnowledgeRelation
+from ..models import (Citation, KnowledgeBase, KnowledgeDocument, KnowledgeEntity, KnowledgeFact, KnowledgeRelation,
+                      WorkspaceKnowledgeSource)
 from . import artifacts as artifact_service
 from . import workspaces as ws
 
@@ -45,6 +46,17 @@ def visible_bases(ctx):
     return KnowledgeBase.objects.filter(account=ctx.account).filter(
         Q(scope='personal', owner=ctx.user) | Q(scope='workspace', workspace_id__in=workspace_ids)
         | Q(scope='account'))
+
+
+def workspace_sources(ctx, workspace):
+    """Bases the workspace references as 资料来源 (E67, D106) that the user can see."""
+    linked = WorkspaceKnowledgeSource.objects.filter(workspace=workspace).values('knowledge_base_id')
+    return visible_bases(ctx).filter(pk__in=linked)
+
+
+def workspace_source_document_count(ctx, workspace):
+    """D108: “资料 N 份” counts the same bases the 资料来源 list shows."""
+    return live_documents().filter(knowledge_base__in=workspace_sources(ctx, workspace)).count()
 
 
 def citable_bases(ctx):

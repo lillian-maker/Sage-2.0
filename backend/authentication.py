@@ -32,6 +32,7 @@ from .http import client_ip, error
 from .invitations import create_registered_user, validate_code
 from .models import (AccountProfile, AccountSession, AuditEvent, AuthFlow, AuthThrottle,
     BillingAccount, LoginChallenge, LoginIdentity, Membership)
+from .workbench import clock
 from .views import (digest, email_ready, normalized_identifier, password_reset_ready,
     payload, password_identifier, session_data, throttle, validate_new_password)
 
@@ -107,7 +108,7 @@ def verify_captcha(ticket, randstr, address):
 def flow_data(flow):
     return {'flow_id': str(flow.pk), 'purpose': flow.purpose, 'stage': flow.stage,
         'method': flow.method,
-        'expires_in': max(0, int((flow.expires_at-timezone.now()).total_seconds())),
+        'expires_in': max(0, int((flow.expires_at-clock.now()).total_seconds())),
         'captcha_app_id': str(settings.CAPTCHA_APP_ID)}
 
 
@@ -116,6 +117,8 @@ def _binding_lock(request):
     if not binding:
         raise ValueError('INVALID_FLOW')
     key = digest('flow-session:' + binding)
+    # Throttle rows stay on the real clock because views.throttle compares them with timezone.now;
+    # flow and challenge deadlines use clock.now so they agree with workbench-created flows.
     now = timezone.now()
     AuthThrottle.objects.get_or_create(key=key, defaults={'window_at': now, 'last_at': now})
     AuthThrottle.objects.select_for_update().get(pk=key)
@@ -136,7 +139,7 @@ def _identity_locks(request,identifier,google_sub='',*,method='email'):
 
 
 def _live(flow):
-    if flow.consumed_at or flow.expires_at <= timezone.now():
+    if flow.consumed_at or flow.expires_at <= clock.now():
         raise ValueError('INVALID_FLOW')
 
 
@@ -177,7 +180,7 @@ def _locked_flow(request, value, stage=None, purpose=None):
                 if str(exc) != 'AUTH_REQUIRED':
                     raise
     flow = AuthFlow.objects.select_for_update().filter(pk=flow_id).first()
-    if (flow is None or flow.consumed_at or flow.expires_at <= timezone.now() or
+    if (flow is None or flow.consumed_at or flow.expires_at <= clock.now() or
             flow.method != hint.method or flow.identifier != hint.identifier or flow.user_id != hint.user_id or
             flow.session_digest != binding or
             (stage and flow.stage != stage) or (purpose and flow.purpose != purpose)):
@@ -217,7 +220,7 @@ def start(request, purpose):
             validate_new_password(data['password'], get_user_model()(email=identifier if method=='email' else '', **fields))
         except ValidationError as exc:
             return error(request, 'INVALID_PASSWORD', 422, exc.messages[0])
-        fields.update(agreement_version=data['agreement_acceptance'], agreement_accepted_at=timezone.now())
+        fields.update(agreement_version=data['agreement_acceptance'], agreement_accepted_at=clock.now())
     elif purpose == 'login' and (not isinstance(data['password'], str) or not 1 <= len(data['password']) <= 128):
         raise ValueError('INVALID_REQUEST')
     with transaction.atomic():
@@ -241,7 +244,7 @@ def start(request, purpose):
             except ValueError as exc:
                 if str(exc) != 'AUTH_REQUIRED':
                     raise
-        _invalidate(AuthFlow.objects.filter(session_digest=binding, consumed_at__isnull=True), timezone.now())
+        _invalidate(AuthFlow.objects.filter(session_digest=binding, consumed_at__isnull=True), clock.now())
         if purpose == 'login':
             valid = user.check_password(data['password']) if user else check_password(data['password'], make_password(None))
             if not valid or user is None:
@@ -250,7 +253,7 @@ def start(request, purpose):
         # Registration response does not reveal whether the address already exists.
         flow = AuthFlow.objects.create(purpose=purpose, method=method, identifier=identifier,
             session_digest=binding, user=user if purpose != 'registration' else None,
-            expires_at=timezone.now()+timedelta(seconds=settings.AUTH_CODE_TTL_SECONDS), **fields)
+            expires_at=clock.now()+timedelta(seconds=settings.AUTH_CODE_TTL_SECONDS), **fields)
     return JsonResponse(flow_data(flow), status=201)
 
 
@@ -261,7 +264,7 @@ def _send_code(request, flow):
             (flow.purpose == 'email_code' and not email_ready())):
         return error(request, 'CHANNEL_UNAVAILABLE', 503)
     _live(flow)
-    now, code, challenge_id = timezone.now(), f'{secrets.randbelow(1000000):06d}', uuid.uuid4()
+    now, code, challenge_id = clock.now(), f'{secrets.randbelow(1000000):06d}', uuid.uuid4()
     if flow.challenge_id:
         LoginChallenge.objects.filter(pk=flow.challenge_id).update(consumed_at=now)
     item = LoginChallenge.objects.create(id=challenge_id,
@@ -362,12 +365,12 @@ def captcha(request):
                     not LoginIdentity.objects.filter(user=user, method=flow.method, identifier=flow.identifier).exists()):
                 return error(request, 'INVALID_CREDENTIALS', 401)
             _live(flow)
-            flow.consumed_at, flow.password_hash = timezone.now(), ''
+            flow.consumed_at, flow.password_hash = clock.now(), ''
             flow.save(update_fields=['consumed_at','password_hash'])
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             register_session(request)
             AuditEvent.objects.create(actor=user, action='auth.password_verified', request_id=request.request_id)
-            if flow.expires_at <= timezone.now():
+            if flow.expires_at <= clock.now():
                 raise ValueError('INVALID_FLOW')
             return JsonResponse(session_data(request))
         if not throttle('identity:'+flow.method+':'+flow.identifier,settings.AUTH_IDENTIFIER_LIMIT,settings.AUTH_RESEND_SECONDS):
@@ -399,7 +402,7 @@ def cancel(request):
     data = payload(request, ('flow_id',))
     with transaction.atomic():
         flow, _ = _locked_flow(request, data['flow_id'])
-        _invalidate(AuthFlow.objects.filter(pk=flow.pk), timezone.now())
+        _invalidate(AuthFlow.objects.filter(pk=flow.pk), clock.now())
     return JsonResponse({'status':'cancelled'})
 
 
@@ -407,7 +410,7 @@ def cancel(request):
 def _locked_challenge(flow,data,purpose):
     item = LoginChallenge.objects.select_for_update().filter(pk=flow.challenge_id).first()
     if (item is None or str(item.pk) != data['challenge_id'] or not item.delivered or
-            item.consumed_at or item.expires_at <= timezone.now() or
+            item.consumed_at or item.expires_at <= clock.now() or
             item.session_digest != flow.session_digest or item.identifier != flow.identifier or item.method != flow.method or
             item.purpose != _challenge_purpose(purpose)):
         raise ValueError('INVALID_CODE')
@@ -439,7 +442,7 @@ def verify(request, purpose):
         item = _locked_challenge(flow,data,purpose)
         if not constant_time_compare(item.code_digest,digest(str(item.pk)+':'+data['code'])):
             raise ValueError('INVALID_CODE')
-        now = timezone.now()
+        now = clock.now()
         if purpose == 'recovery':
             if user is None or not LoginIdentity.objects.filter(user=user, method=flow.method, identifier=flow.identifier).exists():
                 return error(request, 'INVALID_CODE', 422)
@@ -477,13 +480,13 @@ def verify(request, purpose):
                 return error(request,str(exc),422)
             raise
         _live(flow)
-        flow.consumed_at, flow.password_hash, item.consumed_at = timezone.now(), '', timezone.now()
+        flow.consumed_at, flow.password_hash, item.consumed_at = clock.now(), '', clock.now()
         flow.save(update_fields=['consumed_at','password_hash'])
         item.save(update_fields=['consumed_at'])
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         register_session(request)
         AuditEvent.objects.create(actor=user, action='auth.registered', request_id=request.request_id)
-        if flow.expires_at <= timezone.now():
+        if flow.expires_at <= clock.now():
             raise ValueError('INVALID_FLOW')
         return JsonResponse(session_data(request))
 
@@ -521,10 +524,10 @@ def change_password(request, user, identifier, password, *, expires_at, method='
         user.email = identifier  # Validation only; LoginIdentity remains authoritative.
     validate_new_password(password, user)
     user.set_password(password)
-    if expires_at <= timezone.now():
+    if expires_at <= clock.now():
         raise ValueError('INVALID_FLOW')
     user.save(update_fields=['password'])
-    now = timezone.now()
+    now = clock.now()
     _invalidate(AuthFlow.objects.filter(Q(user=user)|Q(method=method,identifier=identifier),consumed_at__isnull=True),now)
     LoginChallenge.objects.filter(Q(password_user=user)|Q(method=method,identifier=identifier),consumed_at__isnull=True).update(consumed_at=now)
     keys = list(AccountSession.objects.filter(user=user).values_list('session_key', flat=True))
@@ -535,7 +538,7 @@ def change_password(request, user, identifier, password, *, expires_at, method='
     from .notifications import record_security_notice
     record_security_notice(user, 'password-reset:'+str(request.request_id))
     # Includes every DB write and lock wait, not just the expensive hash.
-    if expires_at <= timezone.now():
+    if expires_at <= clock.now():
         raise ValueError('INVALID_FLOW')
     transaction.on_commit(lambda: _password_notification(identifier, request.request_id,method))
 
@@ -563,7 +566,7 @@ def complete(request):
 @transaction.atomic
 def cleanup_auth_data(*, apply=False):
     """Scrub expired/consumed technical state; never touch users or ticket tombstones."""
-    now = timezone.now()
+    now = clock.now()
     expired = Q(expires_at__lte=now) | Q(consumed_at__isnull=False)
     all_flows = AuthFlow.objects.filter(expired)
     flows = all_flows.exclude(identifier='',password_hash='',first_name='',last_name='',

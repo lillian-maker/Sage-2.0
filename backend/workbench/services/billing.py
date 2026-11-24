@@ -10,6 +10,7 @@ import uuid
 from datetime import timedelta
 from fractions import Fraction
 
+from django.conf import settings
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.http import HttpResponse
@@ -341,14 +342,26 @@ def revise(ctx, public_id, data):
                               'estimate_state': item.estimate_state, 'version': item.version}}
 
 
+# Fixed per-scope estimates for development and test (2736:1979 前 20 名约 20 Credits; 2736:43 前 50 名约 40 Credits).
+# Production has no estimate source yet, so a re-estimate there ends in unavailable.
+LOCAL_ESTIMATES = {20: 20, 50: 40}
+
+
+def _local_estimate(item):
+    if settings.ENVIRONMENT not in ('development', 'test'):
+        return None
+    return LOCAL_ESTIMATES.get(item.scope_params.get('top_n'))
+
+
 @transaction.atomic
 def estimate(ctx, public_id, data):
     item = find_authorization(ctx, public_id, lock=True)
     client_request_id(data)
     _decidable(ctx, item)
-    if item.estimate_state != 'unavailable':
+    if item.estimate_state not in ('checking', 'unavailable'):
         raise ValueError('STATE_CONFLICT')
-    item.estimate_state = 'checking'
+    credits = _local_estimate(item)
+    item.estimate_state, item.estimated_credits = ('estimated', credits) if credits else ('unavailable', None)
     _bump(item)
     return {'authorization': {'id': item.public_id, 'estimate_state': item.estimate_state, 'version': item.version}}
 

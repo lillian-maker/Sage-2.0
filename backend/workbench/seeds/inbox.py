@@ -6,8 +6,8 @@ from ._clock import timezone
 
 from backend.workbench.models import (AuthorizationRequest, Automation, AutomationPermission, AutomationRun,
                                       ConnectorConnection, Expert, Extension, InboxItem, InboxItemEvent,
-                                      InboxSource, InboxSourceDailyStat, KickoffQuestion, Task, TaskParticipant,
-                                      TaskStep, TaskThread)
+                                      InboxSource, InboxSourceDailyStat, KickoffQuestion, Task, TaskDelivery,
+                                      TaskParticipant, TaskStep, TaskThread)
 from backend.workbench.services.notify import notify
 
 from . import core
@@ -16,6 +16,9 @@ from .billing import AUTHORIZATION
 ORDER = 40
 # Minutes since last activity on the seed clock; screen 715 shows the A/B copy task at "26 分钟".
 ACTIVITY_MINUTES = {'首页文案 A/B 方案': 26}
+# Screen 48 list ages on the seed clock: 待你审批 10 分钟前, 待你补充 1 小时前, 待你验收 / 邀请 昨天. created_at is
+# auto_now_add (wall clock), so the rows are back-dated after creation.
+DECISION_AGE_MINUTES = {'approve': 10, 'supply': 60, 'accept': 25 * 60, 'invite': 26 * 60}
 ZONE = ZoneInfo('Asia/Shanghai')
 
 EXPERTS = ('立言', '解忧', '安心', '契约', '结伴', '守店', '安界', '通途', '望野', '觅位', '译境', '衡价', '回声', '明镜',
@@ -59,14 +62,16 @@ AUTOMATIONS = (
 )
 # Screens 57/58: per-rule prompt, estimate and the connector the rule reads (state of that permission).
 AUTOMATION_DETAILS = {
+    # 640:2 最近结果 reads the last run (成功 · 11月3日, 排除行); without it the cell fell back to the kind label.
     '每周德国站竞品价格监控': {
         'prompt': '对比 Amazon.de 小家电类目前 20 名竞品的价格变化，标出降价超过 10% 的商品，并给出我们是否跟进的建议。',
-        'estimate': (3, 25, '1 份价格对比表'), 'connector': ('Jungle Scout', 'needs_connection')},
+        'estimate': (3, 25, '1 份价格对比表'), 'connector': ('Jungle Scout', 'needs_connection'), 'last_success_days': 16},
     'Amazon 差评日报': {'last_success_days': 1},
     # Enabling fails (connection missing), so the list shows the roll-back toast of screen 57.
     '黑五库存预警': {'connector': ('Keepa', 'needs_connection')},
-    '新品上架清单': {'prompt': '整理本周店铺新上架的商品，列出标题、价格和库存，并标出信息不完整的商品。',
-               'estimate': (5, 15, '1 份上架清单'), 'connector': ('店铺商品目录', 'needs_grant')},
+    # Screens 2827:2548 / 2946:1337: saved, not enabled, the catalog connection still missing and no estimate yet.
+    '新品上架清单': {'prompt': '整理本周上架的新品并生成清单。',
+               'estimate': (None, None, None), 'connector': ('店铺商品目录', 'needs_connection')},
 }
 # The scan runs the "新市场进入评估" Playbook, whose lead is 望野 (screen 59 "望野 · 由 Playbook 指定"); the catalog
 # has no separate scanning expert.
@@ -189,19 +194,33 @@ def _task(account, member, workspace, title, lead, status='running'):
 def _decisions(ctx, account, users, memberships, workspace, experts):
     from .artifacts import workspace as named_workspace
     lillian, chen = memberships['lillian'], memberships['chen']
+    now = timezone.now()
+
+    def age(kind):
+        return now - timedelta(minutes=DECISION_AGE_MINUTES[kind])
+
     research = _task(account, lillian, workspace, '德国站竞品格局调研', experts['望野'], status='awaiting_user')
     # One request shared with seeds/billing.py (same purpose_text), so screen 48 shows a single 40 Credits approval.
     if not AuthorizationRequest.objects.filter(task=research, purpose_text=AUTHORIZATION['purpose_text']).exists():
-        AuthorizationRequest.objects.create(account=account, task=research, requested_by_expert=experts['望野'],
-                                            extension=_extension('Jungle Scout'), **AUTHORIZATION)
+        request = AuthorizationRequest.objects.create(account=account, task=research,
+                                                      requested_by_expert=experts['望野'],
+                                                      extension=_extension('Jungle Scout'), **AUTHORIZATION)
+        AuthorizationRequest.objects.filter(pk=request.pk).update(created_at=age('approve'))
+        # The "德语 Listing 本地化样稿 v1 · 译境" accept card is the pending TaskDelivery from seeds/tasks.py.
+        TaskDelivery.objects.filter(account=account, decision='pending', task__owner=lillian,
+                                    task__title='德语 Listing 本地化').update(created_at=age('accept'))
     keywords = _task(account, lillian, workspace, 'Amazon.de 关键词与类目机会', experts['觅位'])
-    KickoffQuestion.objects.get_or_create(account=account, task=keywords, order=1,
-                                          defaults={'question': '需要确认目标价格带'})
-    # The "德语 Listing 本地化样稿 v1 · 译境" accept card is the pending TaskDelivery from seeds/tasks.py.
+    question, created = KickoffQuestion.objects.get_or_create(account=account, task=keywords, order=1,
+                                                              defaults={'question': '需要确认目标价格带'})
+    if created:
+        KickoffQuestion.objects.filter(pk=question.pk).update(created_at=age('supply'))
     abtest = _task(account, chen, named_workspace(ctx, '品牌官网改版'), '首页文案 A/B 方案', experts['立言'])
-    TaskParticipant.objects.get_or_create(account=account, task=abtest, kind='human', user=users['lillian'],
-                                          defaults={'role': 'collaborator', 'state': 'invited',
-                                                    'invited_by': users['chen']})
+    invite, created = TaskParticipant.objects.get_or_create(account=account, task=abtest, kind='human',
+                                                            user=users['lillian'],
+                                                            defaults={'role': 'collaborator', 'state': 'invited',
+                                                                      'invited_by': users['chen']})
+    if created:
+        TaskParticipant.objects.filter(pk=invite.pk).update(created_at=age('invite'))
 
 
 def _automations(account, member, workspace, experts):

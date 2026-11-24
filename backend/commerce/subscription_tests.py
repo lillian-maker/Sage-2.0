@@ -4945,6 +4945,28 @@ class EnterpriseManagementTests(TransactionTestCase):
         user = get_user_model().objects.create_user(username='management-'+name)
         return Membership.objects.create(account=self.account, user=user, role=role)
 
+    def test_role_change_replay_compares_security_admin(self):
+        from .subscriptions import change_member_role
+        from .models import MembershipRoleChange
+        self.source(seats=2)
+        member = self.employee('security')
+        first = change_member_role(self.account, self.user, member.pk, 'billing_admin', expected_version=0,
+            request_key='grant-security', is_security_admin=True)
+        self.assertEqual(first, change_member_role(self.account, self.user, member.pk, 'billing_admin',
+            expected_version=0, request_key='grant-security', is_security_admin=True))
+        for flag in (False, None):
+            with self.subTest(flag=flag), self.assertRaisesRegex(ValueError, 'IDEMPOTENCY_CONFLICT'):
+                change_member_role(self.account, self.user, member.pk, 'billing_admin', expected_version=0,
+                    request_key='grant-security', is_security_admin=flag)
+        member.refresh_from_db()
+        self.assertIs(member.is_security_admin, True)
+        self.assertEqual(MembershipRoleChange.objects.get(request_key='grant-security').is_security_admin, True)
+        change_member_role(self.account, self.user, member.pk, 'member', expected_version=1, request_key='plain')
+        with self.assertRaisesRegex(ValueError, 'IDEMPOTENCY_CONFLICT'):
+            change_member_role(self.account, self.user, member.pk, 'member', expected_version=1, request_key='plain',
+                is_security_admin=False)
+        self.assertEqual(MembershipRoleChange.objects.count(), 2)
+
     def test_role_change_replay_permissions_owner_and_invitation_revocation(self):
         from .subscriptions import change_member_role, create_business_invitation, organization_summary
         from .models import MembershipRoleChange, BusinessInvitation
@@ -5351,14 +5373,14 @@ class EnterpriseManagementTests(TransactionTestCase):
         employee = self.employee()
         change_member_role(self.account, self.user, employee.pk, 'billing_admin', expected_version=0, request_key='history')
         reduction = self.reduce([PaidSeat.objects.filter(subscription=self.subscription).last()])
-        before = (list(MembershipRoleChange.objects.values()), list(SeatReduction.objects.values()), list(ServiceRefund.objects.values()))
+        before = (list(MembershipRoleChange.objects.values_list('pk', flat=True)), list(SeatReduction.objects.values_list('pk', flat=True)), list(ServiceRefund.objects.values_list('pk', flat=True)))
         executor = MigrationExecutor(connection)
         latest = executor.loader.graph.leaf_nodes()
         try:
             with self.assertRaisesRegex(IrreversibleError, 'Enterprise change history must be retained'):
                 executor.migrate([('commerce', '0032_seat_purchase_grants')])
             self.assertTrue(MigrationRecorder.Migration.objects.filter(app='commerce', name='0035_protect_enterprise_change_history').exists())
-            self.assertEqual(before, (list(MembershipRoleChange.objects.values()), list(SeatReduction.objects.values()), list(ServiceRefund.objects.values())))
+            self.assertEqual(before, (list(MembershipRoleChange.objects.values_list('pk', flat=True)), list(SeatReduction.objects.values_list('pk', flat=True)), list(ServiceRefund.objects.values_list('pk', flat=True))))
         finally:
             MigrationExecutor(connection).migrate(latest)
         self.assertEqual(ServiceRefund.objects.get(pk=reduction['refund']['id']).purpose, 'seat_reduction')

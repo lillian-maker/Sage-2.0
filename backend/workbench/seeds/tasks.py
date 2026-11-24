@@ -52,6 +52,11 @@ MAIN_GRAPH = (
     ('claims', 'review', '合规复核', '宣称与合规复核', '安界', 'queued', 15, None, ('compliance',)),
     ('summary', 'deliver', '报告汇总', '汇总进入建议', '望野', 'queued', 25, None, ('numbers', 'claims')),
 )
+# Screen 22 (存为 Playbook): the suggested template — six of the nine steps, three of them parameterized.
+MAIN_PLAYBOOK_VARIABLES = [{'name': '市场', 'default': '德国'}, {'name': '平台', 'default': 'Amazon.de'},
+                           {'name': '品类', 'default': '家用小家电'}]
+MAIN_PLAYBOOK_STEPS = (('landscape', '市场'), ('keywords', '平台'), ('compliance', '市场'), ('pricing', None),
+                       ('numbers', None), ('summary', None))
 # Inputs of the sales-estimate node, resolved from the knowledge graph.
 SALES_INPUTS = ('Amazon.de 小家电类目', '竞品前 50 名', '我们的 X1 系列')
 SALES_CRITERIA = (('覆盖前 50 名中至少 45 个商品', 'pending'), ('每个估算注明数据日期与来源', 'pending'),
@@ -65,12 +70,13 @@ PARALLEL_ROWS = (
     ('清账', 'numbers', '数字复核', None, None, False),
 )
 PARALLEL_METRICS = {'tool_calls': 6, 'documents_read': 24, 'artifacts_created': 2, 'elapsed_seconds': 1025}
+# Delivery-time wording of the acceptance list (08 交付验收); the kickoff card of 德国站进入评估 keeps the short wording.
 MAIN_CRITERIA = (
     ('覆盖前 20 名竞品，含价格带与差评集中点', '报告 §2 · 数据表'),
-    ('给出“进入 / 暂缓”结论及 3 条依据', '报告 §3'),
-    ('列出上线前必须完成的合规门槛', '报告 §5 · 安界清单'),
-    ('关键数字经清账复核', '报告 §6 · 复核记录'),
-    ('附全部数据来源', '报告 §7 · 来源'),
+    ('每个数字注明来源与数据日期', '报告附录 A'),
+    ('列出上架前必须完成的合规事项与周期', '报告 §3'),
+    ('给出“进入 / 暂缓”结论及 3 条依据', '报告 §1'),
+    ('关键数字由清账复核', '复核记录'),
 )
 MAIN_QUESTIONS = (
     ('先看哪个类目？', ['小家电', '厨房用品', '个护电器'], '小家电'),
@@ -86,9 +92,15 @@ SUGGESTIONS = (('把进入清单整理成 Excel 打勾表', False), ('查看前 
 ACTIVE_MINUTES = (8, 41, 12)
 # Screen 23: the user's request that started the X1 content review.
 OPENING = {'X1 德语 Listing 上架前审核': '上架前帮我审核这份德语 Listing 和主图，看看有没有违反 Amazon.de 政策和德国法规的地方。'}
+# Screen 23 (内容审核结果卡) names the review's plan steps; other active tasks keep numbered placeholder steps.
+STEP_TITLES = {'X1 德语 Listing 上架前审核': ('拆分审核对象与维度', '平台政策审核', '法规与品牌规范审核', '汇总结果待你验收',
+                                          '应用改写并生成 v3')}
+# Screen 23 also names who ran each review step and how long the finished ones took (安界 · 1 分钟 …).
+STEP_EXPERTS = {'X1 德语 Listing 上架前审核': ('安界', '觅位', '立言', '安界', '望野')}
+STEP_MINUTES = {'X1 德语 Listing 上架前审核': (1, 3, 4)}
 ACTIVE = (
     ('Amazon.de 关键词与类目机会', '觅位', None, 'running', ('望野',), 2, 5, '检索类目页'),
-    ('X1 德语 Listing 上架前审核', '安界', None, 'stuck', ('译境',), 1, 4, '法规原文版本不一致，正在重试'),
+    ('X1 德语 Listing 上架前审核', '安界', None, 'stuck', ('望野',), 3, 5, '3 处需修改'),
     ('Q4 欧洲达人合作清单', '立言', '黑五大促', 'running', (), 3, 5, '筛选德语区家居类达人'),
 )
 # Screen 48 "待你验收": the localisation sample is delivered and waits for Lillian.
@@ -147,7 +159,7 @@ def _message(task, at, body, kind='text', expert=None, user=None, thread=None, *
         author_expert=expert, author_user=user, kind=kind, body=body, sent_at=at, **extra)
 
 
-def _steps(task, rows, done, now, activity=None, running_status='running'):
+def _steps(task, rows, done, now, activity=None, running_status='running', minutes=()):
     for order, (stage, title, expert, credits) in enumerate(rows, 1):
         if order <= done:
             status = 'done'
@@ -159,7 +171,8 @@ def _steps(task, rows, done, now, activity=None, running_status='running'):
         TaskStep.objects.create(
             account=task.account, task=task, order=order, stage=stage, title=title, expert=expert, status=status,
             estimated_credits=credits, activity=activity if status != 'done' and status != 'queued' else None,
-            started_at=start if status != 'queued' else None, finished_at=start + timedelta(minutes=10)
+            started_at=start if status != 'queued' else None,
+            finished_at=start + timedelta(minutes=minutes[order - 1] if order <= len(minutes) else 10)
             if status == 'done' else None)
 
 
@@ -193,14 +206,17 @@ def _expert_ref(expert):
 
 
 def _main_task(ctx, account, member, workspace, experts, now):
-    wangye, anjie, qingzhang = experts['望野'], experts['安界'], experts['清账']
-    # Conversation clock matches the boards (望野's progress note at 09:52, the delivery at 10:52) on the seed day.
-    start = timezone.localtime(now).replace(hour=9, minute=14, second=0, microsecond=0)
+    wangye, anjie = experts['望野'], experts['安界']
+    # Conversation clock matches the boards (request 09:40, 望野's progress note 09:52, delivery 10:52) on the seed day.
+    start = timezone.localtime(now).replace(hour=9, minute=40, second=0, microsecond=0)
     # v2 was accepted; the follow-up "前 50 名月销量" step now waits for the Jungle Scout authorization.
     task, created = _task(account, member, workspace, MAIN_TITLE, wangye, 'awaiting_user',
-                          now - timedelta(minutes=10), (anjie, qingzhang))
+                          now - timedelta(minutes=10), (anjie,))
     if not created:
         return task
+    # Boards list four participants: 望野, 安界, Lillian Li and Chen Yu. 清账 still owns its plan steps (658:2).
+    TaskParticipant.objects.create(account=account, task=task, kind='human', user=ctx['users']['chen'],
+                                   role='collaborator', state='active', invited_by=member.user)
     task.goal = '判断家用小家电是否值得在 12 月前进入德国站'
     task.scope_text = 'Amazon.de 小家电类目前 20 名竞品、价格带、EPR / WEEE 合规门槛'
     task.deliverables = '竞品格局报告（文档）+ 价格带数据表'
@@ -226,17 +242,21 @@ def _main_task(ctx, account, member, workspace, experts, now):
     _message(task, start + timedelta(minutes=7), '收到，按前 20 名整理，本土品牌单独标出。计划分 5 步。', kind='plan',
              expert=wangye, branch_index=2, card_type='plan', card_id=task.public_id)
     graph = _main_graph(task, experts, now)
+    task.playbook_template = {'name': '新市场进入评估', 'variables': MAIN_PLAYBOOK_VARIABLES,
+                              'steps': [{'step': graph[key].public_id, 'variable': variable}
+                                        for key, variable in MAIN_PLAYBOOK_STEPS]}
+    task.save(update_fields=['playbook_template', 'updated_at'])
     _parallel_card(task, wangye, graph, start + timedelta(minutes=8), experts)
-    progress = _message(task, start + timedelta(minutes=38), PROGRESS_BODY, expert=wangye, branch_index=2,
+    progress = _message(task, start + timedelta(minutes=12), PROGRESS_BODY, expert=wangye, branch_index=2,
                         run_metrics={'steps_done': 3, 'steps_total': 5})
     Citation.objects.create(account=account, task=task, task_message=progress,
                             external_label='Amazon.de 类目页 · 11月3日', ref_index=2)
     side = TaskThread.objects.create(account=account, task=task, kind='side', anchor_message=progress, expert=anjie)
-    _message(task, start + timedelta(minutes=50), 'LUCID 登记需要多久？会影响 12 月上架吗？', user=user, thread=side)
-    _message(task, start + timedelta(minutes=51), '通常 3–5 个工作日。WEEE 注册号需要 4–6 周，是关键路径，建议本周提交。',
+    _message(task, start + timedelta(minutes=24), 'LUCID 登记需要多久？会影响 12 月上架吗？', user=user, thread=side)
+    _message(task, start + timedelta(minutes=25), '通常 3–5 个工作日。WEEE 注册号需要 4–6 周，是关键路径，建议本周提交。',
              expert=anjie, thread=side)
-    _message(task, start + timedelta(minutes=52), '好，把这个结论写进清单。', user=user, thread=side)
-    back = _message(task, start + timedelta(minutes=53), 'EPR 注册清单已更新，见右侧侧聊中的讨论结论。', kind='summary', expert=anjie,
+    _message(task, start + timedelta(minutes=26), '好，把这个结论写进清单。', user=user, thread=side)
+    back = _message(task, start + timedelta(minutes=27), 'EPR 注册清单已更新，见右侧侧聊中的讨论结论。', kind='summary', expert=anjie,
                     branch_index=2, card_type='side_thread', card_id=side.public_id)
     side.brought_back_message = back
     side.save(update_fields=['brought_back_message', 'updated_at'])
@@ -246,7 +266,7 @@ def _main_task(ctx, account, member, workspace, experts, now):
     delivery = TaskDelivery.objects.create(account=account, task=task, artifact_version=version,
                                            summary=DELIVERY_SUMMARY, decision='accepted', decided_by=user,
                                            decided_at=now - timedelta(minutes=15))
-    card = _message(task, start + timedelta(minutes=98), DELIVERY_BODY, kind='delivery_card', expert=wangye,
+    card = _message(task, start + timedelta(minutes=72), DELIVERY_BODY, kind='delivery_card', expert=wangye,
                     branch_index=2, card_type='delivery', card_id=delivery.public_id, is_important=True)
     version.task_message = card
     version.save(update_fields=['task_message', 'updated_at'])
@@ -254,7 +274,7 @@ def _main_task(ctx, account, member, workspace, experts, now):
         TaskSuggestion.objects.create(account=account, task=task, text=text,
                                       requires_authorization=requires_authorization,
                                       state='started' if requires_authorization else 'open')
-    _message(task, start + timedelta(minutes=100), '查看前 50 名竞品的月销量需要用 Jungle Scout 读取数据，等你批准后继续。',
+    _message(task, start + timedelta(minutes=74), '查看前 50 名竞品的月销量需要用 Jungle Scout 读取数据，等你批准后继续。',
              expert=wangye, branch_index=2)
     TaskUserState.objects.create(account=account, task=task, user=user, pinned_at=now - timedelta(days=1),
                                  last_read_at=now - timedelta(minutes=30))
@@ -272,9 +292,10 @@ def _active(ctx, account, member, workspace, experts, now):
         if not created:
             continue
         rows = [(('understand', 'research', 'analyze', 'review', 'deliver')[min(order, 4)],
-                 '%s · 第 %d 步' % (title, order + 1), experts[lead], 6) for order in range(total)]
+                 STEP_TITLES[title][order] if title in STEP_TITLES else '%s · 第 %d 步' % (title, order + 1),
+                 experts[STEP_EXPERTS[title][order]] if title in STEP_EXPERTS else experts[lead], 6) for order in range(total)]
         step_status = 'awaiting_user' if status == 'awaiting_user' else 'failed' if status == 'stuck' else 'running'
-        _steps(task, rows, done, at, activity, step_status)
+        _steps(task, rows, done, at, activity, step_status, STEP_MINUTES.get(title, ()))
         _message(task, at - timedelta(minutes=30), OPENING.get(title, '%s，今天内给我初稿。' % title), user=member.user)
         if status == 'stuck':
             task.stuck_rounds = 3

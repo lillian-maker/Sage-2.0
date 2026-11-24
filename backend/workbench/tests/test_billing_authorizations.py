@@ -1,4 +1,6 @@
 """Contract tests: app/authorizations/* and app/grants (C-A-5, C-A-6, C-D-18, Q-P5, Q-V11)."""
+from django.test import override_settings
+
 from backend.commerce.models import Reservation
 from backend.models import AuditEvent
 from backend.workbench.models import AuthorizationGrant
@@ -90,18 +92,42 @@ class AuthorizationDecisionTests(AppTestCase):
         self.assertTrue(AuditEvent.objects.filter(action='authorization.reject').exists())
         self.assert_error(self.post(self.url('approve'), {'client_request_id': 'r2'}), 409, 'STATE_CONFLICT')
 
-    def test_revise_and_estimate(self):
+    @override_settings(ENVIRONMENT='development')
+    def test_revise_then_estimate_gives_fixed_local_estimate(self):
         body = self.ok(self.post(self.url('revise'), {'scope_params': {'top_n': 20}, 'client_request_id': 'v1'}))
         self.assertEqual(body['authorization']['estimate_state'], 'checking')
         self.assertEqual(body['authorization']['scope_text'], 'Amazon.de · 小家电类目 · 前 20 名')
         self.assert_error(self.post(self.url('revise'), {'scope_params': {'top_n': 30}, 'client_request_id': 'v2'}),
                           422, 'VALIDATION_FAILED')
-        self.assert_error(self.post(self.url('estimate'), {'client_request_id': 'e1'}), 409, 'STATE_CONFLICT')
+        self.assert_error(self.post(self.url('approve'), {'client_request_id': 'v3'}), 409, 'STATE_CONFLICT')
+        body = self.ok(self.post(self.url('estimate'), {'client_request_id': 'e1'}), 202)
+        self.assertEqual(body['authorization']['estimate_state'], 'estimated')
+        detail = self.ok(self.get('app/authorizations/%s' % self.item.public_id))
+        self.assertEqual((detail['estimate_state'], detail['estimated_credits']), ('estimated', 20))
+        self.assert_error(self.post(self.url('estimate'), {'client_request_id': 'e2'}), 409, 'STATE_CONFLICT')
+        credits(self.account)
+        self.assertEqual(self.ok(self.post(self.url('approve'), {'client_request_id': 'e3'}))['authorization']['decision'],
+                         'approved')
+
+    @override_settings(ENVIRONMENT='test')
+    def test_estimate_accepts_unavailable_and_checking_in_test(self):
+        for state, top_n, expected in (('unavailable', 50, 40), ('checking', 20, 20)):
+            with self.subTest(state=state):
+                self.item.refresh_from_db()
+                self.item.estimate_state, self.item.estimated_credits = state, None
+                self.item.scope_params = {'top_n': top_n}
+                self.item.save()
+                self.ok(self.post(self.url('estimate'), {'client_request_id': 't-%s' % state}), 202)
+                self.item.refresh_from_db()
+                self.assertEqual((self.item.estimate_state, self.item.estimated_credits), ('estimated', expected))
+
+    @override_settings(ENVIRONMENT='production')
+    def test_production_estimate_without_source_is_unavailable(self):
+        self.ok(self.post(self.url('revise'), {'scope_params': {'top_n': 20}, 'client_request_id': 'p1'}))
+        body = self.ok(self.post(self.url('estimate'), {'client_request_id': 'p2'}), 202)
+        self.assertEqual(body['authorization']['estimate_state'], 'unavailable')
         self.item.refresh_from_db()
-        self.item.estimate_state = 'unavailable'
-        self.item.save()
-        body = self.ok(self.post(self.url('estimate'), {'client_request_id': 'e2'}), 202)
-        self.assertEqual(body['authorization']['estimate_state'], 'checking')
+        self.assertIsNone(self.item.estimated_credits)
 
     def test_version_guards_decisions(self):
         self.assertEqual(self.ok(self.get('app/authorizations/%s' % self.item.public_id))['version'], 1)

@@ -530,6 +530,48 @@ class KickoffTests(TaskWorld):
         self.assertEqual(Reservation.objects.get(account=self.personal, task_key=task.public_id).quantity, '40')
         self.assertEqual(self.ok(self.post(path, {'client_request_id': 'start-1'}))['task']['status'], 'running')
 
+    def test_start_creates_kickoff_card_message_once(self):
+        # D96: 用户创建的任务开工后保留只读开工确认卡（此前只有种子任务有 kickoff_card 消息）。
+        member = self.member(self.lillian, self.personal)
+        task = Task.objects.create(account=self.personal, title='个人任务', creator=member, owner=member,
+                                   model_mode='auto', status='awaiting_kickoff')
+        TaskStep.objects.create(account=self.personal, task=task, order=1, stage='research', title='s',
+                                estimated_credits=40)
+        batch = CreditBatch.objects.create(account=self.personal, source='purchased', source_key='fixture',
+                                           initial_quantity='100', expires_at=timezone.now() + timedelta(days=30))
+        CreditEntry.objects.create(batch=batch, kind='grant', quantity='100', event_key='grant')
+        self.login(self.lillian, self.personal)
+        path = 'app/tasks/%s/start' % task.public_id
+        self.ok(self.post(path, {'client_request_id': 'start-1'}))
+        cards = TaskMessage.objects.filter(task=task, kind='kickoff_card')
+        self.assertEqual(cards.count(), 1)
+        card = cards.get()
+        self.assertEqual((card.card_type, card.card_id), ('kickoff', task.public_id))
+        self.assertEqual(card.author_kind, 'system')  # 无主责专家时退化为系统消息
+        listed = self.ok(self.get('app/tasks/%s/messages' % task.public_id))
+        self.assertEqual([m['kind'] for m in listed['items']].count('kickoff_card'), 1)
+        # 重复开始（幂等重放）不再补卡
+        self.ok(self.post(path, {'client_request_id': 'start-1'}))
+        self.assertEqual(TaskMessage.objects.filter(task=task, kind='kickoff_card').count(), 1)
+
+    def test_start_keeps_existing_kickoff_card(self):
+        member = self.member(self.lillian, self.personal)
+        task = Task.objects.create(account=self.personal, title='个人任务', creator=member, owner=member,
+                                   model_mode='auto', status='awaiting_kickoff')
+        TaskStep.objects.create(account=self.personal, task=task, order=1, stage='research', title='s',
+                                estimated_credits=40)
+        batch = CreditBatch.objects.create(account=self.personal, source='purchased', source_key='fixture',
+                                           initial_quantity='100', expires_at=timezone.now() + timedelta(days=30))
+        CreditEntry.objects.create(batch=batch, kind='grant', quantity='100', event_key='grant')
+        thread = svc.main_thread(task)
+        TaskMessage.objects.create(account=self.personal, task=task, thread=thread, author_kind='system',
+                                   kind='kickoff_card', body='开工前确认。', card_type='kickoff',
+                                   card_id=task.public_id)
+        self.login(self.lillian, self.personal)
+        self.ok(self.post('app/tasks/%s/start' % task.public_id, {'client_request_id': 'start-1'}))
+        card = TaskMessage.objects.get(task=task, kind='kickoff_card')
+        self.assertEqual(card.body, '开工前确认。')
+
     def test_start_business_without_seat_is_insufficient(self):
         task = self.kickoff_task()
         self.login(self.lillian, self.business)

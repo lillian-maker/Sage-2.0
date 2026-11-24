@@ -12,6 +12,7 @@ from ._clock import timezone
 
 from backend.workbench.models import Task
 
+from . import artifacts as artifact_seed
 from . import core
 from . import tasks as task_seed
 
@@ -22,6 +23,10 @@ LOGISTICS_TITLE = '德国物流与 VAT 成本测算'
 # The workspace task list on screen 631.
 WORKSPACE_TASKS = ('德国站竞品格局调研', '德国 EPR 与 WEEE 合规清单', 'Amazon.de 关键词与类目机会', '德语 Listing 本地化',
                    LOGISTICS_TITLE, '进入方案汇总（经营脉络）')
+# The sidebar group "未关联工作区" lists only "整理本周 Amazon 差评" (727:7); detached demo tasks that fit another
+# workspace move there. Their recency keeps them out of those groups' three visible rows.
+OTHER_WORKSPACE_TASKS = {'黑五大促': ('Q4 广告复盘', 'Q4 达人合作清单', '黑五投放素材清单', '黑五备货节奏'),
+                         '品牌官网改版': ('品牌主张文案',)}
 
 
 def _logistics(account, member, workspace):
@@ -40,3 +45,6 @@ def seed(ctx):
     _logistics(account, ctx['memberships']['lillian'], workspace)
     Task.objects.filter(account=account, workspace=workspace, archived_at__isnull=True).exclude(
         title__in=WORKSPACE_TASKS).update(workspace=None)
+    for name, titles in OTHER_WORKSPACE_TASKS.items():
+        Task.objects.filter(account=account, workspace__isnull=True, archived_at__isnull=True,
+                            title__in=titles).update(workspace=artifact_seed.workspace(ctx, name))

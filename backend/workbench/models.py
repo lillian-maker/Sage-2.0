@@ -1,5 +1,6 @@
 """App workbench entities (backend-plan.md section 1, E07–E63)."""
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -168,6 +169,8 @@ class Task(WorkbenchModel):
     source_automation_run = models.ForeignKey('AutomationRun', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     source_playbook = models.ForeignKey('Playbook', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     playbook_variables = models.JSONField(null=True, blank=True)
+    # Suggested defaults for "存为 Playbook": {name, variables: [{name, default}], steps: [{step: <public_id>, variable}]}.
+    playbook_template = models.JSONField(null=True, blank=True)
     shared_task = models.ForeignKey('commerce.SharedTask', null=True, blank=True, on_delete=models.PROTECT, related_name='+')
     pause_reason = models.CharField(max_length=20, null=True, blank=True,
                                     choices=_choices('user', 'quota_exhausted', 'handoff', 'policy'))
@@ -585,6 +588,23 @@ class KnowledgeBase(WorkbenchModel):
     editor_department = models.ForeignKey('commerce.Department', null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
     expert_cite_enabled = models.BooleanField(default=True)
     version = models.PositiveIntegerField(default=1)
+
+
+# E67 (D106, 24 屏 资料来源): a workspace only references a knowledge base as a source; removing the
+# reference leaves the knowledge base, its scope / workspace / permissions and documents untouched.
+class WorkspaceKnowledgeSource(WorkbenchModel):
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name='knowledge_sources')
+    knowledge_base = models.ForeignKey(KnowledgeBase, on_delete=models.CASCADE, related_name='workspace_sources')
+    added_by = models.ForeignKey(USER, null=True, blank=True, on_delete=models.SET_NULL, related_name='+')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['workspace', 'knowledge_base'],
+                                               name='wb_workspace_kb_source_unique')]
+
+    def save(self, *args, **kwargs):
+        if not (self.account_id == self.workspace.account_id == self.knowledge_base.account_id):
+            raise ValidationError('workspace and knowledge base must belong to the same account')
+        super().save(*args, **kwargs)
 
 
 # E42

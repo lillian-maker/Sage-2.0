@@ -539,6 +539,8 @@ class MembershipRoleChange(models.Model):
     request_key = models.CharField(max_length=64)
     expected_version = models.PositiveIntegerField()
     resulting_version = models.PositiveIntegerField()
+    # None when the request did not set the flag; replays compare it like the other request fields.
+    is_security_admin = models.BooleanField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -547,7 +549,7 @@ class MembershipRoleChange(models.Model):
 
     def save(self, *args, **kwargs):
         _unchanged(self, ['membership_id', 'account_id', 'actor_id', 'before_role', 'after_role',
-            'request_key', 'expected_version', 'resulting_version'])
+            'request_key', 'expected_version', 'resulting_version', 'is_security_admin'])
         super().save(*args, **kwargs)
 
 

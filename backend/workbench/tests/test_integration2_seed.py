@@ -35,7 +35,7 @@ class SeedRegressionBase(AppTestCase):
 class SeedContentTests(SeedRegressionBase):
     def test_seed_is_idempotent_for_new_rows(self):
         self.assertEqual(Subscription.objects.filter(account=self.seeded_business).count(), 1)
-        self.assertEqual(PaidSeat.objects.filter(subscription__account=self.seeded_business).count(), 3)
+        self.assertEqual(PaidSeat.objects.filter(subscription__account=self.seeded_business).count(), 10)
         personal = Membership.objects.get(user__email='lillian@sagedemo.com', account__kind='personal').account
         self.assertEqual(Order.objects.filter(account=personal, display_number__endswith='-0042').count(), 1)
         self.assertFalse(Order.objects.filter(account=self.seeded_business, display_number__endswith='-0042').exists())

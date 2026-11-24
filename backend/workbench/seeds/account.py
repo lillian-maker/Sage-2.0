@@ -42,8 +42,10 @@ def _when(spec, now):
 def _task(account, workspace, membership, title):
     task = Task.objects.filter(account=account, title=title).order_by('id').first()
     if task is None:
+        # Task.last_activity_at defaults to the wall clock; seeded drafts sit at the 11 月 3 日 memory/grant date.
         task = Task.objects.create(account=account, workspace=workspace if title == '德国站竞品格局调研' else None,
-                                   title=title, creator=membership, owner=membership, model_mode='auto')
+                                   title=title, creator=membership, owner=membership, model_mode='auto',
+                                   last_activity_at=_when((11, 3), timezone.now()))
     return task
 
 
@@ -93,6 +95,8 @@ def seed(ctx):
     profile, _ = AccountProfile.objects.get_or_create(user=lillian)
     for key, value in PROFILE.items():
         setattr(profile, key, value)
+    # 677:2: 两步验证（新设备登录时）开着。
+    profile.two_step_on_new_device = True
     profile.onboarding_completed_at = profile.onboarding_completed_at or _when((11, 1), now)
     profile.save()
 

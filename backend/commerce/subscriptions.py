@@ -3,6 +3,7 @@
 Activation and channel confirmation are trusted internal operations, not HTTP
 payment endpoints. They do not charge, sign a mandate or verify a PSP callback.
 """
+import os
 import re
 import uuid
 import hashlib
@@ -17,6 +18,7 @@ from django.utils import timezone
 
 from backend.billing_rules import month_boundary, renewal_failure_decision
 from backend.models import AuditEvent
+from backend.workbench import clock
 from .billing import (_authorize_purchase, _datetime, _get, _identifier, _lock_account,
                       _quantity, _text, _attempt_dict, _effective_attempt_state, _payment_snapshot, _sale_gate, create_quote, create_order, grant_credits)
 from .models import CreditBatch, Quote, Order, Subscription, SubscriptionPeriod, PaymentAttempt, PaymentMethod, AuthorizationChange
@@ -1418,10 +1420,19 @@ def _seat_usage_state(seat, now):
     return pending, used, locked_until
 
 
+def _invitation_expiry_now(now):
+    # In development/test with SAGE_SEED_NOW, expiry is judged on the pinned workbench clock so seeded invitations
+    # agree with the render clock (same approach as authentication flow deadlines); production and unpinned runs
+    # keep the caller's instant.
+    if settings.ENVIRONMENT in ('development', 'test') and os.environ.get('SAGE_SEED_NOW', '').strip():
+        return clock.now()
+    return now
+
+
 def _invitation_status(invitation, now):
     if invitation.state != 'pending':
         return invitation.state
-    if invitation.expires_at <= now:
+    if invitation.expires_at <= _invitation_expiry_now(now):
         return 'expired'
     creator = invitation.creator
     if (not creator.is_active or not creator.user.is_active or
@@ -1440,7 +1451,7 @@ def _invitation_status(invitation, now):
 def _pending_invitations(account, now):
     from .models import BusinessInvitation
     return [row for row in BusinessInvitation.objects.filter(account=account, state='pending',
-        expires_at__gt=now).select_related('creator__user', 'seat', 'subscription', 'account')
+        expires_at__gt=_invitation_expiry_now(now)).select_related('creator__user', 'seat', 'subscription', 'account')
         if _invitation_status(row, now) == 'pending']
 
 
@@ -1769,8 +1780,8 @@ def change_member_role(account, actor, membership_id, role, *, expected_version,
         raise ValueError('INVALID_REQUEST')
     previous = MembershipRoleChange.objects.filter(account=account, request_key=request_key).first()
     if previous:
-        if (previous.actor_id, previous.membership_id, previous.after_role, previous.expected_version) != (
-                actor.pk, membership_id, role, expected_version):
+        if (previous.actor_id, previous.membership_id, previous.after_role, previous.expected_version,
+                previous.is_security_admin) != (actor.pk, membership_id, role, expected_version, is_security_admin):
             raise ValueError('IDEMPOTENCY_CONFLICT')
         return {'account_id':str(account.pk), 'membership_id':membership_id,
             'role':previous.after_role, 'version':previous.resulting_version}
@@ -1785,7 +1796,7 @@ def change_member_role(account, actor, membership_id, role, *, expected_version,
         target_type='membership', target_id=str(member.pk),
         summary=f'{member.user.get_full_name() or "成员"} 角色 {before} → {role}'[:200])
     change = MembershipRoleChange.objects.create(account=account, membership=member, actor=actor,
-        before_role=before, after_role=role, request_key=request_key,
+        before_role=before, after_role=role, request_key=request_key, is_security_admin=is_security_admin,
         expected_version=expected_version, resulting_version=expected_version+1)
     AuditEvent.objects.create(actor=actor, account=account, action='membership.role_changed', request_id=uuid.uuid4())
     BillingNotification.objects.create(account=account, type='member_role_changed',

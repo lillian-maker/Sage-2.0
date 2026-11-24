@@ -8,7 +8,7 @@ from django.utils import timezone
 from backend.commerce.billing import set_shared_limit
 from backend.workbench.models import (AcceptanceCriterion, Artifact, AuthorizationRequest, Citation, ContentReview,
                                       ContentReviewIssue, ExtensionInstall, KnowledgeBase, KnowledgeDocument, Task,
-                                      TaskDelivery, TaskMessage, TaskThread)
+                                      TaskDelivery, TaskMessage, TaskStep, TaskThread)
 from backend.workbench.services import artifacts as store
 from backend.workbench.tests.base import AppTestCase
 from backend.workbench.tests.test_inbox_support import (give_credits, make_expert, make_extension, make_task,
@@ -83,6 +83,22 @@ class TaskDetailAdditionTests(AppTestCase):
         delivery = self._delivery(decision='accepted')
         body = self.ok(self.get('app/tasks/%s' % self.task.public_id))
         self.assertIsNone(body['pending_delivery'])
+
+    def test_playbook_template_defaults_and_filtering(self):
+        self.assertIsNone(self.ok(self.get('app/tasks/%s' % self.task.public_id))['playbook_template'])
+        kept = TaskStep.objects.create(account=self.business, task=self.task, order=1, stage='research',
+                                       label='竞品格局分析', title='竞品格局分析', expert=self.expert)
+        plain = TaskStep.objects.create(account=self.business, task=self.task, order=2, stage='deliver',
+                                        label='报告汇总', title='汇总进入建议', expert=self.expert)
+        self.task.playbook_template = {
+            'name': '新市场进入评估', 'variables': [{'name': '市场', 'default': '德国'}, {'bad': 1}],
+            'steps': [{'step': kept.public_id, 'variable': '市场'}, {'step': plain.public_id, 'variable': '平台'},
+                      {'step': 'gone', 'variable': None}]}
+        self.task.save(update_fields=['playbook_template'])
+        body = self.ok(self.get('app/tasks/%s' % self.task.public_id))
+        self.assertEqual(body['playbook_template'], {
+            'name': '新市场进入评估', 'variables': [{'name': '市场', 'default': '德国'}],
+            'steps': [{'step': kept.public_id, 'variable': '市场'}, {'step': plain.public_id, 'variable': None}]})
 
 
 class DecisionEntryShapeTests(AppTestCase):

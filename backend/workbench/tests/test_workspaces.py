@@ -5,8 +5,8 @@ from django.utils import timezone
 
 from backend.models import Membership
 from backend.workbench.models import (AcceptanceCriterion, Expert, KnowledgeBase, KnowledgeDocument, Playbook,
-                                      Task, TaskStep, TaskUserState, Workspace, WorkspaceMember,
-                                      WorkspaceRuleVersion)
+                                      Task, TaskStep, TaskUserState, Workspace, WorkspaceKnowledgeSource,
+                                      WorkspaceMember, WorkspaceRuleVersion)
 from backend.workbench.tests.base import AppTestCase, make_user
 
 
@@ -113,7 +113,12 @@ class WorkspaceReadTests(WorkspaceBase):
         self.as_(self.mark)
         body = self.ok(self.get(self.url()))
         self.assertEqual(body['name'], '德国市场进入')
-        self.assertEqual(body['counts'], {'tasks': 4, 'documents': 2, 'members': 3})
+        # D108: documents only come from referenced bases (资料来源); owning a base is not enough.
+        self.assertEqual(body['counts'], {'tasks': 4, 'documents': 0, 'members': 3})
+        WorkspaceKnowledgeSource.objects.create(account=self.business, workspace=self.ws,
+                                                knowledge_base=KnowledgeBase.objects.get(name='德国市场进入资料库'))
+        self.assertEqual(self.ok(self.get(self.url()))['counts']['documents'], 2)
+        body = self.ok(self.get(self.url()))
         self.assertEqual(body['account_kind'], 'business')
         self.assertEqual(body['current_rule_version'], {'number': 3})
         self.assertEqual(body['unread_count'], 4)

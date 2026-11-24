@@ -11,7 +11,7 @@ from django.db.models import Q
 from ...http import error
 from ...models import AccountProfile
 from ...views import throttle
-from ..models import KnowledgeDocument, Task, TaskParticipant, TaskUserState, Workspace, WorkspaceMember
+from ..models import Task, TaskParticipant, TaskUserState, Workspace, WorkspaceMember
 
 EDIT_ROLES = ('owner', 'editor')
 ROLE_ORDER = ('owner', 'editor', 'viewer', 'guest')
@@ -176,10 +176,6 @@ def workspace_tasks(ctx, workspace, member, include_archived=False):
     if not include_archived:
         qs = qs.filter(archived_at__isnull=True)
     return qs
-
-
-def workspace_document_count(workspace):
-    return KnowledgeDocument.objects.filter(knowledge_base__workspace=workspace, deleted_at__isnull=True).count()
 
 
 def active_member_count(workspace):

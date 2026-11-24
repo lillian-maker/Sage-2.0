@@ -5,7 +5,8 @@ from ._clock import timezone
 
 from backend.commerce.models import Department
 from backend.workbench.models import (Artifact, ArtifactVersion, Expert, KnowledgeBase, KnowledgeDocument,
-                                      KnowledgeEntity, KnowledgeFact, KnowledgeRelation, Workspace)
+                                      KnowledgeEntity, KnowledgeFact, KnowledgeRelation, Workspace,
+                                      WorkspaceKnowledgeSource)
 from backend.workbench.services import knowledge as knowledge_service
 
 ORDER = 30
@@ -34,6 +35,8 @@ BASES = (
     ('客服话术库', 'account', 'chen', 'account_all', False, (), '客服组'),
     ('德国市场法规库', 'workspace', 'lillian', 'workspace_all', True, ('lillian', 'chen'), None),
 )
+# 24 屏（727:2）资料来源只列“德国市场法规库”；“德国市场进入资料库”仍属该工作区（scope / workspace 不变），只是不作为资料来源。
+WORKSPACE_SOURCES = ('德国市场法规库',)
 # title, uploader, size bytes, pages, state, progress, updated offset, extra
 DOCUMENTS = {
     '德国市场进入资料库': (
@@ -42,7 +45,7 @@ DOCUMENTS = {
         ('品牌手册 2026.pdf', 'chen', 12 * MB, 48, 'indexing', 62, MINUTES_10, {}),
         ('Amazon.de 小家电类目页', 'lillian', None, None, 'indexed', None, YESTERDAY,
          {'web': 'https://www.amazon.de/kleine-haushaltsgeraete', 'refresh': 'weekly'}),
-        ('2025 Q3 销售报表.csv', 'mark', int(1.1 * MB), None, 'indexed', None, 96, {'data_age': 96}),
+        ('2025 Q3 销售报表.csv', 'mark', int(1.1 * MB), None, 'indexed', None, 109, {'data_age': 96}),
         ('德国站关键词清单.xlsx', 'chen', 240 * 1024, None, 'indexed', None, 10, {}),
         ('Amazon.de 类目费用说明.pdf', 'lillian', int(1.6 * MB), 9, 'indexed', None, 12, {}),
         ('德国消费者调研 2026.pdf', 'lillian', int(3.2 * MB), 24, 'indexed', None, 14, {}),
@@ -69,8 +72,9 @@ FILLER_BASES = {
     '品牌手册 2026': (12, ('品牌主张', '视觉规范', '语气指南', '标志使用', '色彩规范', '字体规范', '包装规范',
                        '摄影风格', 'Listing 模板', '广告素材规范', '社媒规范', '品牌故事'), YESTERDAY, 0),
     # 23 fillers + the 2025-06 source of the superseded WEEE fact = 24 (39 屏).
-    '竞品研究资料': (23, None, 7, 0),
-    '客服话术库': (16, None, 9, 1),
+    # 39 屏 draws 10月30日 / 10月28日 for these two bases against the 11月19日 render clock.
+    '竞品研究资料': (23, None, 20, 0),
+    '客服话术库': (16, None, 22, 1),
 }
 OLD_SOURCE_TITLE = '竞品研究资料'
 
@@ -152,6 +156,9 @@ def seed_bases(ctx):
                                               editor_department=department if dept else None)
             kb.editors.set([users[key] for key in editors])
         bases[name] = kb
+        if name in WORKSPACE_SOURCES:
+            WorkspaceKnowledgeSource.objects.get_or_create(account=business, workspace=workspace, knowledge_base=kb,
+                                                           defaults={'added_by': users[owner]})
     return bases
 
 

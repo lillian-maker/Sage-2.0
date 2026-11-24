@@ -24,13 +24,17 @@ DEPARTMENTS = (('运营部', 9000, 3000, (('lillian', False), ('chen', True), ('
 # 76 屏：运营部打开了部门内调剂（每人份额一半保底、一半进调剂池）。
 POOLED_DEPARTMENTS = ('运营部',)
 # Settled shared Credits per business member this service month.
-BUSINESS_SPEND = (('mark', '1280'), ('chen', '640'))
-# Personal account usage (C-C-9, 63 屏): task title, Credits, settled days ago; 1,280 used this period in total.
-PERSONAL_TASKS = (('德国站竞品格局调研', '420', 0), ('德国 EPR 与 WEEE 合规清单', '310', 0), ('整理本周 Amazon 差评', '180', 1),
-                  ('Amazon 差评日报', '40', 1), ('首页文案 A/B 方案', '330', 2))
+# 76 屏运营部成员额度：Lillian 本期已用 1,280。
+BUSINESS_SPEND = (('lillian', '1280'), ('chen', '640'))
+# Personal account usage (C-C-9, 63 屏): task title, Credits, settled days ago, extra hours back; 1,280 used this
+# period in total. The two same-day rows need distinct hours so 641:2 sorts 420 before 310 (reverse last_used_at).
+PERSONAL_TASKS = (('德国站竞品格局调研', '420', 0, 0), ('德国 EPR 与 WEEE 合规清单', '310', 0, 2), ('整理本周 Amazon 差评', '180', 1, 0),
+                  ('Amazon 差评日报', '40', 1, 0), ('首页文案 A/B 方案', '330', 2, 0))
 # 63 屏「Amazon 差评日报（自动化）」：个人账本里由自动化运行产生的任务。
 PERSONAL_AUTOMATION_TASKS = ('Amazon 差评日报',)
 PERSONAL_CREDITS = '5000'
+# Enterprise subscription seats (758 / 760「10 已购名额」).
+SEAT_QUANTITY = 10
 # Offboarding preview (760:476) shows Wang Min; core pins the business member set, so Mark owns these instead.
 OFFBOARDING_TASKS = (('欧洲站售后话术整理', 'running'), ('11 月退货原因分析', 'awaiting_user'))
 # action, summary, target_type, actor, (day of the current month, hour, minute) -- 759:321–354, newest first
@@ -75,8 +79,9 @@ def _extension(name):
 def _task(account, membership, title, workspace=None, status='awaiting_user'):
     task = Task.objects.filter(account=account, title=title).order_by('id').first()
     if task is None:
+        # last_activity_at follows the seed clock, not the Task default (wall clock).
         task = Task.objects.create(account=account, workspace=workspace, title=title, creator=membership,
-                                   owner=membership, model_mode='auto', status=status)
+                                   owner=membership, model_mode='auto', status=status, last_activity_at=timezone.now())
     return task
 
 
@@ -90,8 +95,10 @@ def _shared_spend(account, membership, quantity, now):
     CreditEntry.objects.create(batch=batch, kind='grant', quantity=quantity, event_key='grant')
     reservation = Reservation.objects.create(account=account, task_key=key, membership=membership, quantity=quantity,
                                              settled_quantity=quantity, state='settled',
-                                             shared_period_start=now - timedelta(days=1),
-                                             shared_period_end=now + timedelta(days=29))
+                                             # same window as the subscription period below, which is
+                                             # what the member rows count shared usage against
+                                             shared_period_start=_month_start(now, 0),
+                                             shared_period_end=_month_start(now, -1))
     CreditEntry.objects.create(batch=batch, reservation=reservation, kind='reserve', quantity=quantity,
                                event_key='r:' + key)
     CreditEntry.objects.create(batch=batch, reservation=reservation, kind='settle', quantity=quantity,
@@ -104,34 +111,36 @@ def _orders_seats(business, members, users, now):
         return
     subscription_snapshot = {'product_id': 'seed', 'code': 'Enterprise', 'version': 1,
                              'kind': 'subscription', 'audience': 'business', 'billing_cycle': 'monthly',
-                             'seat_quantity': 3, 'unit_amount_minor': 29700, 'amount_minor': 89100,
+                             'seat_quantity': SEAT_QUANTITY, 'unit_amount_minor': 29700, 'amount_minor': 29700 * SEAT_QUANTITY,
                              'currency': 'CNY'}
     subscription_product = ProductVersion.objects.create(
         code='Enterprise', version=1, kind='subscription', audience='business',
         billing_cycle='monthly', unit_amount_minor=29700, minimum_seats=1, state='published',
         effective_at=now - timedelta(days=90))
     subscription_quote = Quote.objects.create(account=business, product=subscription_product,
-                                              snapshot=subscription_snapshot, amount_minor=89100, currency='CNY',
+                                              snapshot=subscription_snapshot, amount_minor=29700 * SEAT_QUANTITY, currency='CNY',
                                               expires_at=now + timedelta(days=30))
     subscription_order = Order.objects.create(
         account=business, created_by=users['lillian'], quote=subscription_quote,
         idempotency_key='seed-billing-subscription', request_hash='seed', snapshot=subscription_snapshot,
-        amount_minor=89100, currency='CNY', status='fulfilled', paid_at=now - timedelta(days=2),
+        amount_minor=29700 * SEAT_QUANTITY, currency='CNY', status='fulfilled', paid_at=now - timedelta(days=2),
         display_number='SG-2026-11-0008')
     PaymentFact.objects.create(order=subscription_order, channel='alipay', merchant_reference='seed-subscription',
-                               transaction_reference='2026110122001000000000001234', amount_minor=89100,
+                               transaction_reference='2026110122001000000000001234', amount_minor=29700 * SEAT_QUANTITY,
                                currency='CNY', evidence_hash='a' * 64, disposition='accepted',
                                paid_at=now - timedelta(days=2))
+    # The enterprise service month is the calendar month (745「本服务月结束 11月30日」).
     subscription = Subscription.objects.create(
-        account=business, initial_order=subscription_order, original_anchor=now - timedelta(days=2),
+        account=business, initial_order=subscription_order, original_anchor=_month_start(now, 0),
         billing_timezone='Asia/Shanghai', calendar_rule_version='v1', billing_cycle='monthly',
         mandate={}, auto_renew=True)
-    seats = [PaidSeat.objects.create(subscription=subscription, position=1, membership=members['lillian']),
-             PaidSeat.objects.create(subscription=subscription, position=2, membership=members['chen']),
-             PaidSeat.objects.create(subscription=subscription, position=3, membership=None)]
+    # 758 / 760「10 已购名额 = 4 已分配 + 1 邀请预留 + 0 本月锁定 + 5 可分配」：Wang Min 的座位在 d82_org 里分配。
+    assigned = {1: members['lillian'], 2: members['chen'], 3: members['zhao']}
+    seats = [PaidSeat.objects.create(subscription=subscription, position=position, membership=assigned.get(position))
+             for position in range(1, SEAT_QUANTITY + 1)]
     SubscriptionPeriod.objects.create(
         subscription=subscription, order=subscription_order, cycle_index=0,
-        starts_at=now - timedelta(days=2), ends_at=now + timedelta(days=28),
+        starts_at=_month_start(now, 0), ends_at=_month_start(now, -1),
         snapshot={**subscription_snapshot, 'credits_quantity': '0',
                   'seat_ids': [str(seat.pk) for seat in seats]})
 
@@ -150,8 +159,9 @@ PERSONAL_PLAN = {'product_id': 'seed', 'code': 'pro', 'version': 1, 'kind': 'sub
 PERSONAL_TOPUP = {'product_id': 'seed', 'code': 'seed-credits-2000', 'version': 1, 'kind': 'credits',
                   'audience': 'personal', 'credits_quantity': '2000', 'unit_amount_minor': 19900,
                   'amount_minor': 19900, 'currency': 'CNY'}
-# months back, display sequence, day of month, needs review
-PERSONAL_PERIODS = ((2, '0142', 1, True), (1, '0187', 1, False), (0, '0021', 1, False))
+# months back, display sequence, day of month, needs review. The 10月 invoice is created on the 31st so 764:2 lists
+# it after the 10月18日 top-up (设计按行的时间倒序), while the period text still reads 10月1日 – 10月30日.
+PERSONAL_PERIODS = ((2, '0142', 1, True), (1, '0187', 31, False), (0, '0021', 1, False))
 PERSONAL_TOPUP_ORDER = (1, '0193', 18)
 # 66 屏：本月 3 日 14:22 加购 5,000 Credits，标价 ¥499，加购优惠 −¥50（discount_* 存在订单快照里，D29）。
 PERSONAL_CREDITS_ORDER = {'product_id': 'seed', 'code': 'seed-credits-5000', 'version': 1, 'kind': 'credits',
@@ -274,13 +284,17 @@ def seed(ctx):
         _shared_spend(business, members[key], quantity, now)
     _orders_seats(business, members, users, now)
 
-    # 760:476「邀请中 · 23 小时后失效」一行：走真实邀请服务，占用唯一的空座位
+    # 760:476「邀请中 · 23 小时后失效」一行：走真实邀请服务，预留一个空座位
     from backend.commerce.subscriptions import create_business_invitation
     invite = create_business_invitation(business, users['lillian'], method='email', identifier='lishan@sage.demo',
                                         role='member', paid=True, request_key='seed-invite-lishan')
     # 758:428 / 760:428 邀请行显示受邀人姓名；成员行记录用户 id，供“（你）”按用户匹配（D41）
     from backend.commerce.models import BusinessInvitation
     from ..services import org_people
+    # The service stamps created_at / expires_at from the real clock; pin both to the seed clock (sent 1 hour ago,
+    # 23 hours left) so the row reads 「23 小时后失效」. A queryset update keeps the expiry > created_at constraint.
+    BusinessInvitation.objects.filter(pk=invite['id']).update(created_at=now - timedelta(hours=1),
+                                                              expires_at=now + timedelta(hours=23))
     org_people.record_invitation(business, BusinessInvitation.objects.get(pk=invite['id']), 'Li Shan')
     for membership in members.values():
         if membership.account_id == business.pk:
@@ -314,16 +328,16 @@ def seed(ctx):
         ledger.grant_credits(personal, 'purchased', 'seed-billing-personal', PERSONAL_CREDITS,
                              paid + timedelta(days=365), order=credits_order)
         CreditBatch.objects.filter(account=personal, source_key='seed-billing-personal').update(created_at=paid)
-    for title, quantity, days in PERSONAL_TASKS:
+    for title, quantity, days, hours in PERSONAL_TASKS:
         task = _task(personal, owner, title)
         if title in PERSONAL_AUTOMATION_TASKS and task.source_automation_run_id is None:
-            task.source_automation_run = _personal_automation_run(personal, owner, title, now - timedelta(days=days))
+            task.source_automation_run = _personal_automation_run(personal, owner, title, now - timedelta(days=days, hours=hours))
             task.save(update_fields=['source_automation_run'])
         if Reservation.objects.filter(account=personal, task_key=task.public_id).exists():
             continue
         reservation = ledger.reserve_credits(personal, task.public_id, quantity)
         ledger.settle_credits(personal, reservation['id'], quantity)
-        CreditEntry.objects.filter(reservation_id=reservation['id']).update(created_at=now - timedelta(days=days))
+        CreditEntry.objects.filter(reservation_id=reservation['id']).update(created_at=now - timedelta(days=days, hours=hours))
     # 61 屏“本期额度已使用 25% · 个人账本 · 11月3日”: commerce raises the notice when settlement crosses 25%, which
     # in the seed happens at seed time; the row is dated to the 3rd like the usage it summarises (update skips the
     # model's immutability check, seed only).
