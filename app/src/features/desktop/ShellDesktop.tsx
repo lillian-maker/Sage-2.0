@@ -167,7 +167,8 @@ export function WorkspaceHoverCard({
       {w && (
         <button type="button" className="sg-dsk-card__row" onClick={() => go(`/knowledge?workspace=${encodeURIComponent(workspaceId)}`)}>
           <Icon name="file" size={14} />
-          <span className="truncate">{`资料 ${w.counts.documents} 份${indexAt ? ` · 本地索引 ${fmtLocalTime(indexAt)}` : ''}`}</span>
+          {/* D112: workspace document counts are not shown (local-folder files are never known to the backend). */}
+          <span className="truncate">{indexAt ? `本地索引 ${fmtLocalTime(indexAt)}` : '资料'}</span>
         </button>
       )}
       <div className="sg-dsk-card__divider" />

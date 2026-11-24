@@ -218,7 +218,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
       <aside className={`sg-ws__side${railOpen ? ' is-open' : ''}`} aria-label="工作区资料与成员">
         <section>
           <SectionTitle
-            title={docs.data ? `资料 · ${docs.data.total}` : '资料'}
+            title="资料"
             action={{ label: '添加资料', icon: 'plus', href: `/knowledge?workspace=${enc}` }}
           />
           {docs.status === 'error' && <InlineNotice icon="info" tone="error" text="资料暂时无法读取" action="重试" onAction={docs.reload} />}
@@ -235,7 +235,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
           })}
           {docs.data && docs.data.total > 4 && (
             <Link className="sg-wsside__more" href={allDocsHref}>
-              查看全部 {docs.data.total} 项
+              查看全部
             </Link>
           )}
         </section>

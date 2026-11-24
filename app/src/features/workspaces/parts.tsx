@@ -33,7 +33,7 @@ export function WorkspaceTabs({
   const base = `/workspaces/${encodeURIComponent(ws.id)}`;
   const tabs: Array<{ key: WorkspaceTabKey; label: string; to: string }> = [
     { key: 'tasks', label: `任务 ${ws.counts.tasks}`, to: base },
-    { key: 'documents', label: `资料 ${ws.counts.documents}`, to: `/knowledge?workspace=${encodeURIComponent(ws.id)}` },
+    { key: 'documents', label: '资料', to: `/knowledge?workspace=${encodeURIComponent(ws.id)}` },
     { key: 'rules', label: rulesLabel, to: `${base}/rules` },
     { key: 'members', label: `成员 ${memberCount ?? ws.counts.members}`, to: `${base}/members` },
   ];
