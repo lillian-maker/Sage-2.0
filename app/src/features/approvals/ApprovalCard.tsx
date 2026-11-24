@@ -38,6 +38,10 @@ export interface ApprovalCardProps {
   onApproveScope?: (value: string) => void;
   /** The scope changed and credits must be re-estimated before approving. */
   estimatePending?: boolean;
+  /** Offer the estimate action; defaults to estimatePending. A check already running has nothing to retry (2736:1495). */
+  canEstimate?: boolean;
+  /** 重试估算 after an unavailable estimate (2777:43), 重新估算 after a scope change (2736:1011). */
+  estimateLabel?: string;
 }
 
 const LABEL = { pending: '需要你确认', approved: '已批准', processing: '处理中', rejected: '已拒绝' } as const;
@@ -60,6 +64,8 @@ export function ApprovalCard({
   scopes,
   onApproveScope,
   estimatePending,
+  canEstimate,
+  estimateLabel = '重试估算',
 }: ApprovalCardProps) {
   const [scopeAt, setScopeAt] = useState<{ x: number; y: number } | null>(null);
   const decided = status === 'approved' || status === 'rejected';
@@ -80,8 +86,10 @@ export function ApprovalCard({
       { variant: 'secondary', size: 32, label: '修改范围', onClick: onRevise, disabled: decided || !!submitting },
     ];
     if (status === 'pending') {
-      extra = [{ label: '拒绝', onClick: onReject }];
-      if (estimatePending) actions.push({ variant: 'secondary', size: 32, label: '重试估算', onClick: onEstimate, disabled: !!submitting });
+      // 2732:797 / 2736:1011: 批准 → 修改范围 → 拒绝 → 重新估算.
+      actions.push({ variant: 'ghost', size: 32, label: '拒绝', onClick: onReject });
+      // D69/D75: 重新估算 stays clickable from the start; on it the estimate turns 待重新估算.
+      if (canEstimate ?? estimatePending) actions.push({ variant: 'secondary', size: 32, label: estimateLabel, onClick: onEstimate, disabled: !!submitting });
     }
   }
   const scopeMenu = !decided && scopes && scopes.length > 0 && onApproveScope;
@@ -101,7 +109,8 @@ export function ApprovalCard({
         ))}
       </dl>
       <div className="sg-approval__footer">
-        <ActionBar variant="decision" actions={actions} extraActions={extra} />
+        {/* In the inbox a decided request keeps only 在任务中打开 (2292:2, 2732:2305). */}
+        {layout === 'inbox' && decided ? <span /> : <ActionBar variant="decision" actions={actions} extraActions={extra} />}
         {scopeMenu && (
           <Button
             variant="ghost"

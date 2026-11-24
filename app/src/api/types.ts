@@ -207,6 +207,19 @@ export interface GetTasksByIdResponse {
     artifact_version?: number;
     id?: string;
   };
+  playbook_template?: {
+    name?: string;
+    steps?: Array<{
+      id?: string;
+      step?: string;
+      variable?: string;
+    }>;
+    variables?: Array<{
+      default?: string;
+      id?: string;
+      name?: string;
+    }>;
+  };
   progress?: {
     done?: string;
     total?: number;
@@ -1307,6 +1320,35 @@ export interface GetWorkspacesJoinRequestsMineResponse {
   };
 }
 
+/** GET app/workspaces/{id}/knowledge-bases〔新增，D106〕 */
+export interface GetWorkspacesKnowledgeBasesResponse {
+  can_manage?: boolean;
+  items?: Array<{
+    can_edit?: boolean;
+    cite_audience?: string;
+    content_updated_at?: string | null;
+    document_count?: number;
+    editor_department?: {
+      id?: string;
+      name?: string;
+    };
+    expert_cite_enabled?: boolean;
+    failed_count?: number;
+    failed_document_ids?: Array<string>;
+    id?: string;
+    name?: string;
+    processing_count?: number;
+    scope?: string;
+    workspace?: {
+      id?: string;
+      name?: string;
+    };
+  }>;
+  next_offset?: number;
+  offset?: number;
+  total?: number;
+}
+
 /** POST auth/challenges〔已有（现固定返回 403，需重新启用）〕 响应：201 {flow_id, challenge_id, expires_at, resend_available_at} */
 export interface PostAuthChallengesResponse {
   [key: string]: unknown;
@@ -1750,6 +1792,19 @@ export interface PostBillingOrganizationMembersRemoveRequest {
   membership_id?: JsonValue;
   request_key?: JsonValue;
   confirm?: JsonValue;
+  [key: string]: JsonValue | undefined;
+}
+
+/** DELETE app/workspaces/{id}/knowledge-bases/{kb_id}〔新增，D106〕 响应：200 {knowledge_base:{id, name}}；只删除工作区与知识库的引用关系，知识库本身不变；写审计 workspace.knowledge_source.remove */
+export interface DeleteWorkspacesKnowledgeBasesByIdResponse {
+  knowledge_base?: {
+    id?: string;
+    name?: string;
+  };
+}
+
+/** 请求：无 */
+export interface DeleteWorkspacesKnowledgeBasesByIdRequest {
   [key: string]: JsonValue | undefined;
 }
 

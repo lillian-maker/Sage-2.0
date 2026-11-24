@@ -7,13 +7,14 @@ export interface ChoiceChipGroupProps {
   size: 28;
   onChange?: (value: string) => void;
   label?: string;
+  disabled?: boolean;
 }
 
-export function ChoiceChipGroup({ options, value, size, onChange, label }: ChoiceChipGroupProps) {
+export function ChoiceChipGroup({ options, value, size, onChange, label, disabled }: ChoiceChipGroupProps) {
   return (
     <div className="sg-chipgroup" role="radiogroup" aria-label={label}>
       {options.map((o) => (
-        <ChoiceChip key={o} role="radio" label={o} size={size} selected={o === value} onToggle={() => onChange?.(o)} />
+        <ChoiceChip key={o} role="radio" label={o} size={size} selected={o === value} disabled={disabled} onToggle={() => onChange?.(o)} />
       ))}
     </div>
   );

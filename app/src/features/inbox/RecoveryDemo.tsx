@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '../../components/Button/Button';
 import { Icon } from '../../components/Icon/Icon';
 import { automationsApi } from '../automations/api';
@@ -75,7 +75,8 @@ function useScanAutomationId(): string | null {
   return id;
 }
 
-export function RecoveryDemo({ initial, navigate }: { initial: RecoveryPhase; navigate: (to: string) => void }) {
+/** Renders both panes of the 收件 · 需要我决定 layout: the example row on the left (under header) and its card. */
+export function RecoveryDemo({ initial, navigate, header }: { initial: RecoveryPhase; navigate: (to: string) => void; header?: ReactNode }) {
   const [phase, setPhase] = useState<RecoveryPhase>(initial);
   const scanId = useScanAutomationId();
   useEffect(() => setPhase(initial), [initial]);
@@ -130,29 +131,41 @@ export function RecoveryDemo({ initial, navigate }: { initial: RecoveryPhase; na
     );
 
   return (
-    <div className="sg-decide__card sg-recover" data-demo-phase={phase}>
-      <div className="sg-recover__head">
-        <span className="sg-recover__tag">{LIST_TAG[phase]}</span>
-        <h3 className="sg-recover__title">使用 Keepa 读取历史价格</h3>
-        <span className="sg-recover__meta">{phase === 'rejected_processing' ? '示例 · 每月新市场机会扫描 · 法国' : '虚构测试示例 · 每月新市场机会扫描 · 法国'}</span>
-      </div>
-      <section className="sg-approval sg-approval--inbox is-pending" aria-busy={busy || undefined}>
-        <div className="sg-approval__status">
-          <Icon name="info" size={14} />
-          {STATUS[phase]}
+    <>
+      <div className="sg-inq__side">
+        {header}
+        <div className="sg-inq__list">
+          <div className="sg-inq__row is-selected sg-recover__head">
+            <span className="sg-inq__row-text">
+              <span className="sg-recover__tag">{LIST_TAG[phase]}</span>
+              <span className="sg-recover__title">使用 Keepa 读取历史价格</span>
+              <span className="sg-recover__meta">{phase === 'rejected_processing' ? '示例 · 每月新市场机会扫描 · 法国' : '虚构测试示例 · 每月新市场机会扫描 · 法国'}</span>
+            </span>
+          </div>
         </div>
-        <p className="sg-approval__title">使用 Keepa 读取历史价格（只读）。</p>
-        <dl className="sg-approval__grid">
-          {DETAILS.map((d) => (
-            <div key={d.label}>
-              <dt>{d.label}</dt>
-              <dd>{pendingDetails && d.label !== '动作' ? '待确认' : d.value}</dd>
+      </div>
+      <section className="sg-inq__detail" aria-label="决定详情">
+        <div className="sg-inq__pane sg-decide__card sg-recover" data-demo-phase={phase}>
+          <h2 className="sg-inq__title">使用 Keepa 读取历史价格</h2>
+          <section className="sg-approval sg-approval--inbox is-pending" aria-busy={busy || undefined}>
+            <div className="sg-approval__status">
+              <Icon name="info" size={14} />
+              {STATUS[phase]}
             </div>
-          ))}
-        </dl>
-        <div className="sg-recover__actions">{actions}</div>
+            <p className="sg-approval__title">使用 Keepa 读取历史价格（只读）。</p>
+            <dl className="sg-approval__grid">
+              {DETAILS.map((d) => (
+                <div key={d.label}>
+                  <dt>{d.label}</dt>
+                  <dd>{pendingDetails && d.label !== '动作' ? '待确认' : d.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="sg-recover__actions">{actions}</div>
+          </section>
+          <p className="sg-decide__note">{NOTE[phase]}</p>
+        </div>
       </section>
-      <p className="sg-decide__note">{NOTE[phase]}</p>
-    </div>
+    </>
   );
 }

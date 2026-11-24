@@ -6,7 +6,6 @@ import { Avatar } from '../../components/Avatar/Avatar';
 import { BackLink } from '../../components/BackLink/BackLink';
 import { Button } from '../../components/Button/Button';
 import { Icon } from '../../components/Icon/Icon';
-import { IconButton } from '../../components/IconButton/IconButton';
 import { Menu, MenuItem, Popover } from '../../components/Menu/MenuItem';
 import { EmptyState, ErrorBanner, errorMessage, QueryGate } from '../../components/States/States';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -80,10 +79,10 @@ export default function Screen({ params, navigate }: ScreenProps) {
           actions={
             k && (
               <>
-                <IconButton
-                  icon="settings"
-                  size={32}
+                <Button
                   variant="secondary"
+                  size={32}
+                  icon="settings"
                   label="权限"
                   onClick={(e) => {
                     const r = e.currentTarget.getBoundingClientRect();

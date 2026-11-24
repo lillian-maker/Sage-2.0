@@ -312,11 +312,12 @@ export function AppShell({ pathname, children }: { pathname: string; children: R
         </Popover>
       )}
       {toastState && (
-        <div className="sg-shell__toast">
+        <div className={toastState.variant === 'card' ? 'sg-shell__toast sg-shell__toast--card' : 'sg-shell__toast'}>
           <Toast
             key={toastState.key}
             tone={toastState.tone}
             message={toastState.message}
+            {...(toastState.variant ? { variant: toastState.variant } : {})}
             {...(toastState.detail ? { detail: toastState.detail } : {})}
             onClose={closeToast}
             {...(toastState.actionLabel

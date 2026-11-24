@@ -64,6 +64,21 @@
   color: var(--color-neutral-0);
 }
 
+/*
+ * Sidebar count badges and task progress tags per theme (light), measured on the theme boards:
+ * 84/85 新锐 (692/693), 87/88 时尚 (695/696), 90/91 舒适 (698/699), 93/94 极简 (701/702).
+ * The generic brand-tint mapping gives these themes a solid accent behind the progress tag, which the
+ * boards only use for the badge.
+ */
+[data-theme="neo_electric"]:not([data-appearance="dark"]) .sg-count--brand { background: #c6f432; color: #111111; }
+[data-theme="neo_electric"]:not([data-appearance="dark"]) .sg-tasklist__state.is-info { background: #efebff; color: #5b3df5; }
+[data-theme="fashion_editorial"]:not([data-appearance="dark"]) .sg-count--brand { background: #c8102e; color: #ffffff; }
+[data-theme="fashion_editorial"]:not([data-appearance="dark"]) .sg-tasklist__state.is-info { background: #ece8e0; color: #111111; }
+[data-theme="comfort_readable"]:not([data-appearance="dark"]) .sg-count--brand { background: #0f5e6b; color: #ffffff; }
+[data-theme="comfort_readable"]:not([data-appearance="dark"]) .sg-tasklist__state.is-info { background: #e6f2f3; color: #0f5e6b; }
+[data-theme="minimal_focus"]:not([data-appearance="dark"]) .sg-count--brand { background: #ff5b1f; color: #111111; }
+[data-theme="minimal_focus"]:not([data-appearance="dark"]) .sg-tasklist__state.is-info { background: #f2f2f2; color: #111111; }
+
 
 /* 窄窗口（Figma 709/712、708/711）：右栏收为抽屉，从右侧滑出 */
 .sg-btn.sg-taskheader__railtoggle,

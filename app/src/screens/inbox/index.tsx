@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ScreenProps } from '../../app/router';
 import { useShell } from '../../app/AppShell';
 import { useApiQuery, useSubmit } from '../../app/useApi';
@@ -9,7 +9,7 @@ import { EmptyState, ErrorBanner, LoadingState, errorMessage } from '../../compo
 import { Tab } from '../../components/Tabs/Tab';
 import { Tag } from '../../components/Tag/Tag';
 import { inboxApi, type InboxItem, type ItemGroup, type Mention, type SourceKind } from '../../features/inbox/api';
-import { DecisionEntry } from '../../features/inbox/DecidePanel';
+import { DecisionDetail, DecisionRow, type DecidedSnapshot } from '../../features/inbox/DecidePanel';
 import { RECOVERY_PHASES, RecoveryDemo, type RecoveryPhase } from '../../features/inbox/RecoveryDemo';
 import { GROUPS, GROUP_TAG, SOURCE_LABEL, shortTime } from '../../features/inbox/format';
 import { HandoverRow } from '../../features/inbox/HandoverRow';
@@ -67,6 +67,7 @@ function HandoverList({ navigate, toast }: { navigate: (to: string) => void; toa
   if (groups.length === 0) return <EmptyState icon="users" title="现在没有待接管的交接" description="同事离开时转给你的任务、审批与自动化会出现在这里" />;
   return (
     <div className="sg-handover">
+      <h2 className="sg-handover__title">交接给你的事项</h2>
       {page.status === 'error' && <ErrorBanner message={errorMessage(page.error, '刷新失败')} onRetry={page.reload} />}
       {groups.map((g) => {
         const tasks = g.items.filter((item) => item.kind === 'task');
@@ -85,6 +86,7 @@ function HandoverList({ navigate, toast }: { navigate: (to: string) => void; toa
                 ))}
               </>
             )}
+            {others.length > 0 && <div className="sg-handover__label">其他</div>}
             {others.map((item) => (
               <HandoverRow key={item.id} item={item} onChanged={page.reload} onNavigate={navigate} onToast={toast} />
             ))}
@@ -100,34 +102,67 @@ function HandoverList({ navigate, toast }: { navigate: (to: string) => void; toa
   );
 }
 
-function DecideList({ navigate, onChanged, demo }: { navigate: (to: string) => void; onChanged: () => void; demo: RecoveryPhase | null }) {
+function DecideList({
+  header,
+  navigate,
+  onChanged,
+  demo,
+}: {
+  header: ReactNode;
+  navigate: (to: string) => void;
+  onChanged: () => void;
+  demo: RecoveryPhase | null;
+}) {
   const page = useApiQuery((s) => inboxApi.decisions(s), []);
-  if (demo)
-    return (
-      <div className="sg-decide">
-        <RecoveryDemo initial={demo} navigate={navigate} />
-      </div>
-    );
-  if (page.status === 'loading' && !page.data) return <LoadingState rows={3} />;
-  if (page.status === 'error' && !page.data) return <ErrorBanner message={errorMessage(page.error, '需要我决定暂时无法读取')} onRetry={page.reload} />;
+  const [selected, setSelected] = useState<string | null>(null);
+  const [decided, setDecided] = useState<DecidedSnapshot | null>(null);
+  if (demo) return <RecoveryDemo initial={demo} navigate={navigate} header={header} />;
   const items = page.data?.items ?? [];
-  if (items.length === 0) return <EmptyState icon="check" title="没有等你决定的事" description="审批、验收、邀请与待补充会出现在这里" />;
+  const showingDecided = decided !== null && selected === decided.decision.id;
+  const current = showingDecided ? null : (items.find((d) => d.id === selected) ?? items[0] ?? null);
+
+  let list;
+  if (page.status === 'loading' && !page.data) list = <LoadingState rows={3} />;
+  else if (page.status === 'error' && !page.data) list = <ErrorBanner message={errorMessage(page.error, '需要我决定暂时无法读取')} onRetry={page.reload} />;
+  else if (items.length === 0 && !showingDecided)
+    list = <EmptyState icon="check" title="没有等你决定的事" description="审批、验收、邀请与待补充会出现在这里" />;
+  else
+    list = (
+      <>
+        {page.status === 'error' && <ErrorBanner message={errorMessage(page.error, '刷新失败')} onRetry={page.reload} />}
+        {items.map((d) => (
+          <DecisionRow key={d.id} decision={d} selected={current?.id === d.id} onSelect={() => setSelected(d.id)} />
+        ))}
+      </>
+    );
+
+  const shown = showingDecided ? decided.decision : current;
   return (
-    <div className="sg-decide">
-      {page.status === 'error' && <ErrorBanner message={errorMessage(page.error, '刷新失败')} onRetry={page.reload} />}
-      {items.map((d) => (
-        <DecisionEntry
-          key={d.id}
-          decision={d}
-          onChanged={() => {
-            page.reload();
-            onChanged();
-          }}
-          onOpenTask={(taskId) => navigate(`/tasks/${taskId}?from=approval`)}
-          onOpenRun={(automationId, runId) => navigate(`/automations/${automationId}/runs?run=${runId}`)}
-        />
-      ))}
-    </div>
+    <>
+      <div className="sg-inq__side">
+        {header}
+        <div className="sg-inq__list">{list}</div>
+      </div>
+      <section className="sg-inq__detail" aria-label="决定详情">
+        {shown && (
+          <DecisionDetail
+            key={shown.id}
+            decision={shown}
+            decided={showingDecided ? decided : null}
+            onChanged={() => {
+              page.reload();
+              onChanged();
+            }}
+            onDecided={(snapshot) => {
+              setDecided(snapshot);
+              setSelected(snapshot.decision.id);
+            }}
+            onOpenTask={(taskId) => navigate(`/tasks/${taskId}?from=approval`)}
+            onOpenRun={(automationId, runId) => navigate(`/automations/${automationId}/runs?run=${runId}`)}
+          />
+        )}
+      </section>
+    </>
   );
 }
 
@@ -263,12 +298,51 @@ export default function Screen({ query, navigate }: ScreenProps) {
     </nav>
   );
 
-  let body;
   const demoParam = query.get('demo') as RecoveryPhase | null;
   const demo = demoParam && RECOVERY_PHASES.includes(demoParam) ? demoParam : null;
-  if (filter === 'decide') body = <DecideList navigate={navigate} onChanged={shell.refresh} demo={demo} />;
-  else if (filter === 'mentions') body = <MentionsList navigate={navigate} />;
-  else if (filter === 'handover') body = <HandoverList navigate={navigate} toast={toastFail} />;
+
+  // 638:2: 需要我决定 and @与指派 use a title + horizontal tabs header over a list / detail split; the
+  // demo frames (3128:43, 3311:681) show the tabs without counts.
+  if (filter === 'decide' || filter === 'mentions') {
+    const tab = (label: string, selectedTab: boolean, n: number | undefined, onSelect: () => void) => (
+      <Tab size={37} label={label} selected={selectedTab} onSelect={onSelect} {...(!demo && n !== undefined ? { count: n } : {})} />
+    );
+    const header = (
+      <header className="sg-inq__head">
+        <h1 className="sg-inq__h1">收件</h1>
+        <p className="sg-inq__subtitle">所有在等你处理的事，都在这里</p>
+        <div className="sg-tabs sg-inq__tabs" role="tablist" aria-label="收件">
+          {tab('全部', false, counts?.all, () => setFilter('all'))}
+          {tab('需要我决定', filter === 'decide', counts?.decisions, () => setFilter('decide'))}
+          {tab('@ 与指派', filter === 'mentions', counts?.mentions, () => setFilter('mentions'))}
+          {tab('外部消息', false, counts?.external, () => setFilter('all'))}
+        </div>
+      </header>
+    );
+    return (
+      <div className={`sg-inbox sg-inbox--tabs${filter === 'mentions' ? ' is-single' : ''}`}>
+        {filter === 'decide' ? (
+          <DecideList
+            header={header}
+            navigate={navigate}
+            onChanged={() => {
+              shell.refresh();
+              page.reload();
+            }}
+            demo={demo}
+          />
+        ) : (
+          <div className="sg-inq__side">
+            {header}
+            <MentionsList navigate={navigate} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  let body;
+  if (filter === 'handover') body = <HandoverList navigate={navigate} toast={toastFail} />;
   else if (page.status === 'loading' && !page.data) body = <LoadingState rows={4} />;
   else if (page.status === 'error' && !page.data)
     body = <ErrorBanner message={errorMessage(page.error, '收件暂时无法读取')} onRetry={page.reload} />;

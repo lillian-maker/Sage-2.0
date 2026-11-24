@@ -102,6 +102,7 @@ export default function Screen({ query, hash, navigate }: ScreenProps) {
               label: item.title,
               tone: 'outline' as const,
               size: 24 as const,
+              ...(item.state ? { meta: item.state, metaTone: item.state === '就绪' ? ('success' as const) : ('muted' as const) } : {}),
               icon: kind === 'materials' ? ('file' as const) : kind === 'experts' ? ('contact' as const) : ('zap' as const),
               removable: true,
               onRemove: () => setPicked((p) => ({ ...p, [kind]: p[kind].filter((x) => x.id !== item.id) })),

@@ -11,9 +11,10 @@ export interface CapabilityRowProps {
   action?: string;
   onAction?: () => void;
   busy?: boolean;
+  disabled?: boolean;
 }
 
-export function CapabilityRow({ icon, iconTile, name, kind, action, onAction, busy }: CapabilityRowProps) {
+export function CapabilityRow({ icon, iconTile, name, kind, action, onAction, busy, disabled }: CapabilityRowProps) {
   const connector = kind?.startsWith('连接器');
   return (
     <div className="sg-cap">
@@ -21,7 +22,7 @@ export function CapabilityRow({ icon, iconTile, name, kind, action, onAction, bu
       <span className="sg-cap__name truncate">{name}</span>
       {kind && <span className={`sg-cap__kind${connector ? ' is-connector' : ''}`}>{kind}</span>}
       <span className="sg-cap__spacer" />
-      {action && <Button variant="secondary" size={28} label={action} onClick={onAction} busy={busy} />}
+      {action && <Button variant="secondary" size={28} label={action} onClick={onAction} busy={busy} disabled={disabled} />}
     </div>
   );
 }

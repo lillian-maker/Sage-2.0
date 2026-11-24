@@ -97,6 +97,7 @@
 .sg-pbdialog__step { display: flex; align-items: center; gap: 10px; height: 31px; text-align: left; }
 .sg-pbdialog__steptitle { color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); }
 .sg-pbdialog__stepmeta { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
+.sg-pbdialog__stepvar { color: var(--color-blue-840); font: var(--type-sans-sc-12-500-lh14-4); }
 .sg-pbdialog__vars { display: flex; flex-direction: column; }
 .sg-pbdialog__var { display: flex; align-items: center; gap: 10px; height: 31px; color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); }
 .sg-pbdialog__var button { display: flex; align-items: center; color: var(--color-slate-540); }

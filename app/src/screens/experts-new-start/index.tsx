@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ScreenProps } from '../../app/router';
-import { useSubmit } from '../../app/useApi';
+import { useApiQuery, useSubmit } from '../../app/useApi';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { ApiError } from '../../api/client';
 import { Button } from '../../components/Button/Button';
 import { IconButton } from '../../components/IconButton/IconButton';
@@ -20,6 +21,8 @@ export default function Screen({ query, navigate }: ScreenProps) {
   const [mode, setMode] = useState<Mode>(presetTemplate ? 'template' : 'describe');
   const [description, setDescription] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const counts = useApiQuery((signal) => expertsApi.list({ group: 'all' }, signal), []).data?.counts;
+  const total = counts ? counts.management + counts.role : undefined;
 
   const create = useSubmit(async () => {
     const body =
@@ -53,7 +56,8 @@ export default function Screen({ query, navigate }: ScreenProps) {
     <>
       <div className="sg-dpage" aria-hidden="true">
         <div className="sg-dpage__body">
-          <div className="sg-egrid" style={{ marginTop: 56 }}>
+          <PageHeader title="专家" description={total !== undefined ? `${total} 位数字专家，按职责找到合适的同事交办` : '按职责找到合适的同事交办'} />
+          <div className="sg-egrid" style={{ marginTop: 24 }}>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="sg-ecard sg-ecard--skeleton">
                 <span className="sg-skel sg-skel--avatar" />
@@ -65,7 +69,7 @@ export default function Screen({ query, navigate }: ScreenProps) {
           </div>
         </div>
       </div>
-      <Modal className="sg-dmodal__card" label="新建专家" onClose={() => navigate('/experts')}>
+      <Modal className="sg-dmodal__card" label="新建专家" scope="content" onClose={() => navigate('/experts')}>
           <div className="sg-dmodal__head">
             <h2>新建专家</h2>
             <IconButton icon="x" size={28} variant="ghost" label="关闭" onClick={() => navigate('/experts')} />

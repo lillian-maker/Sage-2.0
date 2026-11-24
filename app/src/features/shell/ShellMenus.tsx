@@ -10,6 +10,8 @@ import { errorMessage } from '../../components/States/States';
 import { TextField } from '../../components/TextField/TextField';
 import { checkForUpdates } from '../desktop/ShellDesktop';
 import { useDesktopInfo } from '../desktop/bridge';
+import { currentSubscription, getSubscriptions } from '../billing/api';
+import { planName } from '../billing/labels';
 import './shell.css';
 import { Modal } from '../../components/Modal/Modal';
 
@@ -26,6 +28,7 @@ export interface ToastOptions {
   detail?: string;
   actionLabel?: string;
   onAction?: () => void;
+  variant?: 'card';
 }
 
 interface Props {
@@ -54,11 +57,10 @@ function useAccountCard(open: boolean) {
       (p) => setCard((c) => ({ ...c, ...(typeof p.email === 'string' && p.email ? { email: p.email } : {}) })),
       () => undefined,
     );
-    billing.getBillingSubscriptions(undefined, ctl.signal).then(
+    getSubscriptions(ctl.signal).then(
       (s) => {
-        const first = (s as { items?: Array<{ plan_name?: string; plan?: { name?: string } }> }).items?.[0];
-        const plan = first?.plan_name || first?.plan?.name;
-        if (plan) setCard((c) => ({ ...c, plan }));
+        const sub = currentSubscription(s.items);
+        setCard((c) => ({ ...c, plan: sub ? planName(sub.plan_code) : undefined }));
       },
       () => undefined,
     );
@@ -76,14 +78,14 @@ export function ShellMenus({ menu, onClose, session, workspaces: list, toast, re
   const card = useAccountCard(menu?.kind === 'account');
   useEffect(() => setSubmenu(null), [menu]);
 
-  const run = async (fn: () => Promise<unknown>, failure: string, after?: () => void) => {
+  const run = async (fn: () => Promise<unknown>, failure: string, after?: () => void): Promise<void> => {
     onClose();
     try {
       await fn();
       refresh();
       after?.();
     } catch (err) {
-      toast({ tone: 'failure', message: errorMessage(err, failure) });
+      toast({ tone: 'failure', message: errorMessage(err, failure), actionLabel: '重试', onAction: () => void run(fn, failure, after) });
     }
   };
 

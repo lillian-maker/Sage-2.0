@@ -86,6 +86,35 @@
 .sg-toast__action { color: var(--color-blue-220); font: var(--type-sans-sc-13-500-lh15-6); letter-spacing: var(--type-sans-sc-13-500-lh15-6-ls); }
 .sg-toast--failure .sg-toast__action { color: var(--color-neutral-0); }
 .sg-toast__close { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; color: var(--color-neutral-0); opacity: 0.7; }
+/* 57 自动化 3235:94: white card, red title, outlined “知道了” on the right. */
+.sg-toastcard {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  padding: 16px;
+  border: 1px solid var(--color-red-150);
+  border-radius: 10px;
+  background: var(--color-neutral-0);
+  box-shadow: var(--shadow-0_6_20-neutral-1000-a14);
+}
+.sg-toastcard__title { color: var(--color-red-600); font: var(--type-sans-sc-15-500-lh18); letter-spacing: var(--type-sans-sc-15-500-lh18-ls); }
+.sg-toastcard--undo .sg-toastcard__title { color: var(--color-blue-840); }
+.sg-toastcard__detail { color: var(--color-slate-660-2); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-toastcard__actions { display: flex; justify-content: flex-end; }
+.sg-toastcard__action {
+  height: 30px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-neutral-160);
+  border-radius: 6px;
+  background: var(--color-neutral-0);
+  color: var(--color-slate-730);
+  font: var(--type-sans-sc-13-500-lh15-6);
+  cursor: pointer;
+}
+.sg-toastcard__action:hover { background: var(--color-neutral-40); }
 .sg-toast__timer {
   width: 60px;
   height: 3px;

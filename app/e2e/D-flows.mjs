@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(path.join(process.env.PLAYWRIGHT_MODULE, 'index.js'));
 const base = process.env.SAGE_URL || 'http://127.0.0.1:5184';
 const [name, value] = readFileSync(process.env.SAGE_SESSION_FILE || new URL('../../tmp/dev-session.txt', import.meta.url).pathname, 'utf8').trim().split('=');
-const shots = '/Users/ll/Documents/Sage/.scratch/figma-sync/q/dev/frontend/shots/D';
+const shots = process.env.SHOTS || new URL('../../tmp/e2e-shots/D', import.meta.url).pathname;
 mkdirSync(shots, { recursive: true });
 
 const results = [];

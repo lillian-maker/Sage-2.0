@@ -56,9 +56,13 @@ export default function Screen({ params, query, hash, navigate }: ScreenProps) {
   const decisions = useApiQuery((s) => taskApi.decisions(s), [id]);
   const threads = useApiQuery((s) => taskApi.threads(id, s), [id]);
   const status = task.data?.status;
+  // 04 开工确认卡 · 启动后: until the first step moves, the confirmed brief stays on the page read-only.
+  const justStarted = status === 'running' && !!steps.data
+    && steps.data.items.every((s) => s.status === 'queued' || s.status === 'missing_capability')
+    && (msgs.data?.items ?? []).some((m) => m.kind === 'kickoff_card');
   const kickoff = useApiQuery(
-    (s) => (status === 'awaiting_kickoff' ? taskApi.kickoff(id, s) : Promise.resolve(null)),
-    [id, status],
+    (s) => (status === 'awaiting_kickoff' || justStarted ? taskApi.kickoff(id, s) : Promise.resolve(null)),
+    [id, status, justStarted],
   );
   const mine = (decisions.data?.items ?? []).filter((d) => d.target.task_id === id);
   const delivery = mine.find((d) => d.type === 'accept' && d.target.type === 'delivery');
@@ -128,7 +132,9 @@ export default function Screen({ params, query, hash, navigate }: ScreenProps) {
     navigate(`/tasks/${id}?panel=side-chat&thread=${r.thread.id}`);
   });
 
-  const messages = (branch != null ? branchMsgs.data?.items : null) ?? msgs.data?.items ?? [];
+  const messages = ((branch != null ? branchMsgs.data?.items : null) ?? msgs.data?.items ?? []).map((m) =>
+    justStarted && m.kind === 'kickoff_card' ? { ...m, body: '任务已开始，进度将在右侧更新。' } : m,
+  );
   const lastUser = [...messages].reverse().find((m) => m.author_kind === 'user');
   useEffect(() => {
     if (hash === 'editing' && lastUser) setEditing(lastUser.id);
@@ -424,7 +430,7 @@ export default function Screen({ params, query, hash, navigate }: ScreenProps) {
             {edit.error && <InlineNotice icon="info" tone="error" text={apiMessage(edit.error, '重新发送没有成功')} />}
             {openThread.error && <InlineNotice icon="info" tone="error" text={apiMessage(openThread.error, '侧聊暂时无法打开')} />}
 
-            {t.status === 'awaiting_kickoff' && kickoff.data && (
+            {(t.status === 'awaiting_kickoff' || justStarted) && kickoff.data && (
               <div id="task-confirm">
                 <KickoffPanel
                   kickoff={kickoff.data}

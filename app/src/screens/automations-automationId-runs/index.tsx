@@ -131,7 +131,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
               </div>
               <div className="sg-autorun__cell">
                 <span className="sg-autorun__num">完成后放入“成果 › 自动化”</span>
-                <span className="sg-autorun__label">产出</span>
+                <span className="sg-autorun__label">结果</span>
               </div>
               <div className="sg-autorun__cell">
                 <span className="sg-autorun__num">

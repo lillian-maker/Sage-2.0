@@ -90,3 +90,7 @@ button.sg-dsk-card__row:hover:not(:disabled) { background: var(--color-neutral-4
 .sg-dsk-mobile__title { color: var(--color-blue-840); font: var(--type-sans-sc-14-500-lh16-8); }
 .sg-dsk-mobile__sub { padding-bottom: 6px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
 .sg-dsk-mobile__note { color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }
+
+/* 24 屏编辑弹窗: red text on light red, not a filled danger button (D94-batch minor 3). */
+.sg-btn.sg-dsk-remove { color: var(--color-red-500); background: rgba(180, 73, 73, 0.1); }
+.sg-btn.sg-dsk-remove:hover { background: rgba(180, 73, 73, 0.16); }

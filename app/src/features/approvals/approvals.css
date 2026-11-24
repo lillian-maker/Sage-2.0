@@ -43,6 +43,10 @@
 .sg-approval__open { flex: none; padding-top: 0; }
 
 .sg-authblock { display: flex; flex-direction: column; gap: 8px; }
+.sg-authbanner { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; border-radius: var(--radius-card); background: var(--color-orange-60); }
+.sg-authbanner__text { margin: 0; color: var(--color-orange-660); font: var(--type-sans-sc-12-400-lh14-4); line-height: 19px; }
+.sg-authbanner__text strong { font-weight: 700; }
+.sg-authbanner__actions { display: flex; align-items: center; gap: 8px; }
 .sg-authblock__scope { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .sg-authblock__revise { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--color-neutral-60); border-radius: var(--radius-card); }
 .sg-authblock__revise-actions { display: flex; justify-content: flex-end; gap: 8px; }

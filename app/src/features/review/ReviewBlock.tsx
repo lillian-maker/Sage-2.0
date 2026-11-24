@@ -30,13 +30,23 @@ export function ReviewBlock({ id, onOpenArtifact, onOpenVersions }: ReviewBlockP
     await fn();
     review.reload();
   });
+  // 2294:1361: show “正在应用全部改写” from the moment the request leaves until fresh review data arrives,
+  // because the backend may finish the rewrite inside the same request and never report state 'rewriting'.
+  const [staleAfterApply, setStaleAfterApply] = useState<unknown>(null);
+  const applyAll = useSubmit(async (reviewId: string) => {
+    const before = review.data;
+    await taskApi.applyAll(reviewId);
+    setStaleAfterApply(before ?? null);
+    review.reload();
+  });
   const r = review.data;
-  const rewriting = r?.state === 'rewriting';
+  const applyingAll = applyAll.submitting || (staleAfterApply !== null && r === staleAfterApply);
+  const rewriting = r?.state === 'rewriting' || applyingAll;
   useEffect(() => {
-    if (!rewriting) return;
+    if (r?.state !== 'rewriting') return;
     const t = window.setInterval(review.reload, 2000);
     return () => window.clearInterval(t);
-  }, [rewriting, review.reload]);
+  }, [r?.state, review.reload]);
 
   if (!r) {
     return review.status === 'error' ? (
@@ -65,7 +75,7 @@ export function ReviewBlock({ id, onOpenArtifact, onOpenVersions }: ReviewBlockP
       : rewritten
         ? { label: '查看改写版本', onClick: () => setChecking(true) }
         : r.can_edit && r.state === 'reviewed'
-          ? { label: '应用全部改写', onClick: () => void act.submit(() => taskApi.applyAll(r.id)) }
+          ? { label: '应用全部改写', onClick: () => void applyAll.submit(r.id) }
           : { label: '应用全部改写', disabled: true };
   return (
     <div className="sg-reviewblock">
@@ -108,7 +118,9 @@ export function ReviewBlock({ id, onOpenArtifact, onOpenVersions }: ReviewBlockP
         </button>
       )}
       {copied && <InlineNotice icon="check" tone="muted" text="已复制改写建议" />}
-      {act.error && <InlineNotice icon="info" tone="error" text={apiMessage(act.error, '操作没有成功，请重试')} />}
+      {(act.error ?? applyAll.error) && (
+        <InlineNotice icon="info" tone="error" text={apiMessage(act.error ?? applyAll.error, '操作没有成功，请重试')} />
+      )}
     </div>
   );
 }

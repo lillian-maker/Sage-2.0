@@ -24,6 +24,11 @@ export interface ModalProps {
   initialFocus?: string;
   /** Component gallery: render the box in place, without backdrop, focus handling or Esc. */
   inline?: boolean;
+  /**
+   * `content`: the backdrop covers only the main area below the 52px top bar, leaving the sidebar and the
+   * bell usable (645:2 新建专家). Only for routes whose page does not scroll, since it is positioned in main.
+   */
+  scope?: 'window' | 'content';
   children: ReactNode;
 }
 
@@ -39,6 +44,7 @@ export function Modal({
   onSubmit,
   initialFocus,
   inline,
+  scope = 'window',
   children,
 }: ModalProps) {
   const boxRef = useRef<HTMLElement | null>(null);
@@ -117,7 +123,7 @@ export function Modal({
   if (inline) return box;
   return (
     <div
-      className="sg-modal-backdrop"
+      className={scope === 'content' ? 'sg-modal-backdrop sg-modal-backdrop--content' : 'sg-modal-backdrop'}
       role="presentation"
       onMouseDown={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onClose?.();

@@ -119,6 +119,7 @@ export function Toast({
   actionLabel,
   onAction,
   onClose,
+  variant,
 }: {
   tone: ToastTone;
   message: string;
@@ -126,6 +127,8 @@ export function Toast({
   actionLabel?: string;
   onAction?: () => void;
   onClose: () => void;
+  /** 'card': white alert card with a red title and an outlined acknowledge button (57 自动化 3235:94). */
+  variant?: 'card';
 }) {
   const [paused, setPaused] = useState(false);
   useEffect(() => {
@@ -133,6 +136,19 @@ export function Toast({
     const t = window.setTimeout(onClose, 5000);
     return () => window.clearTimeout(t);
   }, [tone, paused, onClose]);
+  if (variant === 'card') {
+    return (
+      <div className={`sg-toastcard sg-toastcard--${tone}`} role={tone === 'failure' ? 'alert' : 'status'}>
+        <strong className="sg-toastcard__title">{message}</strong>
+        {detail && <span className="sg-toastcard__detail">{detail}</span>}
+        <div className="sg-toastcard__actions">
+          <button type="button" className="sg-toastcard__action" onClick={onAction ?? onClose}>
+            {actionLabel ?? '知道了'}
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       className={`sg-toast sg-toast--${tone}`}

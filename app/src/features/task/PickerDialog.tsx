@@ -14,6 +14,8 @@ export interface PickedItem {
   id: string;
   title: string;
   sub?: string;
+  /** Index state of a single material (就绪 / 索引中 …), shown on the composer chip. */
+  state?: string;
 }
 
 interface Row extends PickedItem {
@@ -27,6 +29,7 @@ const TITLE: Record<PickerKind, { title: string; search: string; noun: string; e
 };
 
 const INDEX: Record<string, string> = { indexed: '就绪', indexing: '索引中', failed: '索引失败', queued: '排队中' };
+const INDEX_LABELS = new Set(Object.values(INDEX));
 
 async function load(kind: PickerKind, q: string, signal: AbortSignal): Promise<Row[]> {
   const query = q ? { q } : undefined;
@@ -46,7 +49,7 @@ async function load(kind: PickerKind, q: string, signal: AbortSignal): Promise<R
         id: `kb:${kb.id}`,
         title: kb.name,
         sub: `${scopeShortLine(kb)} · ${kb.document_count} 份`,
-        side: '知识库',
+        side: '可引用',
       }));
     return kbRows.concat(
       r.items.map((d) => ({
@@ -88,11 +91,13 @@ export function PickerDialog({ kind, selected, onConfirm, onCancel }: PickerDial
   const rows = useApiQuery((signal) => load(kind, term, signal), [kind, term]);
   const copy = TITLE[kind];
   const failed = rows.status === 'error';
+  // 2520:243: an empty search result offers only 清除搜索; the field's × and 确认 are not drawn.
+  const emptySearch = !failed && !!term && !!rows.data && rows.data.length === 0;
   const toggle = (r: Row) =>
     setPicked((p) => {
       const next = new Map(p);
       if (next.has(r.id)) next.delete(r.id);
-      else next.set(r.id, { id: r.id, title: r.title, ...(r.sub ? { sub: r.sub } : {}) });
+      else next.set(r.id, { id: r.id, title: r.title, ...(r.sub ? { sub: r.sub } : {}), ...(kind === 'materials' && INDEX_LABELS.has(r.side) ? { state: r.side } : {}) });
       return next;
     });
 
@@ -102,7 +107,7 @@ export function PickerDialog({ kind, selected, onConfirm, onCancel }: PickerDial
           {copy.title}
           {picked.size > 0 && <span className="sg-picker__count">已选 {picked.size}</span>}
         </h2>
-        <SearchField size={32} value={q} placeholder={copy.search} onValueChange={setQ} autoFocus clearable />
+        <SearchField size={32} value={q} placeholder={copy.search} onValueChange={setQ} autoFocus clearable={!emptySearch} />
         <div className="sg-picker__list">
           {failed ? (
             <>
@@ -147,7 +152,7 @@ export function PickerDialog({ kind, selected, onConfirm, onCancel }: PickerDial
         </div>
         <div className="sg-picker__footer">
           <Button variant="secondary" size={32} label="取消" onClick={onCancel} />
-          {!failed && <Button variant="primary" size={32} label="确认" disabled={rows.status === 'loading' && !rows.data} onClick={() => onConfirm([...picked.values()])} />}
+          {!failed && !(emptySearch && picked.size === 0) && <Button variant="primary" size={32} label="确认" disabled={rows.status === 'loading' && !rows.data} onClick={() => onConfirm([...picked.values()])} />}
         </div>
     </Modal>
   );

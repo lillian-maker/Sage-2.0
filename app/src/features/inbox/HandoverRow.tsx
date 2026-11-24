@@ -13,6 +13,9 @@ const KIND_LABEL: Record<string, string> = {
   custom_expert: '自建专家',
 };
 
+// 762:2: non-task rows carry a kind column; the approval row reads “待处理的审批”.
+const ROW_KIND: Record<string, string> = { ...KIND_LABEL, approval: '待处理的审批' };
+
 const STATUS_ZH: Record<string, string> = {
   running: '进行中',
   paused: '已暂停',
@@ -88,6 +91,7 @@ export function HandoverRow({
   const oneLine = item.kind !== 'task' && meta;
   return (
     <div className="sg-handover__row">
+      {item.kind !== 'task' && <span className="sg-handover__row-kind">{ROW_KIND[item.kind] ?? item.kind}</span>}
       <div className="sg-handover__row-text">
         <span className="sg-handover__row-title">{oneLine ? `${item.target.title} · ${meta}` : item.target.title}</span>
         {!oneLine && meta && <span className="sg-handover__row-meta">{meta}</span>}

@@ -208,7 +208,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
               </div>
               <IconButton icon="x" size={28} variant="ghost" label="关闭详情" onClick={() => select(null)} />
             </div>
-            {selected.authorization_id && <AuthorizationBlock id={selected.authorization_id} onDecided={steps.reload} />}
+            {selected.authorization_id && <AuthorizationBlock id={selected.authorization_id} compact onDecided={steps.reload} />}
             {selected.required_extension && (
               <InlineNotice icon="puzzle" tone="info" text={`需要扩展：${selected.required_extension.name}`} action="去安装" onAction={() => navigate(`/extensions/${selected.required_extension!.id}`)} />
             )}

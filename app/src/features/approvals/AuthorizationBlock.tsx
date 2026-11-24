@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useApiQuery, useSubmit } from '../../app/useApi';
 import { Button } from '../../components/Button/Button';
-import { ChoiceChipGroup } from '../../components/ChoiceChip/ChoiceChipGroup';
 import { ConfirmDialog } from '../../components/ConfirmDialog/ConfirmDialog';
 import { InlineNotice } from '../../components/InlineNotice/InlineNotice';
 import { Menu, MenuItem } from '../../components/Menu/MenuItem';
-import { Modal } from '../../components/Modal/Modal';
+import { ReviseScopeDialog } from './ReviseScopeDialog';
 import { VALIDITY_TEXT } from '../inbox/format';
 import { ErrorBanner, LoadingState, errorMessage } from '../../components/States/States';
 import { apiMessage, taskApi, type Authorization } from '../task/model';
 import { ApprovalCard } from './ApprovalCard';
+import { scopedPurpose } from './purpose';
 import './approvals.css';
 
 const ACTION: Record<string, string> = {
@@ -44,27 +44,45 @@ function confirmMessage(a: Authorization, scope: string): string {
   return `${a.expert?.name ?? '专家'}将${verb} ${a.scope_text}，${credits(a)}，${SCOPE_EFFECT[scope] ?? ''}。${reasons}`;
 }
 
-function credits(a: Authorization): string {
+function validityPhrase(validity: string): string {
+  const v = VALIDITY[validity] ?? validity;
+  return v.endsWith('有效') ? v : `${v}有效`;
+}
+
+function credits(a: Authorization, estimating = false): string {
   // A rejected request keeps the estimate it had when it was turned down, marked as an estimate.
   if (a.decision === 'rejected') return a.estimate_state === 'estimated' && a.estimated_credits != null ? `约 ${a.estimated_credits} Credits（估算）` : '未估算';
-  if (a.estimate_state === 'unavailable') return '估算暂不可用';
-  if (a.estimate_state === 'estimating' || a.estimate_state === 'pending') return '核对中…';
+  if (estimating || isChecking(a.estimate_state)) return '正在核对';
+  if (a.estimate_state === 'unavailable') return '暂时无法估算';
+  if (a.estimate_state === 'checking') return '待重新估算';
   return a.estimated_credits != null ? `约 ${a.estimated_credits} Credits` : '—';
+}
+
+/** An estimate still being worked out (2736:1495 正在核对). */
+function isChecking(state: string | undefined): boolean {
+  return state === 'estimating' || state === 'pending';
+}
+
+/** revise leaves the request in checking: the new scope waits for 重新估算 (2736:1011 待重新估算). */
+function needsEstimate(state: string | undefined): boolean {
+  return state === 'checking' || state === 'unavailable';
 }
 
 export interface AuthorizationBlockProps {
   id: string;
   /** Open the approval-scope menu right away (deep link #scope). */
   scopeMenu?: boolean;
+  /** One-line banner with 批准 / 修改范围 / 拒绝 for a pending request (658:2 编排视图节点详情). */
+  compact?: boolean;
   onDecided?: () => void;
 }
 
-export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBlockProps) {
+export function AuthorizationBlock({ id, scopeMenu, compact, onDecided }: AuthorizationBlockProps) {
   const auth = useApiQuery((signal) => taskApi.authorization(id, signal), [id]);
   const [revising, setRevising] = useState(false);
-  const [topN, setTopN] = useState<number | null>(null);
   const [menu, setMenu] = useState(!!scopeMenu);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [estimating, setEstimating] = useState(false);
   const act = useSubmit(async (fn: () => Promise<unknown>) => {
     await fn();
     auth.reload();
@@ -73,7 +91,10 @@ export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBl
   useEffect(() => setMenu(!!scopeMenu), [scopeMenu]);
 
   const a = auth.data;
-  const checking = a?.estimate_state === 'estimating' || a?.estimate_state === 'pending';
+  const checking = isChecking(a?.estimate_state);
+  const blocked = estimating || checking || needsEstimate(a?.estimate_state);
+  // The 正在核对 shown while 重新估算 runs lasts until the re-read row or an error arrives.
+  useEffect(() => setEstimating(false), [a, act.error]);
   useEffect(() => {
     if (!checking) return;
     const t = window.setInterval(auth.reload, 3000);
@@ -92,7 +113,7 @@ export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBl
   const details = [
     { label: '动作', value: ACTION[a.action_kind] ?? a.action_kind },
     { label: '范围', value: a.scope_text },
-    { label: '预计消耗', value: credits(a) },
+    { label: '预计消耗', value: credits(a, estimating) },
     { label: '有效期', value: VALIDITY[a.validity] ?? a.validity },
     ...(a.charge_target ? [{ label: '计入', value: [a.charge_target.label, a.charge_target.department?.name].filter(Boolean).join(' · ') }] : []),
   ];
@@ -101,9 +122,7 @@ export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBl
       ? undefined
       : a.decision === 'approved'
         ? `已批准本次数据使用${a.decision_scope && SCOPE[a.decision_scope] ? ' · ' + SCOPE[a.decision_scope]!.label : ''}`
-        : checking
-          ? '核对中 · 正在重新估算'
-          : a.estimate_state === 'unavailable'
+        : a.estimate_state === 'unavailable'
             ? '需要你确认 · 估算暂不可用'
             : undefined;
 
@@ -114,29 +133,44 @@ export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBl
     if (a.confirm_scopes?.includes(scope)) setConfirming(scope);
     else void approve(scope);
   };
-  // The range in effect comes first (2736:43: 前 50 名, then 前 20 名).
-  const options = [...a.scope_options]
-    .sort((x, y) => Number(y.top_n === a.scope_params?.top_n) - Number(x.top_n === a.scope_params?.top_n))
-    .map((o) => o.label);
-  const current = a.scope_options.find((o) => o.top_n === (topN ?? a.scope_params?.top_n))?.label ?? '';
+
+  // Checking / unavailable estimates keep the full card: they need its estimate actions.
+  const banner = compact && !decided && !blocked;
 
   return (
     <div className="sg-authblock">
-      {(
+      {banner ? (
+        <div className="sg-authbanner" role="group" aria-label="需要你授权">
+          <p className="sg-authbanner__text">
+            <strong>需要你授权：</strong>
+            {`${scopedPurpose(a.purpose_text, a.scope_params)}${credits(a)}，${validityPhrase(a.validity)}。`}
+          </p>
+          <div className="sg-authbanner__actions">
+            <Button variant="primary" size={28} label="批准" busy={act.submitting} onClick={() => choose('once')} />
+            <Button variant="secondary" size={28} label="修改范围" disabled={act.submitting} onClick={() => setRevising(true)} />
+            <Button variant="ghost" size={28} label="拒绝" disabled={act.submitting} onClick={() => act.submit(() => taskApi.reject(a.id))} />
+          </div>
+        </div>
+      ) : (
         <ApprovalCard
-          status={a.decision === 'rejected' ? 'rejected' : a.decision === 'approved' ? 'approved' : checking ? 'processing' : 'pending'}
+          status={a.decision === 'rejected' ? 'rejected' : a.decision === 'approved' ? 'approved' : 'pending'}
           layout="task"
-          request={{ title: a.purpose_text, details, ...(statusLabel ? { statusLabel } : {}) }}
+          request={{ title: scopedPurpose(a.purpose_text, a.scope_params), details, ...(statusLabel ? { statusLabel } : {}) }}
           busy={act.submitting}
-          estimatePending={a.estimate_state === 'unavailable' || checking}
+          estimatePending={blocked}
+          canEstimate={!estimating && needsEstimate(a.estimate_state)}
+          estimateLabel={a.estimate_state === 'checking' ? '重新估算' : '重试估算'}
           onApprove={() => approve('once')}
           onReject={() => act.submit(() => taskApi.reject(a.id))}
           onRevise={() => setRevising((v) => !v)}
-          onEstimate={() => act.submit(() => taskApi.estimate(a.id))}
+          onEstimate={() => {
+            setEstimating(true);
+            void act.submit(() => taskApi.estimate(a.id));
+          }}
           onCancel={() => setRevising(false)}
         />
       )}
-      {!decided && a.allowed_scopes.length > 1 && (
+      {!banner && !decided && a.allowed_scopes.length > 1 && (
         <div className="sg-authblock__scope">
           <Button variant="ghost" size={26} label={`批准 · ${SCOPE.once!.label}`} trailingIcon="chevron-down" onClick={() => setMenu((m) => !m)} aria-expanded={menu} />
           {menu && (
@@ -147,7 +181,7 @@ export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBl
                   icon={s === 'once' ? 'check' : 'layers'}
                   label={SCOPE[s]?.label ?? s}
                   hint={SCOPE[s]?.hint(a.extension?.name)}
-                  disabled={act.submitting || checking || a.estimate_state === 'unavailable'}
+                  disabled={act.submitting || blocked}
                   onSelect={() => choose(s)}
                 />
               ))}
@@ -155,39 +189,20 @@ export function AuthorizationBlock({ id, scopeMenu, onDecided }: AuthorizationBl
           )}
         </div>
       )}
-      {revising && !decided && options.length > 0 && (
-        <Modal className="sg-formdialog" style={{ width: 520 }} labelledBy="sg-authrevise-title" onClose={() => { setRevising(false); setTopN(null); }}>
-          <h2 id="sg-authrevise-title" className="sg-formdialog__title">调整本次查询范围</h2>
-          <p className="sg-formdialog__text">{`当前范围：${a.scope_text}\n动作：${ACTION[a.action_kind] ?? a.action_kind}`}</p>
-          {a.estimate_state === 'unavailable' && a.scope_options.find((o) => o.top_n === a.scope_params?.top_n) && (
-            <span className="sg-authblock__hint">{`当前为${a.scope_options.find((o) => o.top_n === a.scope_params?.top_n)!.label}；返回后可继续审批。`}</span>
-          )}
-          <span className="sg-formdialog__label">选择查询数量</span>
-          <ChoiceChipGroup
-            options={options}
-            value={current}
-            size={28}
-            label="查询范围"
-            onChange={(label) => setTopN(a.scope_options.find((o) => o.label === label)?.top_n ?? null)}
-          />
-          <p className="sg-formdialog__text">确认范围不会批准，费用将重新估算。</p>
-          <div className="sg-formdialog__actions">
-            <Button variant="ghost" size={28} label="取消" onClick={() => { setRevising(false); setTopN(null); }} />
-            <Button
-              variant="primary"
-              size={28}
-              label="确认范围"
-              busy={act.submitting}
-              disabled={topN == null || topN === a.scope_params?.top_n}
-              onClick={async () => {
-                if (topN == null) return;
-                await act.submit(() => taskApi.revise(a.id, topN));
-                setRevising(false);
-                setTopN(null);
-              }}
-            />
-          </div>
-        </Modal>
+      {revising && !decided && a.scope_options.length > 0 && (
+        <ReviseScopeDialog
+          scopeText={a.scope_text}
+          actionText={ACTION[a.action_kind] ?? a.action_kind}
+          options={a.scope_options}
+          currentTopN={a.scope_params?.top_n}
+          estimateState={a.estimate_state}
+          busy={act.submitting}
+          onClose={() => setRevising(false)}
+          onSubmit={async (next) => {
+            await act.submit(() => taskApi.revise(a.id, next));
+            setRevising(false);
+          }}
+        />
       )}
       {confirming && !decided && (
         <ConfirmDialog

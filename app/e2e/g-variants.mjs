@@ -1,9 +1,10 @@
 // 注入新变体元素做视觉核对（danger 按钮、Tag 15、Kbd 数组、Checkbox、Select prefix 的静态样式）。
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE + '/index.mjs');
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 const BASE = process.env.SAGE_URL;
-const OUT = '/Users/ll/Documents/Sage/.scratch/figma-sync/q/dev/frontend/shots/G';
-const [name, value] = readFileSync('/Users/ll/Documents/Sage/Sage-2.0/tmp/dev-session.txt', 'utf8').trim().split('=');
+const OUT = process.env.SHOTS || new URL('../../tmp/e2e-shots/G', import.meta.url).pathname;
+mkdirSync(OUT, { recursive: true });
+const [name, value] = readFileSync(process.env.SAGE_SESSION_FILE || new URL('../../tmp/dev-session.txt', import.meta.url).pathname, 'utf8').trim().split('=');
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
 await ctx.addCookies([{ name, value, url: BASE }]);

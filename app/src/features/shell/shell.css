@@ -6,3 +6,5 @@
 .sg-renamedialog { gap: 14px; }
 .sg-renamedialog .sg-dialog__actions { justify-content: flex-end; }
 .sg-shell__toast { position: fixed; right: 24px; bottom: 24px; z-index: 120; }
+/* 3235:94: centred over the main column (frame minus the 240px sidebar), 48px above the bottom. */
+.sg-shell__toast--card { right: auto; bottom: 48px; left: calc(50% + 120px); transform: translateX(-50%); }

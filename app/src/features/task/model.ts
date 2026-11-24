@@ -80,6 +80,12 @@ export interface TaskDetail {
   source_automation_run: { automation_name: string; scheduled_for: string | null; variables: Record<string, unknown> | null } | null;
   /** Null when the task is delivered without a formal acceptance request (drafts waiting for confirmation). */
   pending_delivery?: { id: string } | null;
+  /** Suggested defaults for the save-as-playbook dialog; `variable` marks the step that variable parameterizes. */
+  playbook_template?: {
+    name: string;
+    variables: Array<{ name: string; default: string }>;
+    steps: Array<{ step: string; variable: string | null }>;
+  } | null;
   source_inbox_item?: { id: string; source_label: string; sender_label: string; received_at: string; original_text: string; translated_text: string | null } | null;
   suggestions: Array<{ id: string; text: string; requires_authorization?: boolean }>;
   forked_from_task: { id: string; title: string } | null;

@@ -35,5 +35,7 @@
   font: var(--type-sans-sc-11-500-lh13-2);
 }
 .sg-tag.is-clickable { cursor: pointer; }
+.sg-tag__meta { color: var(--color-slate-540); font: var(--type-sans-sc-11-400-lh13-2); }
+.sg-tag__meta.is-success { color: var(--color-green-660); }
 .sg-tag__remove { display: inline-flex; color: var(--color-slate-540); cursor: pointer; }
 .sg-tag__remove:hover { color: var(--color-blue-840); }

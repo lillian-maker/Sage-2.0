@@ -4,11 +4,14 @@ import { request, type Query } from '../client';
 import type {
   DeleteWorkspacesByIdRequest,
   DeleteWorkspacesByIdResponse,
+  DeleteWorkspacesKnowledgeBasesByIdRequest,
+  DeleteWorkspacesKnowledgeBasesByIdResponse,
   DeleteWorkspacesMembersByIdRequest,
   DeleteWorkspacesMembersByIdResponse,
   GetWorkspacesByIdResponse,
   GetWorkspacesJoinRequestsMineResponse,
   GetWorkspacesJoinRequestsResponse,
+  GetWorkspacesKnowledgeBasesResponse,
   GetWorkspacesMembersResponse,
   GetWorkspacesResponse,
   GetWorkspacesRulesResponse,
@@ -114,6 +117,21 @@ export const postWorkspacesJoinRequestsReject = (id: string, rid: string, body: 
  */
 export const postWorkspacesJoinRequestsWithdraw = (id: string, rid: string, body: PostWorkspacesJoinRequestsWithdrawRequest = {}, signal?: AbortSignal) =>
   request<PostWorkspacesJoinRequestsWithdrawResponse>('POST', `app/workspaces/${encodeURIComponent(id)}/join-requests/${encodeURIComponent(rid)}/withdraw`, { body, signal });
+
+/**
+ * GET /api/app/workspaces/{id}/knowledge-bases〔新增，D106〕
+ * 分页/筛选：分页 offset/50（查询参数只接受 offset），排序同 GET app/knowledge-bases；只列工作区引用（E67 WorkspaceKnowledgeSource）且当前用户可见的知识库；工作区成员可读，非成员、跨账号、已删除工作区 NOT_FOUND 404。
+ * 错误码：NOT_FOUND 404
+ */
+export const getWorkspacesKnowledgeBases = (id: string, query?: Query, signal?: AbortSignal) =>
+  request<GetWorkspacesKnowledgeBasesResponse>('GET', `app/workspaces/${encodeURIComponent(id)}/knowledge-bases`, { query, signal });
+
+/**
+ * DELETE /api/app/workspaces/{id}/knowledge-bases/{kb_id}〔新增，D106〕
+ * 错误码：PERMISSION_DENIED 403（非工作区负责人）、NOT_FOUND 404（非成员、跨账号、知识库对当前用户不可见或未被该工作区引用）
+ */
+export const deleteWorkspacesKnowledgeBasesById = (id: string, kb_id: string, body: DeleteWorkspacesKnowledgeBasesByIdRequest = {}, signal?: AbortSignal) =>
+  request<DeleteWorkspacesKnowledgeBasesByIdResponse>('DELETE', `app/workspaces/${encodeURIComponent(id)}/knowledge-bases/${encodeURIComponent(kb_id)}`, { body, signal });
 
 /**
  * GET /api/app/workspaces/{id}/members〔新增〕

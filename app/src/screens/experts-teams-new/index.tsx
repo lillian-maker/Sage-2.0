@@ -11,14 +11,15 @@ import { TextField } from '../../components/TextField/TextField';
 import { errorMessage, QueryGate } from '../../components/States/States';
 import { allPages, expertsApi, type ExpertItem, type PersonRef } from '../../features/experts/api';
 
-import { TeamCard } from '../../features/experts/TeamCard';
+import TeamsScreen from '../experts-teams/index';
 import '../../features/experts/frame.css';
 import '../../features/experts/teams.css';
 import { Modal } from '../../components/Modal/Modal';
 
 const MAX_MEMBERS = 8;
 
-export default function Screen({ navigate }: ScreenProps) {
+export default function Screen(props: ScreenProps) {
+  const { navigate } = props;
   const { toast } = useShell();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -28,7 +29,6 @@ export default function Screen({ navigate }: ScreenProps) {
   const [filter, setFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const backdrop = useApiQuery((signal) => expertsApi.teams(signal), []);
   const experts = useApiQuery(
     (signal) => allPages<ExpertItem>((offset) => expertsApi.list({ group: 'all', offset: offset || undefined }, signal) as Promise<never>),
     [],
@@ -74,14 +74,9 @@ export default function Screen({ navigate }: ScreenProps) {
 
   return (
     <>
-      <div className="sg-dpage" aria-hidden="true">
-        <div className="sg-dpage__body">
-          <div className="sg-tgrid" style={{ marginTop: 22 }}>
-            {(backdrop.data?.items ?? []).map((team) => (
-              <TeamCard key={team.id} team={team} />
-            ))}
-          </div>
-        </div>
+      {/* 718:2: the dialog sits over the full 团队 tab (header, group tabs and the 新建团队 card). */}
+      <div aria-hidden="true" style={{ height: '100%' }}>
+        <TeamsScreen {...props} />
       </div>
       <Modal className="sg-dmodal__card" label="新建团队" onClose={() => navigate('/experts/teams')}>
         <div className="sg-dmodal__head">

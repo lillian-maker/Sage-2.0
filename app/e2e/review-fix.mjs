@@ -170,7 +170,113 @@ if (want('toast')) {
   await page.waitForTimeout(400);
   check('toast', '3235:92 关闭', (await toast.count()) === 0);
 }
-// 4: 2736:43 / 2089:2924 改为模态弹窗（review issue 4），有效期文案（issue 5）。
+// D69/D75: after 修改范围 the request waits for 重新估算 (estimate_state=checking, credits cleared). The authorization
+// GETs are rewritten here so the seed keeps its estimated request.
+if (want('revised')) {
+  let estimatedNow = false;
+  const revised = (v) => {
+    if (Array.isArray(v)) return v.forEach(revised);
+    if (!v || typeof v !== 'object') return;
+    if (v.decision === 'pending' && typeof v.estimate_state === 'string' && v.scope_params && [20, 50].includes(v.scope_params.top_n)) {
+      v.estimate_state = estimatedNow ? 'estimated' : 'checking';
+      v.estimated_credits = estimatedNow ? 20 : null;
+      v.scope_params = { ...v.scope_params, top_n: 20 };
+      if (typeof v.scope_text === 'string') v.scope_text = v.scope_text.replace(/前\s*50\s*名/, '前 20 名');
+    }
+    Object.values(v).forEach(revised);
+  };
+  const rewrite = async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    const resp = await route.fetch();
+    const json = await resp.json().catch(() => null);
+    if (json == null) return route.fulfill({ response: resp });
+    revised(json);
+    return route.fulfill({ response: resp, json });
+  };
+  const pattern = /\/api\/app\/(authorizations|inbox)/;
+  await page.route(pattern, rewrite);
+  // D75: 重新估算 answers after a delay (正在核对 meanwhile); later reads carry the dev fixed estimate (前 20 名约 20 Credits).
+  const estimateUrl = /\/api\/app\/authorizations\/[^/]+\/estimate$/;
+  const estimateRoute = async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    estimatedNow = true;
+    return route.fulfill({ status: 202, contentType: 'application/json', body: JSON.stringify({ authorization: { id: 'x', estimate_state: 'estimated', version: 3 } }) });
+  };
+  await page.route(estimateUrl, estimateRoute);
+  const cardState = async (card) => ({
+    text: (await card.innerText().catch(() => '')).replace(/\s+/g, ' '),
+    approve: await card.getByRole('button', { name: '批准', exact: true }).first().isDisabled().catch(() => null),
+    revise: await card.getByRole('button', { name: '修改范围', exact: true }).count(),
+    retry: await card.getByRole('button', { name: '重试估算', exact: true }).count(),
+    again: await card.getByRole('button', { name: '重新估算', exact: true }).count(),
+  });
+  const flow = async (where, card, sid) => {
+    estimatedNow = false;
+    await open(where, 900);
+    const before = await cardState(page.locator(card).first());
+    check('revised', `${sid} 说明句随范围变为前 20 名`, before.text.includes('前 20 名竞品的销量估算') && !before.text.includes('前 50 名竞品'), before.text.slice(0, 120));
+    check('revised', `${sid} 预计消耗“待重新估算”`, before.text.includes('待重新估算'), before.text.slice(0, 200));
+    check('revised', `${sid} 状态“需要你确认”`, before.text.startsWith('需要你确认'), before.text.slice(0, 40));
+    check('revised', `${sid} 批准禁用、修改范围保留、有“重新估算”、无“重试估算”`, before.approve === true && before.revise === 1 && before.again === 1 && before.retry === 0,
+      JSON.stringify({ approve: before.approve, revise: before.revise, again: before.again, retry: before.retry }));
+    await shot(`d75-${sid.replace(':', '-')}-before`);
+    await page.locator(card).first().getByRole('button', { name: '重新估算', exact: true }).click();
+    await page.waitForTimeout(400);
+    const during = await cardState(page.locator(card).first());
+    check('revised', `${sid} 重新估算进行中显示“正在核对”、批准禁用`, during.text.includes('正在核对') && during.approve === true && during.again === 0, during.text.slice(0, 200));
+    await page.waitForTimeout(2600);
+    const after = await cardState(page.locator(card).first());
+    check('revised', `${sid} 估算后显示“约 20 Credits”、批准可点、按钮收起`, after.text.includes('约 20 Credits') && after.approve === false && after.again === 0 && after.retry === 0,
+      JSON.stringify({ text: after.text.slice(0, 160), approve: after.approve, again: after.again }));
+    await shot(`d75-${sid.replace(':', '-')}-after`);
+  };
+  await flow(`/tasks/${I.richTask}`, '.sg-authblock .sg-approval', '2736:1011');
+  await flow('/inbox?filter=decide', '.sg-decide__card .sg-approval', '2732:797');
+  await page.unroute(estimateUrl, estimateRoute);
+  await page.unroute(pattern, rewrite);
+}
+// D79: before kickoff the card is 开工确认 with the design's subtitle / plan summary / capability rows; once started
+// (task and kickoff GETs rewritten to running, no step moved yet) it stays read-only as 任务说明 under 任务已开始.
+if (want('kickoff')) {
+  const list = await apiGet(BASE, 'tasks?status=awaiting_kickoff').catch(() => ({ items: [] }));
+  const kid = (list.items.find((x) => x.status === 'awaiting_kickoff') || list.items[0] || {}).id;
+  check('kickoff', '种子里有待开工任务', !!kid, String(kid));
+  if (kid) {
+    await open(`/tasks/new?task=${kid}#confirm`, 900);
+    const pre = (await page.locator('.sg-brief').first().innerText().catch(() => '')).replace(/\s+/g, ' ');
+    check('kickoff', '开工前标题“开工确认”与副标题', pre.startsWith('开工确认') && pre.includes('复杂任务 · 预计 5 位专家 · 约 25 分钟'), pre.slice(0, 80));
+    check('kickoff', '开工前能力行“技能 / 连接器 · 只读”与“安装 / 连接”', pre.includes('技能') && pre.includes('连接器 · 只读') && pre.includes('安装') && pre.includes('连接'), pre.slice(0, 400));
+    check('kickoff', '开工前计划摘要与提示', pre.includes('执行计划 · 8 步 · 5 位专家（展开查看与调整）') && pre.includes('不安装也可以开始，相关步骤会标为“缺少能力”'), pre.slice(-200));
+    check('kickoff', '开工前有“开始执行”', (await page.locator('.sg-brief').getByRole('button', { name: '开始执行', exact: true }).count()) === 1);
+    const started = async (route) => {
+      if (route.request().method() !== 'GET') return route.fallback();
+      const resp = await route.fetch();
+      const json = await resp.json().catch(() => null);
+      if (json == null) return route.fulfill({ response: resp });
+      const t = json.task && json.task.id ? json.task : json;
+      if ((t.id === kid || t.task_id === kid) && t.status === 'awaiting_kickoff') t.status = 'running';
+      return route.fulfill({ response: resp, json });
+    };
+    const pattern = new RegExp(`/api/app/tasks/${kid}(/kickoff)?$`);
+    await page.route(pattern, started);
+    await open(`/tasks/${kid}`, 900);
+    const body = (await page.locator('.sg-taskpage, main').first().innerText().catch(() => '')).replace(/\s+/g, ' ');
+    const card = page.locator('.sg-brief').first();
+    const post = (await card.innerText().catch(() => '')).replace(/\s+/g, ' ');
+    check('kickoff', '开工后显示“任务已开始，进度将在右侧更新。”', body.includes('任务已开始，进度将在右侧更新。') && !body.includes('开始前先和你确认几件事'), body.slice(0, 200));
+    check('kickoff', '开工后卡片标题“任务说明”、问题已确认', post.startsWith('任务说明') && post.includes('1 · 已确认的问题') && post.includes('重点评估哪个渠道？'), post.slice(0, 120));
+    check('kickoff', '开工后保留任务说明与验收清单', post.includes('判断家用小家电是否值得在 12 月前进入德国站') && post.includes('覆盖前 20 名竞品与价格带') && post.includes('关键数字由清账复核'), post.slice(0, 400));
+    const ro = {
+      start: await card.getByRole('button', { name: '开始执行', exact: true }).count(),
+      cancel: await card.getByRole('button', { name: '取消', exact: true }).count(),
+      chip: await card.getByRole('radio').first().isDisabled().catch(() => null),
+      add: await card.getByRole('button', { name: /添加一条/ }).first().isDisabled().catch(() => null),
+    };
+    check('kickoff', '开工后只读：无“开始执行 / 取消”，选项与“添加一条”禁用', ro.start === 0 && ro.cancel === 0 && ro.chip === true && ro.add === true, JSON.stringify(ro));
+    await shot('d79-kickoff-started');
+    await page.unroute(pattern, started);
+  }
+}// 4: 2736:43 / 2089:2924 改为模态弹窗（review issue 4），有效期文案（issue 5）。
 if (want('modal')) {
   await open(`/tasks/${I.richTask}`, 900);
   const validity = await page.locator('.sg-authblock .sg-approval__grid').first().innerText().catch(() => '');
@@ -391,6 +497,63 @@ if (want('theme')) {
   check('theme', '5 张主题卡都有 Sage 标志', cards.length === 5 && cards.every((c) => c.logo), JSON.stringify(cards));
   check('theme', '5 张主题卡都有头像且加载成功', cards.length === 5 && cards.every((c) => c.avatar), JSON.stringify(cards));
   await shot('730-2');
+}
+// D81: the save-as-playbook dialog starts from the task's playbook_template; the automation editor shows the
+// "你创建" meta, the example-variables label and 待确认 rows for lead expert, permissions and run estimate.
+if (want('playbook')) {
+  const tid = I.richTask;
+  const tpl = await apiGet(BASE, `tasks/${tid}`).then((t) => t.playbook_template).catch(() => null);
+  check('playbook', '主任务详情返回 playbook_template', !!tpl && tpl.name === '新市场进入评估' && tpl.steps.length === 6 && tpl.variables.length === 3, JSON.stringify(tpl).slice(0, 200));
+  const accepted = async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    const resp = await route.fetch();
+    const json = await resp.json().catch(() => null);
+    if (json && json.id === tid) json.status = 'accepted';
+    return route.fulfill({ response: resp, json: json ?? undefined });
+  };
+  const detailUrl = new RegExp(`/api/app/tasks/${tid}$`);
+  await page.route(detailUrl, accepted);
+  let posted = null;
+  const capture = (route) => { posted = route.request().postDataJSON(); return route.fulfill({ status: 201, contentType: 'application/json', body: '{"playbook":{"id":"x"}}' }); };
+  await page.route('**/api/app/playbooks', capture);
+  await open(`/tasks/${tid}#save-playbook`, 1200);
+  const dlg = page.locator('.sg-pbdialog').first();
+  const txt = (await dlg.innerText().catch(() => '')).replace(/\s+/g, ' ');
+  const nameVal = await dlg.getByRole('textbox', { name: 'Playbook 名称' }).inputValue().catch(() => '');
+  check('playbook', '对话框名称默认“新市场进入评估”', nameVal === '新市场进入评估', nameVal);
+  check('playbook', '默认勾选 6 步', txt.includes('步骤 · 6（来自本次执行图，可以删减）'), txt.slice(0, 160));
+  check('playbook', '步骤行显示变量与节点名', txt.includes('{市场} · 竞品格局分析') && txt.includes('{平台} · 关键词研究') && txt.includes('· 报告汇总'), txt.slice(0, 400));
+  check('playbook', '变量默认值', txt.includes('变量 · 运行时填写') && txt.includes('{市场} = 德国') && txt.includes('{平台} = Amazon.de') && txt.includes('{品类} = 家用小家电'), txt.slice(-300));
+  await shot('d81-687-2');
+  await dlg.getByRole('button', { name: '保存 Playbook', exact: true }).click().catch(() => undefined);
+  await page.waitForTimeout(800);
+  const titles = (posted?.steps ?? []).map((s) => s.title);
+  check('playbook', '保存请求：6 步、标题带变量、只提交被引用的变量', titles.length === 6 && titles.includes('{市场} 竞品格局分析') && titles.some((t) => t.includes('{平台}'))
+    && JSON.stringify((posted?.variables ?? []).map((v) => v.name)) === JSON.stringify(['市场', '平台']), JSON.stringify(posted).slice(0, 400));
+  await page.unroute('**/api/app/playbooks', capture);
+  await page.unroute(detailUrl, accepted);
+
+  await open('/automations/new/edit?type=playbook', 900);
+  const pre = (await page.locator('main').innerText().catch(() => '')).replace(/\s+/g, ' ');
+  check('playbook', '新建 Playbook 型：未选时主责、权限与预计都显示“待确认”', pre.includes('主责专家 待确认') && pre.includes('完成设置后确认 选择内容后显示 待确认') && (pre.match(/待确认/g) || []).length >= 5, pre.slice(0, 600));
+  await page.getByRole('button', { name: /Playbook$/ }).click();
+  await page.getByRole('dialog', { name: '选择 Playbook' }).locator('.sg-autopick__row', { hasText: '新市场进入评估' }).first().click();
+  await page.waitForTimeout(400);
+  const card = (await page.locator('.sg-playbook').first().innerText().catch(() => '')).replace(/\s+/g, ' ');
+  check('playbook', 'Playbook 卡片“6 步 · 5 位专家 · 你创建”与变量示例标签', card.includes('6 步 · 5 位专家 · 你创建') && card.includes('变量示例（运行前规则待确认）：'), card);
+  await page.getByPlaceholder('请输入名称').fill('新品上架清单');
+  const sel = (l, v) => page.locator(`select[aria-label="${l}"]`).first().selectOption({ label: v });
+  await sel('归属工作区', '德国市场进入'); await sel('频率', '每周'); await sel('日期', '周一'); await sel('时间', '09:00');
+  await page.waitForTimeout(300);
+  const full = (await page.locator('main').innerText().catch(() => '')).replace(/\s+/g, ' ');
+  check('playbook', '填写完成：计划下“保存后仍需启用”，权限“启用时确认 / 具体权限 / 待确认”', full.includes('保存后仍需启用') && full.includes('启用时确认 具体权限 待确认') && full.includes('填写完成，可以保存'), full.slice(0, 900));
+  await shot('d81-2909-43');
+  await page.locator('.sg-inchips').getByRole('radio', { name: '一段指令' }).click();
+  await page.getByPlaceholder('请输入要运行的指令').fill('整理本周上架的新品并生成清单。');
+  await page.locator('select[aria-label="主责专家"]').selectOption({ index: 1 });
+  await page.waitForTimeout(300);
+  const side = (await page.locator('.sg-sidecard').first().innerText().catch(() => '')).replace(/\s+/g, ' ');
+  check('playbook', '指令态填写完成后预计显示“待估算”', (side.match(/待估算/g) || []).length === 3, side);
 }if (want('report')) {
   // placeholder group so --only report prints the summary only
 }

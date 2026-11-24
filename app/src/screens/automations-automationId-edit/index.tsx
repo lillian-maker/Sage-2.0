@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { currentSession } from '../../api/client';
 import { experts, workspaces } from '../../api/endpoints';
 import type { ScreenProps } from '../../app/router';
 import { useShell } from '../../app/AppShell';
@@ -211,12 +212,14 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
   const nextRun = nextRunText(form.freq, form.time, form.freq === 'weekly' ? Number(form.weekday) : null, form.freq === 'monthly' ? Number(form.monthday) : null);
   const permissions = estimate?.permissions ?? [];
   const missingPermission = permissions.some((p) => p.state !== 'granted');
+  // A draft rule is already stored on the server, so it reads as saved even when opened later (3156:714).
+  const savedDraft = justSaved || estimate?.state === 'draft';
 
   let status: string;
   if (isNew) status = '尚未保存';
   else if (dirty) status = enabled ? '有未保存的更改' : '有未保存的更改 · 未启用';
   else if (enabled) status = '已启用 · 按计划运行';
-  else if (justSaved) status = '已保存 · 未启用';
+  else if (savedDraft) status = '已保存 · 未启用';
   else status = '未启用 · 保存后在列表中启用';
 
   let saveHint: string;
@@ -226,6 +229,8 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
   else saveHint = enabled ? '保存后按新计划运行' : '保存后仍需启用';
 
   const leadName = estimate?.lead_expert?.name;
+  const creatorId = (playbook as PlaybookBrief | null)?.created_by?.id;
+  const mine = !!creatorId && creatorId === currentSession()?.user?.id;
 
   const saveAndReport = () =>
     void save.submit().then(() => {
@@ -250,17 +255,11 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
             </div>
             <div className="sg-autofield">
               <span className="sg-autofield__label">运行内容</span>
-              {isNew ? (
-                <div className="sg-inchips">
-                  <ChoiceChip role="radio" size={30} label="一段指令" selected={form.kind === 'prompt'} onToggle={() => set({ kind: 'prompt' })} />
-                  <ChoiceChip role="radio" size={30} label="Playbook" selected={form.kind === 'playbook'} onToggle={() => set({ kind: 'playbook' })} />
-                </div>
-              ) : (
-                <div>
-                  <Tag label={form.kind === 'playbook' ? 'Playbook' : '一段指令'} tone="neutral" size={20} />
-                  <span className="sg-autofield__hint" style={{ marginLeft: 8 }}>运行内容创建后不可修改</span>
-                </div>
-              )}
+              <div className="sg-inchips">
+                <ChoiceChip role="radio" size={30} label="一段指令" selected={form.kind === 'prompt'} disabled={!isNew} onToggle={() => set({ kind: 'prompt' })} />
+                <ChoiceChip role="radio" size={30} label="Playbook" selected={form.kind === 'playbook'} disabled={!isNew} onToggle={() => set({ kind: 'playbook' })} />
+                {!isNew && <span className="sg-autofield__hint" style={{ marginLeft: 8, alignSelf: 'center' }}>运行内容创建后不可修改</span>}
+              </div>
             </div>
             {form.kind === 'prompt' ? (
               <div className="sg-autofield">
@@ -273,13 +272,16 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
                   <span className="sg-autofield__label">Playbook</span>
                   {playbook ? (
                     <PlaybookCard
-                      playbook={{ name: playbook.name, meta: `${(playbook as PlaybookBrief).step_count ?? ''} 步 · ${(playbook as PlaybookBrief).expert_count ?? ''} 位专家` }}
+                      playbook={{
+                        name: playbook.name,
+                        meta: `${(playbook as PlaybookBrief).step_count ?? ''} 步 · ${(playbook as PlaybookBrief).expert_count ?? ''} 位专家${mine ? ' · 你创建' : ''}`,
+                      }}
                       variables={variableNames.map((n) => ({
                         label: `{${n}} = ${form.variables[n] ?? playbook.variables?.find((v) => v.name === n)?.default ?? ''}`,
                         tone: 'neutral' as const,
                         size: 18 as const,
                       }))}
-                      variablesLabel="每次运行前填写变量："
+                      variablesLabel={isNew || justSaved ? undefined : '每次运行前填写变量：'}
                     />
                   ) : (
                     <span className="sg-autofield__hint">请选择 Playbook</span>
@@ -329,6 +331,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
                   ? `${!isNew && !enabled && justSaved ? '启用后' : ''}下次运行：${nextRun}。Mac 未开机或 Sage 未运行时会记为“已错过”。`
                   : '请选择执行周期、日期和时间'}
               </span>
+              {isNew && nextRun && <span className="sg-autofield__hint">保存后仍需启用</span>}
             </div>
             <div className="sg-autofield">
               <span className="sg-autofield__label">主责专家</span>
@@ -342,20 +345,28 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
                   onChange={(v) => set({ leadExpert: v })}
                 />
               ) : (
-                <span className="sg-autofield__hint">{leadName ? `${leadName} · 由 Playbook 指定` : '由 Playbook 指定'}</span>
+                <span className="sg-autofield__hint">{leadName ? `${leadName} · 由 Playbook 指定` : '待确认'}</span>
               )}
             </div>
             <div className="sg-autofield">
               <span className="sg-autofield__label">需要的权限</span>
               {isNew || !estimate ? (
                 <>
-                  <span className="sg-autofield__hint">完成设置后确认</span>
-                  <span className="sg-autofield__hint">选择内容后显示</span>
+                  <span className="sg-autofield__hint">{invalid ? '完成设置后确认' : '启用时确认'}</span>
+                  <span className="sg-autofield__hint">{form.playbookId ? '具体权限' : '选择内容后显示'}</span>
+                  <div>
+                    <Tag label="待确认" tone="neutral" size={18} />
+                  </div>
                 </>
               ) : (
                 <>
-                  <span className="sg-autofield__hint">{justSaved && missingPermission ? '缺少权限时无法启用' : '启用时会逐项确认'}</span>
+                  <span className="sg-autofield__hint">{savedDraft && missingPermission ? '缺少权限时无法启用' : '启用时会逐项确认'}</span>
                   <span className="sg-autofield__hint">具体权限</span>
+                  {permissions.length === 0 && (
+                    <div>
+                      <Tag label="待确认" tone="neutral" size={18} />
+                    </div>
+                  )}
                   {permissions.map((p) => (
                     <div key={p.id} className="sg-incard__row" style={{ gap: 6 }}>
                       <Icon name={p.state === 'granted' ? 'check' : 'info'} size={13} color={p.state === 'granted' ? 'color.green.660' : 'color.orange.660'} />
@@ -378,6 +389,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
               duration={estimate?.estimated_duration_minutes != null ? `约 ${estimate.estimated_duration_minutes} 分钟` : undefined}
               credits={estimate?.estimated_credits != null ? `约 ${estimate.estimated_credits} Credits` : undefined}
               output={estimate?.expected_output ?? undefined}
+              emptyLabel={form.kind === 'playbook' ? '待确认' : isNew && invalid ? '待填写' : '待估算'}
             />
           </div>
         </div>
@@ -422,13 +434,13 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
       )}
       {confirmLeave && (
         <ConfirmDialog
-          title="放弃未保存的修改？"
-          message="你有还没保存的修改，离开后不会保留。"
-          confirmLabel="放弃更改"
-          cancelLabel="继续编辑"
-          tone="warning"
-          onCancel={() => setConfirmLeave(false)}
-          onConfirm={() => navigate('/automations')}
+          title="放弃未保存的更改？"
+          message="退出后，本次未保存的更改将丢失。"
+          confirmLabel="继续编辑"
+          cancelLabel="放弃更改"
+          onConfirm={() => setConfirmLeave(false)}
+          onCancel={() => navigate('/automations')}
+          onDismiss={() => setConfirmLeave(false)}
         />
       )}
     </div>

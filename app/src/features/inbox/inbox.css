@@ -116,6 +116,8 @@
 .sg-handover__row-title { color: var(--color-blue-840); font: var(--type-sans-sc-13-400-lh15-6); }
 .sg-handover__row-meta { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
 .sg-handover__label { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); padding: 6px 0 2px; }
+.sg-handover__title { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-20-500-lh27-32); }
+.sg-handover__row-kind { flex: 0 0 76px; color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); }
 .sg-handover__foot { color: var(--color-slate-540); font: var(--type-sans-sc-12-400-lh14-4); padding: 8px 0 0; }
 
 /* setup */
@@ -163,3 +165,50 @@
 .sg-recover__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .sg-inbox__bell { margin-left: auto; }
 .sg-inbox__toolbar .sg-seg ~ .sg-inbox__bell, .sg-inbox__connect ~ .sg-inbox__bell { margin-left: 0; }
+
+/* 收件 · 需要我决定 / @与指派 (638:2): title + tabs over a 420px list and the detail pane. */
+.sg-inbox--tabs { padding-top: 52px; }
+.sg-inq__side {
+  flex: none;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 4px 0 0 40px;
+  border-right: 1px solid var(--color-neutral-60);
+}
+.sg-inbox--tabs.is-single .sg-inq__side { flex: 1 1 auto; width: auto; border-right: 0; padding-right: 40px; }
+.sg-inq__head { flex: none; padding-right: 24px; }
+.sg-inbox--tabs.is-single .sg-handover { width: 100%; max-width: 720px; margin: 0; padding: 8px 0 48px; }
+.sg-inq__h1 { margin: 0; color: var(--color-blue-840); font: var(--type-sans-sc-24-500-lh28-8); }
+.sg-inq__subtitle { margin: 6px 0 0; color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-inq__tabs { gap: 14px; margin-top: 18px; height: 40px; align-items: center; }
+.sg-inq__list { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.sg-inq__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px 14px 8px;
+  border-bottom: 1px solid var(--color-neutral-60);
+  border-radius: 6px;
+  background: none;
+  text-align: left;
+}
+.sg-inq__row:hover, .sg-inq__row.is-selected { background: var(--color-neutral-20); }
+.sg-inq__row-text { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sg-inq__row-tag { color: var(--color-orange-660); font: var(--type-sans-sc-11-500-lh13-2); }
+.sg-inq__row-tag.is-info { color: var(--color-blue-590); }
+.sg-inq__row-title { color: var(--color-blue-840); font: var(--type-manrope-14-500-lh19-12); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sg-inq__row-meta, .sg-inq__row-time { color: var(--color-slate-540); font: var(--type-manrope-12-400-lh16-39); }
+.sg-inq__row-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sg-inq__row-time { flex: none; }
+.sg-inq__detail { flex: 1 1 auto; min-width: 0; overflow-y: auto; padding: 24px 48px; }
+.sg-inq__pane { display: flex; flex-direction: column; gap: 18px; max-width: 668px; }
+.sg-inq__pane.sg-decide__card { gap: 18px; }
+.sg-inq__pane .sg-decide__card { gap: 18px; }
+.sg-inq__pane .sg-approval { max-width: 640px; }
+.sg-inq__crumb { display: flex; align-items: center; gap: 8px; color: var(--color-slate-600); font: var(--type-sans-sc-13-400-lh15-6); }
+.sg-inq__crumb-sep { color: var(--color-slate-230); }
+.sg-inq__title { margin: 0; color: var(--color-blue-840); font: var(--type-manrope-20-600-lh27-32); }
+.sg-inq__list .sg-recover__head { flex-direction: row; padding: 14px 16px 14px 8px; border-radius: 6px; background: var(--color-neutral-20); }

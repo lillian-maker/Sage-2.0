@@ -7,7 +7,7 @@ import { EmptyState, errorMessage, QueryGate } from '../../components/States/Sta
 import { Switch } from '../../components/Switch/Switch';
 import { TextField } from '../../components/TextField/TextField';
 import { getBillingAccount } from '../../features/billing/api';
-import { fmtCredits, fmtMonthDay, toNumber } from '../../features/billing/format';
+import { fmtCredits, fmtPeriodLastDay, toNumber } from '../../features/billing/format';
 import { SITE_LINKS, openSite } from '../../features/billing/site';
 import { OrgFrame, UsageBar, isForbidden } from '../../features/settings/OrgFrame';
 import { SettingsDialog } from '../../features/settings/common';
@@ -93,7 +93,7 @@ export default function Screen(_props: ScreenProps) {
             <span>已分给部门 / 个人</span>
           </span>
           <span className="sg-seats__cell">
-            <b>{org.data?.period_end ? fmtMonthDay(org.data.period_end) : '—'}</b>
+            <b>{org.data?.period_end ? fmtPeriodLastDay(org.data.period_end) : '—'}</b>
             <span>本服务月结束</span>
           </span>
           <span className="sg-seats__actions">

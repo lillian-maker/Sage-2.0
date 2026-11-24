@@ -17,6 +17,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
   const [q, setQ] = useState(query.get('q') ?? '');
   const detail = useApiQuery((signal) => extensionsApi.detail(skillId, signal), [skillId]);
   const d = detail.data;
+  const counts = useApiQuery((signal) => extensionsApi.list({ tab: 'installed' }, signal), []);
 
   return (
     <div className="sg-dpage has-rail" style={{ gridTemplateColumns: 'minmax(0, 1fr) 400px' }}>
@@ -26,6 +27,7 @@ export default function Screen({ params, query, navigate }: ScreenProps) {
           <ExtensionsHeader
             navigate={navigate}
             tab="installed"
+            installedCount={counts.data?.counts.installed}
             q={q}
             onSearch={setQ}
             description="插件给专家增加工具，技能教专家方法，连接器接入外部数据，智能体接入外部 Agent；连接与授权都会单独确认"

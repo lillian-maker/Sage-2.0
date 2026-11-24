@@ -46,7 +46,8 @@ export function KickoffPanel({ kickoff, onStarted, onCancel, onChanged, onInstal
   const minutes = kickoff.estimated_duration_minutes;
   const subtitle = [
     kickoff.complexity ? COMPLEXITY[kickoff.complexity] ?? kickoff.complexity : '',
-    b.rule_version ? `按工作区规则 v${b.rule_version.number}` : '',
+    kickoff.estimated_expert_count ? `预计 ${kickoff.estimated_expert_count} 位专家` : '',
+    minutes ? `约 ${minutes} 分钟` : '',
   ]
     .filter(Boolean)
     .join(' · ');
@@ -72,16 +73,21 @@ export function KickoffPanel({ kickoff, onStarted, onCancel, onChanged, onInstal
             { label: '约束', value: constraints ?? '' },
           ].filter((f) => f.value),
           criteria: kickoff.criteria.map((c) => c.text),
-          capabilities: kickoff.missing_capabilities.map((c) => ({
-            icon: 'puzzle',
-            name: c.extension?.name ?? c.title,
-            kind: c.extension?.kind === 'connector' ? '连接器 · 需安装' : '扩展 · 需安装',
-            action: '去安装',
-            ...(c.extension ? { onAction: () => onInstall(c.extension!.id) } : {}),
-          })),
-          planSummary: `执行计划 · ${kickoff.plan.step_count} 步 · ${kickoff.plan.expert_count} 位专家${minutes ? ` · 预计 ${minutes} 分钟` : ''}`,
-          ...(started ? { hint: '任务已开工，说明与验收清单已锁定' } : kickoff.missing_capabilities.length ? { hint: '缺少的能力可先开工，执行到相关步骤时再补齐' } : {}),
+          capabilities: kickoff.missing_capabilities.map((c) => {
+            // Connectors only ever get read-only access (Extension.access has the single level read_only).
+            const connector = c.extension?.kind === 'connector';
+            return {
+              icon: 'puzzle' as const,
+              name: c.extension?.name ?? c.title,
+              kind: connector ? '连接器 · 只读' : c.extension?.kind === 'skill' ? '技能' : '扩展',
+              action: connector ? '连接' : '安装',
+              ...(c.extension ? { onAction: () => onInstall(c.extension!.id) } : {}),
+            };
+          }),
+          planSummary: `执行计划 · ${kickoff.plan.step_count} 步 · ${kickoff.plan.expert_count} 位专家（展开查看与调整）`,
+          ...(!started && kickoff.missing_capabilities.length ? { hint: '不安装也可以开始，相关步骤会标为“缺少能力”' } : {}),
         }}
+        readOnly={started}
         starting={start.submitting}
         onAnswer={(i, value) => {
           const q = kickoff.questions[i];

@@ -17,29 +17,36 @@ export interface SavePlaybookDialogProps {
 }
 
 export function SavePlaybookDialog({ task, steps, onClose }: SavePlaybookDialogProps) {
-  const [name, setName] = useState(task.title);
-  const [picked, setPicked] = useState<Set<string>>(() => new Set(steps.map((s) => s.id)));
+  const template = task.playbook_template ?? null;
+  const stepVariable = new Map((template?.steps ?? []).map((row) => [row.step, row.variable]));
+  const initialPicked = () => {
+    const suggested = steps.filter((s) => stepVariable.has(s.id));
+    return new Set((suggested.length ? suggested : steps).map((s) => s.id));
+  };
+  const [name, setName] = useState(template?.name ?? task.title);
+  const [picked, setPicked] = useState<Set<string>>(initialPicked);
   const [visibility, setVisibility] = useState('only_me');
   const [saved, setSaved] = useState(false);
-  const [variables, setVariables] = useState<Array<{ name: string; default: string }>>([]);
+  const [variables, setVariables] = useState<Array<{ name: string; default: string }>>(() => template?.variables ?? []);
   const [varName, setVarName] = useState('');
   const [varValue, setVarValue] = useState('');
-  useEffect(() => setPicked(new Set(steps.map((s) => s.id))), [steps]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setPicked(initialPicked()), [steps]);
 
   // A declared variable replaces its value in the step titles, so the saved playbook is parameterized.
   const substituted = (title: string) =>
     variables.reduce((t, v) => (v.default ? t.split(v.default).join(`{${v.name}}`) : t), title);
-  const save = useSubmit(() =>
-    taskApi.savePlaybook({
-      source_task: task.id,
-      name: name.trim(),
-      visibility,
-      variables,
-      steps: steps
-        .filter((s) => picked.has(s.id))
-        .map((s, i) => ({ source_step: s.id, order: i + 1, title: substituted(s.title) })),
-    }),
-  );
+  const savedTitle = (s: TaskStep) => {
+    const title = substituted(s.title);
+    const v = stepVariable.get(s.id);
+    return v && variables.some((x) => x.name === v) && !title.includes(`{${v}}`) ? `{${v}} ${title}` : title;
+  };
+  const save = useSubmit(() => {
+    const chosen = steps.filter((s) => picked.has(s.id)).map((s, i) => ({ source_step: s.id, order: i + 1, title: savedTitle(s) }));
+    // The backend rejects variables no step title references, so only referenced ones are sent.
+    const used = variables.filter((v) => chosen.some((row) => row.title.includes(`{${v.name}}`)));
+    return taskApi.savePlaybook({ source_task: task.id, name: name.trim(), visibility, variables: used, steps: chosen });
+  });
   const addVariable = () => {
     const v = { name: varName.trim(), default: varValue.trim() };
     if (!v.name || !v.default || v.name.includes('{') || v.name.includes('}')) return;
@@ -97,7 +104,14 @@ export function SavePlaybookDialog({ task, steps, onClose }: SavePlaybookDialogP
                     <span className={`sg-checkitem__box${on ? ' is-checked' : ''}`}>{on && <Icon name="check" size={10} />}</span>
                     {s.expert && <Avatar {...avatarOf(s.expert.name, s.expert.avatar_ref)} size={20} />}
                     <span className="sg-pbdialog__steptitle">{substituted(s.title)}</span>
-                    {s.skill && <span className="sg-pbdialog__stepmeta">· {s.skill.name}</span>}
+                    {stepVariable.has(s.id) ? (
+                      <>
+                        {stepVariable.get(s.id) && <span className="sg-pbdialog__stepvar">{`{${stepVariable.get(s.id)}}`}</span>}
+                        <span className="sg-pbdialog__stepmeta">· {s.label || s.skill?.name || s.title}</span>
+                      </>
+                    ) : (
+                      s.skill && <span className="sg-pbdialog__stepmeta">· {s.skill.name}</span>
+                    )}
                   </button>
                 );
               })}

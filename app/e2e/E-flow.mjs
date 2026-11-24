@@ -1,13 +1,14 @@
 // E 组交互验证：详情打开、修改范围弹层、来源保存（PATCH 带 version）、编辑保存（PATCH）、新建规则（POST）、启用/暂停提示。
 // 运行：SAGE_URL=http://127.0.0.1:5185 PLAYWRIGHT_MODULE=... node e2e/E-flow.mjs
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(path.join(process.env.PLAYWRIGHT_MODULE, 'index.js'));
 const base = process.env.SAGE_URL || 'http://127.0.0.1:5185';
-const shots = process.env.SHOTS || '/Users/ll/Documents/Sage/.scratch/figma-sync/q/dev/frontend/shots/E';
+const shots = process.env.SHOTS || new URL('../../tmp/e2e-shots/E', import.meta.url).pathname;
+mkdirSync(shots, { recursive: true });
 const [name, value] = readFileSync(process.env.SAGE_SESSION_FILE || new URL('../../tmp/dev-session.txt', import.meta.url).pathname, 'utf8').trim().split('=');
 
 const browser = await chromium.launch();
@@ -29,15 +30,17 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(300);
 step('Esc 关闭详情', (await page.locator('.sg-indetail').count()) === 0);
 
-// 2) 需要我决定 → 修改范围弹层（不写库）
+// 2) 需要我决定 → 修改范围整窗弹窗（不写库；2732:43 起改为全窗遮罩弹窗）
 await page.goto(base + '/inbox?filter=decide', { waitUntil: 'networkidle' });
 const approveCard = page.locator('.sg-decide__card', { hasText: 'Jungle Scout' }).first();
 await approveCard.getByRole('button', { name: '修改范围' }).click();
-await page.waitForSelector('.sg-decide__revise');
-await page.locator('.sg-decide__revise .sg-chip', { hasText: '前 20 名' }).click();
+const reviseDialog = page.locator('.sg-modal-backdrop [role="dialog"]').last();
+await reviseDialog.waitFor();
+await reviseDialog.getByRole('radio', { name: '前 20 名' }).click();
 await page.screenshot({ path: shots + '/inbox-decide-revise.png' });
-step('修改范围弹层出现且可选', await page.locator('.sg-decide__revise .sg-chip.is-selected').count() > 0);
-await approveCard.getByRole('button', { name: '取消' }).click();
+step('修改范围弹窗出现且可选', (await reviseDialog.getByRole('radio', { name: '前 20 名', checked: true }).count()) > 0);
+await reviseDialog.getByRole('button', { name: '取消' }).click();
+await reviseDialog.waitFor({ state: 'detached' });
 
 // 3) 来源设置保存（PATCH 带 version，内容不变）
 import { seedIds } from './seed-ids.mjs';
@@ -97,6 +100,23 @@ if (enabled) {
   step('未授予权限保持暂停', true, 'enable 被拒绝（权限未授予）');
 }
 await page.screenshot({ path: shots + '/automation-created.png' });
+
+// 7) D96：用户新建任务开工后保留只读开工确认卡（此前只有种子任务有 kickoff_card 消息）
+const d96 = await page.evaluate(async () => {
+  const s = await (await fetch('/api/auth/session', { credentials: 'same-origin' })).json();
+  const headers = { 'Content-Type': 'application/json', 'X-CSRFToken': s.csrf_token, 'X-Billing-Account': String(s.active_account_id) };
+  const createdRes = await fetch('/api/app/tasks', { method: 'POST', credentials: 'same-origin', headers, body: JSON.stringify({ body: 'E组联调：整理德国站 EPR 合规清单，输出两页报告' }) });
+  const created = await createdRes.json();
+  const id = created.task ? created.task.id : null;
+  if (!id) return { id, start: 0, createStatus: createdRes.status, createBody: JSON.stringify(created) };
+  const started = await fetch('/api/app/tasks/' + id + '/start', { method: 'POST', credentials: 'same-origin', headers, body: JSON.stringify({ client_request_id: 'e-d96-start' }) });
+  return { id, start: started.status };
+});
+await page.goto(base + '/tasks/' + d96.id, { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+step('新建任务开工后显示只读开工确认卡（D96）', d96.start === 200 && (await page.getByText('任务已开始，进度将在右侧更新。').count()) > 0,
+     'start=' + d96.start + ' task=' + d96.id + (d96.createStatus ? ' create=' + d96.createStatus + ' ' + d96.createBody : ''));
+await page.screenshot({ path: shots + '/d96-kickoff-readonly.png' });
 
 console.log(JSON.stringify({ results, errors }, null, 2));
 await browser.close();

@@ -19,6 +19,8 @@ export interface TaskBrief {
 
 export interface TaskBriefCardProps {
   brief: TaskBrief;
+  /** After kickoff the card stays on the page as a read-only record of what was confirmed. */
+  readOnly?: boolean;
   onStart?: () => void;
   onCancel?: () => void;
   onAnswer?: (index: number, value: string) => void;
@@ -27,18 +29,18 @@ export interface TaskBriefCardProps {
   starting?: boolean;
 }
 
-export function TaskBriefCard({ brief, onStart, onCancel, onAnswer, onAddCriterion, onTogglePlan, starting }: TaskBriefCardProps) {
-  const open = brief.questions.filter((q) => (q.confirmed === undefined ? !q.value : !q.confirmed)).length;
+export function TaskBriefCard({ brief, readOnly, onStart, onCancel, onAnswer, onAddCriterion, onTogglePlan, starting }: TaskBriefCardProps) {
+  const open = readOnly ? 0 : brief.questions.filter((q) => (q.confirmed === undefined ? !q.value : !q.confirmed)).length;
   return (
-    <Card className="sg-brief">
-      <CardHeader icon="check" title="任务说明" subtitle={brief.subtitle} />
+    <Card className={`sg-brief${readOnly ? ' is-readonly' : ''}`}>
+      <CardHeader icon="check" title={readOnly ? '任务说明' : '开工确认'} subtitle={brief.subtitle} />
       <div className="sg-brief__grid">
         <div className="sg-brief__col">
           <div className="sg-section-label">{open > 0 ? `1 · 先确认 ${open} 个问题` : '1 · 已确认的问题'}</div>
           {brief.questions.map((q, i) => (
             <div key={q.question} className="sg-brief__q">
               <span>{q.question}</span>
-              <ChoiceChipGroup options={q.options} value={q.value} size={28} label={q.question} onChange={(v) => onAnswer?.(i, v)} />
+              <ChoiceChipGroup options={q.options} value={q.value} size={28} label={q.question} disabled={readOnly} onChange={(v) => onAnswer?.(i, v)} />
             </div>
           ))}
           <div className="sg-section-label">2 · 任务说明（点击可修改）</div>
@@ -62,13 +64,13 @@ export function TaskBriefCard({ brief, onStart, onCancel, onAnswer, onAddCriteri
               <li key={c}>{c}</li>
             ))}
           </ol>
-          <button type="button" className="sg-brief__add" onClick={onAddCriterion}>
+          <button type="button" className="sg-brief__add" onClick={onAddCriterion} disabled={readOnly}>
             <Icon name="plus" size={13} />
             添加一条
           </button>
           <div className="sg-section-label">4 · 需要补齐的能力</div>
           {brief.capabilities.map((c) => (
-            <CapabilityRow key={c.name} {...c} />
+            <CapabilityRow key={c.name} {...c} {...(readOnly ? { disabled: true } : {})} />
           ))}
         </div>
       </div>
@@ -76,14 +78,16 @@ export function TaskBriefCard({ brief, onStart, onCancel, onAnswer, onAddCriteri
         <Icon name="chevron-down" size={13} />
         {brief.planSummary}
       </button>
-      <ActionBar
-        variant="footer"
-        hint={brief.hint}
-        actions={[
-          { variant: 'ghost', size: 32, label: '取消', onClick: onCancel },
-          { variant: 'primary', size: 32, label: '开始执行', onClick: onStart, busy: starting },
-        ]}
-      />
+      {!readOnly && (
+        <ActionBar
+          variant="footer"
+          hint={brief.hint}
+          actions={[
+            { variant: 'ghost', size: 32, label: '取消', onClick: onCancel },
+            { variant: 'primary', size: 32, label: '开始执行', onClick: onStart, busy: starting },
+          ]}
+        />
+      )}
     </Card>
   );
 }

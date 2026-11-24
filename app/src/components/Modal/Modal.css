@@ -7,6 +7,10 @@
   justify-content: center;
   background: rgb(22 40 60 / 0.24);
 }
+.sg-modal-backdrop--content {
+  position: absolute;
+  inset: 52px 0 0;
+}
 .sg-modal { outline: none; }
 
 /* Form dialogs over a page (2736:43 调整本次查询范围、2089:2924 填写退回原因). */

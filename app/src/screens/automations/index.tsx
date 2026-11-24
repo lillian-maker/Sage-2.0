@@ -67,7 +67,7 @@ export default function Screen({ query, navigate }: ScreenProps) {
           await automationsApi.enable(a.id);
         } catch {
           // The server rolled the rule back to its previous state; the switch never flipped.
-          shell.toast({ tone: 'failure', message: `未能启用「${a.name}」`, detail: '这条规则还没有获得执行权限，已恢复为暂停，没有运行。', actionLabel: '知道了', onAction: () => undefined });
+          shell.toast({ tone: 'failure', message: `未能启用「${a.name}」`, detail: '这条规则还没有获得执行权限，已恢复为暂停，没有运行。', actionLabel: '知道了', onAction: () => undefined, variant: 'card' });
           return;
         }
         shell.toast({ tone: 'undo', message: `已启用「${a.name}」` });

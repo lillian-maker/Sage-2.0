@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { request } from '../../api/client';
+import type { DeleteWorkspacesKnowledgeBasesByIdResponse, GetWorkspacesKnowledgeBasesResponse } from '../../api/types';
 import { Link } from '../../app/router';
 import { useApiQuery } from '../../app/useApi';
 import { Button } from '../../components/Button/Button';
@@ -21,6 +22,8 @@ import {
   useWorkspaceFolders,
   type UpdateState,
 } from './bridge';
+// The edit dialog reuses .sg-wsdialog, which otherwise only loads with the workspace pages.
+import '../workspaces/workspaces.css';
 import './desktop.css';
 import { Modal } from '../../components/Modal/Modal';
 
@@ -62,18 +65,14 @@ export function useHoverIntent<T>(openDelay = 400, closeDelay = 200) {
   return { value, enter, leave, keep, close };
 }
 
-interface KbItem {
-  id: string;
-  name: string;
-  scope: string;
-  workspace: { id: string; name: string } | null;
-}
+const sourcesPath = (workspaceId: string) => `app/workspaces/${encodeURIComponent(workspaceId)}/knowledge-bases`;
 
+/** D106: the workspace's referenced knowledge bases (资料来源), not every base that belongs to the workspace. */
 function useWorkspaceSources(workspaceId: string) {
   const detail = useApiQuery((s) => wsApi.get(workspaceId, s), [workspaceId]);
-  const kbs = useApiQuery((s) => request<{ items: KbItem[] }>('GET', 'app/knowledge-bases', { query: { scope: 'workspace' }, signal: s }), []);
-  const own = (kbs.data?.items ?? []).filter((k) => k.workspace?.id === workspaceId);
-  return { detail, kbs: own, kbsLoaded: !!kbs.data };
+  const kbs = useApiQuery((s) => request<GetWorkspacesKnowledgeBasesResponse>('GET', sourcesPath(workspaceId), { signal: s }), [workspaceId]);
+  const items = (kbs.data?.items ?? []).map((k) => ({ id: k.id ?? '', name: k.name ?? '' }));
+  return { detail, kbs: items, kbsLoaded: !!kbs.data, reloadKbs: kbs.reload };
 }
 
 const kindLabel = (w: WorkspaceDetail) => (w.account_kind === 'personal' ? '个人' : '企业');
@@ -201,7 +200,7 @@ export function EditWorkspaceDialog({
   onRemove: (name: string) => void;
   navigate: (to: string) => void;
 }) {
-  const { detail, kbs } = useWorkspaceSources(workspaceId);
+  const { detail, kbs, reloadKbs } = useWorkspaceSources(workspaceId);
   const d = desktop();
   const { folders } = useWorkspaceFolders(d ? workspaceId : null);
   const w = detail.data;
@@ -209,6 +208,7 @@ export function EditWorkspaceDialog({
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [removingKb, setRemovingKb] = useState(false);
   const value = name ?? w?.name ?? '';
   const trimmed = value.trim();
 
@@ -237,6 +237,17 @@ export function EditWorkspaceDialog({
   const folderAct = (fn: () => Promise<unknown>) => {
     setError(null);
     fn().then(notifyFoldersChanged, (err: unknown) => setError(desktopErrorText(err)));
+  };
+  const removeKb = (kbId: string) => {
+    if (removingKb) return;
+    setError(null);
+    setRemovingKb(true);
+    request<DeleteWorkspacesKnowledgeBasesByIdResponse>('DELETE', `${sourcesPath(workspaceId)}/${encodeURIComponent(kbId)}`)
+      .then(
+        () => reloadKbs(),
+        (err: unknown) => setError(apiMessage(err, '移除失败，请重试')),
+      )
+      .finally(() => setRemovingKb(false));
   };
   const go = (to: string) => {
     onClose();
@@ -288,6 +299,7 @@ export function EditWorkspaceDialog({
                 <button type="button" className="sg-dsk-sources__link truncate" onClick={() => go(`/knowledge/${encodeURIComponent(k.id)}`)}>
                   {`知识库：${k.name}`}
                 </button>
+                {w?.can_manage && <IconButton icon="x" size={25} iconSize={12} variant="ghost" label={`移除 知识库：${k.name}`} disabled={removingKb} onClick={() => removeKb(k.id)} />}
               </div>
             ))}
             <div className="sg-dsk-sources__row">
@@ -329,7 +341,7 @@ export function EditWorkspaceDialog({
           </div>
         )}
         <div className="sg-wsdialog__foot">
-          {w?.can_manage && <Button variant="danger" size={32} label="移除工作区" onClick={() => onRemove(w.name)} />}
+          {w?.can_manage && <Button variant="ghost" size={32} className="sg-dsk-remove" label="移除工作区" onClick={() => onRemove(w.name)} />}
           <span className="sg-wsdialog__note" />
           <Button variant="ghost" size={32} label="取消" onClick={onClose} />
           <Button type="submit" variant="primary" size={32} label="保存" busy={saving} disabled={!w} />
