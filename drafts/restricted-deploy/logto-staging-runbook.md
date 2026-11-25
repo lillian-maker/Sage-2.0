@@ -54,7 +54,7 @@
 5. 数据库口令：`openssl rand -hex 24`，同时写入 env 的 `DB_URL` 与 secret 文件 `logto_db_pass`。
 6. `SECRET_VAULT_KEK`：`openssl rand -base64 32`；与数据库备份同等托管。
 7. 一个测试账号（邮箱或用户名），用于 smoke。
-8. 确认官网 staging 回调域名。本文暂用 `staging.sagegogo.com`；G4 前必须定稿。
+8. 确认官网 staging 回调域名。G4 staging 官网已使用 `voc.sagegogo.com`；`staging.sagegogo.com` 无 A 记录。
 
 ## 5. 首次部署
 
@@ -118,7 +118,7 @@
 | 对象 | 值 |
 | --- | --- |
 | Web client | `sage-web-staging`，Traditional Web（confidential） |
-| Web redirect | `https://staging.sagegogo.com/api/auth/oidc/callback`（暂定；G4 定稿） |
+| Web redirect | `https://voc.sagegogo.com/api/auth/oidc/callback`（G4 staging 官网） |
 | Web post logout | `https://staging.sagegogo.com/` |
 | Desktop client | `sage-desktop-staging`，Native（public + PKCE） |
 | Desktop redirect | `http://127.0.0.1:3000/callback` |

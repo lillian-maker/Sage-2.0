@@ -15,6 +15,34 @@
 
 G1 Logto staging 是独立 stack：`compose.logto.yaml`、`staging-logto.env.example`、`logto-staging-nginx.conf`。操作单见 [logto-staging-runbook.md](logto-staging-runbook.md)。它不进入 `sage-preview`，不修改生产 compose、DNS 或官网登录代码。
 
+G3 连接器操作单见 [logto-staging-connectors.md](logto-staging-connectors.md)。当前 completed（邮件路径）：SES SMTP 已配置并通过真实登录验证码发送；SMS 拆分为 Sage 票据 `G3-SMS` 待办；Google 按用户决定不启用。
+
+## G4 staging 官网 OIDC 接线（已部署 voc.sagegogo.com）
+
+`compose.auth.yaml` 已接 `SAGE_OIDC_*` 与 `SAGE_AUTH_OIDC_ENABLED`；`docker-entrypoint.py` 白名单新增 `SAGE_OIDC_CLIENT_SECRET`，仅从 `auth_credentials.json`（10001:10001、0400）加载。非秘密值由操作者环境提供：
+
+```text
+SAGE_AUTH_OIDC_ENABLED=1
+SAGE_OIDC_ISSUER=https://auth.staging.sagegogo.com/oidc
+SAGE_OIDC_CLIENT_ID=qm3ykssujwpv0jvt14abv
+SAGE_OIDC_REDIRECT_URI=https://voc.sagegogo.com/api/auth/oidc/callback
+SAGE_OIDC_POST_LOGOUT_REDIRECT_URI=https://voc.sagegogo.com/
+SAGE_OIDC_SCOPE=openid profile email phone
+SAGE_AUTH_LEGACY_LOGIN_ENABLED=0
+SAGE_STAGING_IMAGE_TAG=staging-voc-20261126
+SAGE_DOCKER_SECRETS_DIR=/etc/sage/staging/secrets
+SAGE_STAGING_PROXY_IP=172.28.0.1
+```
+
+`SAGE_STAGING_PROXY_IP` 是该主机 `sage-staging_edge` 的网关；换主机或重建网络后必须重新读取。`SAGE_OIDC_CLIENT_SECRET` 只写入 `auth_credentials.json`；staging web client secret 在 G1 的本机 0600 文件中。staging 浏览器验收已通过，`SAGE_AUTH_LEGACY_LOGIN_ENABLED` 已设 0。`/api/auth/oidc/callback` 走 nginx 的通用 `/api/` 代理；不要复制 `/api/auth/google/callback` 的 403 规则。已用 `voc.sagegogo.com` 完成 staging 浏览器 OIDC 登录/登出；`staging.sagegogo.com` 无 A 记录。独立栈为 `sage-staging`（`compose.staging.yaml`），镜像 `sage-app:staging-voc-20261126`，应用只发布 `127.0.0.1:8001`，宿主 nginx 终止 TLS。不得把 `voc` 当作生产。
+
+配置自检（容器内，不打印 secret）：
+
+```sh
+python manage.py check
+python manage.py shell -c "from backend.oidc_rp import ready; print(ready())"
+```
+
 统一参数：`--env-file /dev/null -p sage-preview`；云端禁 build/pull；管理命令经 `exec -T app python /app/deploy/docker-entrypoint.py python manage.py …`（exec 不执行 ENTRYPOINT）。cron 实态见服务器 `/etc/cron.d/sage-prod`（`process_notifications` 以注释预留，阶段 E 启用；`check_operations` 行需补 scope 参数，详见 prod-20261107/acceptance-report-phase-0AB.md 勘误节）。
 
 ## 独立Docker执行入口 · 2026-10-15
