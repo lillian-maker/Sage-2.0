@@ -17,6 +17,8 @@
 1. 应用 `Sagegogo`（AppID 2021007121629097）：把应用简介、网址改为真实内容（网址 `https://sagegogo.com`）。
 2. 开发设置 → 接口加签方式：选择“密钥”模式、RSA2。上传应用公钥，保存页面给出的“支付宝公钥”。
    2026-11-25 已在服务器私有目录生成密钥对：私钥 `alipay_app_private_pkcs1.pem`（PKCS1，2048 位，root 0400，未挂载给应用），应用公钥 `alipay_app_public.pem`（DER SHA256 `75a3a3ad5179271dda89f6f987071d9ab28dd054ae0daeace1346297b57b7178`）。写 `alipay_live.json` 时从这两个文件取值，不另行生成。
+   2026-11-25 开放平台已完成：应用（现名 SageAI）接口加签方式设为“密钥”RSA2，上传的应用公钥即上述文件；支付宝公钥另存为 `alipay_platform_public.pem`（root 0444）。“可调用产品”已含电脑网站支付（page.pay、query、close、refund、fastpay.refund.query、账单下载）。同日提交审核，状态“审核中”（平台称 1 天内完成）。
+   同日已写入 `alipay_live.json`（10001:10001，0400，app_id 2021007121629097，seller_id 2088980686273250，merchant_entity shenzhen-zhongmiao，payment_ttl_seconds 900，notify_origin https://sagegogo.com），在 6130b06 镜像内以 10001 用户、无网络运行 `load_alipay_credentials` 通过，私钥推导的公钥 DER SHA256 与上传值一致。尚未加入 `SAGE_COMPOSE_OVERLAYS`，应用未挂载。
 3. 确认应用已绑定“电脑网站支付”，提交审核并上线。应用处于“开发中”时不能在线上调用。
 4. 记录商户 PID（2088 开头的 16 位数字），即 `seller_id`。
 5. 应用网关、授权回调地址不需要填写；异步通知地址由每笔订单携带。
