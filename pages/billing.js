@@ -170,6 +170,8 @@
       if (version !== sessionVersion) return;
       if (result.ok !== true) throw new Error('LOGOUT_UNCONFIRMED');
       logoutPending = false; logoutUserId = null; sessionState = 'signed-out'; clearOrderRecovery();
+      const target = typeof result.logout_url === 'string' ? new URL(result.logout_url) : null;
+      if (target?.protocol === 'https:') { location.assign(target.href); return; }
     } catch (_) {
       if (version !== sessionVersion) return;
       sessionState = 'unavailable'; sessionNotice = t('本页账户数据已清除，但服务端退出尚未确认，请重试退出。','Account data is cleared from this page, but server sign-out is not confirmed. Retry sign-out.');

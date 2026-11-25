@@ -33,6 +33,16 @@ from .models import (AuditEvent, AuthThrottle, BillingAccount, LoginChallenge,
 logger = logging.getLogger('sage')
 _DEFAULT_EMAIL_TEMPLATE = object()
 
+# Legacy entries stay available for rollback, but OIDC can close them with one switch.
+LEGACY_LOGIN_PATHS = frozenset({
+    'auth/register/start', 'auth/register/verify', 'auth/password-login',
+    'auth/captcha', 'auth/resend', 'auth/cancel', 'auth/recovery/start',
+    'auth/recovery/verify', 'auth/recovery/complete', 'auth/invitation-check',
+    'auth/challenges', 'auth/verify', 'auth/google/start', 'auth/google/callback',
+    'auth/google/resume', 'auth/google/register', 'auth/google/bind-password',
+    'auth/google/bind-code/start', 'auth/google/bind-code/verify', 'auth/google/bind',
+})
+
 
 def health(request, *, readiness=False):
     """Process/schema probes only: never imply payments or delivery are available."""
@@ -151,6 +161,8 @@ def membership(request, financial=False):
 def session_data(request):
     from .authentication import captcha_ready, registration_ready, registration_terms_ready, recovery_ready
     from .google_auth import ready as google_ready
+    from . import oidc_rp
+    oidc_ready = oidc_rp.ready()
     original_email = request.user.is_authenticated and LoginIdentity.objects.filter(user=request.user,method='email').exists()
     original_phone = request.user.is_authenticated and LoginIdentity.objects.filter(user=request.user,method='phone').exists()
     google_managed = request.user.is_authenticated and not original_email and not original_phone and LoginIdentity.objects.filter(user=request.user,method='google').exists()
@@ -165,6 +177,9 @@ def session_data(request):
                 'phone_password_reset': bool(captcha_ready() and recovery_ready('phone') and (not request.user.is_authenticated or original_phone)),
                 'google_login': google_ready(),
                 'google_registration': google_ready() and registration_terms_ready(),
+                'oidc_login': oidc_ready,
+                'oidc_registration': oidc_ready and settings.AUTH_REGISTRATION_TERMS_READY,
+                'legacy_login': bool(settings.AUTH_LEGACY_LOGIN_ENABLED),
                 'captcha_app_id': str(settings.CAPTCHA_APP_ID) if captcha_ready() else None,
                 'registration_terms_version': settings.AUTH_REGISTRATION_TERMS_VERSION if registration_terms_ready() else None,
                 'registration_terms_url': settings.AUTH_REGISTRATION_TERMS_URL if registration_terms_ready() else None,
@@ -481,6 +496,7 @@ def _api_request(request, path):
         'auth/recovery/verify': ('POST',), 'auth/recovery/complete': ('POST',),
         'auth/resend': ('POST',), 'auth/cancel': ('POST',),
         'auth/google/start': ('POST',), 'auth/google/callback': ('GET',),
+        'auth/oidc/start': ('POST',), 'auth/oidc/callback': ('GET',), 'auth/oidc/logout': ('POST',),
         'auth/google/resume': ('POST',), 'auth/google/register': ('POST',),
         'auth/google/bind-password': ('POST',), 'auth/google/bind-code/start': ('POST',),
         'auth/google/bind-code/verify': ('POST',), 'auth/google/bind': ('POST',),
@@ -533,6 +549,8 @@ def _api_request(request, path):
         result = error(request, 'METHOD_NOT_ALLOWED', 405)
         result['Allow'] = ', '.join(methods)
         return result
+    if path in LEGACY_LOGIN_PATHS and not settings.AUTH_LEGACY_LOGIN_ENABLED:
+        return error(request, 'LEGACY_AUTH_DISABLED', 503, '旧登录入口已关闭，请使用统一登录。')
     try:
         from .account import dispatch, session_is_active, revoke_current_session
         if request.method == 'POST' and path.startswith('auth/') and request.GET:
@@ -547,6 +565,10 @@ def _api_request(request, path):
             return check_request(request)
         if path == 'auth/session':
             return JsonResponse(session_data(request))
+        if path.startswith('auth/oidc/') and path in routes:
+            from . import oidc_rp
+            return {'auth/oidc/start': oidc_rp.start, 'auth/oidc/callback': oidc_rp.callback,
+                'auth/oidc/logout': oidc_rp.logout}[path](request)
         if path.startswith('auth/google/') and path in routes:
             from . import google_auth
             return {'auth/google/start':google_auth.start,'auth/google/callback':google_auth.callback,
@@ -574,6 +596,9 @@ def _api_request(request, path):
         if path == 'auth/password-reset':
             return password_reset(request)
         if path == 'auth/logout':
+            from . import oidc_rp
+            if oidc_rp.ready():
+                return oidc_rp.logout(request)
             payload(request, ())
             revoke_current_session(request)
             logout(request)
