@@ -207,6 +207,47 @@ class AlipaySandboxHTTPTests(TransactionTestCase):
         self.private.public_key().verify(signature, signed, padding.PKCS1v15(), hashes.SHA256())
         self.assert_no_funds()
 
+    def test_live_original_order_signing_and_query_are_separately_gated(self):
+        live = {**self.configuration, 'notify_origin': 'https://sage.example'}
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=False):
+            self.assertEqual(self.post().status_code, 503)
+            self.assertFalse(PaymentAttempt.objects.exists())
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE={},
+                BILLING_ALIPAY_LIVE_ENABLED=True):
+            self.assertEqual(self.post().status_code, 503)
+            self.assertFalse(PaymentAttempt.objects.exists())
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True):
+            first = self.post()
+            self.assertEqual(first.status_code, 200, first.content)
+            attempt = PaymentAttempt.objects.get(order=self.order)
+            self.assertEqual(attempt.dispatch_authorization, {
+                'channel':'alipay', 'environment':'LIVE', 'app_id':live['app_id'],
+                'seller_id':live['seller_id'], 'merchant_entity':live['merchant_entity']})
+            url = urlsplit(first.json()['payment_url'])
+            self.assertEqual(url.netloc, 'openapi.alipay.com')
+            self.assertEqual(parse_qs(url.query)['notify_url'],
+                ['https://sage.example/api/payments/webhooks/alipay'])
+            fields = {'code':'10000', 'out_trade_no':str(attempt.pk), 'total_amount':'7.31',
+                'trade_status':'WAIT_BUYER_PAY'}
+            with patch.object(payments, '_alipay_sandbox_call', return_value=(fields,'a'*64)) as query:
+                second = self.post()
+                self.assertEqual(second.status_code, 200, second.content)
+                self.assertNotIn('payment_url', second.json())
+                self.assertEqual(query.call_count, 1)
+                status = self.client.post(f'/api/billing/orders/{self.order.pk}/payment-status',
+                    '{}', content_type='application/json', HTTP_X_BILLING_ACCOUNT=str(self.account.pk))
+                self.assertEqual(status.status_code, 200, status.content)
+                self.assertEqual(query.call_count, 2)
+                self.assertEqual(status.json()['order']['id'], str(self.order.pk))
+            with patch.object(payments, '_alipay_sandbox_call', side_effect=ValueError('ALIPAY_QUERY_UNKNOWN')):
+                unknown = self.post()
+                self.assertEqual(unknown.status_code, 200, unknown.content)
+                self.assertNotIn('payment_url', unknown.json())
+            self.assertEqual(PaymentAttempt.objects.count(), 1)
+            self.assert_no_funds()
+
     def test_duplicate_pending_and_unknown_keep_reference_expiry_and_never_sign_again(self):
         first = self.post()
         self.assertEqual(first.status_code, 200)
@@ -543,6 +584,29 @@ class AlipayCallbackHTTPTests(TransactionTestCase):
         self.assertEqual(CreditBatch.objects.count(), 1)
         self.assertEqual(self.attempt.events.get().source, 'verified_callback')
 
+    def test_live_callback_requires_gate_and_frozen_live_identity(self):
+        live = {**self.context, 'environment': 'LIVE'}
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(dispatch_authorization=live)
+        body = self.notification()
+        config = {**self.configuration, 'notify_origin': 'https://sage.example'}
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=config,
+                BILLING_ALIPAY_LIVE_ENABLED=False):
+            self.assertEqual(self.post(body).status_code, 503)
+            self.assertFalse(PaymentFact.objects.exists())
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=config,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_SALES_ENABLED=False, BILLING_APPROVED_CHANNELS={}):
+            PaymentAttempt.objects.filter(pk=self.attempt.pk).update(
+                dispatch_authorization={**live, 'seller_id':'9999'})
+            self.assertGreaterEqual(self.post(body).status_code, 400)
+            PaymentAttempt.objects.filter(pk=self.attempt.pk).update(dispatch_authorization=live)
+            self.assertGreaterEqual(self.post(self.notification(seller_id='9999')).status_code, 400)
+            self.assertGreaterEqual(self.post(self.notification(total_amount='7.32')).status_code, 400)
+            self.assertFalse(PaymentFact.objects.exists())
+            self.assertEqual(self.post(body).content, b'success')
+            self.assertEqual(self.post(body).content, b'success')
+            self.assertEqual(PaymentFact.objects.count(), 1)
+            self.assertEqual(CreditBatch.objects.count(), 1)
+
     def test_duplicate_and_finished_notifications_deliver_one_receipt(self):
         body = self.notification()
         self.assertEqual(self.post(body).content, b'success')
@@ -642,20 +706,23 @@ class AlipayCallbackHTTPTests(TransactionTestCase):
         self.assertEqual(PaymentFact.objects.count(), 1)
         self.assertEqual(CreditBatch.objects.count(), 1)
 
-    def test_conflicting_canonical_payment_time_cannot_change_an_existing_receipt(self):
+    def test_later_payment_time_for_same_trade_is_acknowledged_without_changing_receipt(self):
         self.assertEqual(self.post().content, b'success')
-        response = self.reject_unchanged(self.notification(gmt_payment='2026-10-16 16:59:00'))
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(self.post(self.notification(gmt_payment='2026-10-16 16:59:00')).content, b'success')
+        self.assertEqual(PaymentFact.objects.get().paid_at, self.now-timedelta(seconds=90))
+        self.assertEqual(CreditBatch.objects.count(), 1)
 
-    def test_query_first_then_http_notification_then_query_preserves_canonical_time(self):
+    def test_query_first_confirms_payment_then_http_notification_is_idempotent(self):
         from backend.alipay_transport_tests import AlipayTransportTests
         with AlipayTransportTests.transport(self, self.signed_query()):
-            self.assertEqual(payments.query_alipay_payment(self.account, self.attempt.pk)['status'], 'unknown')
-        self.assertFalse(PaymentFact.objects.exists())
+            self.assertEqual(payments.query_alipay_payment(self.account, self.attempt.pk)['status'], 'succeeded')
+        self.assertEqual(PaymentFact.objects.get().paid_at, self.now-timedelta(seconds=60))
+        self.assertEqual(CreditBatch.objects.count(), 1)
         self.assertEqual(self.post().content, b'success')
         with AlipayTransportTests.transport(self, self.signed_query()):
             self.assertEqual(payments.query_alipay_payment(self.account, self.attempt.pk)['status'], 'succeeded')
-        self.assertEqual(PaymentFact.objects.get().paid_at, self.now-timedelta(seconds=90))
+        self.assertEqual(PaymentFact.objects.count(), 1)
+        self.assertEqual(PaymentFact.objects.get().paid_at, self.now-timedelta(seconds=60))
         self.assertEqual(CreditBatch.objects.count(), 1)
 
     def test_http_notification_delivery_failure_then_query_repairs_without_recharging(self):

@@ -179,7 +179,22 @@ BILLING_APPROVED_CHANNELS = {}
 BILLING_WALLET_TESTS = {}
 # Local SDK URL signing only; all sandbox identity/key/expiry fields are explicit.
 BILLING_ALIPAY_SANDBOX = {}
+# A future production configuration requires independent explicit enablement.
+BILLING_ALIPAY_LIVE_ENABLED = False
+BILLING_ALIPAY_LIVE_REFUND_ENABLED = False
+BILLING_ALIPAY_EGRESS_PROXY = ''
+BILLING_ALIPAY_LIVE = {}
+if ENVIRONMENT == 'production' and os.environ.get('SAGE_ALIPAY_CREDENTIALS_ENABLED') == '1':
+    from backend.alipay_credentials import load_alipay_credentials
+    BILLING_ALIPAY_LIVE = load_alipay_credentials('/run/secrets/alipay_live.json')
 BILLING_WECHAT_NATIVE = {}
+if ENVIRONMENT == 'production' and os.environ.get('SAGE_WECHAT_CREDENTIALS_ENABLED') == '1':
+    from backend.wechat_credentials import load_wechat_credentials
+    BILLING_WECHAT_NATIVE = load_wechat_credentials('/run/secrets/wechat_native.json')
+# Only the reviewed internal egress service may be selected; disabled by default.
+BILLING_WECHAT_EGRESS_PROXY = ''
+# A separate gate for a future reviewed production configuration; default closed.
+BILLING_WECHAT_LIVE_ENABLED = False
 # Approved on 2026-10-16; clients cannot choose their own expiry.
 BILLING_QUOTE_TTL_SECONDS = 600
 BILLING_TOPUP_PRESETS = {}
@@ -201,6 +216,13 @@ OPERATIONS_SMS_RECIPIENT = os.environ.get('SAGE_OPERATIONS_SMS_RECIPIENT', '')
 BILLING_TERMS_DOCUMENTS = {}
 # D10 eligibility must be confirmed before exposing paid Credits purchases.
 BILLING_CREDITS_PURCHASE_ENABLED = False
+# The reviewed commercial switches are read last so nothing above can reopen them.
+if ENVIRONMENT == 'production' and os.environ.get('SAGE_BILLING_SALES_CONFIG_ENABLED') == '1':
+    from backend.billing_sales_config import load_billing_sales
+    globals().update(load_billing_sales('/run/secrets/billing_sales.json'))
+# Calendar for new subscription periods and Credits pack expiry: one calendar
+# month (or year) after payment, carried to the next Beijing midnight.
+BILLING_TERM_CALENDAR = {'timezone': 'Asia/Shanghai', 'rule_version': 'next-midnight-v1'}
 # Extra-seat public sales still require approved products and payment-channel verification.
 BILLING_SEAT_PURCHASE_ENABLED = False
 LOGGING = {'version': 1, 'disable_existing_loggers': False,

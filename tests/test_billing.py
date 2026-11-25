@@ -120,9 +120,9 @@ class BillingHTTPTests(unittest.TestCase):
         status, data = self.request('/api/billing/catalog')
         self.assertEqual(status, 200)
         data = data['policy']
-        self.assertEqual(data['version'], '2026-10-16.2')
+        self.assertEqual(data['version'], '2026-11-25.1')
         self.assertEqual(data['currency'], 'CNY')
-        self.assertEqual(data['renewal']['manual_payment_window_days'], 3)
+        self.assertEqual(data['renewal']['repayment_window_days'], 0)
         self.assertFalse(data['renewal']['automatic_retry'])
         self.assertTrue(data['auto_topup']['separate_authorization'])
         self.assertNotIn('balance', data)

@@ -161,13 +161,22 @@ def prepare_renewal_notice(account, subscription_id, cycle_index, *, charge_at):
     return notice
 
 
-def assert_renewal_notice(subscription, cycle_index, *, charge_at=None):
-    """Fail closed before a NEW debit; original in-flight payments remain queryable.
+def renewal_notice_confirmed(subscription, cycle_index, *, charge_at=None):
+    """Whether a current billing admin had a confirmed reminder before the charge.
 
     A provider's identified send acknowledgement is not a claim of reading or
-    handset delivery. Unknown / failed sends never qualify. A late notice cannot
-    satisfy the agreed one-day notice; the customer may renew manually.
+    handset delivery. Unknown / failed sends never qualify. The answer only
+    drives an operator alert: a missing reminder does not stop the renewal.
     """
+    try:
+        return assert_renewal_notice(subscription, cycle_index, charge_at=charge_at)
+    except ValueError as exc:
+        if str(exc) != 'RENEWAL_NOTICE_REQUIRED':
+            raise
+        return False
+
+
+def assert_renewal_notice(subscription, cycle_index, *, charge_at=None):
     source = f'renewal:{subscription.pk}:{cycle_index}:reminder'
     notice = BillingNotification.objects.filter(account=subscription.account,
         subscription=subscription, source_event=source, type='renewal_reminder').first()
@@ -181,7 +190,7 @@ def assert_renewal_notice(subscription, cycle_index, *, charge_at=None):
     valid = bool(notice and notice.currency == 'CNY' and
         notice.amount_minor == _renewal_snapshot(subscription)['amount_minor'] and
         notice.occurred_at == deadline and
-        deliveries.filter(state__in=('sent', 'delivered'), confirmed_at__lte=deadline,
+        deliveries.filter(state__in=('sent', 'delivered'), confirmed_at__lte=planned,
             confirmed_at__isnull=False).exclude(provider_reference='').exists() and
         not deliveries.filter(state__in=('pending', 'sending', 'failed', 'unknown')).exists())
     if not valid:
@@ -190,7 +199,7 @@ def assert_renewal_notice(subscription, cycle_index, *, charge_at=None):
 
 
 def record_renewal_notice_blocked(subscription, cycle_index):
-    """Call after the rejected debit transaction has rolled back."""
+    """Operator alert: the reminder was not confirmed; the renewal charge still runs."""
     from .commerce.models import BillingIssue
     return BillingIssue.objects.update_or_create(account=subscription.account,
         code='renewal_notice_blocked', object_type='renewal_cycle',

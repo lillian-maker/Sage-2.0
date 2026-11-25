@@ -457,6 +457,9 @@ def api(request, path):
             if isinstance(result, dict) and 'payment_query' in result:
                 from .payments import finish_payment_query
                 return finish_payment_query(request, result)
+            if isinstance(result, dict) and 'payment_close' in result:
+                from .payments import finish_payment_close
+                return finish_payment_close(request, result)
             return result
         except DatabaseError:
             logger.error('api_database_unavailable request_id=%s', request.request_id)
@@ -516,15 +519,17 @@ def _api_request(request, path):
     }
     methods = routes.get(path)
     if path.startswith('billing/orders/'):
-        methods = ('POST',) if path.endswith(('/pay', '/payment-status')) else ('GET',)
+        methods = ('POST',) if path.endswith(('/pay', '/payment-status', '/cancel')) else ('GET',)
     if path.startswith('billing/purchase-quotes/'):
         methods = ('GET',)
     if re.fullmatch(r'billing/subscriptions/[^/]+/cancel', path):
         methods = ('POST',)
     if re.fullmatch(r'billing/subscriptions/[^/]+/(change-quotes|changes|refunds|seat-quotes|seat-purchases|seat-reduction-quotes|seat-reductions)', path):
         methods = ('POST',)
-    if re.fullmatch(r'billing/subscriptions/[^/]+/(change-options|refund-assessment|change-quotes/[^/]+|seat-quotes/[^/]+|seat-reduction-quotes/[^/]+)', path):
+    if re.fullmatch(r'billing/subscriptions/[^/]+/(change-options|refund-assessment|manual-renewal|change-quotes/[^/]+|seat-quotes/[^/]+|seat-reduction-quotes/[^/]+)', path):
         methods = ('GET',)
+    if re.fullmatch(r'billing/subscriptions/[^/]+/manual-renewals', path):
+        methods = ('POST',)
     if re.fullmatch(r'billing/refunds/[^/]+', path):
         methods = ('GET',)
     if re.fullmatch(r'billing/orders/[^/]+/refunds', path):
@@ -656,6 +661,20 @@ def _api_request(request, path):
             require_sensitive(request, member.account)
             return JsonResponse(subscriptions.confirm_seat_reduction(member.account, request.user, subscription_id,
                 data['quote_id'], request_key=request.headers.get('Idempotency-Key', '')), status=201)
+        matched_renewal = re.fullmatch(r'billing/subscriptions/([^/]+)/(manual-renewal|manual-renewals)', path)
+        if matched_renewal:
+            if request.GET:
+                raise ValueError('INVALID_REQUEST')
+            subscription_id, action = matched_renewal.groups()
+            if action == 'manual-renewal':
+                return JsonResponse(subscriptions.manual_renewal_offer(member.account, request.user, subscription_id))
+            data = payload(request, ('channel', 'agreement_acceptance'))
+            if member.account.kind == 'business':
+                from .account import require_sensitive
+                require_sensitive(request, member.account)
+            return JsonResponse(subscriptions.create_manual_renewal_order(member.account, request.user, subscription_id,
+                channel=data['channel'], agreement_acceptance=data['agreement_acceptance'],
+                idempotency_key=request.headers.get('Idempotency-Key', '')), status=201)
         matched_seats = re.fullmatch(r'billing/subscriptions/([^/]+)/(seat-quotes|seat-purchases|seat-quotes/[^/]+)', path)
         if matched_seats:
             if request.GET:
@@ -902,7 +921,8 @@ def _api_request(request, path):
                 payment_status = re.fullmatch(r'billing/orders/([^/]+)/payment-status',path)
                 wallet = re.fullmatch(r'billing/orders/([^/]+)/wallet-test',path)
                 refund_request = re.fullmatch(r'billing/orders/([^/]+)/refunds',path)
-                matched = payment or payment_status or assessment or wallet or refund_request
+                cancel = re.fullmatch(r'billing/orders/([^/]+)/cancel',path)
+                matched = payment or payment_status or assessment or wallet or refund_request or cancel
                 order_id = uuid.UUID(matched.group(1) if matched else path.split('/')[-1])
             except (ValueError, TypeError, AttributeError) as exc:
                 raise ValueError('NOT_FOUND') from exc
@@ -912,6 +932,15 @@ def _api_request(request, path):
             if payment_status:
                 from .payments import start_payment_query
                 return start_payment_query(request, order_id)
+            if cancel:
+                if request.GET:
+                    raise ValueError('INVALID_REQUEST')
+                payload(request, ())
+                result = commerce.cancel_unpaid_order(member.account, request.user, order_id)
+                if 'payment_close' in result:
+                    return result
+                detail = commerce.order_detail(member.account, order_id)
+                return JsonResponse({**detail, 'cancel_status': 'cancelled'})
             if refund_request:
                 data = payload(request, ('request_key', 'confirm'))
                 if data['confirm'] is not True:
@@ -978,7 +1007,8 @@ def _api_request(request, path):
         if code in ('INVITATION_UNAVAILABLE', 'INVITATION_ALREADY_PENDING', 'MEMBER_ALREADY_EXISTS',
                 'NO_AVAILABLE_SEAT', 'SEAT_RESERVED_FOR_INVITATION', 'TASK_SETTLEMENT_REQUIRED',
                 'SEAT_CHANGED', 'MEMBER_ROLE_CHANGED', 'SEAT_NOT_RELEASABLE', 'SEAT_COVERAGE_CHANGED',
-                'MEMBER_ALREADY_SEATED', 'SEAT_LOCKED_UNTIL_NEXT_SERVICE_MONTH', 'NEXT_PAID_PERIOD_REQUIRED'):
+                'MEMBER_ALREADY_SEATED', 'SEAT_LOCKED_UNTIL_NEXT_SERVICE_MONTH', 'NEXT_PAID_PERIOD_REQUIRED',
+                'SEAT_LEAVING_NEXT_TERM'):
             return error(request, code, 409)
         if code == 'SUBSCRIPTION_EXPIRED':
             return error(request, code, 422)
@@ -990,6 +1020,10 @@ def _api_request(request, path):
                 'SUBSCRIPTION_ALREADY_CHANGED', 'PAYMENT_RECONCILIATION_REQUIRED', 'UPGRADE_NOT_AVAILABLE',
                 'REFUND_PENDING', 'REFUND_REVIEW_REQUIRED'):
             return error(request, code, 409)
+        if code == 'UNPAID_ORDER_EXISTS':
+            return error(request, code, 409, '你有一笔未完成支付的同类订单，请先完成支付或取消该订单。')
+        if code == 'SALES_CONTACT_REQUIRED':
+            return error(request, code, 409, 'Enterprise 方案需联系销售签约后开通。')
         if code == 'CURRENT_PRICE_REQUIRED':
             return error(request, code, 503)
         if code in ('SERVICE_NOT_ACTIVE', 'CREDITS_SUBSCRIPTION_REQUIRED', 'ANNUAL_REFUND_ONLY', 'NO_REFUNDABLE_SERVICE', 'FUTURE_CREDITS_REQUIRE_REVIEW',

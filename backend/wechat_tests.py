@@ -159,6 +159,13 @@ class WechatProtocolTests(TestCase):
             b'POST\n/v3/pay/transactions/native\n1800000000\nfixture_nonce\n'+expected+b'\n',
             padding.PKCS1v15(), hashes.SHA256())
 
+    def test_native_rejects_non_bmp_description_before_transport(self):
+        for description in ('Sage 订单 🚀', 'Sage \ud800'):
+            with self.subTest(description=repr(description)), self.transport():
+                with self.assertRaisesRegex(ValueError, '^WECHAT_REQUEST_INVALID$'):
+                    self.call(description=description)
+                self.assertEqual(self.sent, [])
+
     def test_query_close_refund_and_refund_query_contracts(self):
         cases = [
             ('query', {}, 'GET', '/v3/pay/transactions/out-trade-no/11111111222243338444555555555555?mchid=1900000001', b''),
@@ -415,7 +422,7 @@ class WechatProtocolTests(TestCase):
         return call(operation, self.reference, **(fields | kwargs))
 
     def transport(self, body=b'{"code_url":"weixin://wxpay/bizpayurl?fixture=value"}', *,
-            status=200, headers=None, compressed=False, failure=None, stream_failure=None):
+            status=200, headers=None, compressed=False, failure=None, stream_failure=None, expected_proxy=None):
         self.sent = []
         self.closed_responses = []
         raw_headers = HTTPHeaderDict(self.signed(body) if headers is None else headers)
@@ -426,7 +433,7 @@ class WechatProtocolTests(TestCase):
         def send(session, prepared, **kwargs):
             self.assertIsInstance(prepared, requests.PreparedRequest)
             self.assertFalse(session.trust_env)
-            self.assertEqual(kwargs['proxies'], {})
+            self.assertEqual(kwargs['proxies'], {'https':expected_proxy} if expected_proxy else {})
             self.assertIs(kwargs['verify'], True)
             self.assertIs(kwargs['allow_redirects'], False)
             self.assertIs(kwargs['stream'], True)
@@ -474,6 +481,17 @@ class WechatProtocolTests(TestCase):
         self.assertEqual(self.sent[0][:2], ('POST', '/v3/pay/transactions/native'))
         self.assertEqual(json.loads(self.sent[0][2])['amount'], {'total':731, 'currency':'CNY'})
         self.assertEqual(len(self.closed_responses), 1)
+
+    def test_explicit_egress_proxy_ignores_untrusted_environment(self):
+        with patch.dict(os.environ, {'HTTPS_PROXY':'http://attacker.invalid:1',
+                'REQUESTS_CA_BUNDLE':'/untrusted/ca'}), self.transport(expected_proxy='http://egress:3128'):
+            self.call(proxy_url='http://egress:3128')
+        for proxy in ('http://other:3128', 'https://egress:3128', 'http://egress:3128/',
+                'http://user:pass@egress:3128', True):
+            with self.subTest(proxy=proxy), self.transport():
+                with self.assertRaisesRegex(ValueError, '^WECHAT_REQUEST_INVALID$'):
+                    self.call(proxy_url=proxy)
+                self.assertEqual(self.sent, [])
 
     def test_transport_all_five_operations_keep_original_references_and_bytes(self):
         cases = [('native', 200, b'{"code_url":"weixin://wxpay/path?any=parameter"}', 'POST', '/v3/pay/transactions/native'),
@@ -538,6 +556,31 @@ class WechatProtocolTests(TestCase):
                     self.call('query')
             self.assertEqual(len(self.sent), 1)
             self.assertEqual(len(self.closed_responses), 1)
+
+    def test_transport_records_only_safe_unique_provider_request_id(self):
+        body = b'{"trade_state":"NOTPAY"}'
+        def response(status, headers):
+            result = requests.Response()
+            result.status_code = status
+            result.raw = HTTPResponse(body=io.BytesIO(body), headers=HTTPHeaderDict(headers), preload_content=False)
+            result.headers.update(result.raw.headers)
+            return result
+        for status in (200, 400):
+            headers = self.signed(body) + [('Request-ID', 'fixture-request-123')]
+            with self.subTest(status=status), patch.object(requests.adapters.HTTPAdapter, 'send',
+                    autospec=True, return_value=response(status, headers)), \
+                    self.assertLogs('sage', level='INFO') as captured:
+                if status == 200:
+                    self.call('query')
+                else:
+                    with self.assertRaisesRegex(ValueError, '^WECHAT_CALL_UNKNOWN$'):
+                        self.call('query')
+            self.assertEqual(captured.output, ['INFO:sage:wechat_api_request_id=fixture-request-123'])
+        for values in (['invalid id'], ['x'*129], ['first-id', 'second-id']):
+            headers = self.signed(body) + [('Request-ID', value) for value in values]
+            with self.subTest(values=len(values)), patch.object(requests.adapters.HTTPAdapter, 'send',
+                    autospec=True, return_value=response(200, headers)), self.assertNoLogs('sage'):
+                self.call('query')
 
     def test_transport_timeout_and_stream_failure_do_not_retry_or_log_exception(self):
         for failure in (requests.Timeout('RAW_EXCEPTION_MUST_NOT_LEAK'),

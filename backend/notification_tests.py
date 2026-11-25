@@ -181,7 +181,8 @@ class RenewalNoticeTests(TestCase):
             with self.subTest(state=state), self.assertRaisesRegex(ValueError, 'RENEWAL_NOTICE_REQUIRED'):
                 assert_renewal_notice(self.subscription, 1, charge_at=self.charge_at)
 
-    def test_verified_send_does_not_require_read_and_late_send_is_rejected(self):
+    def test_verified_send_does_not_require_read_and_send_after_charge_is_unconfirmed(self):
+        from .notifications import renewal_notice_confirmed
         delivery = NotificationDelivery.objects.create(notification=self.prepare(), user=self.user,
             channel='email', state='sent', provider_reference='fixture-send-id',
             confirmed_at=self.charge_at-timedelta(days=1, seconds=1))
@@ -189,6 +190,10 @@ class RenewalNoticeTests(TestCase):
         self.assertEqual(NotificationRead.objects.count(), 0)
         delivery.confirmed_at = self.charge_at-timedelta(hours=23)
         delivery.save(update_fields=['confirmed_at'])
+        self.assertTrue(renewal_notice_confirmed(self.subscription, 1, charge_at=self.charge_at))
+        delivery.confirmed_at = self.charge_at+timedelta(seconds=1)
+        delivery.save(update_fields=['confirmed_at'])
+        self.assertFalse(renewal_notice_confirmed(self.subscription, 1, charge_at=self.charge_at))
         with self.assertRaisesRegex(ValueError, 'RENEWAL_NOTICE_REQUIRED'):
             assert_renewal_notice(self.subscription, 1, charge_at=self.charge_at)
 
@@ -396,6 +401,26 @@ class NotificationWorkerIsolationTests(TransactionTestCase):
                 result=self.worker()
         self.assertEqual(result['contacts_changed'],1);self.assertEqual(result['sent'],1)
         self.assertEqual(send.call_count,1)
+
+    def test_renewal_reminder_sends_after_its_time_until_the_charge(self):
+        from .models import LoginIdentity
+        user=get_user_model().objects.create_user(username='reminder-window')
+        account=BillingAccount.objects.create(kind='personal',name='Synthetic',personal_owner=user)
+        Membership.objects.create(account=account,user=user,role='owner')
+        LoginIdentity.objects.create(user=user,method='email',identifier='reminder@example.invalid')
+        now=timezone.now()
+        due=BillingNotification.objects.create(account=account,type='renewal_reminder',
+            source_event='reminder-late-run',occurred_at=now-timedelta(minutes=10),amount_minor=100,currency='CNY')
+        future=BillingNotification.objects.create(account=account,type='renewal_reminder',
+            source_event='reminder-future',occurred_at=now+timedelta(minutes=10),amount_minor=100,currency='CNY')
+        stale=BillingNotification.objects.create(account=account,type='renewal_reminder',
+            source_event='reminder-after-charge',occurred_at=now-timedelta(days=1,minutes=1),amount_minor=100,currency='CNY')
+        with patch('backend.notifications._transport_notice',return_value='fixture-message') as send:
+            result=self.worker()
+        self.assertEqual(send.call_count,1)
+        self.assertEqual(result['sent'],1)
+        self.assertEqual(NotificationDelivery.objects.get(notification=due).state,'sent')
+        self.assertFalse(NotificationDelivery.objects.filter(notification__in=[future,stale]).exists())
 
     def test_unexpected_worker_error_is_not_swallowed(self):
         self.notice(1,'email')

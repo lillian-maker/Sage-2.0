@@ -1,10 +1,10 @@
-"""Annual future-service refund requests and original-payment receipts."""
+"""Subscription refund requests (24-hour full, prepaid terms, annual future months) and receipts."""
 import hashlib
 import json
 import re
 import uuid
 from fractions import Fraction
-from datetime import timezone as datetime_timezone
+from datetime import timedelta, timezone as datetime_timezone
 
 from django.db import transaction
 from django.utils import timezone
@@ -97,10 +97,33 @@ def _period_cash_weights(period, cutoff, *, policy='seconds', seat_ids=None):
     return {key:value for key, value in weights.items() if value > 0}, sources
 
 
+# A term paid this recently, with none of its included credits used, refunds in
+# full and ends immediately. Activation may trail the channel's payment time.
+FULL_REFUND_WINDOW = timedelta(hours=24)
+ACTIVATION_TOLERANCE = timedelta(minutes=10)
+
+
+def _paid_at(period):
+    return min((payment.paid_at for payment in period.order.payment_facts.filter(disposition='accepted')), default=None)
+
+
+def _credits_used(period):
+    from django.db.models import Q
+    from .models import CreditEntry
+    return CreditEntry.objects.filter(Q(batch__subscription_period=period)|Q(batch__purchase_change__period=period),
+        kind__in=('reserve', 'settle')).exists()
+
+
+def _full_refund_current(period, now):
+    """The running term qualifies for the 24-hour full refund."""
+    paid_at = _paid_at(period)
+    return bool(paid_at and now - FULL_REFUND_WINDOW <= paid_at and
+        period.starts_at >= paid_at - ACTIVATION_TOLERANCE and
+        not period.order.snapshot.get('subscription_change_id') and not _credits_used(period))
+
+
 def _assessment(account, subscription):
     from .subscriptions import _seat_purchase_pending, _renewal_delivery_pending
-    if subscription.billing_cycle != 'annual':
-        raise ValueError('ANNUAL_REFUND_ONLY')
     if subscription.superseded_at:
         raise ValueError('SUBSCRIPTION_ALREADY_CHANGED')
     if subscription.service_refunds.filter(purpose='service').exclude(status='terminated').exists():
@@ -118,7 +141,34 @@ def _assessment(account, subscription):
     if not current and not future:
         raise ValueError('NO_REFUNDABLE_SERVICE')
     desired, pending_from, order_ids = {}, None, set()
-    for period in ([current] if current else [])+future:
+    if current and _full_refund_current(current, now):
+        # Everything paid for this subscription is returned and service ends now.
+        for period in [current]+future:
+            if period is not current and CreditBatch.objects.filter(subscription_period=period).exists():
+                raise ValueError('FUTURE_CREDITS_REQUIRE_REVIEW')
+            weights, _ = _period_cash_weights(period, period.starts_at)
+            for payment_id, value in weights.items():
+                desired[payment_id] = desired.get(payment_id, Fraction())+value
+            order_ids.add(period.order_id)
+        pending_from = now
+        policy = 'full_within_24h'
+    elif subscription.billing_cycle != 'annual':
+        # A started monthly term is not refundable; prepaid future terms are, in full.
+        for period in future:
+            if CreditBatch.objects.filter(subscription_period=period).exists():
+                raise ValueError('FUTURE_CREDITS_REQUIRE_REVIEW')
+            weights, _ = _period_cash_weights(period, period.starts_at)
+            for payment_id, value in weights.items():
+                desired[payment_id] = desired.get(payment_id, Fraction())+value
+            pending_from = min(pending_from, period.starts_at) if pending_from else period.starts_at
+            order_ids.add(period.order_id)
+        if not desired:
+            raise ValueError('MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+        policy = 'future_terms'
+    else:
+        policy = 'future_months'
+    annual = ([current] if current else [])+future if policy == 'future_months' else []
+    for period in annual:
         start_month = period.cycle_index*12
         started = sum(_boundary(subscription, start_month+month) <= now for month in range(12))
         remaining = 12-started
@@ -157,7 +207,8 @@ def _assessment(account, subscription):
         period.snapshot.get('entitlements', {}).get('contract') for period in periods if period.order_id in order_ids)
     return {'subscription_id': str(subscription.pk), 'eligible': True, 'amount_minor': str(total),
         'currency': 'CNY', 'current_service_ends_at': pending_from.astimezone(datetime_timezone.utc).isoformat(),
-        'automatic_review': not (issued or abnormal or contract),
+        'automatic_review': not (issued or abnormal or contract), 'policy': policy,
+        '_periods': [period.pk for period in periods if period.order_id in order_ids],
         'items': [{'order_id': str(_get(PaymentFact.objects, pk=item['payment_id']).order_id),
             'amount_minor': str(item['amount_minor'])} for item in allocations],
         '_allocations': allocations, '_pending_from': pending_from}
@@ -219,6 +270,29 @@ def request_credit_refund(account, user, order_id, request_key):
     return credit_refund_data(item)
 
 
+def _freeze_key(refund):
+    return f'service-refund:{refund.pk}'
+
+
+def _freeze_refunded_credits(account, refund, period_ids):
+    """Credits included with a fully refunded term stop being usable at once."""
+    from django.db.models import Q
+    from .billing import _balances, _text, freeze_credits
+    batches = CreditBatch.objects.filter(Q(subscription_period__in=period_ids)|Q(purchase_change__period__in=period_ids),
+        account=account, expires_at__gt=timezone.now()).order_by('id')
+    for batch in batches:
+        available = _balances(batch)['available']
+        if available:
+            freeze_credits(account, batch.pk, _freeze_key(refund), _text(available))
+
+
+def _resolve_refunded_credits(account, refund, outcome):
+    from .billing import _resolve_credit_freeze
+    from .models import CreditFreeze
+    for hold in CreditFreeze.objects.filter(batch__account=account, request_key=_freeze_key(refund), state='frozen'):
+        _resolve_credit_freeze(account, hold.pk, outcome, evidence_hash=refund.evidence_hash)
+
+
 @transaction.atomic
 def request_service_refund(account, user, subscription_id, request_key):
     account = _lock_account(account)
@@ -244,6 +318,8 @@ def request_service_refund(account, user, subscription_id, request_key):
         status='approved' if assessment['automatic_review'] else 'review',
         amount_minor=int(assessment['amount_minor']), allocations=assessment['_allocations'],
         pending_from=assessment['_pending_from'])
+    if assessment['policy'] == 'full_within_24h':
+        _freeze_refunded_credits(account, refund, assessment['_periods'])
     AuditEvent.objects.create(actor=user, account=account, action='service_refund.requested', request_id=refund.pk)
     BillingNotification.objects.create(account=account, subscription=subscription,
         type='service_refund_requested', source_event=f'service-refund:{refund.pk}:requested',
@@ -329,6 +405,8 @@ def record_service_refund_receipt(account, refund_id, payment_id, *, event_key, 
         refund.status = 'unknown' if outcome in ('failed', 'unknown') else 'processing'
     refund.evidence_hash = evidence_hash
     refund.save(update_fields=['status', 'evidence_hash', 'updated_at'])
+    if refund.status in ('refunded', 'terminated') and refund.purpose == 'service':
+        _resolve_refunded_credits(account, refund, 'refunded' if refund.status == 'refunded' else 'released')
     if outcome in ('failed', 'unknown'):
         BillingIssue.objects.update_or_create(account=account, code='service_refund_unconfirmed',
             object_type='service_refund', object_id=refund.pk, defaults={'last_seen_at': timezone.now()})

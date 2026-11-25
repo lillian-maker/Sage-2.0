@@ -7,6 +7,7 @@ import base64
 import binascii
 import hashlib
 import json
+import logging
 import math
 import re
 import uuid
@@ -18,6 +19,8 @@ from cryptography.exceptions import InvalidSignature, InvalidTag, UnsupportedAlg
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+WECHAT_EGRESS_PROXY = 'http://egress:3128'
 
 
 def _text(value, pattern):
@@ -70,7 +73,9 @@ def build_wechat_request(operation, reference, *, mchid, merchant_serial, privat
             _text(appid, r'[A-Za-z0-9_-]{1,32}')
             if type(description) is not str or not 1 <= len(description) <= 127:
                 raise ValueError
-            if any(ord(char) < 32 for char in description):
+            # APIv3 accepts only Unicode characters encoded in at most 3 UTF-8 bytes.
+            if any(ord(char) < 32 or ord(char) > 0xffff or 0xd800 <= ord(char) <= 0xdfff
+                    for char in description):
                 raise ValueError
             if type(notify_origin) is not str:
                 raise ValueError
@@ -162,20 +167,25 @@ def wechat_qr_image(code_url):
         raise ValueError('WECHAT_QR_INVALID') from None
 
 
-def call_wechat_api(operation, reference, *, public_key, now, **request_fields):
+def call_wechat_api(operation, reference, *, public_key, now, proxy_url='', **request_fields):
     """One authenticated APIv3 call from trusted server fields, never a retry.
 
     The caller must durably claim money operations before calling and reconcile
-    unknown results using original IDs. Native is wired only for local tests.
+    unknown results using original IDs. Production requires separate enablement.
     Accepted Native/refund responses are not payment/refund confirmation.
     """
     try:
-        if type(now) is not int:
+        if type(now) is not int or type(proxy_url) is not str or proxy_url not in ('', WECHAT_EGRESS_PROXY):
             raise ValueError
         request = build_wechat_request(operation, reference, **request_fields)
     except (TypeError, ValueError):
         raise ValueError('WECHAT_REQUEST_INVALID') from None
     def reject_status(response, **kwargs):
+        # Request-ID is provider-supplied and not covered by the response
+        # signature; record only a single bounded, log-safe token.
+        request_ids = response.raw.headers.getlist('Request-ID')
+        if len(request_ids) == 1 and re.fullmatch(r'[A-Za-z0-9_-]{1,128}', request_ids[0]):
+            logging.getLogger('sage').info('wechat_api_request_id=%s', request_ids[0])
         # Session.send prepares Response.next even with redirects disabled;
         # reject before that preparation can consume an unbounded error body.
         if not 200 <= response.status_code < 300:
@@ -188,6 +198,7 @@ def call_wechat_api(operation, reference, *, public_key, now, **request_fields):
             session.trust_env = False
             with session.request(request['method'], request['url'], headers=request['headers'],
                     data=request['body'], timeout=(5, 15), verify=True,
+                    proxies={'https':proxy_url} if proxy_url else {},
                     allow_redirects=False, stream=True, hooks={'response':reject_status}) as response:
                 if not 200 <= response.status_code < 300:
                     raise ValueError

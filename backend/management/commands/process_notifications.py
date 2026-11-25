@@ -11,7 +11,9 @@ from django.utils import timezone
 from backend.models import Membership
 from backend.commerce.models import BillingNotification, PaymentAttempt
 from backend.notifications import (prepare_renewal_notice, prepare_notice_delivery,
-    send_notice_delivery, record_renewal_notice_blocked, assert_renewal_notice)
+    send_notice_delivery, record_renewal_notice_blocked, renewal_notice_confirmed)
+
+REMINDER_ALERT_AFTER = timedelta(minutes=30)
 
 
 class Command(BaseCommand):
@@ -36,7 +38,7 @@ class Command(BaseCommand):
         attempts = PaymentAttempt.objects.filter(subscription__isnull=False, dispatched_at__isnull=True,
             state='created', subscription__auto_renew=True).select_related('subscription__initial_order', 'account')
         result = {'mode': 'apply' if options['apply'] else 'dry-run', 'renewals': attempts.count(),
-            'sent': 0, 'unknown': 0, 'blocked': 0, 'contacts_missing': 0, 'contacts_changed': 0,
+            'sent': 0, 'unknown': 0, 'notice_unconfirmed': 0, 'contacts_missing': 0, 'contacts_changed': 0,
             'channels_unavailable': 0, 'recipients_unavailable': 0, 'unsupported_types': 0, 'payments_dispatched': 0}
         if not options['apply']:
             result['pending_notices'] = BillingNotification.objects.count()
@@ -45,21 +47,18 @@ class Command(BaseCommand):
         for attempt in attempts:
             notice = prepare_renewal_notice(attempt.account, attempt.subscription_id,
                 attempt.renewal_cycle_index, charge_at=attempt.dispatch_not_before)
-            if now > notice.occurred_at:
-                try:
-                    assert_renewal_notice(attempt.subscription, attempt.renewal_cycle_index,
-                        charge_at=attempt.dispatch_not_before)
-                except ValueError as exc:
-                    if str(exc) != 'RENEWAL_NOTICE_REQUIRED':
-                        raise
-                    record_renewal_notice_blocked(attempt.subscription, attempt.renewal_cycle_index)
-                    result['blocked'] += 1
+            if (now > notice.occurred_at+REMINDER_ALERT_AFTER and
+                    not renewal_notice_confirmed(attempt.subscription, attempt.renewal_cycle_index,
+                        charge_at=attempt.dispatch_not_before)):
+                # Alert only; the renewal charge still runs at its planned time.
+                record_renewal_notice_blocked(attempt.subscription, attempt.renewal_cycle_index)
+                result['notice_unconfirmed'] += 1
         for notice in BillingNotification.objects.select_related('account').filter(
                 created_at__gte=since).exclude(type='account_security').iterator():
             if notice.type == 'renewal_reminder':
-                # Run every 30 seconds. Send within the minute BEFORE the agreed
-                # T-24h deadline; a late job blocks the debit rather than backdating.
-                if not now <= notice.occurred_at <= now+timedelta(minutes=1):
+                # Send from the reminder time (two days before expiry) until the
+                # planned charge; a job that runs late still sends, never backdates.
+                if not notice.occurred_at <= now < notice.occurred_at+timedelta(days=1):
                     continue
             elif notice.occurred_at > now:
                 continue

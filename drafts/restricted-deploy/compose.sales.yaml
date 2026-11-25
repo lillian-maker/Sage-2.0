@@ -1,0 +1,14 @@
+# Optional candidate only: mounts the reviewed commercial switches (what may be sold, the
+# approved channel and the approved purchase terms). It contains no keys. Append after
+# compose.alipay.yaml and compose.egress.yaml; without this file every sales gate stays closed.
+services:
+  app:
+    environment:
+      SAGE_BILLING_SALES_CONFIG_ENABLED: "1"
+    secrets:
+      - source: billing_sales
+        target: billing_sales.json
+
+secrets:
+  billing_sales:
+    file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/billing_sales.json"

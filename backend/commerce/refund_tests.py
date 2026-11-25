@@ -327,3 +327,187 @@ class CreditRefundRequestTests(TransactionTestCase):
         self.assertEqual(credits_summary(self.account)['frozen'], '2')
         with self.assertRaisesRegex(ValueError, 'REFUND_REVIEW_REQUIRED'):
             resolve_credit_refund(self.account, result['id'], 'refunded', evidence_hash='b'*64)
+
+
+@override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)
+class FullRefundWithin24HoursTests(TestCase):
+    """Any term paid within 24 hours with no included credits used refunds in full."""
+    def setUp(self):
+        self.paid_at = datetime(2026, 7, 15, 12, tzinfo=ZoneInfo('Asia/Shanghai'))
+        self.now = self.paid_at+timedelta(hours=2)
+        self.clock = patch('django.utils.timezone.now', return_value=self.now)
+        self.clock_mock = self.clock.start()
+        self.addCleanup(self.clock.stop)
+        self.user = get_user_model().objects.create_user(username='full-refund-owner')
+        self.account = BillingAccount.objects.create(kind='personal', name='Fixture', personal_owner=self.user)
+        Membership.objects.create(account=self.account, user=self.user, role='owner')
+        self.sequence = 0
+
+    def product(self, cycle, amount):
+        return ProductVersion.objects.create(code='pro', version=self.sequence+1, kind='subscription',
+            audience='personal', billing_cycle=cycle, unit_amount_minor=amount, credits_quantity='10',
+            entitlements={'fixture': True}, entitlement_version='f', credit_rule_version='f',
+            terms_version='f', state='published', effective_at=self.paid_at-timedelta(days=60))
+
+    def paid_order(self, product, paid_at, snapshot_extra=None):
+        self.sequence += 1
+        amount = product.unit_amount_minor
+        snapshot = {'code': 'pro', 'credits_quantity': '10', 'seat_quantity': 1, 'entitlements': {'fixture': True},
+            'billing_cycle': product.billing_cycle, 'kind': 'subscription', 'audience': 'personal',
+            'currency': 'CNY', 'amount_minor': amount, **(snapshot_extra or {})}
+        quote = Quote.objects.create(account=self.account, product=product, snapshot=snapshot,
+            amount_minor=amount, currency='CNY', expires_at=paid_at+timedelta(minutes=10))
+        order = Order.objects.create(account=self.account, quote=quote, created_by=self.user,
+            idempotency_key=f'full-{self.sequence}', request_hash='a'*64, snapshot=snapshot,
+            amount_minor=amount, currency='CNY', status='fulfilled', paid_at=paid_at)
+        payment = PaymentFact.objects.create(order=order, channel='fixture', merchant_reference='fixture-merchant',
+            transaction_reference=f'full-{self.sequence}', amount_minor=amount, currency='CNY',
+            evidence_hash='a'*64, disposition='accepted', paid_at=paid_at)
+        return order, payment
+
+    def subscribe(self, cycle='monthly', amount=9900, snapshot_extra=None):
+        self.prod = self.product(cycle, amount)
+        self.order, self.payment = self.paid_order(self.prod, self.paid_at, snapshot_extra)
+        self.sub = Subscription.objects.create(account=self.account, initial_order=self.order,
+            original_anchor=self.paid_at, billing_timezone='Asia/Shanghai', calendar_rule_version='fixture',
+            billing_cycle=cycle, mandate={})
+        self.months = 12 if cycle == 'annual' else 1
+        self.period = self.term(self.order, 0)
+
+    def term(self, order, cycle):
+        return SubscriptionPeriod.objects.create(subscription=self.sub, order=order, cycle_index=cycle,
+            starts_at=month_boundary(self.paid_at, cycle*self.months),
+            ends_at=month_boundary(self.paid_at, (cycle+1)*self.months), snapshot=order.snapshot)
+
+    def assess(self):
+        return service_refund_assessment(self.account, self.user, self.sub.pk)
+
+    def use_credits(self, kind='reserve'):
+        from .models import CreditEntry
+        batch = CreditBatch.objects.create(account=self.account, source='subscription', source_key=f'batch-{kind}',
+            subscription_period=self.period, service_month=0, initial_quantity='10', expires_at=self.period.ends_at)
+        CreditEntry.objects.create(batch=batch, kind='grant', quantity='10', event_key='grant')
+        if kind:
+            CreditEntry.objects.create(batch=batch, kind=kind, quantity='1', event_key=kind)
+
+    def test_monthly_unused_within_24_hours_refunds_everything_and_ends_service_now(self):
+        self.subscribe()
+        self.use_credits(kind=None)
+        result = self.assess()
+        self.assertEqual((result['eligible'], result['amount_minor'], result['policy']), (True, '9900', 'full_within_24h'))
+        refund = request_service_refund(self.account, self.user, self.sub.pk, 'full-24h')
+        self.assertEqual((refund['status'], refund['amount_minor']), ('approved', '9900'))
+        self.sub.refresh_from_db()
+        self.assertEqual(self.sub.refund_cutoff_at, self.now)
+        self.assertFalse(self.sub.auto_renew)
+        self.assertEqual(active_subscription_periods(self.account).count(), 0)
+        from .billing import credits_summary, reserve_credits
+        self.assertEqual((credits_summary(self.account)['available'], credits_summary(self.account)['frozen']), ('0', '10'))
+        with self.assertRaisesRegex(ValueError, 'INSUFFICIENT_CREDITS'):
+            reserve_credits(self.account, 'after-refund', '1')
+        row = ServiceRefund.objects.get(pk=refund['id'])
+        record_service_refund_receipt(self.account, row.pk, self.payment.pk, event_key='done', outcome='refunded',
+            amount_minor=9900, provider_reference='fixture-done', evidence_hash='b'*64)
+        self.assertEqual((credits_summary(self.account)['available'], credits_summary(self.account)['refunded']), ('0', '10'))
+
+    def test_terminated_full_refund_restores_service_and_its_credits(self):
+        self.subscribe()
+        self.use_credits(kind=None)
+        refund = request_service_refund(self.account, self.user, self.sub.pk, 'full-24h-terminated')
+        row = ServiceRefund.objects.get(pk=refund['id'])
+        record_service_refund_receipt(self.account, row.pk, self.payment.pk, event_key='stop', outcome='terminated',
+            amount_minor=9900, provider_reference='', evidence_hash='b'*64)
+        from .billing import credits_summary
+        self.assertEqual(credits_summary(self.account)['available'], '10')
+        self.sub.refresh_from_db()
+        self.assertIsNone(self.sub.refund_cutoff_at)
+        self.assertEqual(active_subscription_periods(self.account).count(), 1)
+
+    def test_used_credits_or_expired_window_follow_monthly_no_refund_rule(self):
+        self.subscribe()
+        self.use_credits('reserve')
+        self.assertEqual(self.assess()['reason'], 'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+        CreditEntry = __import__('backend.commerce.models', fromlist=['CreditEntry']).CreditEntry
+        CreditEntry.objects.filter(kind='reserve').delete()
+        self.assertTrue(self.assess()['eligible'])
+        self.clock_mock.return_value = self.paid_at+timedelta(hours=24, seconds=1)
+        self.assertEqual(self.assess()['reason'], 'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+        with self.assertRaisesRegex(ValueError, 'MONTHLY_STARTED_TERM_NOT_REFUNDABLE'):
+            request_service_refund(self.account, self.user, self.sub.pk, 'late')
+        self.sub.refresh_from_db()
+        self.assertTrue(self.sub.auto_renew)
+        self.assertIsNone(self.sub.refund_cutoff_at)
+
+    def test_window_boundary_is_inclusive_at_exactly_24_hours(self):
+        self.subscribe()
+        self.clock_mock.return_value = self.paid_at+timedelta(hours=24)
+        self.assertEqual(self.assess()['policy'], 'full_within_24h')
+
+    def test_late_monthly_refund_returns_only_prepaid_next_term(self):
+        self.subscribe()
+        next_order, next_payment = self.paid_order(self.prod, self.paid_at+timedelta(days=10))
+        upcoming = self.term(next_order, 1)
+        self.clock_mock.return_value = self.paid_at+timedelta(days=12)
+        result = self.assess()
+        self.assertEqual((result['amount_minor'], result['policy']), ('9900', 'future_terms'))
+        self.assertEqual(result['items'], [{'order_id': str(next_order.pk), 'amount_minor': '9900'}])
+        self.assertEqual(datetime.fromisoformat(result['current_service_ends_at']), upcoming.starts_at)
+
+    def test_renewal_charged_a_day_early_refunds_while_the_new_term_has_not_started(self):
+        self.subscribe()
+        start = month_boundary(self.paid_at, 1)
+        renewal_order, renewal_payment = self.paid_order(self.prod, start-timedelta(days=1))
+        self.term(renewal_order, 1)
+        self.clock_mock.return_value = start-timedelta(hours=2)
+        result = self.assess()
+        self.assertEqual((result['amount_minor'], result['policy']), ('9900', 'future_terms'))
+        self.assertEqual(result['items'], [{'order_id': str(renewal_order.pk), 'amount_minor': '9900'}])
+        self.assertEqual(datetime.fromisoformat(result['current_service_ends_at']), start)
+        self.clock_mock.return_value = start+timedelta(hours=1)
+        self.assertEqual(self.assess()['reason'], 'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+
+    def test_renewal_paid_late_within_24_hours_refunds_the_started_renewed_term(self):
+        self.subscribe()
+        start = month_boundary(self.paid_at, 1)
+        renewal_order, renewal_payment = self.paid_order(self.prod, start-timedelta(minutes=5))
+        self.term(renewal_order, 1)
+        self.clock_mock.return_value = start+timedelta(hours=20)
+        result = self.assess()
+        self.assertEqual((result['amount_minor'], result['policy']), ('9900', 'full_within_24h'))
+        self.assertEqual(result['items'], [{'order_id': str(renewal_order.pk), 'amount_minor': '9900'}])
+
+    def test_annual_within_24_hours_refunds_full_year_not_only_future_months(self):
+        self.subscribe('annual', 99900)
+        result = self.assess()
+        self.assertEqual((result['amount_minor'], result['policy']), ('99900', 'full_within_24h'))
+        self.clock_mock.return_value = self.paid_at+timedelta(days=2)
+        result = self.assess()
+        self.assertEqual((result['amount_minor'], result['policy']), ('91575', 'future_months'))
+
+    def test_upgrade_difference_is_not_part_of_the_24_hour_full_refund(self):
+        self.subscribe(snapshot_extra={'subscription_change_id': str(uuid.uuid4())})
+        self.assertEqual(self.assess()['reason'], 'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+
+    def test_new_purchase_waits_until_previous_refund_finishes(self):
+        from .billing import _sale_gate
+        self.subscribe()
+        new_product = self.product('monthly', 9900)
+
+        def gate():
+            try:
+                _sale_gate(new_product, self.account, timezone_now(), 'fixture', 'CN', public_purchase=True)
+            except ValueError as exc:
+                return str(exc)
+        self.assertEqual(gate(), 'CONFIG_INCOMPLETE')
+        refund = request_service_refund(self.account, self.user, self.sub.pk, 'gate-refund')
+        self.assertEqual(gate(), 'REFUND_PENDING')
+        row = ServiceRefund.objects.get(pk=refund['id'])
+        part = row.allocations[0]
+        record_service_refund_receipt(self.account, row.pk, self.payment.pk, event_key='gate', outcome='refunded',
+            amount_minor=part['amount_minor'], provider_reference='fixture-gate', evidence_hash='b'*64)
+        self.assertNotIn(gate(), ('REFUND_PENDING', 'CONFIG_INCOMPLETE'))
+
+
+def timezone_now():
+    from django.utils import timezone
+    return timezone.now()

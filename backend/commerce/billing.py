@@ -8,6 +8,7 @@ callers must be trusted provider reconciliation / server-side task code.
 import calendar
 import hashlib
 import json
+import logging
 import re
 from datetime import datetime, timedelta, timezone as datetime_timezone
 from fractions import Fraction
@@ -116,6 +117,9 @@ def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=Non
         if (product.audience != 'business' or product.kind != 'subscription' or
                 product.entitlements.get('resource_mode') != expected_mode):
             raise ValueError('CONFIG_INCOMPLETE')
+    if public_purchase and product.code == 'enterprise':
+        # Enterprise is sold by contract and enabled by staff, never checked out online.
+        raise ValueError('SALES_CONTACT_REQUIRED')
     if product.kind == "subscription" and product.billing_cycle not in {"monthly", "annual"}:
         raise ValueError("CONFIG_INCOMPLETE")
     if product.kind == "credits" and product.billing_cycle:
@@ -129,13 +133,23 @@ def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=Non
         if product.kind == 'subscription':
             # A public new purchase is not an upgrade, conversion or recovery.
             # Recheck under the account lock before accepting a new order.
+            unfinished = (Order.objects.filter(account=account,snapshot__kind='subscription')
+                .exclude(status__in=['fulfilled','closed']))
             if (Subscription.objects.filter(account=account, auto_renew=True).exists() or
-                    periods.filter(ends_at__gt=now).exists() or
-                    Order.objects.filter(account=account,snapshot__kind='subscription')
-                        .exclude(status__in=['fulfilled','closed']).exists() or
+                    periods.filter(ends_at__gt=now).filter(Q(subscription__refund_cutoff_at__isnull=True) |
+                        Q(subscription__refund_cutoff_at__gt=now)).exists() or
+                    unfinished.exclude(status='pending_payment').exists() or
+                    unfinished.filter(paid_at__isnull=False).exists() or
                     PaymentFact.objects.filter(order__account=account,order__snapshot__kind='subscription')
                         .exclude(disposition='accepted').exists()):
                 raise ValueError('CONFIG_INCOMPLETE')
+            if unfinished.exists():
+                raise ValueError('UNPAID_ORDER_EXISTS')
+            from .models import ServiceRefund
+            # A refund that is later terminated restores the old service.
+            if ServiceRefund.objects.filter(account=account, purpose='service').exclude(
+                    status__in=['refunded', 'terminated']).exists():
+                raise ValueError('REFUND_PENDING')
         else:
             _credits_purchase_gate(account, now)
     try:
@@ -153,17 +167,29 @@ def _sale_gate(product, account, now, channel, buyer_region, merchant_entity=Non
             raise ValueError('CONFIG_INCOMPLETE')
     channels = settings.BILLING_APPROVED_CHANNELS
     configuration = channels.get(channel) if isinstance(channels, dict) and isinstance(channel, str) else None
-    capability = f"recurring_{product.billing_cycle}" if product.kind == "subscription" else "one_time"
+    # term_<cycle> sells one prepaid period with no renewal authority, so it can
+    # use a channel that only supports single payments.
+    accepted = ((f"recurring_{product.billing_cycle}", f"term_{product.billing_cycle}")
+                if product.kind == "subscription" else ("one_time",))
     regions = configuration.get("regions") if isinstance(configuration, dict) else None
     capabilities = configuration.get("capabilities") if isinstance(configuration, dict) else None
     if (not isinstance(configuration, dict) or configuration.get("enabled") is not True
             or configuration.get("currency") != "CNY" or not configuration.get("merchant_entity")
             or not isinstance(regions, list) or not isinstance(capabilities, list)
             or not isinstance(buyer_region, str) or buyer_region not in regions
-            or capability not in capabilities
+            or not any(capability in capabilities for capability in accepted)
             or (merchant_entity is not None and merchant_entity != configuration["merchant_entity"])):
         raise ValueError("CONFIG_INCOMPLETE")
     return configuration["merchant_entity"]
+
+
+def _fixed_term_only(product, channel):
+    """True when the approved channel sells this cycle only as a non-renewing term."""
+    if product.kind != 'subscription':
+        return False
+    capabilities = settings.BILLING_APPROVED_CHANNELS[channel]['capabilities']
+    return (f'term_{product.billing_cycle}' in capabilities and
+            f'recurring_{product.billing_cycle}' not in capabilities)
 
 
 @transaction.atomic
@@ -173,6 +199,8 @@ def create_quote(account, user, product_id, seat_quantity, expires_at, *, channe
     _authorize_purchase(account, user)
     now = timezone.now()
     product = _get(ProductVersion.objects.select_for_update(), pk=product_id)
+    if terms_digest is not None:
+        _close_stale_unpaid(account, now)
     merchant_entity = _sale_gate(product, account, now, channel, buyer_region,
                                 public_purchase=terms_digest is not None)
     if type(seat_quantity) is not int or seat_quantity < product.minimum_seats:
@@ -196,6 +224,10 @@ def create_quote(account, user, product_id, seat_quantity, expires_at, *, channe
         "credit_rule_version": product.credit_rule_version, "terms_version": product.terms_version,
         "channel": channel, "buyer_region": buyer_region, "merchant_entity": merchant_entity,
     }
+    if _fixed_term_only(product, channel):
+        # Frozen with the order so later channel changes cannot turn a single
+        # payment into, or out of, a renewing contract.
+        snapshot['renewal'] = 'none'
     if terms_digest is not None:
         if not isinstance(terms_digest, str) or not re.fullmatch(r'[a-f0-9]{64}', terms_digest):
             raise ValueError('TERMS_UNAVAILABLE')
@@ -252,11 +284,14 @@ def purchase_catalog(account):
         if key in seen:
             continue
         seen.add(key)
-        options, reason = [], 'CONFIG_INCOMPLETE'
+        options, reason, pending = [], 'CONFIG_INCOMPLETE', None
         ttl = settings.BILLING_QUOTE_TTL_SECONDS
         try:
             if product.kind == 'credits':
                 _credits_purchase_gate(account, now)
+            pending = open_checkout_order(account, product.kind)
+            if pending:
+                raise ValueError('UNPAID_ORDER_EXISTS')
             purchase_benefits(product)
             document = purchase_terms(product.terms_version)
             if type(ttl) is not int or ttl <= 0:
@@ -276,7 +311,10 @@ def purchase_catalog(account):
                             _sale_gate(product, account, now, channel, region, public_purchase=True)
                         except ValueError:
                             continue
-                        options.append({'channel': channel, 'buyer_region': region})
+                        option = {'channel': channel, 'buyer_region': region}
+                        if _fixed_term_only(product, channel):
+                            option['renewal'] = 'none'
+                        options.append(option)
             reason = None if options else 'CONFIG_INCOMPLETE'
         except ValueError as exc:
             reason = str(exc)
@@ -287,7 +325,8 @@ def purchase_catalog(account):
             'minimum_seats': product.minimum_seats, 'credits_quantity': product.credits_quantity,
             'entitlements': product.entitlements, 'terms_version': product.terms_version,
             'quote_available': bool(options) and reason is None, 'unavailable_reason': reason,
-            'purchase_options': options, 'terms': document})
+            'purchase_options': options, 'terms': document,
+            'pending_order_id': str(pending.pk) if pending else None})
     return {'account_id': str(account.pk), 'items': items, 'currency': 'CNY'}
 
 
@@ -312,11 +351,15 @@ def purchase_quote_detail(account, quote_id):
             _sale_gate(quote.product, account, timezone.now(), quote.snapshot.get('channel'),
                        quote.snapshot.get('buyer_region'), quote.snapshot.get('merchant_entity'),
                        public_purchase=bool(quote.snapshot.get('terms_document_digest')))
+            if quote.snapshot.get('terms_document_digest') and open_checkout_order(account, quote.product.kind):
+                raise ValueError('UNPAID_ORDER_EXISTS')
         except ValueError as exc:
-            if str(exc) not in ('CONFIG_INCOMPLETE', 'CREDITS_SUBSCRIPTION_REQUIRED'):
+            if str(exc) not in ('CONFIG_INCOMPLETE', 'CREDITS_SUBSCRIPTION_REQUIRED', 'UNPAID_ORDER_EXISTS'):
                 raise
             reason = str(exc)
+    pending = open_checkout_order(account, quote.product.kind) if reason == 'UNPAID_ORDER_EXISTS' else None
     return {'id': str(quote.pk), 'account_id': str(account.pk),
+            'pending_order_id': str(pending.pk) if pending else None,
             'amount_minor': quote.amount_minor, 'currency': quote.currency,
             'expires_at': quote.expires_at.isoformat(),
             'snapshot': {key: value for key, value in quote.snapshot.items() if key != 'merchant_entity'},
@@ -342,6 +385,8 @@ def create_order(account, user, payload, idempotency_key):
         raise ValueError('INVALID_REQUEST')
     if Order.objects.filter(account=account, quote=quote).exists():
         raise ValueError("QUOTE_ALREADY_ORDERED")
+    if quote.snapshot.get('terms_document_digest'):
+        _close_stale_unpaid(account, timezone.now())
     _sale_gate(quote.product, account, timezone.now(), quote.snapshot.get("channel"), quote.snapshot.get("buyer_region"), quote.snapshot.get("merchant_entity"),
                public_purchase=bool(quote.snapshot.get('terms_document_digest')))
     if quote.expires_at <= timezone.now():
@@ -354,8 +399,100 @@ def create_order(account, user, payload, idempotency_key):
             raise ValueError('TERMS_MISMATCH')
     if quote.currency != "CNY" or quote.amount_minor != quote.snapshot.get("amount_minor") or quote.amount_minor <= 0:
         raise ValueError("CONFIG_INCOMPLETE")
+    if quote.snapshot.get('terms_document_digest') and open_checkout_order(account, quote.snapshot.get('kind')):
+        raise ValueError('UNPAID_ORDER_EXISTS')
     order = Order.objects.create(account=account, created_by=user, quote=quote, idempotency_key=idempotency_key, request_hash=fingerprint, snapshot=quote.snapshot, amount_minor=quote.amount_minor, currency=quote.currency)
     return _order_dict(order)
+
+
+def _checkout_order(order, attempt):
+    """A public checkout order, not a renewal, recovery, top-up or seat change."""
+    from .models import TopupBudget
+    return (bool(order.snapshot.get('terms_document_digest')) and
+            not order.snapshot.get('seat_purchase_change_id') and
+            (attempt is None or (not attempt.subscription_id and not attempt.recovery_of_id and
+             not TopupBudget.objects.filter(attempt=attempt).exists())))
+
+
+def _unpaid_deadline(order, attempt):
+    from backend.billing_rules import UNPAID_ORDER_TTL
+    deadline = order.created_at + UNPAID_ORDER_TTL
+    return max(deadline, attempt.expires_at) if attempt else deadline
+
+
+def _close_unpaid(order, attempt, state):
+    """Only for an order whose payment was never dispatched to a channel."""
+    if attempt:
+        attempt.state = state
+        attempt.save(update_fields=['state'])
+    order.status = 'closed'
+    order.save(update_fields=['status'])
+
+
+def _close_stale_unpaid(account, now):
+    """Caller holds the account lock. Dispatched payments wait for the channel."""
+    for other in Order.objects.select_for_update().filter(account=account, status='pending_payment',
+                                                           paid_at__isnull=True):
+        attempt = PaymentAttempt.objects.select_for_update().filter(order=other).first()
+        if (_checkout_order(other, attempt) and (attempt is None or not attempt.dispatched_at) and
+                _unpaid_deadline(other, attempt) <= now):
+            _close_unpaid(other, attempt, 'expired')
+
+
+def open_checkout_order(account, kind):
+    """The unpaid checkout order of this product kind that blocks a new one."""
+    for other in Order.objects.filter(account=account, status='pending_payment',
+                                      paid_at__isnull=True).order_by('created_at', 'id'):
+        attempt = PaymentAttempt.objects.filter(order=other).first()
+        if other.snapshot.get('kind') == kind and _checkout_order(other, attempt):
+            return other
+    return None
+
+
+@transaction.atomic
+def cancel_unpaid_order(account, user, order_id):
+    """Close an unpaid checkout order at the buyer's request.
+
+    A dispatched payment is returned as a close request for the caller to send
+    outside this transaction; the order stays open until the channel answers.
+    """
+    account = _lock_account(account)
+    _authorize_purchase(account, user)
+    order = _get(Order.objects.select_for_update(), account=account, pk=order_id)
+    attempt = PaymentAttempt.objects.select_for_update().filter(order=order).first()
+    if not _checkout_order(order, attempt):
+        raise ValueError('ORDER_STATE_CONFLICT')
+    if order.status == 'closed' and not order.paid_at:
+        return {'order': _order_dict(order)}
+    if order.status != 'pending_payment' or order.paid_at or order.payment_facts.exists():
+        raise ValueError('ORDER_STATE_CONFLICT')
+    if attempt and attempt.dispatched_at:
+        if attempt.state in ('succeeded', 'review'):
+            raise ValueError('ORDER_STATE_CONFLICT')
+        return {'payment_close': str(attempt.pk), 'account': account}
+    _close_unpaid(order, attempt, 'cancelled')
+    return {'order': _order_dict(order)}
+
+
+@transaction.atomic
+def expire_unpaid_order(account, order_id):
+    """Close one overdue checkout order locally when nothing was dispatched.
+
+    Returns 'expired', 'needs_channel_close' (caller closes the dispatched
+    payment outside this transaction), 'open' or 'skipped'.
+    """
+    account = _lock_account(account)
+    order = _get(Order.objects.select_for_update(), account=account, pk=order_id)
+    attempt = PaymentAttempt.objects.select_for_update().filter(order=order).first()
+    if (order.status != 'pending_payment' or order.paid_at or order.payment_facts.exists() or
+            not _checkout_order(order, attempt)):
+        return 'skipped'
+    if _unpaid_deadline(order, attempt) > timezone.now():
+        return 'open'
+    if attempt and attempt.dispatched_at:
+        return 'needs_channel_close'
+    _close_unpaid(order, attempt, 'expired')
+    return 'expired'
 
 
 def list_orders(account):
@@ -438,8 +575,12 @@ def order_detail(account, order_id):
     refunds = [{**_credit_refund_dict(item),'created_at':item.created_at.isoformat(),
                 'resolved_at':item.resolved_at.isoformat() if item.resolved_at else None}
                for item in CreditRefund.objects.filter(payment__order=order).order_by('created_at','id')]
+    unpaid = (order.status == 'pending_payment' and not order.paid_at and not payments and
+              _checkout_order(order, attempt) and not (attempt and attempt.state in ('succeeded', 'review')))
     return {"order": _order_dict(order), "payments": payments, "delivery": {"status": delivery},
             "payment_attempt": attempt_data, "refunds":refunds,
+            "cancelable": unpaid,
+            "payment_deadline": _unpaid_deadline(order, attempt).astimezone(datetime_timezone.utc).isoformat() if unpaid else None,
             "needs_review": bool(review_reasons), "review_reasons": sorted(review_reasons)}
 
 
@@ -485,7 +626,8 @@ def credit_refund_assessment(account, order_id):
         required = {'product_id','code','version','kind','audience','billing_cycle','seat_quantity',
             'currency','unit_amount_minor','amount_minor','credits_quantity','entitlements',
             'entitlement_version','credit_rule_version','terms_version','channel','buyer_region','merchant_entity'}
-        if (not required <= snapshot.keys() or set(snapshot) - required - {'terms_document_digest'} or
+        if (not required <= snapshot.keys() or set(snapshot) - required - {'terms_document_digest', 'renewal'} or
+            snapshot.get('renewal', 'none') != 'none' or
             ('terms_document_digest' in snapshot and (not isinstance(snapshot['terms_document_digest'],str) or
              not re.fullmatch(r'[a-f0-9]{64}',snapshot['terms_document_digest']))) or
             subscription.account_id != account.pk or subscription.initial_order_id != order.pk or
@@ -1350,7 +1492,10 @@ def _persist_confirmed_payment(account, order_id, *, channel, merchant_reference
     receipt_key = {"channel": channel, "merchant_reference": merchant_reference, "transaction_reference": transaction_reference}
     existing = PaymentFact.objects.filter(**receipt_key).first()
     if existing:
-        if (existing.order_id != order.pk or existing.amount_minor != amount_minor or existing.currency != currency or existing.paid_at != paid_at):
+        # Alipay reports send_pay_date on query and gmt_payment on notification
+        # for the same trade_no; whichever verified fact arrived first stands.
+        if (existing.order_id != order.pk or existing.amount_minor != amount_minor or existing.currency != currency or
+                (existing.paid_at != paid_at and channel != 'alipay')):
             raise ValueError("RECEIPT_CONFLICT")
         return {"id": str(existing.pk), "disposition": existing.disposition}
     try:
@@ -1431,10 +1576,12 @@ def fulfill_paid_order(account, order_id):
             quantity = _quantity(order.snapshot["credits_quantity"], positive=True)
         except (KeyError, ValueError) as exc:
             raise ValueError("CONFIG_INCOMPLETE") from exc
-        paid_at = timezone.localtime(order.paid_at)
-        year = paid_at.year + 1
-        day = min(paid_at.day, calendar.monthrange(year, paid_at.month)[1])
-        expires_at = paid_at.replace(year=year, day=day)
+        from backend.billing_rules import credits_pack_expiry
+        from .subscriptions import _calendar_zone
+        calendar_policy = getattr(settings, 'BILLING_TERM_CALENDAR', None)
+        if not isinstance(calendar_policy, dict) or set(calendar_policy) != {'timezone', 'rule_version'}:
+            raise ValueError('CALENDAR_POLICY_REQUIRED')
+        expires_at = credits_pack_expiry(order.paid_at.astimezone(_calendar_zone(calendar_policy['timezone'])))
         grant_credits(account, "purchased", f"order:{order.pk}", _text(quantity), expires_at, order=order)
         from .models import TopupBudget
         topup = TopupBudget.objects.filter(attempt__order=order).select_related('authorization').first()
@@ -1444,9 +1591,24 @@ def fulfill_paid_order(account, order_id):
                 topup.authorization.save(update_fields=['trigger_armed'])
         order.status = "fulfilled"
         order.save(update_fields=["status"])
-    # Subscription activation requires a trusted calendar and either a confirmed
-    # mandate or confirmed signing failure in subscriptions.py. A payment receipt
-    # never guesses the signing result or silently grants future debit authority.
+    elif order.snapshot.get('kind') == 'subscription' and order.snapshot.get('manual_renewal'):
+        from .subscriptions import append_manual_renewal
+        append_manual_renewal(account, order.pk)
+        order.refresh_from_db()
+    elif order.snapshot.get("kind") == "subscription" and order.snapshot.get("renewal") == "none":
+        # A fixed term was sold without any renewal agreement, so the receipt
+        # alone is the complete delivery condition for exactly one period.
+        from .subscriptions import activate_subscription
+        calendar_policy = getattr(settings, 'BILLING_TERM_CALENDAR', None)
+        if not isinstance(calendar_policy, dict) or set(calendar_policy) != {'timezone', 'rule_version'}:
+            raise ValueError('CALENDAR_POLICY_REQUIRED')
+        activate_subscription(account, order.pk, activated_at=order.paid_at,
+            billing_timezone=calendar_policy['timezone'], calendar_rule_version=calendar_policy['rule_version'],
+            mandate=None, renewal_setup_failure={'status': 'not_offered'})
+        order.refresh_from_db()
+    # Any other subscription activation requires a trusted calendar and either a
+    # confirmed mandate or confirmed signing failure in subscriptions.py. A payment
+    # receipt never guesses the signing result or silently grants debit authority.
     return _order_dict(order)
 
 
@@ -1570,10 +1732,16 @@ def claim_payment_dispatch(account, attempt_id, *, request=None, dispatch_contex
             alipay_identity = (type(dispatch_context) is dict and set(dispatch_context) == {
                     'channel', 'environment', 'app_id', 'seller_id', 'merchant_entity'})
             alipay_identity = (alipay_identity and dispatch_context.get('channel') == 'alipay' and
-                dispatch_context.get('environment') == 'SANDBOX' and
+                dispatch_context.get('environment') in ('SANDBOX', 'LIVE') and
                 all(isinstance(dispatch_context.get(key), str) and
                     re.fullmatch(r'[0-9]{1,64}', dispatch_context[key]) for key in ('app_id', 'seller_id')))
-            if (not (wechat_identity or alipay_identity) or settings.ENVIRONMENT != 'test' or
+            environment_allowed = ((settings.ENVIRONMENT == 'test' and
+                (wechat_identity or (alipay_identity and dispatch_context['environment'] == 'SANDBOX'))) or
+                (settings.ENVIRONMENT == 'production' and
+                 ((wechat_identity and getattr(settings, 'BILLING_WECHAT_LIVE_ENABLED', False) is True) or
+                  (alipay_identity and dispatch_context['environment'] == 'LIVE' and
+                   getattr(settings, 'BILLING_ALIPAY_LIVE_ENABLED', False) is True))))
+            if (not (wechat_identity or alipay_identity) or not environment_allowed or
                     not isinstance(dispatch_context.get('merchant_entity'), str) or
                     not dispatch_context['merchant_entity'].strip() or
                     len(dispatch_context['merchant_entity']) > 128 or
@@ -1589,21 +1757,13 @@ def claim_payment_dispatch(account, attempt_id, *, request=None, dispatch_contex
         now = timezone.now()
         snapshot = dict(order.snapshot)
         if attempt.recovery_of_id:
-            from .subscriptions import _recovery_context
-            original = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=attempt.recovery_of_id)
-            try:
-                _, deadline = _recovery_context(account, original, now)
-            except ValueError as exc:
-                if str(exc) != 'RECOVERY_NOT_ELIGIBLE':
-                    raise
-                attempt.state = 'cancelled'
-                attempt.save(update_fields=['state'])
-                order.status = 'closed'
-                order.save(update_fields=['status'])
-                return {**result, 'status': 'cancelled'}
-            source = _payment_snapshot(original.order) if original.dispatched_at else original.order.snapshot
-            if attempt.expires_at > deadline or order.snapshot != source:
-                raise ValueError('RECOVERY_INTENT_CONFLICT')
+            # Post-expiry repayment was withdrawn; an undispatched legacy
+            # intent closes instead of charging.
+            attempt.state = 'cancelled'
+            attempt.save(update_fields=['state'])
+            order.status = 'closed'
+            order.save(update_fields=['status'])
+            return {**result, 'status': 'cancelled'}
         if attempt.subscription_id:
             from .subscriptions import _mandate, _boundary, _months, _renewal_snapshot, _billing_operator
             from .models import Subscription
@@ -1650,9 +1810,12 @@ def claim_payment_dispatch(account, attempt_id, *, request=None, dispatch_contex
                 if (method.state != 'active' or method.channel != subscription.mandate['channel'] or
                     method.merchant_reference != subscription.mandate['merchant_reference']):
                     raise ValueError('PAYMENT_METHOD_NOT_AVAILABLE')
-            from backend.notifications import assert_renewal_notice
-            assert_renewal_notice(subscription, attempt.renewal_cycle_index,
-                charge_at=attempt.dispatch_not_before)
+            from backend.notifications import renewal_notice_confirmed, record_renewal_notice_blocked
+            if not renewal_notice_confirmed(subscription, attempt.renewal_cycle_index,
+                    charge_at=attempt.dispatch_not_before):
+                record_renewal_notice_blocked(subscription, attempt.renewal_cycle_index)
+                logging.getLogger('sage').warning('renewal_notice_unconfirmed subscription_id=%s cycle=%s',
+                    subscription.pk, attempt.renewal_cycle_index)
             # Frozen with the dispatch claim before any provider call. Workers
             # must query this transaction using this snapshot, never a newer mandate.
             attempt.dispatch_authorization = {'subscription_id':str(subscription.pk),

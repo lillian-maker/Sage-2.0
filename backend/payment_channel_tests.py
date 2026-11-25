@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from django.apps import apps
 from django.contrib.sessions.backends.db import SessionStore
+from django.db import DatabaseError
 from django.test import Client, RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.utils import timezone
 
@@ -72,6 +73,26 @@ class PaymentEntryTests(TestCase):
 
     def test_authorized_order_returns_unavailable_without_financial_writes(self):
         self.assert_error(self.post(), 503, 'CHANNEL_UNAVAILABLE')
+
+    def test_payment_entry_database_errors_keep_503_for_each_channel_without_details(self):
+        marker = 'synthetic-database-private-marker'
+        for channel, helper in (('alipay', '_alipay_configuration'), ('wechat', '_wechat_native_configuration')):
+            snapshot = {**self.order.snapshot, 'channel': channel}
+            Order.objects.filter(pk=self.order.pk).update(snapshot=snapshot)
+            with self.subTest(channel=channel), patch.object(payments, helper, side_effect=DatabaseError(marker)):
+                with self.assertLogs('sage', level='ERROR') as logs:
+                    response = self.post()
+                self.assert_error(response, 503, 'DATABASE_UNAVAILABLE')
+                self.assertNotIn(marker, response.content.decode())
+                self.assertNotIn(marker, '\n'.join(logs.output))
+
+    def test_payment_database_error_replaces_sensitive_message_and_chain(self):
+        marker = 'synthetic-database-private-marker'
+        with patch.object(payments, '_alipay_configuration', side_effect=DatabaseError(marker)):
+            with self.assertRaisesRegex(DatabaseError, '^DATABASE_UNAVAILABLE$') as caught:
+                payments.payment_start_capability(self.account, self.order.pk)
+        self.assertIsNone(caught.exception.__context__)
+        self.assertIsNone(caught.exception.__cause__)
 
     def test_repeated_clicks_create_no_attempts_or_funds(self):
         for _ in range(2):
@@ -292,6 +313,38 @@ class AlipayOfflineProtocolTests(TestCase):
         content = '&'.join(f'{key}={params[key]}' for key in sorted(params))
         self.private.public_key().verify(signature, content.encode('utf-8'),
                                          padding.PKCS1v15(), hashes.SHA256())
+
+    def test_live_page_signing_requires_exact_production_gate(self):
+        for environment, gate in [('test', True), ('development', True),
+                                  ('production', False), ('production', 1)]:
+            with self.subTest(environment=environment, gate=gate), override_settings(
+                    ENVIRONMENT=environment, BILLING_ALIPAY_LIVE_ENABLED=gate):
+                with self.assertRaisesRegex(ValueError, '^CHANNEL_UNAVAILABLE$'):
+                    payments.alipay_live_page_url('order_1', 731, app_id='2026000000000001',
+                        private_key=self.private_pem, notify_origin='https://sage.example')
+
+    @override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE_ENABLED=True)
+    def test_live_page_signing_includes_exact_https_callback_and_verifiable_signature(self):
+        url = payments.alipay_live_page_url('order_1', 731, app_id='2026000000000001',
+            private_key=self.private_pem, notify_origin='https://sage.example')
+        parsed = urlsplit(url)
+        self.assertEqual((parsed.scheme, parsed.netloc, parsed.path),
+                         ('https', 'openapi.alipay.com', '/gateway.do'))
+        params = {key: values[0] for key, values in parse_qs(parsed.query).items()}
+        self.assertEqual(params['notify_url'], 'https://sage.example/api/payments/webhooks/alipay')
+        self.assertEqual(params['method'], 'alipay.trade.page.pay')
+        self.assertEqual(json.loads(params['biz_content'])['total_amount'], '7.31')
+        signature = base64.b64decode(params.pop('sign'), validate=True)
+        content = '&'.join(f'{key}={params[key]}' for key in sorted(params))
+        self.private.public_key().verify(signature, content.encode('utf-8'),
+                                         padding.PKCS1v15(), hashes.SHA256())
+        for origin in ('http://sage.example', 'https://user@sage.example',
+                       'https://sage.example/path', 'https://sage.example?x=1',
+                       'https://sage.example#fragment', 'https://sage.example:99999',
+                       'https://' + 'a' * 250 + '.example'):
+            with self.subTest(origin=origin), self.assertRaisesRegex(ValueError, '^ALIPAY_SIGNING_FAILED$'):
+                payments.alipay_live_page_url('order_1', 731, app_id='2026000000000001',
+                    private_key=self.private_pem, notify_origin=origin)
 
     def test_sandbox_signing_is_closed_outside_isolated_test_environment(self):
         for environment in ('production', 'development'):

@@ -289,6 +289,7 @@ class SharedIncludedBusinessTests(TransactionTestCase):
         from .subscriptions import grant_due_credits
         from .refunds import request_service_refund
         result=self.activate()
+        self.now.return_value+=timedelta(days=2)
         request_service_refund(self.account,self.user,result['id'],'shared-future-refund')
         self.assertEqual(credits_summary(self.account)['available'],'172.5')
         self.now.return_value=month_boundary(self.anchor,1)
@@ -608,9 +609,10 @@ class PublicPurchaseEligibilityTests(TransactionTestCase):
         self.assertEqual(self.order(first,'first'),order)
         self.assertFalse(purchase_quote_detail(self.account,second['id'])['can_order'])
         self.assertFalse(purchase_catalog(self.account)['items'][0]['quote_available'])
-        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+        self.assertEqual(purchase_catalog(self.account)['items'][0]['pending_order_id'],order['id'])
+        with self.assertRaisesRegex(ValueError,'UNPAID_ORDER_EXISTS'):
             self.order(second,'second')
-        with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
+        with self.assertRaisesRegex(ValueError,'UNPAID_ORDER_EXISTS'):
             self.quote()
         Order.objects.filter(pk=order['id']).update(status='closed')
         self.assertIn('id',self.quote())
@@ -678,7 +680,8 @@ class PublicPurchaseEligibilityTests(TransactionTestCase):
         pack = fixture_product()
         self.subscribed()
         prepared_order = self.order(self.quote(pack),'before-expiry')
-        unprepared_order = self.order(self.quote(pack),'prepare-after-expiry')
+        with patch('backend.commerce.billing.open_checkout_order', return_value=None):
+            unprepared_order = self.order(self.quote(pack),'prepare-after-expiry')
         expiry = self.now+timedelta(minutes=5)
         attempt = prepare_payment_attempt(self.account,self.user,prepared_order['id'],'before-expiry',expires_at=expiry)
         SubscriptionPeriod.objects.update(ends_at=self.now-timedelta(seconds=1))
@@ -2145,6 +2148,22 @@ class ProductImportTests(TransactionTestCase):
                     state='published',effective_at=timezone.now()-timedelta(days=1))
                 with self.subTest(code=code,kind=kind), self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
                     _sale_gate(product,account,timezone.now(),'fixture','CN','fixture-shenzhen')
+
+    @override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)
+    def test_enterprise_is_contact_sales_only_while_teams_stays_purchasable(self):
+        from .billing import _sale_gate
+        business=BillingAccount.objects.create(kind='business',name='enterprise-contact-only')
+        for code,mode,seats in (('teams','seat_included',1),('enterprise','shared_included',10)):
+            product=ProductVersion(**{**self.product(code),'audience':'business','minimum_seats':seats,
+                'entitlements':{**self.product()['entitlements'],'resource_mode':mode}},
+                state='published',effective_at=timezone.now()-timedelta(days=1))
+            with self.subTest(code=code):
+                if code == 'enterprise':
+                    with self.assertRaisesRegex(ValueError,'SALES_CONTACT_REQUIRED'):
+                        _sale_gate(product,business,timezone.now(),'fixture','CN',public_purchase=True)
+                else:
+                    _sale_gate(product,business,timezone.now(),'fixture','CN',public_purchase=True)
+                _sale_gate(product,business,timezone.now(),'fixture','CN','fixture-shenzhen',historical_subscription=True)
 
 
 @override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)

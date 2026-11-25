@@ -15,7 +15,8 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from backend.billing_rules import month_boundary, renewal_failure_decision
+from backend.billing_rules import (NEXT_MIDNIGHT_RULE, RENEWAL_CHARGE_LEAD, RENEWAL_PREPARE_LEAD, month_boundary,
+    next_midnight, renewal_failure_decision)
 from backend.models import AuditEvent
 from .billing import (_authorize_purchase, _datetime, _get, _identifier, _lock_account,
                       _quantity, _text, _attempt_dict, _effective_attempt_state, _payment_snapshot, _sale_gate, create_quote, create_order, grant_credits)
@@ -67,7 +68,9 @@ def _period_seats(period, at=None, *, include_additions=True):
     reductions = period.subscription.seat_reductions.filter(period=period, state='applied')
     if at is not None:
         reductions = reductions.filter(applied_at__lte=at)
-    removed = [value for reduction in reductions for value in reduction.seat_ids]
+    # A next-term reduction keeps its seats paid and usable until the period ends.
+    removed = [value for reduction in reductions
+        if at is None or reduction.snapshot.get('scope') != 'next_term' for value in reduction.seat_ids]
     return rows.filter(base).exclude(pk__in=removed).order_by('position')
 
 
@@ -321,6 +324,33 @@ def fulfill_seat_purchase(account, change_id):
     return _seat_purchase_dict(change)
 
 
+def _scheduled_removal_ids(subscription, at):
+    """Seats leaving when their paid term ends; they may not be newly assigned."""
+    return {value for row in subscription.seat_reductions.filter(state='applied', snapshot__scope='next_term',
+        period__ends_at__gt=at) for value in row.seat_ids}
+
+
+def _next_term_reduction_target(subscription, now):
+    target = subscription.periods.order_by('-cycle_index').first()
+    if not target or target.ends_at <= now:
+        raise ValueError('SERVICE_NOT_ACTIVE')
+    return target
+
+
+def _eligible_next_term_seats(account, target, seat_ids, now):
+    """Teams seats are removed from the next renewal only; paid capacity is never cut or refunded."""
+    remaining = _period_seats(target)
+    seats = remaining.filter(pk__in=seat_ids)
+    if seats.count() != len(seat_ids) or seats.filter(membership__isnull=False).exists():
+        raise ValueError('SEAT_NOT_RELEASABLE')
+    reserved = {str(row.seat_id) for row in _pending_invitations(account, now) if row.seat_id}
+    if reserved.intersection(seat_ids):
+        raise ValueError('SEAT_RESERVED_FOR_INVITATION')
+    if remaining.count()-len(seat_ids) < target.order.quote.product.minimum_seats:
+        raise ValueError('MINIMUM_SEATS_REQUIRED')
+    return list(seats), remaining.count()
+
+
 def _eligible_reduction_seats(account, period, seat_ids, at):
     seats = _period_seats(period, at).filter(pk__in=seat_ids)
     if seats.count() != len(seat_ids) or seats.filter(membership__isnull=False).exists():
@@ -348,6 +378,7 @@ def _seat_reduction_dict(change):
         'seat_count_before':values['seat_count_before'], 'seat_count_after':values['seat_count_after'],
         'amount_minor':str(values['amount_minor']), 'currency':'CNY', 'expires_at':change.expires_at.astimezone(ZoneInfo('UTC')).isoformat(),
         'service_end':change.period.ends_at.astimezone(ZoneInfo('UTC')).isoformat(), 'refund_from':values['refund_from'], 'policy':values['policy'],
+        'scope':values.get('scope', 'current'),
         'next_paid_seats':values['next_paid_seats'], 'next_paid_starts_at':values['next_paid_starts_at'],
         'status':status, 'refund':refund_data(change.refund) if change.refund_id else None}
 
@@ -380,9 +411,23 @@ def seat_reduction_quote(account, actor, subscription_id, seat_ids, *, request_k
     if (_seat_purchase_pending(subscription) or _renewal_delivery_pending(subscription) or
             SubscriptionChange.objects.filter(subscription=subscription, state='pending_payment').exists()):
         raise ValueError('PAYMENT_RECONCILIATION_REQUIRED')
+    teams = period.snapshot['entitlements'].get('resource_mode') == 'seat_included'
+    if teams:
+        target = _next_term_reduction_target(subscription, now)
+        seats, count = _eligible_next_term_seats(account, target, seat_ids, now)
+        change = SeatReduction.objects.create(account=account, subscription=subscription, period=target, actor=actor,
+            seat_ids=seat_ids, request_key=request_key, request_hash=fingerprint,
+            expires_at=min(now+timedelta(minutes=10), target.ends_at), snapshot={
+                'scope':'next_term', 'seat_count_before':count, 'seat_count_after':count-len(seats),
+                'seat_positions':[seat.position for seat in seats],
+                'seat_versions':{str(seat.pk):seat.version for seat in seats}, 'amount_minor':0,
+                'allocations':[], 'automatic_review':True, 'refund_from':target.ends_at.isoformat(),
+                'policy':'teams_next_term', 'next_paid_seats':count-len(seats),
+                'next_paid_starts_at':target.ends_at.isoformat(),
+                'source_fingerprint':_change_source_fingerprint(subscription)})
+        return _seat_reduction_dict(change)
     seats = _eligible_reduction_seats(account, period, seat_ids, now)
     _, _, month_end = _service_month(subscription, period, now)
-    teams = period.snapshot['entitlements'].get('resource_mode') == 'seat_included'
     cutoff = now if teams else month_end
     weights, _ = _period_cash_weights(period, cutoff, policy='seconds' if teams else 'future_months', seat_ids=seat_ids)
     for key, value in weights.items():
@@ -433,15 +478,19 @@ def confirm_seat_reduction(account, actor, subscription_id, quote_id, *, request
     now = timezone.now()
     if change.expires_at <= now:
         raise ValueError('QUOTE_EXPIRED')
+    next_term = change.snapshot.get('scope') == 'next_term'
     if (change.snapshot['source_fingerprint'] != _change_source_fingerprint(change.subscription) or
-            not active_subscription_periods(account, now).filter(pk=change.period_id).exists()):
+            not active_subscription_periods(account, now).filter(subscription=change.subscription).exists() or
+            (not next_term and not active_subscription_periods(account, now).filter(pk=change.period_id).exists()) or
+            (next_term and _next_term_reduction_target(change.subscription, now).pk != change.period_id)):
         raise ValueError('SOURCE_SUBSCRIPTION_CHANGED')
     if _service_refund_pending(change.subscription):
         raise ValueError('REFUND_PENDING')
     if (_seat_purchase_pending(change.subscription) or _renewal_delivery_pending(change.subscription) or
             SubscriptionChange.objects.filter(subscription=change.subscription, state='pending_payment').exists()):
         raise ValueError('PAYMENT_RECONCILIATION_REQUIRED')
-    seats = _eligible_reduction_seats(account, change.period, change.seat_ids, now)
+    seats = (_eligible_next_term_seats(account, change.period, change.seat_ids, now)[0] if next_term else
+        _eligible_reduction_seats(account, change.period, change.seat_ids, now))
     if any(change.snapshot['seat_versions'][str(seat.pk)] != seat.version for seat in seats):
         raise ValueError('SEAT_CHANGED')
     for row in change.snapshot['allocations']:
@@ -614,7 +663,7 @@ def subscription_change_quote(account, actor, subscription_id, product_id, *, re
         period.starts_at,period.ends_at,now,product.unit_amount_minor*seats,prepaid,
         mode=subscription.billing_cycle+'_to_'+product.billing_cycle,
         unused_cash_minor=sum(own_weights.values(), Fraction()))
-    weights={} if amounts['mode']=='monthly_to_monthly' else dict(own_weights)
+    weights=dict(own_weights)
     applied=Fraction(prepaid-amounts['future_refund_minor'])
     refund_allocations=(_allocate_change_cash(own_weights,amounts['current_refund_minor'])
                         if amounts['current_refund_minor'] else [])
@@ -1432,7 +1481,8 @@ def _invitation_status(invitation, now):
         return 'invalidated'
     if invitation.seat_id:
         period = active_subscription_periods(invitation.account, now).filter(subscription_id=invitation.subscription_id).first()
-        if invitation.seat.membership_id is not None or not period or not _period_seats(period, now).filter(pk=invitation.seat_id).exists():
+        if (invitation.seat.membership_id is not None or not period or not _period_seats(period, now).filter(pk=invitation.seat_id).exists() or
+                str(invitation.seat_id) in _scheduled_removal_ids(period.subscription, now)):
             return 'invalidated'
     return 'pending'
 
@@ -1530,7 +1580,9 @@ def create_business_invitation(account, actor, *, method, identifier, role, paid
     seat = None
     if paid:
         reserved = {row.seat_id for row in pending if row.seat_id}
-        for candidate in _period_seats(period, now).select_for_update(of=('self',)).filter(membership__isnull=True):
+        leaving = _scheduled_removal_ids(period.subscription, now)
+        for candidate in (_period_seats(period, now).select_for_update(of=('self',)).filter(membership__isnull=True)
+                .exclude(pk__in=leaving)):
             waiting, _, locked = _seat_usage_state(candidate, now)
             if candidate.pk not in reserved and not waiting and not locked:
                 seat = candidate
@@ -1638,6 +1690,7 @@ def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
     seats = _period_seats(shown_period, now) if shown_period else PaidSeat.objects.none()
     next_period = subscription.periods.filter(starts_at__gt=now).order_by('starts_at').first() if subscription else None
     seat_states = {seat.pk:_seat_usage_state(seat,now) for seat in seats.select_related('subscription')}
+    leaving = _scheduled_removal_ids(subscription, now) if subscription else set()
     members = Membership.objects.filter(account=account).select_related('user').order_by('id')
     if viewer is not None:
         members = members.filter(user=viewer,is_active=True)
@@ -1698,16 +1751,17 @@ def organization_summary(account, *, offset=0, viewer=None, admin_actor=None):
             'period_end':end.isoformat() if end else None,'can_edit':False}
     return {'account_id':str(account.pk),'members':items,'total_members':total,'offset':offset,
         'next_paid_period':{'id':str(next_period.pk), 'starts_at':next_period.starts_at.isoformat(),
-            'ends_at':next_period.ends_at.isoformat(), 'seat_count':_period_seats(next_period).count(),
+            'ends_at':next_period.ends_at.isoformat(), 'seat_count':_period_seats(next_period, next_period.starts_at).count(),
             'uncovered_seat_items':[{'id':str(seat.pk), 'position':seat.position, 'membership_id':seat.membership_id}
-                for seat in seats.exclude(pk__in=_period_seats(next_period).values('pk'))]} if next_period else None,
+                for seat in seats.exclude(pk__in=_period_seats(next_period, next_period.starts_at).values('pk'))]} if next_period else None,
+        'leaving_seat_items':[{'id':str(seat.pk), 'position':seat.position} for seat in seats if str(seat.pk) in leaving],
         'available_seat_items':[{'id':str(seat.pk), 'position':seat.position, 'version':seat.version}
             for seat in seats.filter(membership__isnull=True) if period and seat.pk not in reserved_seats
-            and not seat_states[seat.pk][0] and not seat_states[seat.pk][2]],
+            and not seat_states[seat.pk][0] and not seat_states[seat.pk][2] and str(seat.pk) not in leaving],
         'next_offset':offset+50 if offset+50<total else None,'seat_count':seats.count(),
         'reserved_seats':len(reserved_seats),
         'available_seats':sum(bool(period) and seat.pk not in reserved_seats and not seat_states[seat.pk][0] and not seat_states[seat.pk][2]
-            for seat in seats.filter(membership__isnull=True)),
+            and str(seat.pk) not in leaving for seat in seats.filter(membership__isnull=True)),
         'locked_seats':sum(bool(seat_states[seat.pk][2]) for seat in seats.filter(membership__isnull=True)),
         'pending_settlement_seats':sum(state[0] for state in seat_states.values()),
         'assigned_seats':seats.filter(membership__isnull=False).count(),'subscription_active':bool(period),
@@ -1929,6 +1983,8 @@ def assign_seat(account, actor, seat_id, membership_id, *, expected_version, req
         period = active_subscription_periods(account,now).filter(subscription=seat.subscription).first()
         if not period or not _period_seats(period, now).filter(pk=seat.pk).exists():
             raise ValueError('SUBSCRIPTION_EXPIRED')
+        if str(seat.pk) in _scheduled_removal_ids(seat.subscription, now):
+            raise ValueError('SEAT_LEAVING_NEXT_TERM')
         _get(Membership.objects,pk=membership_id,account=account,is_active=True,user__is_active=True)
         previous = PaidSeat.objects.filter(subscription=seat.subscription,membership_id=membership_id).exclude(pk=seat.pk).first()
         if previous:
@@ -1971,8 +2027,12 @@ def _calendar_zone(name):
 
 
 def _boundary(subscription, offset):
-    return month_boundary(subscription.original_anchor.astimezone(
+    boundary = month_boundary(subscription.original_anchor.astimezone(
         _calendar_zone(subscription.billing_timezone)), offset)
+    # Offset 0 is the activation instant itself and is never moved.
+    if offset and subscription.calendar_rule_version == NEXT_MIDNIGHT_RULE:
+        boundary = next_midnight(boundary)
+    return boundary
 
 
 def _months(subscription):
@@ -2033,17 +2093,7 @@ def _renewal_snapshot(subscription, mandate=None, *, source_attempt=None):
             not subscription.authorization_changes.filter(new_mandate__channel=channel,
                 created_at__lte=source_attempt.created_at).exists()):
             raise ValueError('RENEWAL_SNAPSHOT_CONFLICT')
-    snapshot = {**subscription.initial_order.snapshot, 'channel': mandate.get('channel')}
-    if snapshot.get('subscription_change_id'):
-        from .models import SubscriptionChange
-        change=_get(SubscriptionChange.objects,account=subscription.account,new_subscription=subscription,state='activated')
-        snapshot['amount_minor']=change.snapshot['gross_minor']
-        snapshot.pop('subscription_change_id')
-    if subscription.seat_purchases.filter(state='activated').exists() or subscription.seat_reductions.filter(state='applied').exists():
-        last = subscription.periods.order_by('-cycle_index').first()
-        seats = list(_period_seats(last))
-        snapshot.update(seat_ids=[str(seat.pk) for seat in seats], seat_quantity=len(seats),
-            amount_minor=snapshot['unit_amount_minor']*len(seats))
+    snapshot = {**_renewal_terms(subscription), 'channel': mandate.get('channel')}
     _mandate(mandate, snapshot)
     if snapshot.get('currency') != 'CNY' or mandate['executor'] != 'sage':
         raise ValueError('RENEWAL_EXECUTOR_CONFLICT')
@@ -2150,7 +2200,7 @@ def prepare_renewal_attempt(account, subscription_id, *, cycle_index, dispatch_n
         raise ValueError('RENEWAL_NOT_AUTHORIZED')
     if _service_refund_pending(subscription):
         raise ValueError('REFUND_PENDING')
-    if _seat_purchase_pending(subscription):
+    if _seat_purchase_pending(subscription) or _manual_renewal_pending(subscription):
         raise ValueError('PAYMENT_RECONCILIATION_REQUIRED')
     initial = subscription.initial_order
     snapshot = _renewal_snapshot(subscription)
@@ -2186,13 +2236,42 @@ def prepare_renewal_attempt(account, subscription_id, *, cycle_index, dispatch_n
         subscription=subscription, renewal_cycle_index=cycle_index, dispatch_not_before=dispatch_not_before)
     return _attempt_dict(attempt, order)
 
+def schedule_due_renewals(account, now=None):
+    """Prepare the next renewal intent for each auto-renewing term nearing its end.
+
+    The charge window opens one day before expiry and closes at expiry, so the
+    reminder (one day before the charge) lands two days before expiry. This only
+    records intents; dispatching to a channel is a separate, gated step.
+    """
+    now = now or timezone.now()
+    result = {'prepared': 0, 'existing': 0, 'skipped': {}}
+    subscriptions = Subscription.objects.filter(account=account, auto_renew=True, cancellation_state='none')
+    for subscription in subscriptions.order_by('created_at', 'pk'):
+        last = subscription.periods.order_by('-cycle_index').first()
+        if not last or subscription.mandate.get('executor') != 'sage':
+            continue
+        cycle_index = last.cycle_index + 1
+        start = _boundary(subscription, cycle_index * _months(subscription))
+        if not start - RENEWAL_PREPARE_LEAD <= now < start:
+            continue
+        existed = PaymentAttempt.objects.filter(subscription=subscription, renewal_cycle_index=cycle_index).exists()
+        try:
+            prepare_renewal_attempt(account, subscription.pk, cycle_index=cycle_index,
+                dispatch_not_before=start - RENEWAL_CHARGE_LEAD, expires_at=start)
+        except ValueError as exc:
+            code = str(exc)
+            result['skipped'][code] = result['skipped'].get(code, 0) + 1
+            continue
+        result['existing' if existed else 'prepared'] += 1
+    return result
+
 
 @transaction.atomic
 def fulfill_renewal_attempt(account, attempt_id):
     """Deliver a bound, dispatched renewal only after an accepted money fact.
 
     Cancellation does not discard an already dispatched payment. Late receipts
-    remain recorded and require the separately specified recovery policy.
+    remain recorded for review; there is no post-expiry repayment path.
     """
     account = _lock_account(account)
     attempt = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=attempt_id)
@@ -2200,113 +2279,6 @@ def fulfill_renewal_attempt(account, attempt_id):
         raise ValueError('RENEWAL_NOT_DISPATCHED')
     return append_paid_period(account, attempt.subscription_id, attempt.order_id,
                               cycle_index=attempt.renewal_cycle_index)
-
-
-def _recovery_context(account, original, now):
-    """Called under the account lock, both at preparation and before dispatch."""
-    if original.account_id != account.pk or not original.subscription_id or original.recovery_of_id:
-        raise ValueError('RECOVERY_NOT_ELIGIBLE')
-    subscription = _get(Subscription.objects.select_for_update(), account=account, pk=original.subscription_id)
-    last = subscription.periods.order_by('-cycle_index').first()
-    if (not last or original.renewal_cycle_index != last.cycle_index + 1 or
-        not subscription.auto_renew or subscription.cancellation_state != 'none'):
-        raise ValueError('RECOVERY_NOT_ELIGIBLE')
-    deadline = last.ends_at.astimezone(_calendar_zone(subscription.billing_timezone)) + timedelta(days=3)
-    state = _effective_attempt_state(original, original.order)
-    if (not last.ends_at <= now < deadline or original.needs_reconciliation or original.order.payment_facts.exists() or
-        not (state == 'failed' or (state == 'expired' and original.dispatched_at is None))):
-        raise ValueError('RECOVERY_NOT_ELIGIBLE')
-    if original.dispatched_at:
-        authorization = original.dispatch_authorization
-        if (not isinstance(authorization,dict) or authorization.get('subscription_id') != str(subscription.pk) or
-                authorization.get('authorization_version') != subscription.authorization_version or
-                authorization.get('mandate') != subscription.mandate):
-            # A changed mandate is not permission to recharge an older intent.
-            raise ValueError('RECOVERY_NOT_ELIGIBLE')
-    snapshot = _payment_snapshot(original.order) if original.dispatched_at else original.order.snapshot
-    _mandate(subscription.mandate, snapshot)
-    if subscription.mandate['executor'] != 'sage' or account.kind != 'personal':
-        raise ValueError('RECOVERY_NOT_ELIGIBLE')
-    if snapshot != _renewal_snapshot(subscription):
-        raise ValueError('RENEWAL_SNAPSHOT_CONFLICT')
-    return subscription, deadline
-
-
-@transaction.atomic
-def prepare_recovery_attempt(account, user, original_attempt_id, *, agreement_acceptance, expires_at):
-    """Explicit user-confirmed recovery intent, not automatic renewal retry.
-
-    Internal only until channel/activation policy is ready. Repeated submission
-    returns the existing attempt; it never manufactures a new charge after an
-    unknown result. Subsequent manual retries require their own reviewed policy.
-    """
-    account = _lock_account(account)
-    _authorize_purchase(account, user)
-    _datetime(expires_at)
-    original = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=original_attempt_id)
-    if agreement_acceptance != original.order.snapshot.get('terms_version'):
-        raise ValueError('TERMS_MISMATCH')
-    existing = PaymentAttempt.objects.filter(recovery_of=original).first()
-    if existing:
-        if existing.expires_at != expires_at:
-            raise ValueError('PAYMENT_INTENT_CONFLICT')
-        return _attempt_dict(existing, existing.order)
-    subscription, deadline = _recovery_context(account, original, timezone.now())
-    if not timezone.now() < expires_at <= deadline:
-        raise ValueError('INVALID_RECOVERY_WINDOW')
-    source = original.order
-    snapshot = _payment_snapshot(source) if original.dispatched_at else source.snapshot
-    _sale_gate(source.quote.product, account, timezone.now(), snapshot['channel'],
-               snapshot['buyer_region'], snapshot['merchant_entity'],historical_subscription=True)
-    key = f'recovery:{original.pk}'
-    if source.currency != 'CNY' or source.amount_minor != snapshot.get('amount_minor') or source.amount_minor <= 0:
-        raise ValueError('RENEWAL_SNAPSHOT_CONFLICT')
-    if Order.objects.filter(account=account,idempotency_key=key).exists():
-        raise ValueError('PAYMENT_INTENT_CONFLICT')
-    # Recovery retains the failed intent's commercial terms and transport,
-    # not the initial purchase's channel or a newer public catalog version.
-    quote = Quote.objects.create(account=account,product=source.quote.product,snapshot=snapshot,
-        amount_minor=source.amount_minor,currency='CNY',expires_at=expires_at)
-    payload = {'quote_id':str(quote.pk),'agreement_acceptance':agreement_acceptance}
-    fingerprint = hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':')).encode()).hexdigest()
-    order = Order.objects.create(account=account,created_by=user,quote=quote,idempotency_key=key,
-        request_hash=fingerprint,snapshot=snapshot,amount_minor=source.amount_minor,currency='CNY')
-    attempt = PaymentAttempt.objects.create(account=account, order=order, intent_key=key,
-        expires_at=expires_at, recovery_of=original)
-    return _attempt_dict(attempt, order)
-
-
-@transaction.atomic
-def activate_recovery_subscription(account, attempt_id, *, activated_at, mandate, payment_method_id=None):
-    """New-authorisation branch only. Never silently reuses/revokes a mandate.
-
-    A trusted caller must already have confirmed the old cancellation and new
-    mandate with its PSP. Reusing an old agreement with a changed schedule is
-    a separate channel capability, not inferred by this function.
-    """
-    account = _lock_account(account)
-    attempt = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=attempt_id)
-    if not attempt.recovery_of_id or not attempt.dispatched_at or attempt.needs_reconciliation:
-        raise ValueError('RECOVERY_NOT_CONFIRMED')
-    original = _get(PaymentAttempt.objects.select_for_update(), account=account, pk=attempt.recovery_of_id)
-    old = _get(Subscription.objects.select_for_update(), account=account, pk=original.subscription_id)
-    if original.order.payment_facts.exists() or original.needs_reconciliation:
-        raise ValueError('RECOVERY_RECONCILIATION_REQUIRED')
-    order = _paid_order(account, attempt.order_id)
-    last = old.periods.order_by('-cycle_index').first()
-    source = _payment_snapshot(original.order) if original.dispatched_at else original.order.snapshot
-    if not last or original.renewal_cycle_index != last.cycle_index + 1 or order.snapshot != source:
-        raise ValueError('RECOVERY_INTENT_CONFLICT')
-    deadline = last.ends_at.astimezone(_calendar_zone(old.billing_timezone)) + timedelta(days=3)
-    if not last.ends_at <= order.paid_at < min(deadline, attempt.expires_at):
-        raise ValueError('RECOVERY_PAYMENT_OUTSIDE_WINDOW')
-    _mandate(mandate, order.snapshot)
-    if (old.auto_renew or old.cancellation_state != 'completed' or not old.cancel_confirmed_at or
-        not old.cancellation_evidence_hash or mandate['agreement_reference'] == old.mandate['agreement_reference']):
-        raise ValueError('RECOVERY_AUTHORIZATION_REQUIRED')
-    return activate_subscription(account, order.pk, activated_at=activated_at, billing_timezone=old.billing_timezone,
-                                 calendar_rule_version=old.calendar_rule_version, mandate=mandate,
-                                 payment_method_id=payment_method_id)
 
 
 def _renewal_state(subscription, now):
@@ -2318,39 +2290,21 @@ def _renewal_state(subscription, now):
     if not attempt and now < last.ends_at:
         return None
     state = _effective_attempt_state(attempt, attempt.order) if attempt else 'missing'
-    recovery = PaymentAttempt.objects.filter(recovery_of=attempt).select_related('order').first() if attempt else None
     # Accepted money still delivers; an additional receipt remains a separate
     # review even when ingestion did not create an attempt reconciliation flag.
-    receipt_review = bool(
-        (attempt and attempt.order.payment_facts.exclude(disposition='accepted').exists()) or
-        (recovery and recovery.order.payment_facts.exclude(disposition='accepted').exists()))
-    if recovery and Subscription.objects.filter(initial_order=recovery.order).exists():
-        if attempt.needs_reconciliation or attempt.order.payment_facts.exists():
-            state = 'review'
-        elif receipt_review:
-            state = _effective_attempt_state(recovery, recovery.order)
-        else:
-            return None
-    if recovery and state in ('failed', 'expired') and not attempt.needs_reconciliation:
-        state = _effective_attempt_state(recovery, recovery.order)
-        if recovery.needs_reconciliation:
-            state = 'review'
+    receipt_review = bool(attempt and attempt.order.payment_facts.exclude(disposition='accepted').exists())
     # A review-only receipt must not turn accepted, pending delivery into a
     # failed renewal or change the expiry worker's authorization decision.
     policy_state = state
     if receipt_review:
         state = 'review'
-    # The subscription already carries its trusted calendar/timezone policy.
-    # Three calendar days here never grants three days of service or credit.
-    deadline = last.ends_at.astimezone(_calendar_zone(subscription.billing_timezone)) + timedelta(days=3)
     decision = renewal_failure_decision('failed' if policy_state in ('failed', 'expired', 'cancelled') else 'unknown',
-                                        last.ends_at, deadline, now)
+                                        last.ends_at, now)
     resolved_failure = bool(attempt and not attempt.needs_reconciliation and
         (state == 'failed' or (state == 'expired' and attempt.dispatched_at is None)))
     unresolved = state in ('pending', 'unknown', 'review') or bool(attempt and attempt.needs_reconciliation)
-    return {'status': state, 'manual_payment_deadline': deadline.isoformat(),
-        'manual_payment_eligible': bool(not recovery and resolved_failure and subscription.auto_renew and decision['allow_manual_payment']),
-        'new_subscription_payment_eligible': bool(not recovery and resolved_failure and decision['allow_new_subscription_payment']),
+    return {'status': state, 'service_ends_at': last.ends_at.isoformat(),
+        'new_subscription_payment_eligible': bool(resolved_failure and decision['allow_new_subscription_payment']),
         'query_original_payment': bool(unresolved),
         'reauthorization_required': bool(decision['new_subscription_requires_authorization'] and policy_state != 'succeeded'),
         'close_future_auto_renewal': bool(decision['close_future_auto_renewal'] and policy_state != 'succeeded')}
@@ -2362,7 +2316,7 @@ def close_expired_renewals(account):
     account = _lock_account(account)
     now, count = timezone.now(), 0
     # A cancelled renewal still retains service until its paid term ends.
-    # Top-up pauses at that boundary, not after the renewal recovery window.
+    # Top-up pauses at that boundary.
     if not active_subscription_periods(account,now).exists():
         pause_topup_authorization(account,reason='subscription_expired')
     for subscription in Subscription.objects.select_for_update().filter(account=account, auto_renew=True):
@@ -2372,7 +2326,7 @@ def close_expired_renewals(account):
             subscription.cancellation_state = 'processing'
             subscription.cancel_requested_at = now
             subscription.save(update_fields=['auto_renew', 'cancellation_state', 'cancel_requested_at'])
-            AuditEvent.objects.create(account=account, action='subscription.recovery_expired', request_id=uuid.uuid4())
+            AuditEvent.objects.create(account=account, action='subscription.renewal_lapsed', request_id=uuid.uuid4())
             count += 1
     return count
 
@@ -2401,10 +2355,12 @@ def _describe(subscription, now):
         'prepaid_through': min(max(period.ends_at for period in periods),cutoff).isoformat() if periods and cutoff else max((period.ends_at for period in periods), default=None).isoformat() if periods else None,
         'auto_renew': subscription.auto_renew, 'cancellation_state': subscription.cancellation_state,
         'can_cancel': subscription.auto_renew and subscription.cancellation_state == 'none',
-        'renewal_setup': {'status': 'failed', 'separate_authorization_required': True}
+        'renewal_setup': {'status': 'not_offered' if subscription.mandate['renewal_setup_failure'].get('status') == 'not_offered' else 'failed',
+                          'separate_authorization_required': True}
             if subscription.mandate.get('renewal_setup_failure') else None,
         'renewal': _renewal_state(subscription, now),
-        'capabilities': {'cancel': True, 'upgrade': False, 'payment_method': False, 'manual_payment': False},
+        'capabilities': {'cancel': True, 'upgrade': False, 'payment_method': False,
+            'manual_payment': bool(current) and not cutoff},
     }
 
 
@@ -2511,9 +2467,15 @@ def activate_subscription(account, order_id, *, activated_at, billing_timezone, 
     if not isinstance(calendar_rule_version, str) or not calendar_rule_version.strip() or len(calendar_rule_version) > 80:
         raise ValueError('CALENDAR_POLICY_REQUIRED')
     without_renewal = renewal_setup_failure is not None
+    fixed_term = order.snapshot.get('renewal') == 'none'
+    if fixed_term and renewal_setup_failure != {'status': 'not_offered'}:
+        # A fixed term never carried a renewal agreement to sign or to fail.
+        raise ValueError('MANDATE_NOT_CONFIRMED')
     if without_renewal:
         if (mandate is not None or payment_method_id is not None or
-                not isinstance(renewal_setup_failure, dict) or
+                not isinstance(renewal_setup_failure, dict)):
+            raise ValueError('MANDATE_NOT_CONFIRMED')
+        if not fixed_term and (
                 set(renewal_setup_failure) != {'status', 'evidence_hash'} or
                 renewal_setup_failure['status'] != 'confirmed_failed' or
                 not isinstance(renewal_setup_failure['evidence_hash'], str) or
@@ -2650,4 +2612,152 @@ def confirm_cancellation(account, subscription_id, *, agreement_reference, evide
         BillingNotification.objects.create(account=account,type='cancellation_confirmed',
             source_event=f'subscription:{subscription.pk}:cancellation_confirmed',
             subscription=subscription,occurred_at=subscription.cancel_confirmed_at)
+    return _describe(subscription, timezone.now())
+
+
+MANUAL_RENEWAL_POLICY = 'manual-renewal-20261125'
+
+
+def _renewal_terms(subscription):
+    """The commercial terms the next term of this subscription is sold at."""
+    snapshot = dict(subscription.initial_order.snapshot)
+    if snapshot.get('subscription_change_id'):
+        from .models import SubscriptionChange
+        change=_get(SubscriptionChange.objects,account=subscription.account,new_subscription=subscription,state='activated')
+        snapshot['amount_minor']=change.snapshot['gross_minor']
+        snapshot.pop('subscription_change_id')
+    if subscription.seat_purchases.filter(state='activated').exists() or subscription.seat_reductions.filter(state='applied').exists():
+        last = subscription.periods.order_by('-cycle_index').first()
+        seats = list(_period_seats(last))
+        snapshot.update(seat_ids=[str(seat.pk) for seat in seats], seat_quantity=len(seats),
+            amount_minor=snapshot['unit_amount_minor']*len(seats))
+    return snapshot
+
+
+def _manual_renewal_gate(subscription, now):
+    from .models import SubscriptionChange
+    last = subscription.periods.order_by('-cycle_index').first()
+    if subscription.superseded_at or not last or last.ends_at <= now:
+        raise ValueError('SERVICE_NOT_ACTIVE')
+    if subscription.refund_cutoff_at or _service_refund_pending(subscription):
+        raise ValueError('REFUND_PENDING')
+    if (_renewal_delivery_pending(subscription) or _seat_purchase_pending(subscription) or
+            SubscriptionChange.objects.filter(subscription=subscription, state='pending_payment').exists() or
+            Order.objects.filter(account=subscription.account, status='paid_pending_entitlement',
+                snapshot__manual_renewal__subscription_id=str(subscription.pk)).exists()):
+        raise ValueError('PAYMENT_RECONCILIATION_REQUIRED')
+    return last
+
+
+def _manual_renewal_pending(subscription):
+    return Order.objects.filter(account=subscription.account, status__in=('pending_payment', 'paid_pending_entitlement'),
+        snapshot__manual_renewal__subscription_id=str(subscription.pk)).exists()
+
+
+def manual_renewal_offer(account, user, subscription_id):
+    """What a manual renewal of this subscription would cost and cover, without ordering."""
+    from .billing import purchase_terms, open_checkout_order
+    _authorize_purchase(account, user)
+    subscription = _get(Subscription.objects.select_related('initial_order__quote__product'), account=account, pk=subscription_id)
+    now = timezone.now()
+    last = _manual_renewal_gate(subscription, now)
+    snapshot = _renewal_terms(subscription)
+    cycle = last.cycle_index+1
+    channels = []
+    approved = settings.BILLING_APPROVED_CHANNELS
+    for channel in (approved if isinstance(approved, dict) else {}):
+        try:
+            _sale_gate(subscription.initial_order.quote.product, account, now, channel, snapshot.get('buyer_region'),
+                snapshot.get('merchant_entity'), historical_subscription=True)
+        except ValueError:
+            continue
+        channels.append(channel)
+    pending = open_checkout_order(account, 'subscription')
+    return {'subscription_id':str(subscription.pk), 'billing_cycle':subscription.billing_cycle,
+        'plan_code':snapshot.get('code'), 'seat_quantity':snapshot.get('seat_quantity'),
+        'amount_minor':str(snapshot['amount_minor']), 'currency':'CNY',
+        'starts_at':_boundary(subscription, cycle*_months(subscription)).astimezone(ZoneInfo('UTC')).isoformat(),
+        'ends_at':_boundary(subscription, (cycle+1)*_months(subscription)).astimezone(ZoneInfo('UTC')).isoformat(),
+        'auto_renew':subscription.auto_renew, 'terms':purchase_terms(snapshot['terms_version']),
+        'channels':channels, 'pending_order_id':str(pending.pk) if pending else None}
+
+
+@transaction.atomic
+def create_manual_renewal_order(account, user, subscription_id, *, channel, agreement_acceptance, idempotency_key):
+    """One more term of the same plan and cycle, paid now and appended after the last paid term.
+
+    Automatic renewal, if on, keeps its schedule and simply charges after the new term.
+    """
+    from backend.billing_rules import UNPAID_ORDER_TTL
+    from .billing import purchase_terms, open_checkout_order, _close_stale_unpaid, _order_dict
+    account = _lock_account(account)
+    _authorize_purchase(account, user)
+    _identifier(idempotency_key)
+    if idempotency_key.startswith(('renewal:', 'recovery:', 'topup:')) or not isinstance(channel, str) or not isinstance(agreement_acceptance, str):
+        raise ValueError('INVALID_REQUEST')
+    fingerprint = hashlib.sha256(json.dumps({'subscription_id':str(subscription_id), 'channel':channel,
+        'agreement_acceptance':agreement_acceptance, 'policy':MANUAL_RENEWAL_POLICY}, sort_keys=True).encode()).hexdigest()
+    existing = Order.objects.filter(account=account, idempotency_key=idempotency_key).first()
+    if existing:
+        if existing.request_hash != fingerprint:
+            raise ValueError('IDEMPOTENCY_CONFLICT')
+        return _order_dict(existing)
+    subscription = _get(Subscription.objects.select_for_update().select_related('initial_order__quote__product'),
+        account=account, pk=subscription_id)
+    now = timezone.now()
+    _close_stale_unpaid(account, now)
+    _manual_renewal_gate(subscription, now)
+    snapshot = _renewal_terms(subscription)
+    if agreement_acceptance != snapshot.get('terms_version'):
+        raise ValueError('TERMS_MISMATCH')
+    product = subscription.initial_order.quote.product
+    snapshot.update(channel=channel, renewal='none', manual_renewal={'subscription_id':str(subscription.pk)},
+        terms_document_digest=purchase_terms(snapshot['terms_version'])['digest'])
+    snapshot['merchant_entity'] = _sale_gate(product, account, now, channel, snapshot.get('buyer_region'),
+        snapshot.get('merchant_entity'), historical_subscription=True)
+    amount = snapshot.get('amount_minor')
+    if type(amount) is not int or not 0 < amount <= 9007199254740991 or snapshot.get('currency') != 'CNY':
+        raise ValueError('CONFIG_INCOMPLETE')
+    if open_checkout_order(account, 'subscription'):
+        raise ValueError('UNPAID_ORDER_EXISTS')
+    quote = Quote.objects.create(account=account, product=product, snapshot=snapshot, amount_minor=amount,
+        currency='CNY', expires_at=now+UNPAID_ORDER_TTL)
+    order = Order.objects.create(account=account, created_by=user, quote=quote, idempotency_key=idempotency_key,
+        request_hash=fingerprint, snapshot=snapshot, amount_minor=amount, currency='CNY')
+    AuditEvent.objects.create(actor=user, account=account, action='subscription.manual_renewal_ordered', request_id=order.pk)
+    return _order_dict(order)
+
+
+@transaction.atomic
+def append_manual_renewal(account, order_id):
+    """Deliver a paid manual renewal as the term right after the last paid one.
+
+    Anything that would make that unsafe leaves the paid order for staff review.
+    """
+    from .models import BillingIssue
+    account = _lock_account(account)
+    order = _paid_order(account, order_id)
+    subscription = _get(Subscription.objects.select_for_update(), account=account,
+        pk=order.snapshot['manual_renewal']['subscription_id'])
+    existing = SubscriptionPeriod.objects.filter(order=order).first()
+    if existing:
+        return _describe(subscription, timezone.now())
+    last = subscription.periods.order_by('-cycle_index').first()
+    cycle = last.cycle_index+1 if last else None
+    start = _boundary(subscription, cycle*_months(subscription)) if last else None
+    end = _boundary(subscription, (cycle+1)*_months(subscription)) if last else None
+    if (not last or subscription.superseded_at or subscription.refund_cutoff_at or _service_refund_pending(subscription) or
+            last.ends_at < order.paid_at or start != last.ends_at or
+            PaymentAttempt.objects.filter(subscription=subscription, renewal_cycle_index=cycle).exists() or
+            SubscriptionPeriod.objects.filter(subscription__account=account, subscription__superseded_at__isnull=True,
+                starts_at__lt=end, ends_at__gt=start).exists()):
+        BillingIssue.objects.update_or_create(account=account, code='MANUAL_RENEWAL_REVIEW', object_type='order',
+            object_id=order.pk, defaults={'last_seen_at':timezone.now()})
+        return _describe(subscription, timezone.now())
+    SubscriptionPeriod.objects.create(subscription=subscription, order=order, cycle_index=cycle,
+        starts_at=start, ends_at=end, snapshot=order.snapshot)
+    grant_due_credits(account)
+    order.status = 'fulfilled'
+    order.save(update_fields=['status'])
+    AuditEvent.objects.create(account=account, action='subscription.manual_renewal_delivered', request_id=order.pk)
     return _describe(subscription, timezone.now())

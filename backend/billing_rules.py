@@ -4,7 +4,7 @@ Amounts are integer fen. Annual calculation is for an unmodified annual line;
 upgrades, prior refunds, expiry disputes and taxes need line-level settlement.
 """
 from calendar import monthrange
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, Inexact, localcontext
 from fractions import Fraction
 
@@ -12,10 +12,10 @@ from fractions import Fraction
 def billing_policy():
     """Public confirmed rules only; this does not imply connected billing."""
     return {
-        'version': '2026-10-16.2', 'currency': 'CNY', 'merchant_region': 'CN-Shenzhen',
+        'version': '2026-11-25.1', 'currency': 'CNY', 'merchant_region': 'CN-Shenzhen',
         'trial': {'successful_runs': 1, 'choices': ['voc', 'shopify_diagnosis'],
                   'payment_method_required': False},
-        'credits': {'name': 'Sage Credits', 'purchased_valid_months': 12,
+        'credits': {'name': 'Sage Credits', 'purchased_valid_months': 1,
                     'subscription_grant': 'monthly', 'rollover': False,
                     'consume_order': ['earliest_expiry', 'subscription_before_purchased_on_tie'],
                     'business_consume_order': ['own_seat_included', 'business_shared'],
@@ -23,8 +23,10 @@ def billing_policy():
                     'enterprise_included_grant': 'monthly_shared_by_purchased_seats',
                     'business_uses_personal_credits': False,
                     'member_shared_limits': False},
-        'renewal': {'automatic_retry': False, 'manual_payment_window_days': 3,
+        'renewal': {'automatic_retry': False, 'repayment_window_days': 0,
+                    'charge_days_before_expiry': 1, 'reminder_days_before_expiry': 2,
                     'grace_entitlements': False},
+        'orders': {'unpaid_ttl_minutes': 15, 'unpaid_per_kind': 1, 'user_cancel': True},
         'auto_topup': {'audience': 'business', 'default_enabled': False,
                        'separate_authorization': True, 'requires_actual_shared_demand': True},
         'payment_methods': {'independent_replacement': True,
@@ -55,6 +57,32 @@ def month_boundary(original_anchor, month_offset):
         raise ValueError('INVALID_MONTH_OFFSET')
     return original_anchor.replace(year=year, month=month,
                                    day=min(original_anchor.day, monthrange(year, month)[1]))
+
+
+# An unpaid checkout order closes this long after it was created; one unpaid
+# order per product kind may exist at a time.
+UNPAID_ORDER_TTL = timedelta(minutes=15)
+
+# Automatic renewal charges during the last day of a term; its reminder goes out
+# one day before that. Intents are prepared a day earlier so the reminder can be.
+RENEWAL_CHARGE_LEAD = timedelta(days=1)
+RENEWAL_PREPARE_LEAD = timedelta(days=3)
+
+
+# Periods sold under this calendar rule end at the first local midnight after the
+# month boundary, so a term never stops in the middle of its last day.
+NEXT_MIDNIGHT_RULE = 'next-midnight-v1'
+
+
+def next_midnight(value):
+    """First midnight after value on value's own wall clock."""
+    _aware(value)
+    return value.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+
+
+def credits_pack_expiry(paid_at_local):
+    """One calendar month after payment, carried to the next local midnight."""
+    return next_midnight(month_boundary(paid_at_local, 1))
 
 
 def annual_refund(paid_minor, original_anchor, requested_at):
@@ -92,17 +120,18 @@ def subscription_change_amounts(current_price_minor, actual_cash_minor, starts_a
         raise ValueError('INVALID_AMOUNT')
     if mode not in ('monthly_to_monthly','monthly_to_annual','annual_to_annual'):
         raise ValueError('UNSUPPORTED_PLAN_CHANGE')
-    credit=(Fraction(0) if mode=='monthly_to_monthly' else unused_cash if mode=='monthly_to_annual'
-            else max(Fraction(current_price_minor)*ratio,unused_cash))
-    if mode!='monthly_to_monthly' and unused_cash>new_price_minor:
+    # The current term's unused value always offsets the new price; an upgrade
+    # never refunds it. Only an unopened prepaid term's excess is returned.
+    credit=unused_cash if mode!='annual_to_annual' else max(Fraction(current_price_minor)*ratio,unused_cash)
+    if unused_cash>new_price_minor:
         raise ValueError('CASH_CREDIT_REQUIRES_REVIEW')
     prepaid_applied=min(Fraction(prepaid_minor),max(Fraction(0),new_price_minor-credit))
     half_up=lambda value:(2*value.numerator+value.denominator)//(2*value.denominator)
     due=half_up(max(Fraction(0),new_price_minor-credit-prepaid_minor))
     future_refund=half_up(prepaid_minor-prepaid_applied)
-    current_refund=half_up(unused_cash) if mode=='monthly_to_monthly' else 0
-    refund=future_refund+current_refund
-    carried=min(new_price_minor-due,(0 if mode=='monthly_to_monthly' else half_up(unused_cash))+prepaid_minor-future_refund)
+    current_refund=0
+    refund=future_refund
+    carried=min(new_price_minor-due,half_up(unused_cash)+prepaid_minor-future_refund)
     return {'gross_minor':new_price_minor,'discount_minor':new_price_minor-due,'due_minor':due,
         'refund_minor':refund,'cash_carried_minor':carried,
         'promotion_minor':max(0,new_price_minor-due-carried),
@@ -219,28 +248,24 @@ def annual_upgrade_credit_delta(old_monthly, new_monthly):
         raise ValueError('CREDITS_PRECISION_UNSUPPORTED') from error
 
 
-def renewal_failure_decision(payment_state, period_end, manual_payment_deadline, now):
+def renewal_failure_decision(payment_state, period_end, now):
     """R18 decision after a failed/unknown renewal, without charging.
 
-    Caller supplies the three-day deadline calculated under the approved
-    timezone/boundary policy; D03 is not silently decided here.
+    There is no retry and no repayment window: an unrenewed term lapses at its
+    end, after which only a new subscription purchase restores service.
     """
-    for value in (period_end, manual_payment_deadline, now):
+    for value in (period_end, now):
         _aware(value)
-    if manual_payment_deadline <= period_end:
-        raise ValueError('INVALID_RENEWAL_WINDOW')
     if payment_state not in ('failed', 'pending', 'unknown'):
         raise ValueError('INVALID_PAYMENT_STATE')
-    period_active = now < period_end
-    window_closed = now >= manual_payment_deadline
+    lapsed = now >= period_end
     return {
-        'subscription_period_active': period_active,
+        'subscription_period_active': not lapsed,
         'automatic_retry': False,
         'query_original_payment': payment_state in ('pending', 'unknown'),
-        'allow_manual_payment': payment_state == 'failed' and not period_active and not window_closed,
-        'allow_new_subscription_payment': payment_state == 'failed' and window_closed,
-        'close_future_auto_renewal': window_closed,
-        'new_subscription_requires_authorization': window_closed,
+        'allow_new_subscription_payment': payment_state == 'failed' and lapsed,
+        'close_future_auto_renewal': lapsed,
+        'new_subscription_requires_authorization': lapsed,
         'preserve_unexpired_purchased_credits': True,
     }
 

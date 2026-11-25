@@ -123,15 +123,14 @@ assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname), 'Use a lo
         assert.equal(await page.locator('#pricing-seats,.seat-selector').count(), 0, 'Seat quantity belongs in checkout, not the plan comparison');
         assert.equal(await page.locator('.plan-grid.business > .plan').count(), 2, 'Business pricing has Teams and Enterprise only');
         assert.equal(new URL(await page.locator('[data-plan-link="teams"]').getAttribute('href'), page.url()).searchParams.get('seats'), String(count));
-        const enterprise = page.locator('[data-plan-link="enterprise"]');
-        assert.equal(new URL(await enterprise.getAttribute('href'), page.url()).searchParams.get('seats'), String(Math.max(count,10)), 'Enterprise entry starts at its minimum seat quantity');
-        const enterpriseCard=page.locator('.plan').filter({has:enterprise});
-        assert.equal(await enterpriseCard.locator('.plan-actions a').count(), 2, 'Enterprise review and sales actions share one card');
+        const enterpriseCard=page.locator('.plan').filter({has:page.getByRole('heading',{name:'Enterprise',exact:true})});
+        assert.equal(await page.locator('[data-plan-link="enterprise"]').count(), 0, 'Enterprise is sold by contract, never checked out online');
+        assert.equal(await enterpriseCard.locator('.plan-actions a').count(), 1, 'Enterprise card offers only the sales inquiry');
         const sales=enterpriseCard.getByRole('link',{name:lang?'Contact sales':'联系销售',exact:true});
         assert.equal(await sales.getAttribute('href'),`billing${lang}.html#procurement`);
         assert.deepEqual(await page.locator('.segmented').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).borderTopWidth)),['0px','0px'], 'Both pricing toggles are borderless');
         for (const code of ['teams','enterprise']) {
-          const card=page.locator('.plan').filter({has:page.locator(`[data-plan-link="${code}"]`)});
+          const card=page.locator('.plan').filter({has:page.getByRole('heading',{name:code==='teams'?'Teams':'Enterprise',exact:true})});
           assert.equal(await card.locator('.business-benefits').count(),1);
           assert.deepEqual(await card.locator('.plan-pending dd').allTextContents(),Array(3).fill(lang?'Pending':'待定'));
           assert.equal(await card.locator('.plan-pending .ui-icon').count(),0);

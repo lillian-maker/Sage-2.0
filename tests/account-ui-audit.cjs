@@ -409,28 +409,31 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     await visit('billing.html#subscription'); await textContains('.subscription-service','已到期'); assert.equal(await page.locator('[data-cancel-open]').count(),0);
     subscriptions = [{...makeSubscription(),status:'scheduled'}]; await page.locator('#subscriptions-refresh').click(); await textContains('.subscription-service','待生效');
     checks.push('Expired and scheduled paid terms remain distinct');
-    const renewal = {status:'failed',manual_payment_deadline:'2027-02-03T01:00:00+08:00',manual_payment_eligible:true,new_subscription_payment_eligible:false,query_original_payment:false,reauthorization_required:false};
+    const renewal = {status:'failed',service_ends_at:'2027-01-31T00:00:00+08:00',new_subscription_payment_eligible:false,query_original_payment:false,reauthorization_required:false};
+    subscriptions = [{...makeSubscription(),status:'active',renewal}];
+    await visit('billing.html#subscription'); await textContains('.subscription-renewal','不会重试');
+    await textContains('.subscription-renewal','到期后没有补缴期');
+    assert.equal(await page.locator('.subscription-renewal').filter({hasText:'补缴窗口'}).count(),0);
     subscriptions = [{...makeSubscription(),status:'expired',next_credit_grant_at:null,renewal}];
-    await visit('billing.html#subscription'); await textContains('.subscription-renewal','主动补缴窗口截止');
-    await textContains('.subscription-renewal','当前支付渠道尚未开放');
+    await page.locator('#subscriptions-refresh').click(); await textContains('.subscription-renewal','订阅权益已到期');
     assert.equal(await page.getByRole('button',{name:'立即补缴',exact:true}).count(),0);
     const beforeReviewRefresh = writes.length;
-    subscriptions[0].renewal = {...renewal,status:'unknown',manual_payment_eligible:false,query_original_payment:true};
+    subscriptions[0].renewal = {...renewal,status:'unknown',query_original_payment:true};
     await page.locator('#subscriptions-refresh').click(); await textContains('.subscription-renewal','请勿重复付款');
     assert.equal(writes.length,beforeReviewRefresh);
-    subscriptions[0].renewal = {...renewal,manual_payment_eligible:false,reauthorization_required:true};
-    await visit('billing-en.html#subscription'); await textContains('.subscription-renewal','Manual renewal window ended');
+    subscriptions[0].renewal = {...renewal,reauthorization_required:true};
+    await visit('billing-en.html#subscription'); await textContains('.subscription-renewal','Subscription ended without renewal');
     checks.push('Failed/unknown/closed renewal states are bilingual, read-only and never offer unconnected payment');
     const beforeDuplicateReview = writes.length;
     for (const lang of ['', '-en']) {
-      subscriptions = [{...makeSubscription(),renewal:{...renewal,status:'review',manual_payment_eligible:false,query_original_payment:true}}];
+      subscriptions = [{...makeSubscription(),renewal:{...renewal,status:'review',query_original_payment:true}}];
       await visit(`billing${lang}.html#subscription`);
       await textContains('.renewal-payment-title',lang ? 'Renewal payment under review' : '续费结果待核实');
       await textContains('.subscription-renewal',lang ? 'Do not pay again' : '请勿重复付款');
       assert.equal(await page.getByRole('button',{name:lang ? 'Pay now' : '立即补缴',exact:true}).count(),0);
       await page.locator('#subscriptions-refresh').click();
       await textContains('.renewal-payment-title',lang ? 'Renewal payment under review' : '续费结果待核实');
-      subscriptions[0].renewal = {...renewal,status:'succeeded',manual_payment_eligible:false,query_original_payment:false};
+      subscriptions[0].renewal = {...renewal,status:'succeeded',query_original_payment:false};
       await page.locator('#subscriptions-refresh').click();
       await textContains('.renewal-payment-title',lang ? 'Renewal payment confirmed' : '续费款项已确认');
       assert.equal(writes.length,beforeDuplicateReview);
@@ -444,7 +447,7 @@ const makeAccount = (id = one) => ({account:accounts.find(item => item.id === id
     assert.equal(await page.locator('.subscription-card').count(),0);
     checks.push('Old-account subscription response cannot reveal an old subscription after switching');
     state = makeSession();
-    subscriptions[0].renewal = {...renewal,status:'unknown',manual_payment_eligible:false,query_original_payment:true};
+    subscriptions[0].renewal = {...renewal,status:'unknown',query_original_payment:true};
     for (const width of [320,390,768,1440]) for (const lang of ['', '-en']) {
       await page.setViewportSize({width,height:1000}); await visit(`billing${lang}.html#subscription`); await page.locator('[data-cancel-open]').click();
       if ((width === 390 && lang === '-en') || (width === 1440 && !lang)) {

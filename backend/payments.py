@@ -1,4 +1,4 @@
-"""Closed payment callbacks and explicitly gated local test reconciliation."""
+"""Payment callbacks and explicitly gated channel reconciliation."""
 import base64
 import binascii
 import hashlib
@@ -8,7 +8,8 @@ import math
 import re
 import uuid
 from datetime import datetime, timedelta, timezone as datetime_timezone
-from urllib.parse import parse_qsl
+from functools import wraps
+from urllib.parse import parse_qsl, urlsplit
 from zoneinfo import ZoneInfo
 
 from alipay.aop.api.AlipayClientConfig import AlipayClientConfig
@@ -25,15 +26,71 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import transaction
+from django.db import DatabaseError, transaction
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.debug import sensitive_variables
 
 from .commerce.models import Order, PaymentAttempt, PaymentFact
 from .http import error
 
 
+ALIPAY_EGRESS_PROXY = 'http://egress:3128'
+
+_PAYMENT_ERROR_CODES = frozenset('''
+    ACCOUNT_CHANGED ALIPAY_NOTIFICATION_INVALID ALIPAY_PAYMENT_INVALID
+    ALIPAY_QUERY_UNAVAILABLE ALIPAY_QUERY_UNKNOWN ALIPAY_REFUND_QUERY_UNAVAILABLE
+    ALIPAY_RESPONSE_INVALID ALIPAY_SIGNING_FAILED AMOUNT_STORAGE_OVERFLOW AUTH_REQUIRED
+    CHANNEL_UNAVAILABLE CONFIG_INCOMPLETE COST_ALREADY_KNOWN COST_SOURCE_MISMATCH
+    CREDITS_EXPIRED CREDITS_STORAGE_PRECISION_UNSUPPORTED
+    CREDITS_SUBSCRIPTION_REQUIRED DISPATCH_REQUIRES_AUTOCOMMIT FORBIDDEN IDEMPOTENCY_CONFLICT
+    INSUFFICIENT_CREDITS INVALID_AMOUNT INVALID_CREDITS INVALID_DATETIME INVALID_DISPATCH_CONTEXT
+    INVALID_BODY_SIZE INVALID_COST_EVENT INVALID_GRANT INVALID_IDENTIFIER INVALID_JSON INVALID_LIMIT_VERSION
+    INVALID_PAYLOAD INVALID_PAYMENT_EVENT INVALID_PAYMENT_EVIDENCE INVALID_PAYMENT_FACT INVALID_REFERENCE
+    INVALID_RENEWAL_WINDOW INVALID_REQUEST INVALID_SEATS INVALID_TASK_TYPE JSON_REQUIRED LEDGER_INCONSISTENT
+    LEGACY_RESERVATION_REVIEW_REQUIRED LIMIT_CHANGED NOT_FOUND ORDER_STATE_CONFLICT OVER_RESERVATION
+    PAYMENT_AUTHORIZATION_UNKNOWN PAYMENT_EVIDENCE_REQUIRED PAYMENT_EXPIRED
+    PAYMENT_FACT_REQUIRES_AUTOCOMMIT PAYMENT_INTENT_CONFLICT PAYMENT_METHOD_NOT_AVAILABLE
+    PAYMENT_NOT_CONFIRMED PAYMENT_NOT_DISPATCHED QUERY_REQUIRES_AUTOCOMMIT QUOTE_ALREADY_ORDERED QUOTE_EXPIRED
+    RECEIPT_CONFLICT RECOVERY_INTENT_CONFLICT REFUND_EVIDENCE_REQUIRED REFUND_EXCEEDS_PAYMENT
+    REFUND_FUNDS_RESOLUTION_REQUIRED REFUND_NOT_ELIGIBLE REFUND_RECONCILIATION_REQUIRED
+    REFUND_REVIEW_REQUIRED RENEWAL_BUILDER_REQUIRED RENEWAL_CHARGING_DISABLED RENEWAL_CYCLE_CONFLICT
+    RENEWAL_EXECUTOR_CONFLICT RENEWAL_SNAPSHOT_CONFLICT ROUNDING_POLICY_REQUIRED SEAT_REQUIRED
+    SUBSCRIPTION_EXPIRED TASK_COMPLETED TASK_NOT_RUNNING TASK_RESULT_NOT_READY TASK_RESUME_FORBIDDEN
+    TASK_SETTLEMENT_REQUIRED TERMS_MISMATCH TERMS_UNAVAILABLE TOPUP_CHARGING_DISABLED
+    UNSETTLED_USAGE_REQUIRED
+'''.split())
+
+
+def _payment_error_boundary(func):
+    """Preserve known business codes, but never propagate unexpected exception text."""
+    @wraps(func)
+    def guarded(*args, **kwargs):
+        code = None
+        database_failure = False
+        try:
+            return func(*args, **kwargs)
+        except DatabaseError:
+            database_failure = True
+        except ValueError as exc:
+            if type(exc) is ValueError and len(exc.args) == 1 and type(exc.args[0]) is str:
+                if exc.args[0] in _PAYMENT_ERROR_CODES:
+                    code = exc.args[0]
+        except Exception:
+            pass
+        # Raise outside the handler so __context__ cannot retain secrets.
+        if database_failure:
+            raise DatabaseError('DATABASE_UNAVAILABLE') from None
+        if code is not None:
+            raise ValueError(code) from None
+        logging.getLogger('sage').error('payment_internal_failed operation=%s', func.__name__)
+        raise RuntimeError('PAYMENT_INTERNAL_ERROR') from None
+    return guarded
+
+
+@sensitive_variables()
+@_payment_error_boundary
 def start_payment(request, order_id):
     """Called after the billing API's session/account locks and authorization."""
     from .views import payload
@@ -47,11 +104,12 @@ def start_payment(request, order_id):
     wechat = order.snapshot.get('channel') == 'wechat'
     existing = PaymentAttempt.objects.filter(order=order).first()
     configuration = (_wechat_native_configuration(order, reconciliation=bool(existing and existing.dispatched_at))
-        if wechat else _alipay_sandbox_configuration(order))
+        if wechat else _alipay_configuration(order, reconciliation=bool(existing and existing.dispatched_at),
+            sandbox=settings.ENVIRONMENT == 'test'))
     if configuration is None:
         return error(request, 'CHANNEL_UNAVAILABLE', 503)
     from .commerce.billing import prepare_payment_attempt
-    if wechat and existing and existing.dispatched_at:
+    if existing and existing.dispatched_at and (wechat or settings.ENVIRONMENT == 'production'):
         return {'payment_query': str(existing.pk), 'account': order.account}
     expires_at = existing.expires_at if existing else (
         order.created_at+timedelta(seconds=configuration['payment_ttl_seconds']))
@@ -64,19 +122,42 @@ def start_payment(request, order_id):
 
 def _alipay_sandbox_configuration(order, *, reconciliation=False):
     """Explicit test-only permission; catalog approval alone cannot sign a URL."""
+    return _alipay_configuration(order, reconciliation=reconciliation, sandbox=True)
+
+
+@sensitive_variables()
+def _alipay_configuration(order, *, reconciliation=False, sandbox=False):
     from .commerce.billing import _sale_gate
     try:
-        configuration = settings.BILLING_ALIPAY_SANDBOX
+        proxy_url = settings.BILLING_ALIPAY_EGRESS_PROXY
+        if type(proxy_url) is not str or proxy_url not in ('', ALIPAY_EGRESS_PROXY):
+            return None
+        if sandbox:
+            if settings.ENVIRONMENT != 'test':
+                return None
+            configuration = settings.BILLING_ALIPAY_SANDBOX
+        else:
+            if settings.ENVIRONMENT != 'production' or settings.BILLING_ALIPAY_LIVE_ENABLED is not True:
+                return None
+            configuration = settings.BILLING_ALIPAY_LIVE
         if type(configuration) is not dict:
             return None
         configuration = dict(configuration)
-        if (settings.ENVIRONMENT != 'test' or type(configuration) is not dict or
-                set(configuration) != {'enabled', 'app_id', 'seller_id', 'merchant_entity',
-                    'private_key', 'public_key', 'payment_ttl_seconds'} or
+        required = {'enabled', 'app_id', 'seller_id', 'merchant_entity',
+                    'private_key', 'public_key', 'payment_ttl_seconds'}
+        if not sandbox:
+            required.add('notify_origin')
+        if (set(configuration) != required or
                 configuration['enabled'] is not True or
                 type(configuration['payment_ttl_seconds']) is not int or
-                configuration['payment_ttl_seconds'] <= 0 or
-                order.snapshot.get('kind') != 'credits' or order.quote.product.kind != 'credits' or
+                configuration['payment_ttl_seconds'] <= 0):
+            return None
+        # A page payment carries no debit agreement: besides Credits it may only
+        # settle a subscription whose frozen terms exclude renewal.
+        kind = order.snapshot.get('kind') if order is not None else None
+        if order is not None and (kind not in ('credits', 'subscription') or order.quote.product.kind != kind or
+                ('renewal' in order.snapshot) != (kind == 'subscription') or
+                order.snapshot.get('renewal', 'none') != 'none' or
                 order.snapshot.get('channel') != 'alipay' or order.currency != 'CNY' or
                 order.quote.currency != 'CNY' or order.quote.account_id != order.account_id or
                 order.snapshot != order.quote.snapshot or
@@ -103,29 +184,43 @@ def _alipay_sandbox_configuration(order, *, reconciliation=False):
         if (not isinstance(private, rsa.RSAPrivateKey) or private.key_size < 2048 or
                 not isinstance(public, rsa.RSAPublicKey) or public.key_size < 2048):
             return None
+        if not sandbox:
+            _alipay_notify_url(configuration['notify_origin'])
         # Evaluate overflow without inventing an expiry fallback.
-        order.created_at+timedelta(seconds=configuration['payment_ttl_seconds'])
-        alipay_amount(order.amount_minor)
-        if not reconciliation:
+        if order is not None:
+            order.created_at+timedelta(seconds=configuration['payment_ttl_seconds'])
+            alipay_amount(order.amount_minor)
+        if order is not None and not reconciliation:
             _sale_gate(order.quote.product, order.account, timezone.now(), 'alipay',
-                order.snapshot.get('buyer_region'), configuration['merchant_entity'])
+                order.snapshot.get('buyer_region'), configuration['merchant_entity'],
+                historical_subscription=bool(order.snapshot.get('manual_renewal')))
         return configuration
     except (ValueError, TypeError, UnicodeError, OverflowError, UnsupportedAlgorithm):
         return None
 
 
+@sensitive_variables()
 def _alipay_sandbox_identity(configuration):
     return {'channel': 'alipay', 'environment': 'SANDBOX',
         **{key: configuration[key] for key in ('app_id', 'seller_id', 'merchant_entity')}}
 
 
+@sensitive_variables()
+def _alipay_live_identity(configuration):
+    return {'channel': 'alipay', 'environment': 'LIVE',
+        **{key: configuration[key] for key in ('app_id', 'seller_id', 'merchant_entity')}}
+
+
+@sensitive_variables()
+@_payment_error_boundary
 def payment_start_capability(account, order_id):
     """Read-only order-bound browser capability, never merchant configuration."""
     order = Order.objects.select_related('account', 'quote__product').filter(account=account, pk=order_id).first()
     if not order or order.status != 'pending_payment' or order.paid_at:
         return None
     wechat = order.snapshot.get('channel') == 'wechat'
-    configuration = _wechat_native_configuration(order) if wechat else _alipay_sandbox_configuration(order)
+    configuration = _wechat_native_configuration(order) if wechat else _alipay_configuration(
+        order, sandbox=settings.ENVIRONMENT == 'test')
     if configuration is None:
         return None
     attempt = PaymentAttempt.objects.filter(order=order).first()
@@ -134,11 +229,13 @@ def payment_start_capability(account, order_id):
     expires_at = attempt.expires_at if attempt else order.created_at+timedelta(seconds=configuration['payment_ttl_seconds'])
     if expires_at <= timezone.now():
         return None
-    return {'environment': 'LOCAL_TEST' if wechat else 'SANDBOX',
+    return {'environment': ('LIVE' if settings.ENVIRONMENT == 'production' else 'LOCAL_TEST') if wechat else ('LIVE' if settings.ENVIRONMENT == 'production' else 'SANDBOX'),
         'channel': 'wechat' if wechat else 'alipay', 'account_id': str(account.pk),
         'order_id': str(order.pk), 'available': True}
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def finish_payment(request, prepared):
     """Claim in a second short transaction before signing or channel I/O."""
     from .commerce.billing import claim_payment_dispatch, record_attempt_event
@@ -146,12 +243,13 @@ def finish_payment(request, prepared):
     order = Order.objects.select_related('account', 'quote__product').get(paymentattempt__pk=attempt_id, account=account)
     if order.snapshot.get('channel') == 'wechat':
         return _finish_wechat_payment(request, prepared, order)
-    configuration = _alipay_sandbox_configuration(order)
+    local = settings.ENVIRONMENT == 'test'
+    configuration = _alipay_configuration(order, sandbox=local)
     if configuration is None:
         return error(request, 'CHANNEL_UNAVAILABLE', 503)
     try:
         claimed = claim_payment_dispatch(account, attempt_id, request=request,
-            dispatch_context=_alipay_sandbox_identity(configuration))
+            dispatch_context=_alipay_sandbox_identity(configuration) if local else _alipay_live_identity(configuration))
     except ValueError as exc:
         code = str(exc)
         status = {'AUTH_REQUIRED': 401, 'ACCOUNT_CHANGED': 409, 'FORBIDDEN': 403,
@@ -164,9 +262,13 @@ def finish_payment(request, prepared):
     if claimed['dispatch']:
         attempt = PaymentAttempt.objects.get(pk=attempt_id, account=account)
         try:
-            data['payment_url'] = alipay_sandbox_page_url(attempt.pk, order.amount_minor,
-                app_id=configuration['app_id'], private_key=configuration['private_key'],
+            fields = dict(app_id=configuration['app_id'], private_key=configuration['private_key'],
                 expires_at=attempt.expires_at)
+            if local:
+                data['payment_url'] = alipay_sandbox_page_url(attempt.pk, order.amount_minor, **fields)
+            else:
+                data['payment_url'] = alipay_live_page_url(attempt.pk, order.amount_minor,
+                    notify_origin=configuration['notify_origin'], order_id=order.pk, **fields)
         except Exception:
             # Do not include SDK exceptions: they may contain key/request material.
             record_attempt_event(account, attempt_id, 'sandbox-signing-unknown', 'unknown',
@@ -176,12 +278,17 @@ def finish_payment(request, prepared):
 
 
 def _wechat_native_configuration(order=None, *, reconciliation=False):
-    """Sage local-test permission for the real protocol, never a WeChat sandbox."""
-    from .wechat import build_wechat_request
+    """Explicit local-test or separately enabled production configuration."""
+    from .wechat import WECHAT_EGRESS_PROXY, build_wechat_request
     from .commerce.billing import _sale_gate
     try:
         configuration = settings.BILLING_WECHAT_NATIVE
-        if (settings.ENVIRONMENT != 'test' or type(configuration) is not dict or
+        proxy_url = settings.BILLING_WECHAT_EGRESS_PROXY
+        permitted = (settings.ENVIRONMENT == 'test' or
+            (settings.ENVIRONMENT == 'production' and
+             getattr(settings, 'BILLING_WECHAT_LIVE_ENABLED', False) is True))
+        if (not permitted or type(proxy_url) is not str or proxy_url not in ('', WECHAT_EGRESS_PROXY) or
+                type(configuration) is not dict or
                 set(configuration) != {'enabled', 'app_id', 'mch_id', 'merchant_entity',
                     'merchant_serial', 'private_key', 'public_key', 'public_key_id',
                     'api_v3_key', 'notify_origin', 'payment_ttl_seconds'} or
@@ -226,7 +333,8 @@ def _wechat_native_configuration(order=None, *, reconciliation=False):
             if not reconciliation:
                 _sale_gate(order.quote.product, order.account, timezone.now(), 'wechat',
                     snapshot.get('buyer_region'), configuration['merchant_entity'],
-                    public_purchase=bool(snapshot.get('terms_document_digest')))
+                    public_purchase=bool(snapshot.get('terms_document_digest')) and not snapshot.get('manual_renewal'),
+                    historical_subscription=bool(snapshot.get('manual_renewal')))
         return configuration
     except (ValueError, TypeError, KeyError, UnicodeError, OverflowError, UnsupportedAlgorithm):
         return None
@@ -257,7 +365,8 @@ def _wechat_call(configuration, operation, attempt):
     now = int(timezone.now().timestamp())
     fields = {'mchid':configuration['mch_id'], 'merchant_serial':configuration['merchant_serial'],
         'private_key':configuration['private_key'], 'public_key_id':configuration['public_key_id'],
-        'public_key':configuration['public_key'], 'now':now, 'timestamp':now, 'nonce':uuid.uuid4().hex}
+        'public_key':configuration['public_key'], 'now':now, 'timestamp':now, 'nonce':uuid.uuid4().hex,
+        'proxy_url':settings.BILLING_WECHAT_EGRESS_PROXY}
     if operation == 'native':
         fields.update(appid=configuration['app_id'], amount_minor=attempt.order.amount_minor,
             description='Sage order '+str(attempt.order_id), notify_origin=configuration['notify_origin'],
@@ -278,7 +387,8 @@ def payment_qr(account, order_id):
     configuration = _wechat_native_configuration(attempt.order, reconciliation=True)
     if configuration is None or attempt.dispatch_authorization != _wechat_identity(configuration):
         return None
-    return {'channel':'wechat', 'account_id':str(account.pk), 'order_id':str(order_id),
+    return {'channel':'wechat', 'environment': 'LIVE' if settings.ENVIRONMENT == 'production' else 'LOCAL_TEST',
+        'account_id':str(account.pk), 'order_id':str(order_id),
         'attempt_id':str(attempt.pk), 'expires_at':attempt.expires_at.isoformat(),
         'image_svg_base64':wechat_qr_image(attempt.wechat_code_url)}
 
@@ -337,6 +447,8 @@ def _finish_wechat_payment(request, prepared, order):
     return JsonResponse(data)
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def start_payment_query(request, order_id):
     from .views import payload
     if request.GET:
@@ -346,7 +458,10 @@ def start_payment_query(request, order_id):
         account_id=request.session.get('active_account_id')).first()
     if not order:
         raise ValueError('NOT_FOUND')
-    if _wechat_native_configuration(order, reconciliation=True) is None:
+    wechat = order.snapshot.get('channel') == 'wechat'
+    configuration = (_wechat_native_configuration(order, reconciliation=True) if wechat else
+        _alipay_configuration(order, reconciliation=True, sandbox=settings.ENVIRONMENT == 'test'))
+    if configuration is None:
         return error(request, 'CHANNEL_UNAVAILABLE', 503)
     attempt = PaymentAttempt.objects.filter(order=order, dispatched_at__isnull=False).first()
     if not attempt:
@@ -354,25 +469,36 @@ def start_payment_query(request, order_id):
     return {'payment_query':str(attempt.pk), 'account':order.account}
 
 
-def finish_payment_query(request, prepared):
-    """Recheck the live financial session in a short transaction before query I/O."""
+def _recheck_financial_session(request, account):
     from .account import _lock_current
     from .commerce.billing import _lock_account, _authorize_purchase
     from .models import Membership
+    with transaction.atomic():
+        _lock_current(request)
+        selected = str(account.pk)
+        if (request.session.load().get('active_account_id') != selected or
+                request.headers.get('X-Billing-Account') != selected):
+            raise ValueError('ACCOUNT_CHANGED')
+        account = _lock_account(account)
+        if not Membership.objects.filter(account=account, user=request.user,
+                is_active=True, role__in=('owner','billing_admin')).exists():
+            raise ValueError('FORBIDDEN')
+        _authorize_purchase(account, request.user)
+    return account
+
+
+def finish_payment_query(request, prepared):
+    """Recheck the live financial session in a short transaction before query I/O."""
     account = prepared['account']
     try:
-        with transaction.atomic():
-            _lock_current(request)
-            selected = str(account.pk)
-            if (request.session.load().get('active_account_id') != selected or
-                    request.headers.get('X-Billing-Account') != selected):
-                raise ValueError('ACCOUNT_CHANGED')
-            account = _lock_account(account)
-            if not Membership.objects.filter(account=account, user=request.user,
-                    is_active=True, role__in=('owner','billing_admin')).exists():
-                raise ValueError('FORBIDDEN')
-            _authorize_purchase(account, request.user)
-        query_wechat_payment(account, prepared['payment_query'])
+        account = _recheck_financial_session(request, account)
+        attempt = PaymentAttempt.objects.select_related('order').get(account=account, pk=prepared['payment_query'])
+        if attempt.order.snapshot.get('channel') == 'wechat':
+            query_wechat_payment(account, attempt.pk)
+        elif attempt.order.snapshot.get('channel') == 'alipay':
+            query_alipay_payment(account, attempt.pk)
+        else:
+            raise ValueError('CHANNEL_UNAVAILABLE')
         return JsonResponse(_wechat_order_result(account,
             PaymentAttempt.objects.get(account=account, pk=prepared['payment_query']).order_id))
     except Exception as exc:
@@ -381,8 +507,35 @@ def finish_payment_query(request, prepared):
             'ACCOUNT_CHANGED':409, 'NOT_FOUND':404}.get(code)
         if status is not None:
             return error(request, code, status)
-        logging.getLogger('sage').error('wechat_query_failed request_id=%s', request.request_id)
+        logging.getLogger('sage').error('payment_query_failed request_id=%s', request.request_id)
         return error(request, 'PAYMENT_QUERY_FAILED', 500)
+
+
+def finish_payment_close(request, prepared):
+    """Close a dispatched checkout payment the buyer cancelled, then report the order.
+
+    The order closes only on the channel's verified answer; otherwise it stays
+    open and the response says the cancellation is still being confirmed.
+    """
+    account = prepared['account']
+    try:
+        account = _recheck_financial_session(request, account)
+        attempt = PaymentAttempt.objects.select_related('order').get(account=account, pk=prepared['payment_close'])
+        if attempt.order.snapshot.get('channel') != 'alipay':
+            raise ValueError('CHANNEL_UNAVAILABLE')
+        close_alipay_payment(account, attempt.pk)
+        data = _wechat_order_result(account, attempt.order_id)
+        data['cancel_status'] = ('cancelled' if data['order']['status'] == 'closed' else
+            'paid' if data['order']['status'] != 'pending_payment' else 'pending')
+        return JsonResponse(data)
+    except Exception as exc:
+        code = str(exc) if isinstance(exc, ValueError) else ''
+        status = {'CHANNEL_UNAVAILABLE':503, 'AUTH_REQUIRED':401, 'FORBIDDEN':403,
+            'ACCOUNT_CHANGED':409, 'NOT_FOUND':404}.get(code)
+        if status is not None:
+            return error(request, code, status)
+        logging.getLogger('sage').error('payment_close_failed request_id=%s', request.request_id)
+        return error(request, 'PAYMENT_CLOSE_FAILED', 500)
 
 
 def _wechat_query_result(account, attempt, configuration):
@@ -461,7 +614,7 @@ def query_wechat_payment(account, attempt_id):
 
 @csrf_exempt
 def wechat_native_webhook(request):
-    """Exact test-only callback: authenticate raw bytes, persist funds, deliver, ACK."""
+    """Exact gated callback: authenticate raw bytes, persist funds, deliver, ACK."""
     from .wechat import verify_wechat_notification, wechat_payment_fact
     configuration = _wechat_native_configuration()
     if configuration is None:
@@ -551,12 +704,53 @@ def build_alipay_request(operation, reference, *, amount_minor=None, refund_refe
     return request
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def alipay_sandbox_page_url(reference, amount_minor, *, app_id, private_key, expires_at=None):
     """Offline signed URL only in isolated tests; never enables website payment."""
     if settings.ENVIRONMENT != 'test':
         raise ValueError('CHANNEL_UNAVAILABLE')
+    return _alipay_page_url(reference, amount_minor, app_id=app_id, private_key=private_key,
+        expires_at=expires_at, sandbox=True)
+
+
+@sensitive_variables()
+@_payment_error_boundary
+def alipay_live_page_url(reference, amount_minor, *, app_id, private_key, notify_origin, expires_at=None,
+                         order_id=None):
+    """Prepare a signed production URL; no payment dispatch or public endpoint."""
+    if settings.ENVIRONMENT != 'production' or getattr(settings, 'BILLING_ALIPAY_LIVE_ENABLED', False) is not True:
+        raise ValueError('CHANNEL_UNAVAILABLE')
+    return _alipay_page_url(reference, amount_minor, app_id=app_id, private_key=private_key,
+        expires_at=expires_at, sandbox=False, notify_origin=notify_origin, order_id=order_id)
+
+
+def _alipay_notify_url(notify_origin):
+    if type(notify_origin) is not str:
+        raise ValueError
+    origin = urlsplit(notify_origin)
+    if (origin.scheme != 'https' or not origin.hostname or origin.username is not None or
+            origin.password is not None or origin.path or origin.query or origin.fragment or
+            not re.fullmatch(r'https://[A-Za-z0-9.-]+(?::[0-9]{1,5})?', notify_origin) or
+            (origin.port is not None and not 1 <= origin.port <= 65535)):
+        raise ValueError
+    result = notify_origin+'/api/payments/webhooks/alipay'
+    if len(result) > 255:
+        raise ValueError
+    return result
+
+
+@sensitive_variables()
+def _alipay_page_url(reference, amount_minor, *, app_id, private_key, expires_at, sandbox, notify_origin=None,
+                     order_id=None):
     request = build_alipay_request('page', reference, amount_minor=amount_minor)
     try:
+        if not sandbox:
+            request.notify_url = _alipay_notify_url(notify_origin)
+            if order_id is not None:
+                # Navigation only. The page re-reads the order from the server and
+                # never treats the provider's redirect parameters as a receipt.
+                request.return_url = notify_origin+'/pages/billing.html?order='+str(uuid.UUID(str(order_id)))
         if expires_at is not None:
             if not isinstance(expires_at, datetime) or timezone.is_naive(expires_at):
                 raise ValueError
@@ -573,7 +767,7 @@ def alipay_sandbox_page_url(reference, amount_minor, *, app_id, private_key, exp
         key = serialization.load_pem_private_key(key_data, password=None)
         if not isinstance(key, rsa.RSAPrivateKey) or key.key_size < 2048:
             raise ValueError
-        config = AlipayClientConfig(sandbox_debug=True)
+        config = AlipayClientConfig(sandbox_debug=sandbox)
         config.app_id, config.app_private_key = app_id, key_data.decode('ascii')
         return DefaultAlipayClient(config, logger=None).page_execute(request, http_method='GET')
     except Exception:
@@ -689,6 +883,8 @@ def verify_alipay_response(body, public_key, *, method):
         raise ValueError('ALIPAY_RESPONSE_INVALID') from None
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def alipay_notification_fact(account, attempt_id, body, *, sandbox=False):
     """Map signed PC-payment notification evidence to the existing ledger input.
 
@@ -704,8 +900,11 @@ def alipay_notification_fact(account, attempt_id, body, *, sandbox=False):
                 account=account, pk=attempt_id).first()
             if not attempt:
                 raise ValueError
-            configuration = _alipay_sandbox_configuration(attempt.order, reconciliation=True)
-            if configuration is None or attempt.dispatch_authorization != _alipay_sandbox_identity(configuration):
+            local = settings.ENVIRONMENT == 'test'
+            configuration = _alipay_configuration(attempt.order, reconciliation=True, sandbox=local)
+            identity = _alipay_sandbox_identity(configuration) if local and configuration else (
+                _alipay_live_identity(configuration) if configuration else None)
+            if configuration is None or attempt.dispatch_authorization != identity:
                 raise ValueError
             configuration = {**configuration, 'currency': 'CNY'}
         else:
@@ -727,9 +926,10 @@ def alipay_notification_fact(account, attempt_id, body, *, sandbox=False):
             raise ValueError
         identity = attempt.dispatch_authorization
         if identity is not None and not attempt.subscription_id:
-            if (settings.ENVIRONMENT != 'test' or type(identity) is not dict or set(identity) != {
+            if (settings.ENVIRONMENT not in ('test', 'production') or type(identity) is not dict or set(identity) != {
                     'channel', 'environment', 'app_id', 'seller_id', 'merchant_entity'} or
-                    identity != _alipay_sandbox_identity(configuration) or
+                    identity != (_alipay_sandbox_identity(configuration) if settings.ENVIRONMENT == 'test'
+                        else _alipay_live_identity(configuration)) or
                     fields.get('app_id') != identity['app_id'] or
                     fields.get('seller_id') != identity['seller_id']):
                 raise ValueError
@@ -774,8 +974,10 @@ def alipay_notification_fact(account, attempt_id, body, *, sandbox=False):
 
 
 @csrf_exempt
+@sensitive_variables()
+@_payment_error_boundary
 def alipay_sandbox_webhook(request):
-    """Exact test-only signed-form callback; never enabled by production gates.
+    """Exact signed-form callback under an explicitly configured channel gate.
 
     The provider's literal success acknowledgment follows receipt persistence,
     delivery and event recording. There is no session or outbound operation.
@@ -784,11 +986,8 @@ def alipay_sandbox_webhook(request):
         response = HttpResponse('failure', status=405, content_type='text/plain')
         response['Allow'] = 'POST'
         return response
-    configuration = settings.BILLING_ALIPAY_SANDBOX
-    if (settings.ENVIRONMENT != 'test' or type(configuration) is not dict or
-            set(configuration) != {'enabled', 'app_id', 'seller_id', 'merchant_entity',
-                'private_key', 'public_key', 'payment_ttl_seconds'} or
-            configuration.get('enabled') is not True):
+    configuration = _alipay_configuration(None, reconciliation=True, sandbox=settings.ENVIRONMENT == 'test')
+    if configuration is None:
         return error(request, 'CHANNEL_UNAVAILABLE', 503)
     if (request.META.get('QUERY_STRING') or request.content_type != 'application/x-www-form-urlencoded' or
             set(request.content_params)-{'charset'} or
@@ -819,6 +1018,7 @@ def alipay_sandbox_webhook(request):
     return HttpResponse('success', content_type='text/plain; charset=utf-8')
 
 
+@sensitive_variables()
 def _alipay_reconciliation_context(account, attempt_id):
     if transaction.get_connection().in_atomic_block:
         raise ValueError('QUERY_REQUIRES_AUTOCOMMIT')
@@ -830,26 +1030,41 @@ def _alipay_reconciliation_context(account, attempt_id):
     if (not attempt.dispatched_at or attempt.subscription_id or attempt.recovery_of_id or
             type(attempt.dispatch_authorization) is not dict):
         raise ValueError('ALIPAY_QUERY_UNAVAILABLE')
-    configuration = _alipay_sandbox_configuration(attempt.order, reconciliation=True)
-    if configuration is None or attempt.dispatch_authorization != _alipay_sandbox_identity(configuration):
+    local = settings.ENVIRONMENT == 'test'
+    configuration = _alipay_configuration(attempt.order, reconciliation=True, sandbox=local)
+    identity = _alipay_sandbox_identity(configuration) if local and configuration else (
+        _alipay_live_identity(configuration) if configuration else None)
+    if configuration is None or attempt.dispatch_authorization != identity:
         raise ValueError('CHANNEL_UNAVAILABLE')
     return attempt, configuration
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def _alipay_sandbox_call(configuration, operation, reference, *, amount_minor=None, refund_reference=None):
     """One TLS call, raw RSA2 verification; callers supply frozen server context.
 
     Public official SDK request/signature functions preserve its AOP contract.
     All signed parameters stay in the form body, away from URL access logs.
     """
-    request = build_alipay_request(operation, reference, amount_minor=amount_minor,
-        refund_reference=refund_reference)
-    config = AlipayClientConfig(sandbox_debug=True)
-    params = request.get_params()
-    params.update(app_id=configuration['app_id'], charset=config.charset,
-        format=config.format, sign_type='RSA2', timestamp=timezone.now().astimezone(
-            ZoneInfo('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M:%S'))
-    method = params['method']
+    proxy_url = settings.BILLING_ALIPAY_EGRESS_PROXY
+    if (type(proxy_url) is not str or proxy_url not in ('', ALIPAY_EGRESS_PROXY) or
+            not (settings.ENVIRONMENT == 'test' or (settings.ENVIRONMENT == 'production' and
+            getattr(settings, 'BILLING_ALIPAY_LIVE_ENABLED', False) is True and
+            _alipay_configuration(None, reconciliation=True) == configuration))):
+        raise ValueError('CHANNEL_UNAVAILABLE')
+    try:
+        request = build_alipay_request(operation, reference, amount_minor=amount_minor,
+            refund_reference=refund_reference)
+        config = AlipayClientConfig(sandbox_debug=settings.ENVIRONMENT == 'test')
+        params = request.get_params()
+        params.update(app_id=configuration['app_id'], charset=config.charset,
+            format=config.format, sign_type='RSA2', timestamp=timezone.now().astimezone(
+                ZoneInfo('Asia/Shanghai')).strftime('%Y-%m-%d %H:%M:%S'))
+        method = params['method']
+    except Exception:
+        logging.getLogger('sage').error('alipay_request_preparation_failed')
+        raise ValueError('ALIPAY_QUERY_UNKNOWN') from None
     try:
         private_key = configuration['private_key']
         if isinstance(private_key, bytes):
@@ -869,7 +1084,8 @@ def _alipay_sandbox_call(configuration, operation, reference, *, amount_minor=No
         with requests.Session() as session:
             session.trust_env = False
             with session.post(config.server_url, data=params, timeout=(5, 15),
-                    verify=True, allow_redirects=False, stream=True, hooks={'response':reject_status}) as response:
+                    verify=True, proxies={'https':proxy_url} if proxy_url else {},
+                    allow_redirects=False, stream=True, hooks={'response':reject_status}) as response:
                 if response.status_code != 200:
                     raise ValueError
                 chunks, length = [], 0
@@ -884,8 +1100,21 @@ def _alipay_sandbox_call(configuration, operation, reference, *, amount_minor=No
     except (requests.RequestException, OSError, ValueError, UnicodeError):
         # No raw SDK/HTTP exception, body, signed form or payer data is logged.
         raise ValueError('ALIPAY_QUERY_UNKNOWN') from None
+    except Exception:
+        logging.getLogger('sage').error('alipay_transport_failed')
+        raise ValueError('ALIPAY_QUERY_UNKNOWN') from None
 
 
+# Margin after the signed time_expire before a missing or closed trade counts
+# as expired, covering provider clock skew and in-flight cashier sessions.
+ALIPAY_EXPIRY_SETTLE = timedelta(minutes=5)
+
+
+class _Settled(Exception):
+    pass
+
+
+@sensitive_variables()
 def _reconcile_alipay_payment(account, attempt, configuration, *, close_evidence=None):
     from .commerce.billing import record_attempt_event, record_confirmed_payment
     try:
@@ -896,6 +1125,19 @@ def _reconcile_alipay_payment(account, attempt, configuration, *, close_evidence
     outcome, fact = 'unknown', None
     try:
         order = attempt.order
+        if (fields.get('code') == '40004' and fields.get('sub_code') == 'ACQ.TRADE_NOT_EXIST' and
+                not any(key in fields and fields[key] != configuration[key] for key in ('app_id', 'seller_id'))):
+            # A page payment trade exists only after the buyer reaches the
+            # cashier. A verified close of it, or its signed expiry passing,
+            # leaves nothing that can still be paid.
+            if close_evidence:
+                outcome = 'cancelled'
+                evidence = hashlib.sha256((close_evidence+':'+evidence).encode('ascii')).hexdigest()
+            elif timezone.now() >= attempt.expires_at+ALIPAY_EXPIRY_SETTLE:
+                outcome = 'expired'
+            else:
+                outcome = 'pending'
+            raise _Settled
         if (fields.get('code') != '10000' or fields.get('out_trade_no') != str(attempt.pk) or
                 fields.get('total_amount') != alipay_amount(order.amount_minor) or
                 any(key in fields and fields[key] != 'CNY' for key in ('currency', 'trans_currency')) or
@@ -914,23 +1156,29 @@ def _reconcile_alipay_payment(account, attempt, configuration, *, close_evidence
                 tzinfo=datetime_timezone(timedelta(hours=8))).astimezone(datetime_timezone.utc)
             if not attempt.dispatched_at.replace(microsecond=0) <= seller_paid_at <= timezone.now():
                 raise ValueError
-            # send_pay_date is the seller's settlement time, not the buyer's
-            # canonical gmt_payment. A query cannot invent a new paid_at. Only
-            # reuse an immutable, exactly matching receipt already in the ledger.
+            # The signed query of our own out_trade_no, with matching amount,
+            # currency and merchant identity, confirms the payment on its own.
+            # An existing receipt keeps its first recorded payment time.
             existing = PaymentFact.objects.filter(channel='alipay',
                 merchant_reference=configuration['merchant_entity'], transaction_reference=reference).first()
-            if (not existing or existing.order_id != order.pk or
+            if existing and (existing.order_id != order.pk or
                     existing.amount_minor != order.amount_minor or existing.currency != 'CNY'):
                 raise ValueError
             fact = {'channel': 'alipay', 'merchant_reference': configuration['merchant_entity'],
                 'transaction_reference': reference, 'amount_minor': order.amount_minor,
-                'currency': 'CNY', 'paid_at': existing.paid_at, 'evidence_hash': evidence}
+                'currency': 'CNY', 'paid_at': existing.paid_at if existing else seller_paid_at,
+                'evidence_hash': evidence}
             outcome = 'succeeded'
-        elif status == 'TRADE_CLOSED' and close_evidence and not fields.get('send_pay_date'):
+        elif status == 'TRADE_CLOSED' and not fields.get('send_pay_date'):
             # CLOSED alone can also mean a fully refunded payment. Require the
-            # verified successful close of this original transaction as well.
-            outcome = 'cancelled'
-            evidence = hashlib.sha256((close_evidence+':'+evidence).encode('ascii')).hexdigest()
+            # verified close of this original transaction, or its expiry.
+            if close_evidence:
+                outcome = 'cancelled'
+                evidence = hashlib.sha256((close_evidence+':'+evidence).encode('ascii')).hexdigest()
+            elif timezone.now() >= attempt.expires_at+ALIPAY_EXPIRY_SETTLE:
+                outcome = 'expired'
+    except _Settled:
+        pass
     except (ValueError, TypeError, KeyError, UnicodeError):
         outcome = 'unknown'
     if fact is not None:
@@ -940,19 +1188,21 @@ def _reconcile_alipay_payment(account, attempt, configuration, *, close_evidence
         outcome, source='provider_query', evidence_hash=evidence)
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def query_alipay_payment(account, attempt_id):
-    """Query only a previously claimed sandbox transaction; never create a charge.
+    """Query only a previously claimed transaction; never create a charge.
 
     Query JSON has no required signed app/seller identity. Trust comes from this
     original authenticated request with the dispatch's frozen merchant context,
     followed by raw RSA2 response verification and exact transaction matching.
-    First receipt creation awaits canonical gmt_payment evidence; seller payment
-    time from a query can only support reconciliation of an existing receipt.
     """
     attempt, configuration = _alipay_reconciliation_context(account, attempt_id)
     return _reconcile_alipay_payment(account, attempt, configuration)
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def close_alipay_payment(account, attempt_id):
     """Close the original sandbox transaction, then independently query its state."""
     from .commerce.billing import _lock_account, record_attempt_event
@@ -974,8 +1224,12 @@ def close_alipay_payment(account, attempt_id):
     if dispatch_close:
         try:
             fields, evidence = _alipay_sandbox_call(configuration, 'close', attempt.pk)
-            if (fields.get('code') == '10000' and fields.get('out_trade_no') == str(attempt.pk) and
-                    not any(key in fields and fields[key] != configuration[key] for key in ('app_id', 'seller_id'))):
+            identity_ok = not any(key in fields and fields[key] != configuration[key]
+                for key in ('app_id', 'seller_id'))
+            # A trade the buyer never opened cannot be closed; the signed
+            # TRADE_NOT_EXIST answer is the close acceptance for it.
+            if identity_ok and ((fields.get('code') == '10000' and fields.get('out_trade_no') == str(attempt.pk)) or
+                    (fields.get('code') == '40004' and fields.get('sub_code') == 'ACQ.TRADE_NOT_EXIST')):
                 close_evidence = evidence
         except ValueError:
             evidence = None
@@ -989,6 +1243,7 @@ def close_alipay_payment(account, attempt_id):
     return _reconcile_alipay_payment(account, attempt, configuration, close_evidence=close_evidence)
 
 
+@sensitive_variables()
 def _alipay_refund_context(account, refund_id):
     """Read the original refund bindings, also rechecked under the account lock."""
     from .commerce.models import CreditRefund
@@ -1013,16 +1268,21 @@ def _alipay_refund_context(account, refund_id):
     if (not attempt or not attempt.dispatched_at or attempt.subscription_id or attempt.recovery_of_id or
             type(attempt.dispatch_authorization) is not dict):
         raise ValueError('ALIPAY_REFUND_QUERY_UNAVAILABLE')
-    configuration = _alipay_sandbox_configuration(payment.order, reconciliation=True)
-    if configuration is None or attempt.dispatch_authorization != _alipay_sandbox_identity(configuration):
+    local = settings.ENVIRONMENT == 'test'
+    configuration = _alipay_configuration(payment.order, reconciliation=True, sandbox=local)
+    identity = _alipay_sandbox_identity(configuration) if local and configuration else (
+        _alipay_live_identity(configuration) if configuration else None)
+    if configuration is None or attempt.dispatch_authorization != identity:
         raise ValueError('CHANNEL_UNAVAILABLE')
     if payment.merchant_reference != configuration['merchant_entity']:
         raise ValueError('ALIPAY_REFUND_QUERY_UNAVAILABLE')
     return refund, attempt, configuration
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def submit_alipay_refund(account, refund_id):
-    """Claim one test-only sandbox refund before I/O; every reentry only queries.
+    """Claim one refund before I/O; every reentry only queries.
 
     The claim survives signing failures, timeouts and process crashes. A refund
     response never resolves credits: only independently verified REFUND_SUCCESS
@@ -1040,6 +1300,9 @@ def submit_alipay_refund(account, refund_id):
         claim_key = 'sandbox-refund-claim:'+str(refund.pk)
         dispatch = not attempt.events.filter(event_key=claim_key).exists()
         if dispatch:
+            if (settings.ENVIRONMENT == 'production' and
+                    getattr(settings, 'BILLING_ALIPAY_LIVE_REFUND_ENABLED', False) is not True):
+                raise ValueError('CHANNEL_UNAVAILABLE')
             payment, hold = refund.payment, refund.freeze
             committed = sum(CreditRefund.objects.filter(payment=payment).exclude(state='released')
                 .values_list('amount_minor', flat=True))
@@ -1060,6 +1323,8 @@ def submit_alipay_refund(account, refund_id):
     return query_alipay_refund(account, refund.pk)
 
 
+@sensitive_variables()
+@_payment_error_boundary
 def query_alipay_refund(account, refund_id):
     """Query a reviewed frozen refund; this function cannot submit a refund.
 

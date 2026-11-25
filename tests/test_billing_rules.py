@@ -1,7 +1,7 @@
 """PRD examples; calculation tests do not imply live refund capability."""
 import sys
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal, localcontext
 from pathlib import Path
 
@@ -75,8 +75,9 @@ class ConfirmedPolicyTests(unittest.TestCase):
         self.assertEqual(policy['currency'], 'CNY')
         self.assertEqual(policy['trial']['successful_runs'], 1)
         self.assertFalse(policy['renewal']['automatic_retry'])
-        self.assertEqual(policy['renewal']['manual_payment_window_days'], 3)
-        self.assertEqual(policy['credits']['purchased_valid_months'], 12)
+        self.assertEqual(policy['renewal']['repayment_window_days'], 0)
+        self.assertEqual(policy['renewal']['charge_days_before_expiry'], 1)
+        self.assertEqual(policy['credits']['purchased_valid_months'], 1)
         self.assertEqual(policy['credits']['business_consume_order'],
                          ['own_seat_included', 'business_shared'])
         self.assertEqual(policy['credits']['business_shared_sources'], ['subscription', 'purchased'])
@@ -167,20 +168,19 @@ class ConfirmedPolicyTests(unittest.TestCase):
             annual_upgrade_credit_delta(2500, 1000)
 
     def test_failed_renewal_has_no_entitlement_grace_or_automatic_retry(self):
-        end = datetime.fromisoformat('2026-10-02T10:00:00+08:00')
-        deadline = datetime.fromisoformat('2026-10-05T10:00:00+08:00')
-        decision = renewal_failure_decision('failed', end, deadline, end)
-        self.assertFalse(decision['automatic_retry'])
-        self.assertFalse(decision['subscription_period_active'])
-        self.assertTrue(decision['allow_manual_payment'])
-        self.assertTrue(decision['preserve_unexpired_purchased_credits'])
-        self.assertFalse(decision['close_future_auto_renewal'])
-        closed = renewal_failure_decision('failed', end, deadline, deadline)
-        self.assertFalse(closed['allow_manual_payment'])
-        self.assertTrue(closed['close_future_auto_renewal'])
-        self.assertTrue(closed['new_subscription_requires_authorization'])
-        self.assertTrue(closed['allow_new_subscription_payment'])
-        self.assertFalse(decision['allow_new_subscription_payment'])
+        end = datetime.fromisoformat('2026-10-02T00:00:00+08:00')
+        before = renewal_failure_decision('failed', end, end - timedelta(days=1))
+        self.assertFalse(before['automatic_retry'])
+        self.assertTrue(before['subscription_period_active'])
+        self.assertFalse(before['close_future_auto_renewal'])
+        self.assertFalse(before['allow_new_subscription_payment'])
+        self.assertNotIn('allow_manual_payment', before)
+        lapsed = renewal_failure_decision('failed', end, end)
+        self.assertFalse(lapsed['subscription_period_active'])
+        self.assertTrue(lapsed['preserve_unexpired_purchased_credits'])
+        self.assertTrue(lapsed['close_future_auto_renewal'])
+        self.assertTrue(lapsed['new_subscription_requires_authorization'])
+        self.assertTrue(lapsed['allow_new_subscription_payment'])
 
     def test_annual_upgrade_decimal_difference_is_exact_above_context_precision(self):
         old = Decimal('123456789012345678901234567890.123456789')
@@ -193,13 +193,12 @@ class ConfirmedPolicyTests(unittest.TestCase):
                          Decimal('123456789012345678901234567890.123456789'))
 
     def test_unknown_renewal_never_opens_duplicate_payment(self):
-        end, deadline = self.now, month_boundary(self.now, 1)
+        end = self.now
         for state in ('pending', 'unknown'):
-            for at in (end, deadline):
+            for at in (end - timedelta(hours=1), end, month_boundary(end, 1)):
                 with self.subTest(state=state, at=at):
-                    result = renewal_failure_decision(state, end, deadline, at)
+                    result = renewal_failure_decision(state, end, at)
                     self.assertTrue(result['query_original_payment'])
-                    self.assertFalse(result['allow_manual_payment'])
                     self.assertFalse(result['automatic_retry'])
                     self.assertFalse(result['allow_new_subscription_payment'])
 
@@ -219,10 +218,10 @@ class ConfirmedPolicyTests(unittest.TestCase):
     def test_decision_helpers_reject_unsupported_states(self):
         with self.assertRaisesRegex(ValueError, 'INVALID_TRIAL_STATE'):
             trial_transition({'status': 'available'}, 'start')
-        with self.assertRaisesRegex(ValueError, 'INVALID_RENEWAL_WINDOW'):
-            renewal_failure_decision('failed', self.now, self.now, self.now)
+        with self.assertRaisesRegex(ValueError, 'TIMEZONE_REQUIRED'):
+            renewal_failure_decision('failed', self.now, self.now.replace(tzinfo=None))
         with self.assertRaisesRegex(ValueError, 'INVALID_PAYMENT_STATE'):
-            renewal_failure_decision('succeeded', self.now, month_boundary(self.now, 1), self.now)
+            renewal_failure_decision('succeeded', self.now, self.now)
         with self.assertRaisesRegex(ValueError, 'INVALID_AUTHORIZATION_STATE'):
             payment_method_removal_decision(['deleted'], [])
 
@@ -252,6 +251,14 @@ class SubscriptionChangeAmountTests(unittest.TestCase):
         result=self.calculate(current_price_minor=26,actual_cash_minor=14,new_price_minor=3,
             quoted_at=datetime.fromisoformat('2026-10-28T21:36:00+08:00'),prepaid_minor=1)
         self.assertEqual(result['refund_minor']+result['cash_carried_minor'],2)
+
+    def test_monthly_upgrade_credits_remaining_time_and_never_refunds(self):
+        result=self.calculate(mode='monthly_to_monthly')
+        self.assertEqual((result['due_minor'],result['refund_minor'],result['current_refund_minor']),(15000,0,0))
+        self.assertEqual(result['cash_carried_minor'],5000)
+        for mode in ('monthly_to_monthly','monthly_to_annual','annual_to_annual'):
+            with self.subTest(mode=mode):
+                self.assertEqual(self.calculate(mode=mode)['current_refund_minor'],0)
 
     def test_invalid_or_excess_cash_requires_review(self):
         with self.assertRaisesRegex(ValueError,'CASH_CREDIT_REQUIRES_REVIEW'):self.calculate(new_price_minor=1)

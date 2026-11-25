@@ -1044,30 +1044,66 @@ class RenewalIntentTests(TransactionTestCase):
         if notice_sent:sent_renewal_notice_fixture(self.account,attempt['id'])
         return attempt
 
-    def test_new_renewal_claim_requires_confirmed_notice_at_least_one_day_before(self):
-        from backend.models import NotificationDelivery
+    def test_unconfirmed_notice_still_charges_and_raises_alert(self):
         from .billing import claim_payment_dispatch
+        from .models import BillingIssue
         sub=self.activate()
         attempt=self.prepare(sub['id'])
-        self.now.return_value=month_boundary(self.anchor,12)-timedelta(hours=1)
-        with self.assertRaisesRegex(ValueError,'RENEWAL_NOTICE_REQUIRED'):
-            claim_payment_dispatch(self.account,attempt['id'])
-        sent_renewal_notice_fixture(self.account,attempt['id'])
-        delivery=NotificationDelivery.objects.get()
-        timely=delivery.confirmed_at
-        for state,confirmed_at in (('pending',timely),('failed',timely),('unknown',timely),
-                ('sent',None),('sent',timely+timedelta(seconds=1))):
-            delivery.state=state;delivery.confirmed_at=confirmed_at
-            delivery.save(update_fields=['state','confirmed_at'])
-            with self.subTest(state=state,confirmed_at=confirmed_at),self.assertRaisesRegex(ValueError,'RENEWAL_NOTICE_REQUIRED'):
-                claim_payment_dispatch(self.account,attempt['id'])
-            row=PaymentAttempt.objects.get(pk=attempt['id'])
-            self.assertEqual(row.state,'created');self.assertIsNone(row.dispatched_at)
-            self.assertIsNone(row.dispatch_authorization)
-        delivery.state='sent';delivery.confirmed_at=timely
-        delivery.save(update_fields=['state','confirmed_at'])
-        self.assertTrue(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        self.now.return_value=month_boundary(self.anchor,12)-timedelta(days=1)
+        with self.assertLogs('sage',level='WARNING') as logs:
+            self.assertTrue(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        self.assertIn('renewal_notice_unconfirmed',logs.output[0])
+        self.assertEqual(BillingIssue.objects.filter(code='renewal_notice_blocked').count(),1)
         self.assertFalse(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        self.assertEqual(BillingIssue.objects.filter(code='renewal_notice_blocked').count(),1)
+
+    def test_scheduler_prepares_charge_window_on_last_day_with_reminder_two_days_before(self):
+        from io import StringIO
+        from django.core.management import call_command
+        from backend.notifications import prepare_renewal_notice
+        from .subscriptions import schedule_due_renewals
+        sub=self.activate()
+        end=month_boundary(self.anchor,12)
+        self.now.return_value=end-timedelta(days=3,seconds=1)
+        self.assertEqual(schedule_due_renewals(self.account)['prepared'],0)
+        self.assertFalse(PaymentAttempt.objects.exists())
+        self.now.return_value=end-timedelta(days=3)
+        output=StringIO()
+        call_command('schedule_renewals',stdout=output)
+        self.assertEqual(json.loads(output.getvalue()),{'prepared':1,'existing':0,'skipped':{}})
+        attempt=PaymentAttempt.objects.get()
+        self.assertEqual((attempt.subscription_id,attempt.renewal_cycle_index),(Subscription.objects.get(pk=sub['id']).pk,1))
+        self.assertEqual(attempt.dispatch_not_before,end-timedelta(days=1))
+        self.assertEqual(attempt.expires_at,end)
+        self.assertIsNone(attempt.dispatched_at)
+        self.assertEqual(schedule_due_renewals(self.account),{'prepared':0,'existing':1,'skipped':{}})
+        self.assertEqual(PaymentAttempt.objects.count(),1)
+        notice=prepare_renewal_notice(self.account,attempt.subscription_id,1,charge_at=attempt.dispatch_not_before)
+        self.assertEqual(notice.occurred_at,end-timedelta(days=2))
+        self.now.return_value=end
+        self.assertEqual(schedule_due_renewals(self.account)['prepared'],0)
+
+    def test_scheduler_skips_cancelled_and_reports_blocked_sales(self):
+        from .subscriptions import schedule_due_renewals
+        sub=self.activate()
+        self.now.return_value=month_boundary(self.anchor,12)-timedelta(days=2)
+        with override_settings(BILLING_SALES_ENABLED=False):
+            result=schedule_due_renewals(self.account)
+        self.assertEqual(result['prepared'],0)
+        self.assertEqual(sum(result['skipped'].values()),1)
+        self.assertFalse(PaymentAttempt.objects.exists())
+        cancel_subscription(self.account,self.user,sub['id'])
+        self.assertEqual(schedule_due_renewals(self.account),{'prepared':0,'existing':0,'skipped':{}})
+        self.assertFalse(PaymentAttempt.objects.exists())
+
+    def test_confirmed_notice_charges_without_alert(self):
+        from .billing import claim_payment_dispatch
+        from .models import BillingIssue
+        sub=self.activate()
+        attempt=self.prepare(sub['id'],notice_sent=True)
+        self.now.return_value=month_boundary(self.anchor,12)-timedelta(days=1)
+        self.assertTrue(claim_payment_dispatch(self.account,attempt['id'])['dispatch'])
+        self.assertFalse(BillingIssue.objects.exists())
 
     def test_renewal_stop_preserves_intent_and_does_not_stop_purchase_or_receipts(self):
         from .billing import claim_payment_dispatch, record_attempt_event
@@ -1731,26 +1767,6 @@ class RenewalIntentTests(TransactionTestCase):
             self.assertEqual(Order.objects.count(),2)
             self.assertEqual(SubscriptionPeriod.objects.count(),2)
 
-    def test_undispatched_expired_renewal_recovery_can_dispatch_and_activate(self):
-        from .billing import claim_payment_dispatch
-        from .subscriptions import activate_recovery_subscription
-        sub = self.activate()
-        original = self.prepare(sub['id'])
-        self.now.return_value = month_boundary(self.anchor,12)
-        self.assertEqual(claim_payment_dispatch(self.account,original['id'])['status'],'expired')
-        recovery = self.recover(original)
-        row = PaymentAttempt.objects.get(pk=recovery['id'])
-        self.assertTrue(claim_payment_dispatch(self.account,row.pk)['dispatch'])
-        record_confirmed_payment(self.account,row.order_id,channel='fixture',merchant_reference='fixture-shenzhen',
-            transaction_reference='undispatched-recovery',amount_minor=12345,currency='CNY',paid_at=timezone.now(),evidence_hash='b'*64)
-        cancel_subscription(self.account,self.user,sub['id'])
-        confirm_cancellation(self.account,sub['id'],agreement_reference='fixture-agreement',evidence_hash='c'*64)
-        args = dict(activated_at=timezone.now(),mandate={**self.mandate,'agreement_reference':'new-recovery'})
-        recovered = activate_recovery_subscription(self.account,row.pk,**args)
-        self.assertEqual(activate_recovery_subscription(self.account,row.pk,**args),recovered)
-        self.assertEqual(Subscription.objects.filter(auto_renew=True).count(),1)
-        self.assertEqual(PaymentAttempt.objects.count(),2)
-
     def test_unknown_or_future_creation_channel_cannot_be_erased_by_migration(self):
         from django.db import transaction
         from .models import Quote
@@ -2089,12 +2105,6 @@ class RenewalIntentTests(TransactionTestCase):
         self.assertFalse(PaymentAttempt.objects.exists())
         self.assertEqual(PaymentFact.objects.count(),1)
 
-    def recover(self, attempt, **changes):
-        from .subscriptions import prepare_recovery_attempt
-        values = dict(agreement_acceptance='fixture-1', expires_at=month_boundary(self.anchor,12)+timedelta(hours=1))
-        values.update(changes)
-        return prepare_recovery_attempt(self.account, self.user, attempt['id'], **values)
-
     def test_renewal_read_flags_extra_receipts_without_blocking_accepted_delivery(self):
         from django.db import transaction
         from .billing import claim_payment_dispatch, _persist_confirmed_payment
@@ -2123,7 +2133,6 @@ class RenewalIntentTests(TransactionTestCase):
                         data=client.get('/api/billing/subscriptions',HTTP_X_BILLING_ACCOUNT=str(self.account.pk)).json()['items'][0]['renewal']
                         self.assertEqual(data['status'],'review')
                         self.assertTrue(data['query_original_payment'])
-                        self.assertFalse(data['manual_payment_eligible'])
                         self.assertFalse(data['new_subscription_payment_eligible'])
                         transaction.set_rollback(True)
                 self.assertEqual(list_subscriptions(self.account)[0]['renewal']['status'],'succeeded')
@@ -2142,249 +2151,6 @@ class RenewalIntentTests(TransactionTestCase):
         self.assertEqual(first,fulfill_renewal_attempt(self.account,row.pk))
         self.assertEqual(SubscriptionPeriod.objects.filter(subscription_id=sub['id']).count(),2)
         self.assertEqual(PaymentAttempt.objects.count(),1)
-
-    def test_recovery_extra_receipts_remain_visible_after_single_delivery(self):
-        from .billing import claim_payment_dispatch
-        from .subscriptions import activate_recovery_subscription, register_verified_payment_method
-        sub,original=self.failed_renewal()
-        recovery=self.recover(original)
-        claim_payment_dispatch(self.account,recovery['id'])
-        row=PaymentAttempt.objects.get(pk=recovery['id'])
-        values=dict(channel='fixture',merchant_reference='fixture-shenzhen',amount_minor=12345,
-            currency='CNY',paid_at=timezone.now(),evidence_hash='b'*64)
-        record_confirmed_payment(self.account,row.order_id,transaction_reference='recovery-accepted',**values)
-        self.assertEqual(list_subscriptions(self.account)[0]['renewal']['status'],'succeeded')
-        record_confirmed_payment(self.account,row.order_id,transaction_reference='recovery-duplicate',**values)
-        result=list_subscriptions(self.account)[0]['renewal']
-        self.assertEqual(result['status'],'review')
-        self.assertTrue(result['query_original_payment'])
-        self.now.return_value=month_boundary(self.anchor,12)+timedelta(days=4)
-        from .subscriptions import close_expired_renewals
-        result=list_subscriptions(self.account)[0]['renewal']
-        self.assertFalse(result['reauthorization_required'])
-        self.assertFalse(result['close_future_auto_renewal'])
-        self.assertEqual(close_expired_renewals(self.account),0)
-        self.assertTrue(Subscription.objects.get(pk=sub['id']).auto_renew)
-        cancel_subscription(self.account,self.user,sub['id'])
-        confirm_cancellation(self.account,sub['id'],agreement_reference=self.mandate['agreement_reference'],evidence_hash='c'*64)
-        method=register_verified_payment_method(self.account,channel='fixture',merchant_reference='fixture-shenzhen',fingerprint='c'*64,evidence_hash='d'*64)
-        args=dict(activated_at=timezone.now(),mandate={**self.mandate,'agreement_reference':'recovery-new'},payment_method_id=method)
-        new=activate_recovery_subscription(self.account,row.pk,**args)
-        self.assertEqual(new,activate_recovery_subscription(self.account,row.pk,**args))
-        old=next(item for item in list_subscriptions(self.account) if item['id']==sub['id'])
-        self.assertEqual(old['renewal']['status'],'review')
-        self.assertTrue(old['renewal']['query_original_payment'])
-        self.assertFalse(old['renewal']['manual_payment_eligible'])
-        self.assertFalse(old['renewal']['reauthorization_required'])
-        self.assertFalse(old['renewal']['close_future_auto_renewal'])
-        self.assertEqual(close_expired_renewals(self.account),0)
-        self.assertTrue(Subscription.objects.get(pk=new['id']).auto_renew)
-        self.assertEqual(CreditBatch.objects.filter(subscription_period__subscription_id=new['id']).count(),1)
-        self.assertEqual(PaymentAttempt.objects.count(),2)
-
-    def test_manual_recovery_has_unique_order_and_requires_terms(self):
-        sub, original = self.failed_renewal()
-        with self.assertRaisesRegex(ValueError, 'TERMS_MISMATCH'):
-            self.recover(original, agreement_acceptance='not-accepted')
-        self.assertEqual(Order.objects.count(),2)
-        recovery = self.recover(original)
-        self.assertEqual(recovery,self.recover(original))
-        self.assertEqual(Order.objects.count(),3)
-        self.assertEqual(PaymentAttempt.objects.get(pk=recovery['id']).recovery_of_id, PaymentAttempt.objects.get(pk=original['id']).pk)
-        with self.assertRaisesRegex(ValueError,'PAYMENT_INTENT_CONFLICT'):
-            self.recover(original,expires_at=month_boundary(self.anchor,12)+timedelta(hours=2))
-        self.assertFalse(list_subscriptions(self.account)[0]['renewal']['manual_payment_eligible'])
-
-    def test_recovery_rechecks_original_money_before_dispatch(self):
-        from .billing import claim_payment_dispatch
-        sub, original = self.failed_renewal()
-        recovery = self.recover(original)
-        row = PaymentAttempt.objects.get(pk=original['id'])
-        record_confirmed_payment(self.account,row.order_id,channel='fixture',merchant_reference='fixture-shenzhen',
-            transaction_reference='late-original',amount_minor=12345,currency='CNY',paid_at=timezone.now(),evidence_hash='b'*64)
-        self.assertFalse(claim_payment_dispatch(self.account,recovery['id'])['dispatch'])
-        self.assertIsNone(PaymentAttempt.objects.get(pk=recovery['id']).dispatched_at)
-        self.assertEqual(PaymentFact.objects.count(),2)
-
-    def test_recovery_claims_once_and_unknown_never_retries(self):
-        from .billing import claim_payment_dispatch, record_attempt_event
-        sub, original = self.failed_renewal()
-        recovery = self.recover(original)
-        self.assertTrue(claim_payment_dispatch(self.account,recovery['id'])['dispatch'])
-        record_attempt_event(self.account,recovery['id'],'timeout','unknown',source='local',evidence_hash='')
-        self.assertFalse(claim_payment_dispatch(self.account,recovery['id'])['dispatch'])
-        self.assertEqual(self.recover(original)['id'],recovery['id'])
-        result = list_subscriptions(self.account)[0]['renewal']
-        self.assertTrue(result['query_original_payment'])
-        self.assertFalse(result['manual_payment_eligible'])
-
-    def test_recovery_outside_window_rejected(self):
-        sub, original = self.failed_renewal()
-        self.now.return_value = month_boundary(self.anchor,12)+timedelta(days=3)
-        with self.assertRaisesRegex(ValueError,'RECOVERY_NOT_ELIGIBLE'):
-            self.recover(original)
-        self.assertEqual(Order.objects.count(),2)
-
-    def test_dispatched_expiry_is_not_manual_recovery_eligible(self):
-        from .billing import claim_payment_dispatch, record_attempt_event
-        sub = self.activate()
-        original = self.prepare(sub['id'], notice_sent=True)
-        self.now.return_value = month_boundary(self.anchor,12)-timedelta(hours=1)
-        claim_payment_dispatch(self.account,original['id'])
-        record_attempt_event(self.account,original['id'],'expired','expired',source='provider_query',evidence_hash='c'*64)
-        self.now.return_value = month_boundary(self.anchor,12)
-        self.assertFalse(list_subscriptions(self.account)[0]['renewal']['manual_payment_eligible'])
-        with self.assertRaisesRegex(ValueError,'RECOVERY_NOT_ELIGIBLE'):
-            self.recover(original)
-
-    @override_settings(BILLING_TERMS_DOCUMENTS={'fixture-1':{'approved':True,
-        'zh':{'title':'测试','paragraphs':['测试协议']},'en':{'title':'Fixture','paragraphs':['Fixture terms']}}})
-    def test_cross_channel_failed_renewal_recovery_preserves_terms_and_delivers_once(self):
-        from .billing import claim_payment_dispatch, record_attempt_event, purchase_terms
-        from .subscriptions import register_verified_payment_method, replace_subscription_authorization, activate_recovery_subscription
-        digest = purchase_terms('fixture-1')['digest']
-        quote = create_quote(self.account,self.user,self.product.pk,1,timezone.now()+timedelta(minutes=5),channel='fixture',buyer_region='CN',terms_digest=digest)
-        order = create_order(self.account,self.user,{'quote_id':quote['id'],'agreement_acceptance':'fixture-1'},'public-recovery-initial')
-        record_confirmed_payment(self.account,order['id'],channel='fixture',merchant_reference='fixture-shenzhen',transaction_reference='public-recovery-initial',amount_minor=12345,currency='CNY',paid_at=timezone.now(),evidence_hash='b'*64)
-        sub = self.activate(order['id'])
-        method = register_verified_payment_method(self.account,channel='replacement',merchant_reference='fixture-shenzhen',fingerprint='c'*64,evidence_hash='d'*64)
-        mandate = {**self.mandate,'channel':'replacement','agreement_reference':'replacement'}
-        channels = {**FIXTURE_CHANNELS,'replacement':dict(FIXTURE_CHANNELS['fixture'])}
-        with override_settings(BILLING_APPROVED_CHANNELS=channels):
-            original = self.prepare(sub['id'], notice_sent=True)
-            replace_subscription_authorization(self.account,self.user,sub['id'],payment_method_id=method,
-                mandate=mandate,expected_version=0,request_key='replacement')
-            self.now.return_value = month_boundary(self.anchor,12)-timedelta(hours=1)
-            claim_payment_dispatch(self.account,original['id'])
-            record_attempt_event(self.account,original['id'],'declined','failed',source='provider_query',evidence_hash='c'*64)
-            self.now.return_value = month_boundary(self.anchor,12)
-            recovery = self.recover(original)
-            self.assertEqual(self.recover(original),recovery)
-            row = PaymentAttempt.objects.get(pk=recovery['id'])
-            original_snapshot = Order.objects.get(pk=order['id']).snapshot
-            self.assertEqual(row.order.snapshot,{**original_snapshot,'channel':'replacement'})
-            self.assertEqual(row.order.snapshot['terms_document_digest'],digest)
-            self.assertTrue(claim_payment_dispatch(self.account,recovery['id'])['dispatch'])
-            self.assertFalse(claim_payment_dispatch(self.account,recovery['id'])['dispatch'])
-            record_confirmed_payment(self.account,row.order_id,channel='replacement',merchant_reference='fixture-shenzhen',transaction_reference='recovery-new-channel',amount_minor=12345,currency='CNY',paid_at=timezone.now(),evidence_hash='b'*64)
-            cancel_subscription(self.account,self.user,sub['id'])
-            confirm_cancellation(self.account,sub['id'],agreement_reference='replacement',evidence_hash='c'*64)
-            values = dict(activated_at=timezone.now(),mandate={**mandate,'agreement_reference':'recovery-fresh'},payment_method_id=method)
-            new = activate_recovery_subscription(self.account,recovery['id'],**values)
-            self.assertEqual(activate_recovery_subscription(self.account,recovery['id'],**values),new)
-            self.assertEqual(CreditBatch.objects.filter(subscription_period__subscription_id=new['id']).count(),1)
-            self.assertEqual(Subscription.objects.filter(auto_renew=True).count(),1)
-            self.assertEqual(Order.objects.get(pk=row.order_id).status,'fulfilled')
-            self.assertEqual(Order.objects.get(pk=order['id']).snapshot,original_snapshot)
-
-    def test_old_unknown_or_replaced_authorization_cannot_create_recovery(self):
-        from .billing import claim_payment_dispatch, record_attempt_event
-        from .subscriptions import register_verified_payment_method, replace_subscription_authorization
-        sub = self.activate()
-        original = self.prepare(sub['id'], notice_sent=True)
-        self.now.return_value = month_boundary(self.anchor,12)-timedelta(hours=1)
-        claim_payment_dispatch(self.account,original['id'])
-        record_attempt_event(self.account,original['id'],'unknown','unknown',source='local',evidence_hash='')
-        method = register_verified_payment_method(self.account,channel='fixture',merchant_reference='fixture-shenzhen',fingerprint='c'*64,evidence_hash='d'*64)
-        replace_subscription_authorization(self.account,self.user,sub['id'],payment_method_id=method,
-            mandate={**self.mandate,'agreement_reference':'replacement'},expected_version=0,request_key='replacement')
-        self.now.return_value = month_boundary(self.anchor,12)
-        with self.assertRaisesRegex(ValueError,'RECOVERY_NOT_ELIGIBLE'):
-            self.recover(original)
-        record_attempt_event(self.account,original['id'],'declined','failed',source='provider_query',evidence_hash='c'*64)
-        with self.assertRaisesRegex(ValueError,'RECOVERY_NOT_ELIGIBLE'):
-            self.recover(original)
-        self.assertEqual(PaymentAttempt.objects.count(),1)
-        self.assertEqual(Order.objects.count(),2)
-
-    def test_recovery_activation_uses_new_confirmed_authorization_and_actual_start(self):
-        from .billing import claim_payment_dispatch
-        from .subscriptions import activate_recovery_subscription
-        sub, original = self.failed_renewal()
-        recovery = self.recover(original)
-        claim_payment_dispatch(self.account,recovery['id'])
-        row = PaymentAttempt.objects.get(pk=recovery['id'])
-        record_confirmed_payment(self.account,row.order_id,channel='fixture',merchant_reference='fixture-shenzhen',
-            transaction_reference='recovery-paid',amount_minor=12345,currency='CNY',paid_at=timezone.now(),evidence_hash='b'*64)
-        self.now.return_value += timedelta(minutes=10)
-        activated_at = timezone.now()
-        new_mandate = {**self.mandate,'agreement_reference':'fixture-reauthorized','evidence_hash':'d'*64}
-        with self.assertRaisesRegex(ValueError,'RECOVERY_AUTHORIZATION_REQUIRED'):
-            activate_recovery_subscription(self.account,recovery['id'],activated_at=activated_at,mandate=new_mandate)
-        self.assertEqual(PaymentFact.objects.count(),2)
-        cancel_subscription(self.account,self.user,sub['id'])
-        confirm_cancellation(self.account,sub['id'],agreement_reference=self.mandate['agreement_reference'],evidence_hash='c'*64)
-        with self.assertRaisesRegex(ValueError,'RECOVERY_AUTHORIZATION_REQUIRED'):
-            activate_recovery_subscription(self.account,recovery['id'],activated_at=activated_at,mandate=self.mandate)
-        from .subscriptions import register_verified_payment_method
-        method = register_verified_payment_method(self.account,channel='fixture',merchant_reference='fixture-shenzhen',
-            fingerprint='c'*64,evidence_hash='d'*64)
-        with self.assertRaisesRegex(ValueError,'PAYMENT_METHOD_BINDING_REQUIRED'):
-            activate_recovery_subscription(self.account,recovery['id'],activated_at=activated_at,mandate=new_mandate)
-        result = activate_recovery_subscription(self.account,recovery['id'],activated_at=activated_at,mandate=new_mandate,payment_method_id=method)
-        self.assertEqual(result,activate_recovery_subscription(self.account,recovery['id'],activated_at=activated_at,mandate=new_mandate,payment_method_id=method))
-        self.assertEqual(str(Subscription.objects.get(pk=result['id']).payment_method_id),method)
-        self.assertEqual(Subscription.objects.get(pk=result['id']).original_anchor,activated_at)
-        self.assertEqual(Subscription.objects.get(pk=sub['id']).original_anchor,self.anchor)
-        self.assertEqual(Subscription.objects.filter(auto_renew=True).count(),1)
-        self.assertEqual(CreditBatch.objects.filter(subscription_period__subscription_id=result['id']).count(),1)
-        self.assertEqual(credits_summary(self.account)['available'],'17.25')
-        self.assertEqual(Order.objects.get(pk=row.order_id).status,'fulfilled')
-        old = next(item for item in list_subscriptions(self.account) if item['id'] == sub['id'])
-        self.assertIsNone(old['renewal'])
-        original_row = PaymentAttempt.objects.get(pk=original['id'])
-        record_confirmed_payment(self.account,original_row.order_id,channel='fixture',merchant_reference='fixture-shenzhen',
-            transaction_reference='original-paid-after-recovery',amount_minor=12345,currency='CNY',paid_at=timezone.now(),evidence_hash='e'*64)
-        old = next(item for item in list_subscriptions(self.account) if item['id'] == sub['id'])
-        self.assertEqual(old['renewal']['status'],'review')
-        self.assertTrue(old['renewal']['query_original_payment'])
-        self.assertFalse(old['renewal']['manual_payment_eligible'])
-        self.assertEqual(CreditBatch.objects.filter(subscription_period__subscription_id=result['id']).count(),1)
-
-    def test_recovery_cancel_before_claim_and_cross_account(self):
-        from .billing import claim_payment_dispatch
-        from .subscriptions import prepare_recovery_attempt
-        sub, original = self.failed_renewal()
-        with self.assertRaisesRegex(ValueError,'NOT_FOUND'):
-            prepare_recovery_attempt(self.other,self.other_user,original['id'],agreement_acceptance='fixture-1',expires_at=timezone.now()+timedelta(hours=1))
-        recovery = self.recover(original)
-        cancel_subscription(self.account,self.user,sub['id'])
-        self.assertFalse(claim_payment_dispatch(self.account,recovery['id'])['dispatch'])
-        self.assertIsNone(PaymentAttempt.objects.get(pk=recovery['id']).dispatched_at)
-
-    def test_unknown_original_and_recovery_chaining_never_create_orders(self):
-        from .billing import claim_payment_dispatch, record_attempt_event
-        sub = self.activate()
-        original = self.prepare(sub['id'], notice_sent=True)
-        self.now.return_value = month_boundary(self.anchor,12)-timedelta(hours=1)
-        claim_payment_dispatch(self.account,original['id'])
-        record_attempt_event(self.account,original['id'],'timeout','unknown',source='local',evidence_hash='')
-        self.now.return_value = month_boundary(self.anchor,12)
-        with self.assertRaisesRegex(ValueError,'RECOVERY_NOT_ELIGIBLE'):
-            self.recover(original)
-        self.assertEqual(Order.objects.count(),2)
-        record_attempt_event(self.account,original['id'],'resolved-failed','failed',source='provider_query',evidence_hash='d'*64)
-        recovery = self.recover(original)
-        with self.assertRaisesRegex(ValueError,'RECOVERY_NOT_ELIGIBLE'):
-            self.recover(recovery)
-        self.assertEqual(Order.objects.count(),3)
-
-    def test_recovery_sales_gate_and_unstarted_expiry(self):
-        from .billing import claim_payment_dispatch
-        _, original = self.failed_renewal()
-        with override_settings(BILLING_SALES_ENABLED=False):
-            with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
-                self.recover(original)
-        self.assertEqual(Order.objects.count(),2)
-        recovery = self.recover(original)
-        with override_settings(BILLING_SALES_ENABLED=False):
-            with self.assertRaisesRegex(ValueError,'CONFIG_INCOMPLETE'):
-                claim_payment_dispatch(self.account,recovery['id'])
-        self.now.return_value += timedelta(hours=1)
-        result = claim_payment_dispatch(self.account,recovery['id'])
-        self.assertFalse(result['dispatch'])
-        self.assertEqual(result['status'],'expired')
-        self.assertEqual(PaymentFact.objects.count(),1)
 
     def test_cancel_before_prepare_or_dispatch_never_claims(self):
         from .billing import claim_payment_dispatch
@@ -2459,36 +2225,60 @@ class RenewalIntentTests(TransactionTestCase):
         self.assertEqual(self.prepare(sub['id'], notice_sent=True)['id'], attempt['id'])
         self.assertEqual(PaymentAttempt.objects.count(), 1)
 
-    def test_failed_renewal_window_has_no_free_service_and_closes_once(self):
+    def test_failed_renewal_lapses_at_expiry_without_repayment_window(self):
         from .billing import claim_payment_dispatch, record_attempt_event
         from .subscriptions import close_expired_renewals
         sub = self.activate()
         attempt = self.prepare(sub['id'], notice_sent=True)
         end = month_boundary(self.anchor, 12)
-        self.now.return_value = end-timedelta(hours=1)
+        self.now.return_value = end-timedelta(days=1)
         claim_payment_dispatch(self.account, attempt['id'])
         record_attempt_event(self.account, attempt['id'], 'failure', 'failed', source='provider_query', evidence_hash='c'*64)
         before = list_subscriptions(self.account)[0]
         self.assertEqual(before['status'], 'active')
-        self.assertFalse(before['renewal']['manual_payment_eligible'])
+        self.assertNotIn('manual_payment_eligible', before['renewal'])
+        self.assertNotIn('manual_payment_deadline', before['renewal'])
+        self.assertEqual(datetime.fromisoformat(before['renewal']['service_ends_at']), end)
+        self.assertFalse(before['renewal']['new_subscription_payment_eligible'])
+        self.assertFalse(before['renewal']['close_future_auto_renewal'])
+        self.assertEqual(close_expired_renewals(self.account), 0)
+        self.assertFalse(claim_payment_dispatch(self.account, attempt['id'])['dispatch'])
         self.now.return_value = end
         expired = list_subscriptions(self.account)[0]
         self.assertEqual(expired['status'], 'expired')
-        self.assertTrue(expired['renewal']['manual_payment_eligible'])
+        self.assertTrue(expired['renewal']['new_subscription_payment_eligible'])
+        self.assertTrue(expired['renewal']['reauthorization_required'])
         self.assertFalse(expired['capabilities']['manual_payment'])
         self.assertEqual(credits_summary(self.account)['available'], '0')
-        self.assertEqual(close_expired_renewals(self.account), 0)
-        self.now.return_value = end+timedelta(days=3)
         self.assertEqual(close_expired_renewals(self.account), 1)
         self.assertEqual(close_expired_renewals(self.account), 0)
         closed = list_subscriptions(self.account)[0]
         self.assertFalse(closed['auto_renew'])
-        self.assertFalse(closed['renewal']['manual_payment_eligible'])
-        self.assertTrue(closed['renewal']['reauthorization_required'])
         self.assertEqual(closed['cancellation_state'], 'processing')
-        self.assertEqual(AuditEvent.objects.filter(action='subscription.recovery_expired').count(), 1)
+        self.assertEqual(AuditEvent.objects.filter(action='subscription.renewal_lapsed').count(), 1)
+        self.assertEqual(PaymentAttempt.objects.count(), 1)
 
-    def test_unknown_receipt_blocks_new_payment_even_after_recovery_deadline(self):
+    def test_legacy_recovery_intent_closes_instead_of_charging(self):
+        from .billing import claim_payment_dispatch
+        from .models import Quote
+        sub, original = self.failed_renewal()
+        source = Order.objects.get(pk=PaymentAttempt.objects.get(pk=original['id']).order_id)
+        quote = Quote.objects.create(account=self.account, product=source.quote.product, snapshot=source.snapshot,
+            amount_minor=source.amount_minor, currency='CNY', expires_at=timezone.now()+timedelta(hours=1))
+        order = Order.objects.create(account=self.account, created_by=self.user, quote=quote,
+            idempotency_key=f"recovery:{original['id']}", request_hash='f'*64, snapshot=source.snapshot,
+            amount_minor=source.amount_minor, currency='CNY')
+        legacy = PaymentAttempt.objects.create(account=self.account, order=order, intent_key=f"recovery:{original['id']}",
+            expires_at=timezone.now()+timedelta(hours=1), recovery_of_id=original['id'])
+        result = claim_payment_dispatch(self.account, legacy.pk)
+        self.assertFalse(result['dispatch'])
+        self.assertEqual(result['status'], 'cancelled')
+        legacy.refresh_from_db(); order.refresh_from_db()
+        self.assertIsNone(legacy.dispatched_at)
+        self.assertEqual(order.status, 'closed')
+        self.assertEqual(PaymentFact.objects.count(), 1)
+
+    def test_unknown_receipt_blocks_new_payment_after_expiry(self):
         from .billing import claim_payment_dispatch, record_attempt_event
         from .subscriptions import close_expired_renewals
         sub = self.activate()
@@ -2496,27 +2286,26 @@ class RenewalIntentTests(TransactionTestCase):
         self.now.return_value = month_boundary(self.anchor, 12)-timedelta(hours=1)
         claim_payment_dispatch(self.account, attempt['id'])
         record_attempt_event(self.account, attempt['id'], 'timeout', 'unknown', source='local', evidence_hash='')
-        self.now.return_value = month_boundary(self.anchor, 12)+timedelta(days=3)
-        close_expired_renewals(self.account)
+        self.now.return_value = month_boundary(self.anchor, 12)
+        self.assertEqual(close_expired_renewals(self.account), 1)
         result = list_subscriptions(self.account)[0]['renewal']
         self.assertTrue(result['query_original_payment'])
-        self.assertFalse(result['manual_payment_eligible'])
         self.assertFalse(result['new_subscription_payment_eligible'])
         self.assertEqual(Order.objects.count(), 2)
 
     def test_missed_scheduler_still_closes_authorization_without_inventing_failure(self):
         from .subscriptions import close_expired_renewals
         self.activate()
-        self.now.return_value = month_boundary(self.anchor, 12)+timedelta(days=3)
+        self.now.return_value = month_boundary(self.anchor, 12)-timedelta(seconds=1)
+        self.assertEqual(close_expired_renewals(self.account), 0)
+        self.now.return_value = month_boundary(self.anchor, 12)
         self.assertEqual(close_expired_renewals(self.account), 1)
         self.assertEqual(close_expired_renewals(self.account), 0)
         result = list_subscriptions(self.account)[0]
         self.assertFalse(result['auto_renew'])
         self.assertEqual(result['renewal']['status'], 'missing')
         self.assertFalse(result['renewal']['new_subscription_payment_eligible'])
-        self.assertFalse(result['renewal']['manual_payment_eligible'])
         self.assertEqual(PaymentAttempt.objects.count(), 0)
-
     def test_inflight_payment_after_cancel_delivers_once(self):
         from .billing import claim_payment_dispatch
         from .subscriptions import fulfill_renewal_attempt
@@ -3527,7 +3316,6 @@ class SubscriptionConcurrencyTests(TransactionTestCase):
     activate = SubscriptionTests.activate
     prepare = RenewalIntentTests.prepare
     failed_renewal = RenewalIntentTests.failed_renewal
-    recover = RenewalIntentTests.recover
     business_paid = SubscriptionTests.business_paid
     business_member = SubscriptionTests.business_member
     topup_fixture = RenewalIntentTests.topup_fixture
@@ -3690,17 +3478,6 @@ class SubscriptionConcurrencyTests(TransactionTestCase):
         self.assertEqual(attempt.dispatched_at is not None, attempt.state == 'pending')
         self.assertFalse(Subscription.objects.get().auto_renew)
         self.assertFalse(claim_payment_dispatch(self.account, attempt.pk)['dispatch'])
-
-    def test_parallel_recovery_creates_and_dispatches_once(self):
-        from .billing import claim_payment_dispatch
-        _, original = self.failed_renewal()
-        results = self.parallel([lambda:self.recover(original)]*2)
-        self.assertEqual(results[0],results[1])
-        self.assertEqual(Order.objects.count(),3)
-        self.assertEqual(PaymentAttempt.objects.filter(recovery_of__isnull=False).count(),1)
-        claims = self.parallel([lambda:claim_payment_dispatch(self.account,results[0]['id'])]*2)
-        self.assertEqual(sum(item['dispatch'] for item in claims),1)
-
 
 @override_settings(BILLING_SALES_ENABLED=True, BILLING_APPROVED_CHANNELS=FIXTURE_CHANNELS)
 class SharedTaskRulesTests(TransactionTestCase):
@@ -4285,16 +4062,16 @@ class ApprovedPlanChangeTests(TransactionTestCase):
             mandate={**self.mandate,'agreement_reference':'new-upgrade-mandate'},old_authorization_evidence_hash='d'*64)
         return result
 
-    def test_month_to_month_collects_new_full_price_and_refunds_old_unused_cash_separately(self):
+    def test_month_to_month_credits_old_unused_cash_and_never_refunds(self):
         source=self.source();target=self.target()
         self.now.return_value=self.anchor+(month_boundary(self.anchor,1)-self.anchor)/2
         quote=self.quote(source,target)
-        self.assertEqual((quote['due_minor'],quote['discount_minor'],quote['refund_minor']),('24690','0','6173'))
+        self.assertEqual((quote['due_minor'],quote['discount_minor'],quote['refund_minor']),('18518','6172','0'))
         result=self.confirm_and_activate(source,quote)
         from .models import SubscriptionChange, ServiceRefund
         change=SubscriptionChange.objects.get(pk=result['id'])
-        self.assertEqual(change.cash_sources,[])
-        self.assertEqual(ServiceRefund.objects.get(subscription=source).amount_minor,6173)
+        self.assertEqual(sum(row['amount_minor'] for row in change.cash_sources),6172)
+        self.assertFalse(ServiceRefund.objects.exists())
         self.assertEqual(credits_summary(self.account)['available'],'35')
         new=change.new_subscription
         self.assertEqual(new.original_anchor,timezone.now())
@@ -5055,8 +4832,9 @@ class EnterpriseManagementTests(TransactionTestCase):
                 provider_reference='local-receipt', evidence_hash='d'*64)
         return result
 
-    def test_teams_reduction_changes_current_capacity_only_and_refunds_original_cash(self):
-        from .subscriptions import _period_seats, _renewal_snapshot, confirm_seat_reduction
+    def test_teams_reduction_never_refunds_and_only_shrinks_the_next_renewal(self):
+        from .subscriptions import (_period_seats, _renewal_snapshot, confirm_seat_reduction, seat_reduction_quote,
+            assign_seat, organization_summary, create_business_invitation)
         from .models import PaidSeat, ServiceRefund
         self.source(cycle='monthly', seats=3, price=10000)
         original = list(self.subscription.periods.values('snapshot', 'starts_at', 'ends_at'))
@@ -5064,20 +4842,48 @@ class EnterpriseManagementTests(TransactionTestCase):
         self.now.return_value = self.anchor+(period.ends_at-self.anchor)/2
         seat = PaidSeat.objects.filter(subscription=self.subscription).last()
         change = self.reduce([seat])
-        self.assertEqual(change['amount_minor'], '5000')
-        self.assertEqual(_period_seats(period).count(), 2)
-        self.assertEqual(_renewal_snapshot(self.subscription)['seat_quantity'], 2)
-        refund = ServiceRefund.objects.get(pk=change['refund']['id'])
-        self.assertEqual(refund.purpose, 'seat_reduction')
-        self.assertEqual(refund.allocations[0]['payment_id'], str(period.order.payment_facts.get().pk))
-        self.assertEqual(self.refund_receipts(change)['status'], 'refunded')
-        self.assertEqual(self.refund_receipts(change)['status'], 'refunded')
+        self.assertEqual((change['amount_minor'], change['refund'], change['policy'], change['scope']),
+            ('0', None, 'teams_next_term', 'next_term'))
+        self.assertEqual((change['seat_count_before'], change['seat_count_after'], change['next_paid_seats']), (3, 2, 2))
+        self.assertEqual(change['next_paid_starts_at'], period.ends_at.isoformat())
+        self.assertFalse(ServiceRefund.objects.exists())
+        # Paid capacity stays for the rest of the term; only the renewal is smaller.
+        self.assertEqual(_period_seats(period, timezone.now()).count(), 3)
+        renewal = _renewal_snapshot(self.subscription)
+        self.assertEqual((renewal['seat_quantity'], renewal['amount_minor']), (2, 20000))
+        self.assertNotIn(str(seat.pk), renewal['seat_ids'])
         self.assertEqual(change['id'], confirm_seat_reduction(self.account, self.user, self.subscription.pk,
             change['id'], request_key='reduce-confirm')['id'])
+        with self.assertRaisesRegex(ValueError, 'SEAT_NOT_RELEASABLE'):
+            seat_reduction_quote(self.account, self.user, self.subscription.pk, [str(seat.pk)], request_key='again')
+        member = self.employee()
+        with self.assertRaisesRegex(ValueError, 'SEAT_LEAVING_NEXT_TERM'):
+            assign_seat(self.account, self.user, seat.pk, member.pk, expected_version=seat.version, request_key='leaving')
+        summary = organization_summary(self.account, admin_actor=self.user)
+        self.assertEqual(summary['leaving_seat_items'], [{'id':str(seat.pk), 'position':seat.position}])
+        self.assertNotIn(str(seat.pk), [item['id'] for item in summary['available_seat_items']])
+        self.assertEqual(summary['seat_count'], 3)
+        invitation = create_business_invitation(self.account, self.user, method='email', identifier='leaving@example.test',
+            role='member', paid=True, request_key='not-leaving-seat')
+        from .models import BusinessInvitation
+        self.assertNotEqual(str(BusinessInvitation.objects.get(pk=invitation['id']).seat_id), str(seat.pk))
         self.subscription.refresh_from_db(); self.assertTrue(self.subscription.auto_renew)
         self.assertIsNone(self.subscription.refund_cutoff_at)
         self.assertEqual(list(self.subscription.periods.values('snapshot', 'starts_at', 'ends_at')), original)
         self.assertEqual(PaidSeat.objects.filter(subscription=self.subscription).count(), 3)
+
+    def test_teams_reduction_after_paid_renewal_applies_to_the_term_after_it(self):
+        from .subscriptions import _period_seats, _renewal_snapshot
+        from .models import PaidSeat
+        self.source(cycle='monthly', seats=3, price=10000)
+        future_order = self.base_order(3, 'future')
+        append_paid_period(self.account, self.subscription.pk, future_order['id'], cycle_index=1)
+        current, future = self.subscription.periods.get(cycle_index=0), self.subscription.periods.get(cycle_index=1)
+        change = self.reduce([PaidSeat.objects.filter(subscription=self.subscription).last()])
+        self.assertEqual((change['amount_minor'], change['next_paid_starts_at']), ('0', future.ends_at.isoformat()))
+        self.assertEqual(_period_seats(current, timezone.now()).count(), 3)
+        self.assertEqual(_period_seats(future, future.starts_at).count(), 3)
+        self.assertEqual(_renewal_snapshot(self.subscription)['seat_quantity'], 2)
 
     def test_enterprise_monthly_reduction_keeps_pool_and_paid_next_period(self):
         from .subscriptions import _period_seats, _renewal_snapshot
@@ -5184,6 +4990,8 @@ class EnterpriseManagementTests(TransactionTestCase):
         future_order = self.base_order(1, 'future')
         append_paid_period(self.account, self.subscription.pk, future_order['id'], cycle_index=1)
         addition = self.next_purchase(2, [])
+        self.assertEqual(service_refund_assessment(self.account, self.user, self.subscription.pk)['policy'], 'full_within_24h')
+        self.now.return_value += timedelta(days=2)
         result = service_refund_assessment(self.account, self.user, self.subscription.pk)
         self.assertEqual(result['amount_minor'], '470000')
         requested = request_service_refund(self.account, self.user, self.subscription.pk, 'full-refund')
@@ -5194,15 +5002,15 @@ class EnterpriseManagementTests(TransactionTestCase):
     def test_unknown_reduction_refund_blocks_new_money_and_termination_restores_capacity(self):
         from .subscriptions import seat_purchase_quote, _period_seats
         from .models import PaidSeat
-        self.source(cycle='monthly', seats=2, price=10000)
+        self.source(mode='shared_included', seats=11, price=120000)
         change = self.reduce([PaidSeat.objects.filter(subscription=self.subscription).last()])
         self.assertEqual(self.refund_receipts(change, 'unknown')['status'], 'unknown')
         with self.assertRaisesRegex(ValueError, 'REFUND_PENDING'):
             seat_purchase_quote(self.account, self.user, self.subscription.pk, 1, request_key='pending-refund-add')
-        self.assertEqual(_period_seats(self.subscription.periods.get()).count(), 1)
+        self.assertEqual(_period_seats(self.subscription.periods.get()).count(), 10)
         self.assertEqual(self.refund_receipts(change, 'terminated')['status'], 'terminated')
         self.assertEqual(self.refund_receipts(change, 'terminated')['status'], 'terminated')
-        self.assertEqual(_period_seats(self.subscription.periods.get()).count(), 2)
+        self.assertEqual(_period_seats(self.subscription.periods.get()).count(), 11)
 
     def test_next_full_annual_purchase_uses_month_rule_after_it_starts(self):
         from .refunds import service_refund_assessment
@@ -5252,7 +5060,7 @@ class EnterpriseManagementTests(TransactionTestCase):
         grant_due_credits(self.account)
         self.assertEqual(list(CreditBatch.objects.filter(service_month=8).values_list('initial_quantity', flat=True)), ['1000'])
 
-    def test_reduction_then_upgrade_carries_only_remaining_active_capacity_cash(self):
+    def test_scheduled_teams_reduction_then_upgrade_carries_all_paid_capacity_cash(self):
         from fractions import Fraction
         from .models import PaidSeat
         from .subscriptions import subscription_change_quote, _duration
@@ -5260,7 +5068,7 @@ class EnterpriseManagementTests(TransactionTestCase):
         self.source(seats=2, price=120000)
         self.now.return_value = month_boundary(self.anchor, 5)+timedelta(days=3)
         change = self.reduce([PaidSeat.objects.filter(subscription=self.subscription).last()])
-        self.refund_receipts(change)
+        self.assertIsNone(change['refund'])
         target = ProductVersion.objects.create(code='management-upgrade', version=1, kind='subscription',
             audience='business', billing_cycle='annual', minimum_seats=1, unit_amount_minor=240000,
             credits_quantity='100', entitlements={'resource_mode':'seat_included', 'upgrade_rank':2},
@@ -5268,11 +5076,11 @@ class EnterpriseManagementTests(TransactionTestCase):
             state='published', effective_at=self.anchor-timedelta(days=1))
         result = subscription_change_quote(self.account, self.user, self.subscription.pk, target.pk, request_key='after-reduction-upgrade')
         period = self.subscription.periods.get()
-        expected = _round(Fraction(120000)*_duration(period.ends_at-timezone.now())/_duration(period.ends_at-period.starts_at))
+        expected = _round(Fraction(240000)*_duration(period.ends_at-timezone.now())/_duration(period.ends_at-period.starts_at))
         from .models import SubscriptionChange
         row = SubscriptionChange.objects.get(pk=result['id'])
         self.assertEqual(row.snapshot['cash_carried_minor'], expected)
-        self.assertEqual(row.quote.snapshot['seat_quantity'], 1)
+        self.assertEqual(row.quote.snapshot['seat_quantity'], 2)
 
     def test_financial_http_gates_binding_sensitive_and_original_operations(self):
         from .models import PaidSeat, SeatReduction
@@ -5347,7 +5155,7 @@ class EnterpriseManagementTests(TransactionTestCase):
         from django.db.migrations.recorder import MigrationRecorder
         from .models import MembershipRoleChange, PaidSeat, SeatReduction, ServiceRefund
         from .subscriptions import change_member_role
-        self.source(cycle='monthly', seats=2, price=10000)
+        self.source(mode='shared_included', seats=11, price=120000)
         employee = self.employee()
         change_member_role(self.account, self.user, employee.pk, 'billing_admin', expected_version=0, request_key='history')
         reduction = self.reduce([PaidSeat.objects.filter(subscription=self.subscription).last()])

@@ -3,6 +3,7 @@ import base64
 import hashlib
 import io
 import json
+import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone as datetime_timezone
@@ -82,7 +83,7 @@ class AlipayTransportTests(TransactionTestCase):
             algorithm or hashes.SHA256()))
         return b'{"alipay_trade_'+operation.encode()+b'_response":'+content+b',"sign":"'+signature+b'"}'
 
-    def transport(self, *bodies, statuses=None):
+    def transport(self, *bodies, statuses=None, gateway='openapi.alipaydev.com'):
         self.sent = []
         replies = iter(zip(bodies, statuses or [200]*len(bodies)))
 
@@ -92,12 +93,12 @@ class AlipayTransportTests(TransactionTestCase):
             self.assertTrue(kwargs['verify'])
             self.assertFalse(kwargs['allow_redirects'])
             self.assertEqual(kwargs['timeout'], (5, 15))
-            self.assertEqual(kwargs['proxies'], {})
+            self.assertEqual(dict(kwargs.get('proxies') or {}), getattr(self, 'expected_proxy', {}))
             self.assertTrue(kwargs['stream'])
             self.assertEqual(session.get_adapter(request.url).max_retries.total, 0)
             parsed = urlsplit(request.url)
             self.assertEqual((parsed.scheme, parsed.netloc, parsed.path, parsed.query),
-                ('https', 'openapi.alipaydev.com', '/gateway.do', ''))
+                ('https', gateway, '/gateway.do', ''))
             self.assertEqual(request.method, 'POST')
             self.assertTrue(request.headers['Content-Type'].startswith('application/x-www-form-urlencoded'))
             form = {key: values[0] for key, values in parse_qs(request.body).items()}
@@ -133,6 +134,39 @@ class AlipayTransportTests(TransactionTestCase):
 
     def query(self):
         return payments.query_alipay_payment(self.account, self.attempt.pk)
+
+    def test_explicit_alipay_egress_ignores_environment_and_rejects_other_proxies(self):
+        self.claim()
+        with patch.dict(os.environ, {'HTTPS_PROXY':'http://attacker.invalid:1',
+                'REQUESTS_CA_BUNDLE':'/untrusted/ca'}):
+            with override_settings(BILLING_ALIPAY_EGRESS_PROXY='http://egress:3128'):
+                self.expected_proxy = {'https':'http://egress:3128'}
+                with self.transport(self.signed()):
+                    self.assertEqual(self.query()['status'], 'pending')
+                    self.assertEqual(self.sent, ['alipay.trade.query'])
+            self.expected_proxy = {}
+            with override_settings(BILLING_ALIPAY_EGRESS_PROXY=''):
+                with self.transport(self.signed()):
+                    self.assertEqual(self.query()['status'], 'pending')
+            for proxy in ('http://other:3128', 'https://egress:3128', 'http://egress:3128/',
+                    'http://user:pass@egress:3128', True, None):
+                with self.subTest(proxy_type=type(proxy).__name__), override_settings(BILLING_ALIPAY_EGRESS_PROXY=proxy):
+                    with patch.object(requests.Session, 'send') as send:
+                        with self.assertRaisesRegex(ValueError, '^CHANNEL_UNAVAILABLE$'):
+                            self.query()
+                        send.assert_not_called()
+
+    def test_proxy_bad_signed_response_remains_unknown_without_sensitive_logging(self):
+        self.claim()
+        self.expected_proxy = {'https':'http://egress:3128'}
+        response = self.signed(algorithm=hashes.SHA1(), sub_msg='RAW_RESPONSE_MUST_NOT_PERSIST')
+        with override_settings(BILLING_ALIPAY_EGRESS_PROXY='http://egress:3128'):
+            with self.assertNoLogs('sage'), self.transport(response):
+                self.assertEqual(self.query()['status'], 'unknown')
+                self.assertEqual(self.sent, ['alipay.trade.query'])
+        recorded = str(list(self.attempt.events.values()))
+        self.assertNotIn('RAW_RESPONSE_MUST_NOT_PERSIST', recorded)
+        self.assertNotIn(self.private_pem, recorded)
 
     def notification_fact(self, *, reference='fixture_transaction', payment_time='2026-10-16 16:58:30'):
         from backend.payment_channel_tests import AlipayOfflineProtocolTests
@@ -176,6 +210,17 @@ class AlipayTransportTests(TransactionTestCase):
                 self.attempt.refresh_from_db()
                 self.assertIsNone(self.attempt.dispatched_at)
                 self.assertIsNone(self.attempt.dispatch_authorization)
+
+    def test_live_query_uses_authenticated_original_reference_and_production_gateway(self):
+        configuration = {**self.configuration, 'notify_origin':'https://sage.example'}
+        self.context = {**self.context, 'environment':'LIVE'}
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=configuration,
+                BILLING_ALIPAY_LIVE_ENABLED=True):
+            self.assertTrue(self.claim()['dispatch'])
+            with self.transport(self.signed(), gateway='openapi.alipay.com'):
+                self.assertEqual(self.query()['status'], 'pending')
+            self.assertEqual(self.sent, ['alipay.trade.query'])
+            self.assert_no_funds()
 
     def test_first_payment_identity_cannot_replace_subscription_authorization(self):
         subscription = Subscription.objects.create(account=self.account, initial_order=self.order,
@@ -313,7 +358,8 @@ class AlipayTransportTests(TransactionTestCase):
         cases = [requests.Timeout('SENSITIVE_SYNTHETIC'), b'{}', b'x'*65537,
             self.signed(algorithm=hashes.SHA1()), self.signed(out_trade_no='other'),
             self.signed(total_amount='7.32'), self.signed(total_amount=7.31),
-            self.signed(trans_currency='USD'), self.signed(code='40004', sub_code='ACQ.TRADE_NOT_EXIST'),
+            self.signed(trans_currency='USD'), self.signed(code='40004', sub_code='ACQ.SYSTEM_ERROR'),
+            self.signed(code='40004', sub_code='ACQ.TRADE_NOT_EXIST', app_id='1'),
             self.signed(app_id='1'), self.signed(seller_id='1'),
             self.signed(trade_status='unexpected'), self.signed(trade_status='TRADE_SUCCESS'),
             self.signed(trade_status='TRADE_SUCCESS', trade_no='transaction', send_pay_date='2026-10-16 16:00:00')]
@@ -372,24 +418,93 @@ class AlipayTransportTests(TransactionTestCase):
                 payments._alipay_sandbox_call(self.configuration, 'query', self.attempt.pk)
             self.assertEqual(self.sent, ['alipay.trade.query'])
 
-    def test_query_first_waits_for_notification_then_reuses_canonical_payment_time(self):
+    def test_query_first_confirms_matching_payment_and_later_notification_is_idempotent(self):
         self.claim()
         body = self.signed(trade_status='TRADE_SUCCESS', trade_no='fixture_transaction',
             send_pay_date='2026-10-16 16:59:00')
         with self.transport(body):
-            self.assertEqual(self.query()['status'], 'unknown')
-        self.assert_no_funds()
-        verified = self.notification_fact()
-        billing.record_confirmed_payment(self.account, self.order.pk, **verified)
-        with self.transport(body, body):
-            self.assertEqual(self.query()['status'], 'succeeded')
             self.assertEqual(self.query()['status'], 'succeeded')
         fact = PaymentFact.objects.get()
-        self.assertEqual(fact.paid_at, verified['paid_at'])
-        self.assertEqual(fact.evidence_hash, verified['evidence_hash'])
-        self.assertEqual(PaymentFact.objects.count(), 1)
+        self.assertEqual(fact.paid_at, self.now-timedelta(seconds=60))
+        self.assertEqual((fact.amount_minor, fact.currency, fact.disposition), (731, 'CNY', 'accepted'))
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'fulfilled')
         self.assertEqual(CreditBatch.objects.count(), 1)
-        self.assertEqual(self.sent, ['alipay.trade.query']*2)
+        verified = self.notification_fact()
+        self.assertNotEqual(verified['paid_at'], fact.paid_at)
+        billing.record_confirmed_payment(self.account, self.order.pk, **verified)
+        with self.transport(body):
+            self.assertEqual(self.query()['status'], 'succeeded')
+        self.assertEqual(PaymentFact.objects.count(), 1)
+        self.assertEqual(PaymentFact.objects.get().paid_at, fact.paid_at)
+        self.assertEqual(CreditBatch.objects.count(), 1)
+
+    def test_query_cannot_confirm_payment_for_other_amount_reference_or_merchant(self):
+        self.claim()
+        for changes in ({'total_amount': '7.30'}, {'out_trade_no': str(uuid.uuid4())},
+                {'seller_id': '2088000000000009'}, {'app_id': '2026000000000009'},
+                {'currency': 'USD'}, {'send_pay_date': '2026-10-16 16:57:00'}, {'send_pay_date': None},
+                {'trade_no': None}):
+            body = self.signed(**{'trade_status': 'TRADE_SUCCESS', 'trade_no': 'fixture_transaction',
+                'send_pay_date': '2026-10-16 16:59:00', **changes})
+            with self.subTest(changes=sorted(changes)), self.transport(body):
+                self.assertEqual(self.query()['status'], 'unknown')
+            self.assert_no_funds()
+
+    def test_missing_trade_is_pending_until_signed_expiry_then_expires_order(self):
+        self.claim()
+        missing = self.signed(code='40004', sub_code='ACQ.TRADE_NOT_EXIST', out_trade_no=None,
+            total_amount=None, trade_status=None)
+        with self.transport(missing):
+            self.assertEqual(self.query()['status'], 'pending')
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'pending_payment')
+        # The transport fixture pins the signed timestamp, so move the expiry instead of the clock.
+        settle = payments.ALIPAY_EXPIRY_SETTLE
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(expires_at=self.now-settle+timedelta(seconds=1))
+        with self.transport(missing):
+            self.assertEqual(self.query()['status'], 'pending')
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(expires_at=self.now-settle)
+        with self.transport(missing):
+            self.assertEqual(self.query()['status'], 'expired')
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'closed')
+        self.assert_no_funds()
+
+    def test_closed_trade_without_payment_expires_only_after_signed_expiry(self):
+        self.claim()
+        closed = self.signed(trade_status='TRADE_CLOSED')
+        with self.transport(closed):
+            self.assertEqual(self.query()['status'], 'unknown')
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(
+            expires_at=self.now-payments.ALIPAY_EXPIRY_SETTLE)
+        with self.transport(closed):
+            self.assertEqual(self.query()['status'], 'expired')
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'closed')
+
+    def test_close_of_never_opened_trade_cancels_after_signed_not_exist_answers(self):
+        self.claim()
+        missing = dict(code='40004', sub_code='ACQ.TRADE_NOT_EXIST', out_trade_no=None)
+        with self.transport(self.signed(operation='close', **missing),
+                self.signed(total_amount=None, trade_status=None, **missing)):
+            self.assertEqual(payments.close_alipay_payment(self.account, self.attempt.pk)['status'], 'cancelled')
+        self.assertEqual(self.sent, ['alipay.trade.close', 'alipay.trade.query'])
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, 'closed')
+        self.assert_no_funds()
+
+    def test_late_payment_after_cancellation_is_kept_for_review_not_delivered(self):
+        self.test_close_of_never_opened_trade_cancels_after_signed_not_exist_answers()
+        paid = self.signed(trade_status='TRADE_SUCCESS', trade_no='late_after_cancel',
+            send_pay_date='2026-10-16 16:59:00')
+        with self.transport(paid):
+            self.assertEqual(self.query()['status'], 'review')
+        fact = PaymentFact.objects.get()
+        self.assertEqual(fact.disposition, 'late_payment_review')
+        self.assertFalse(CreditBatch.objects.exists())
+        self.attempt.refresh_from_db()
+        self.assertTrue(self.attempt.needs_reconciliation)
 
     def test_notification_then_query_preserves_different_buyer_payment_time(self):
         self.claim()
@@ -506,13 +621,12 @@ class AlipayTransportTests(TransactionTestCase):
             self.assertEqual(payments.close_alipay_payment(self.account, self.attempt.pk)['status'], 'unknown')
         self.assert_no_funds()
 
-    def test_close_paid_race_waits_for_canonical_fact_and_never_cancels_paid_order(self):
+    def test_close_paid_race_delivers_the_payment_and_never_cancels_paid_order(self):
         self.claim()
         paid = self.signed(trade_status='TRADE_SUCCESS', trade_no='paid_close_race',
             send_pay_date='2026-10-16 16:59:00')
-        with self.transport(self.signed(operation='close'), paid):
-            self.assertEqual(payments.close_alipay_payment(self.account, self.attempt.pk)['status'], 'unknown')
-        self.assert_no_funds()
+        with self.transport(self.signed(operation='close', code='40004', sub_code='ACQ.TRADE_STATUS_ERROR'), paid):
+            self.assertEqual(payments.close_alipay_payment(self.account, self.attempt.pk)['status'], 'succeeded')
         verified = self.notification_fact(reference='paid_close_race')
         billing.record_confirmed_payment(self.account, self.order.pk, **verified)
         with self.transport(paid):
@@ -640,6 +754,101 @@ class AlipayTransportTests(TransactionTestCase):
         self.refund.refresh_from_db()
         self.assertEqual(self.refund.freeze.state, 'refunded')
 
+    def test_live_refund_gate_and_unknown_recovery_query_original_once(self):
+        self.prepare_refund()
+        live = {**self.configuration, 'notify_origin':'https://sage.example'}
+        identity = {**self.context, 'environment':'LIVE'}
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(dispatch_authorization=identity)
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=1):
+            with self.transport(gateway='openapi.alipay.com'):
+                with self.assertRaisesRegex(ValueError, '^CHANNEL_UNAVAILABLE$'):
+                    self.submit_refund()
+                self.assertEqual(self.sent, [])
+            self.assertFalse(self.attempt.events.filter(event_key='sandbox-refund-claim:'+str(self.refund.pk)).exists())
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=True):
+            with self.transport(requests.Timeout('synthetic'), self.refund_response(refund_status='PROCESSING'),
+                    gateway='openapi.alipay.com'):
+                self.assertEqual(self.submit_refund()['query_status'], 'unknown')
+                self.assertEqual(self.sent, ['alipay.trade.refund', 'alipay.trade.fastpay.refund.query'])
+            self.refund.refresh_from_db()
+            self.assertEqual((self.refund.state, self.refund.freeze.state), ('reserved', 'frozen'))
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=False):
+            with self.transport(self.refund_response(), gateway='openapi.alipay.com'):
+                self.assertEqual(self.submit_refund()['state'], 'refunded')
+                self.assertEqual(self.sent, ['alipay.trade.fastpay.refund.query'])
+            with patch.object(requests.Session, 'send') as send:
+                self.assertEqual(self.submit_refund()['state'], 'refunded')
+                send.assert_not_called()
+
+    def test_live_refund_and_query_use_only_approved_egress(self):
+        self.prepare_refund()
+        live = {**self.configuration, 'notify_origin':'https://sage.example'}
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(
+            dispatch_authorization={**self.context, 'environment':'LIVE'})
+        self.expected_proxy = {'https':'http://egress:3128'}
+        with (patch.dict(os.environ, {'HTTPS_PROXY':'http://attacker.invalid:1',
+                'REQUESTS_CA_BUNDLE':'/untrusted/ca'}),
+              override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=True,
+                BILLING_ALIPAY_EGRESS_PROXY='http://egress:3128')):
+            with self.transport(self.signed(operation='refund', trade_status=None), self.refund_response(),
+                    gateway='openapi.alipay.com'):
+                self.assertEqual(self.submit_refund()['state'], 'refunded')
+                self.assertEqual(self.sent, ['alipay.trade.refund', 'alipay.trade.fastpay.refund.query'])
+
+    def test_bad_refund_proxy_cannot_claim_or_send(self):
+        self.prepare_refund()
+        live = {**self.configuration, 'notify_origin':'https://sage.example'}
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(
+            dispatch_authorization={**self.context, 'environment':'LIVE'})
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=True,
+                BILLING_ALIPAY_EGRESS_PROXY='http://untrusted:3128'):
+            with patch.object(requests.Session, 'send') as send:
+                with self.assertRaisesRegex(ValueError, '^CHANNEL_UNAVAILABLE$'):
+                    self.submit_refund()
+                send.assert_not_called()
+            self.assertFalse(self.attempt.events.filter(event_key='sandbox-refund-claim:'+str(self.refund.pk)).exists())
+
+    def test_live_refund_query_rejects_bad_signature_and_mismatched_original(self):
+        self.prepare_refund()
+        live = {**self.configuration, 'notify_origin':'https://sage.example'}
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(
+            dispatch_authorization={**self.context, 'environment':'LIVE'})
+        invalid = [self.refund_response(refund_amount='7.32'),
+            self.refund_response(out_request_no='wrong-refund'),
+            self.refund_response(trade_no='wrong-transaction'),
+            self.signed(operation='refund_query', algorithm=hashes.SHA1())]
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=True):
+            with self.transport(self.signed(operation='refund', trade_status=None), invalid[0],
+                    gateway='openapi.alipay.com'):
+                self.assertEqual(self.submit_refund()['query_status'], 'unknown')
+            for response in invalid[1:]:
+                with self.transport(response, gateway='openapi.alipay.com'):
+                    self.assertEqual(self.submit_refund()['query_status'], 'unknown')
+                    self.assertEqual(self.sent, ['alipay.trade.fastpay.refund.query'])
+            self.refund.refresh_from_db()
+            self.assertEqual((self.refund.state, self.refund.freeze.state), ('reserved', 'frozen'))
+            with self.transport(self.refund_response(), gateway='openapi.alipay.com'):
+                self.assertEqual(self.submit_refund()['state'], 'refunded')
+                self.assertEqual(self.sent, ['alipay.trade.fastpay.refund.query'])
+
+    def test_live_refund_rejects_mismatched_frozen_merchant_identity(self):
+        self.prepare_refund()
+        live = {**self.configuration, 'notify_origin':'https://sage.example'}
+        PaymentAttempt.objects.filter(pk=self.attempt.pk).update(
+            dispatch_authorization={**self.context, 'environment':'LIVE', 'seller_id':'9'})
+        with override_settings(ENVIRONMENT='production', BILLING_ALIPAY_LIVE=live,
+                BILLING_ALIPAY_LIVE_ENABLED=True, BILLING_ALIPAY_LIVE_REFUND_ENABLED=True):
+            with patch.object(requests.Session, 'send') as send:
+                with self.assertRaisesRegex(ValueError, '^CHANNEL_UNAVAILABLE$'):
+                    self.submit_refund()
+                send.assert_not_called()
+
     def assert_refund_unknown_event(self):
         events = self.attempt.events.filter(event_key='sandbox-refund-submit-unknown:'+str(self.refund.pk))
         self.assertEqual(events.count(), 1, 'Unknown refund submission must leave one durable result event')
@@ -667,6 +876,10 @@ class AlipayTransportTests(TransactionTestCase):
     def test_refund_submit_timeout_never_authorizes_resubmission(self):
         self.prepare_refund()
         self.assert_refund_unknown_no_resend(requests.Timeout('RAW_EXCEPTION_MUST_NOT_PERSIST'))
+
+    def test_refund_unexpected_transport_exception_stays_unknown_without_resubmission(self):
+        self.prepare_refund()
+        self.assert_refund_unknown_no_resend(RuntimeError('RAW_EXCEPTION_MUST_NOT_PERSIST'))
 
     def test_refund_submit_bad_signature_never_authorizes_resubmission(self):
         self.prepare_refund()
