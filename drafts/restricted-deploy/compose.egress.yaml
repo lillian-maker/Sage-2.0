@@ -33,7 +33,7 @@ services:
     entrypoint: [python, /app/deploy/egress_proxy.py]
     environment:
       SAGE_EGRESS_LISTEN: 0.0.0.0:3128
-      SAGE_EGRESS_ALLOW: ses.tencentcloudapi.com,captcha.tencentcloudapi.com,sms.tencentcloudapi.com,openapi.alipay.com
+      SAGE_EGRESS_ALLOW: ses.tencentcloudapi.com,captcha.tencentcloudapi.com,sms.tencentcloudapi.com,openapi.alipay.com,api.mch.weixin.qq.com
       SAGE_EGRESS_UPSTREAM_HOSTS: oauth2.googleapis.com,www.googleapis.com
       SAGE_EGRESS_UPSTREAM: ${SAGE_EGRESS_UPSTREAM:-}
     networks: [egress_internal, egress_external]

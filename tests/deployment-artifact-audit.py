@@ -49,10 +49,10 @@ def main():
     assert 'sage-compose.sh' in cron
     assert '-f compose.yaml' not in cron
 
-    for name in ('compose.auth.yaml', 'compose.alipay.yaml', 'compose.sales.yaml'):
+    for name in ('compose.auth.yaml', 'compose.alipay.yaml', 'compose.wechat.yaml', 'compose.sales.yaml'):
         assert name in package
     helper = contents(PROD / 'sage-compose.sh')
-    order = ['compose.sales.yaml', 'compose.alipay.yaml', 'compose.egress.yaml', 'compose.auth.yaml', 'compose.offline.yaml']
+    order = ['compose.sales.yaml', 'compose.wechat.yaml', 'compose.alipay.yaml', 'compose.egress.yaml', 'compose.auth.yaml', 'compose.offline.yaml']
     positions = [helper.index('/' + name) for name in order]
     assert positions == sorted(positions), 'overlays must be prepended in reverse order'
     assert 'compose.public.yaml' not in helper

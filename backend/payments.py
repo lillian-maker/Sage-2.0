@@ -59,7 +59,7 @@ _PAYMENT_ERROR_CODES = frozenset('''
     RENEWAL_EXECUTOR_CONFLICT RENEWAL_SNAPSHOT_CONFLICT ROUNDING_POLICY_REQUIRED SEAT_REQUIRED
     SUBSCRIPTION_EXPIRED TASK_COMPLETED TASK_NOT_RUNNING TASK_RESULT_NOT_READY TASK_RESUME_FORBIDDEN
     TASK_SETTLEMENT_REQUIRED TERMS_MISMATCH TERMS_UNAVAILABLE TOPUP_CHARGING_DISABLED
-    UNSETTLED_USAGE_REQUIRED
+    UNSETTLED_USAGE_REQUIRED WECHAT_REFUND_QUERY_UNAVAILABLE
 '''.split())
 
 
@@ -319,8 +319,14 @@ def _wechat_native_configuration(order=None, *, reconciliation=False):
             notify_origin=configuration['notify_origin'], time_expire='2026-01-01T00:00:00+00:00')
         if order is not None:
             snapshot = order.snapshot
-            if (snapshot.get('kind') != 'credits' or order.quote.product.kind != 'credits' or
-                    snapshot.get('channel') != 'wechat' or snapshot.get('billing_cycle') != '' or
+            kind = snapshot.get('kind')
+            # Native carries no debit agreement: besides Credits it may only settle
+            # a subscription whose frozen terms exclude renewal.
+            if (kind not in ('credits', 'subscription') or order.quote.product.kind != kind or
+                    ('renewal' in snapshot) != (kind == 'subscription') or
+                    snapshot.get('renewal', 'none') != 'none' or
+                    snapshot.get('billing_cycle') != order.quote.product.billing_cycle or
+                    snapshot.get('channel') != 'wechat' or
                     order.currency != 'CNY' or order.quote.currency != 'CNY' or
                     order.quote.account_id != order.account_id or snapshot != order.quote.snapshot or
                     order.amount_minor != order.quote.amount_minor or
@@ -333,7 +339,9 @@ def _wechat_native_configuration(order=None, *, reconciliation=False):
             if not reconciliation:
                 _sale_gate(order.quote.product, order.account, timezone.now(), 'wechat',
                     snapshot.get('buyer_region'), configuration['merchant_entity'],
-                    public_purchase=bool(snapshot.get('terms_document_digest')) and not snapshot.get('manual_renewal'),
+                    # The plan gate counts this very unpaid order; it already ran at quote time.
+                    public_purchase=(kind == 'credits' and bool(snapshot.get('terms_document_digest')) and
+                        not snapshot.get('manual_renewal')),
                     historical_subscription=bool(snapshot.get('manual_renewal')))
         return configuration
     except (ValueError, TypeError, KeyError, UnicodeError, OverflowError, UnsupportedAlgorithm):
@@ -360,7 +368,7 @@ def _wechat_context(account, attempt_id):
     return attempt, configuration
 
 
-def _wechat_call(configuration, operation, attempt):
+def _wechat_call(configuration, operation, attempt, **refund_fields):
     from .wechat import call_wechat_api
     now = int(timezone.now().timestamp())
     fields = {'mchid':configuration['mch_id'], 'merchant_serial':configuration['merchant_serial'],
@@ -371,6 +379,7 @@ def _wechat_call(configuration, operation, attempt):
         fields.update(appid=configuration['app_id'], amount_minor=attempt.order.amount_minor,
             description='Sage order '+str(attempt.order_id), notify_origin=configuration['notify_origin'],
             time_expire=attempt.expires_at.isoformat())
+    fields.update(refund_fields)
     return call_wechat_api(operation, attempt.pk, **fields)
 
 
@@ -521,9 +530,13 @@ def finish_payment_close(request, prepared):
     try:
         account = _recheck_financial_session(request, account)
         attempt = PaymentAttempt.objects.select_related('order').get(account=account, pk=prepared['payment_close'])
-        if attempt.order.snapshot.get('channel') != 'alipay':
+        channel = attempt.order.snapshot.get('channel')
+        if channel == 'wechat':
+            close_wechat_payment(account, attempt.pk)
+        elif channel == 'alipay':
+            close_alipay_payment(account, attempt.pk)
+        else:
             raise ValueError('CHANNEL_UNAVAILABLE')
-        close_alipay_payment(account, attempt.pk)
         data = _wechat_order_result(account, attempt.order_id)
         data['cancel_status'] = ('cancelled' if data['order']['status'] == 'closed' else
             'paid' if data['order']['status'] != 'pending_payment' else 'pending')
@@ -586,29 +599,49 @@ def _wechat_query_result(account, attempt, configuration):
 
 def query_wechat_payment(account, attempt_id):
     """Only reconcile the original transaction; an expired QR is never reissued."""
-    from .commerce.billing import _lock_account, record_attempt_event
     attempt, configuration = _wechat_context(account, attempt_id)
     outcome = _wechat_query_result(account, attempt, configuration)
     if outcome != 'pending' or attempt.expires_at > timezone.now():
         return
+    _close_wechat(account, attempt, configuration, retry=False)
+
+
+@_payment_error_boundary
+def close_wechat_payment(account, attempt_id):
+    """Close the original Native transaction for a cancelled or overdue order, then query it."""
+    attempt, configuration = _wechat_context(account, attempt_id)
+    _close_wechat(account, attempt, configuration, retry=True)
+
+
+def _close_wechat(account, attempt, configuration, *, retry):
+    from .commerce.billing import _lock_account, record_attempt_event
     with transaction.atomic():
         account = _lock_account(account)
         current = PaymentAttempt.objects.select_for_update().get(pk=attempt.pk, account=account)
         order = Order.objects.select_for_update().get(pk=current.order_id, account=account)
-        dispatch_close = (not order.paid_at and not order.payment_facts.exists() and
-            current.state == 'pending' and not current.events.filter(event_key='wechat-close-claim').exists())
+        open_trade = (not order.paid_at and not order.payment_facts.exists() and
+            current.state in ('pending', 'unknown'))
+        claimed = current.events.filter(event_key='wechat-close-claim').exists()
+        accepted = current.events.filter(event_key='wechat-close-accepted').exists()
+        # Closing can never take money, so an unconfirmed close may be resent by
+        # an explicit cancel or the overdue sweeper; queries alone never resend it.
+        dispatch_close = open_trade and (not claimed or (retry and not accepted))
         if dispatch_close:
-            record_attempt_event(account, attempt.pk, 'wechat-close-claim', 'unknown', source='local', evidence_hash='')
+            record_attempt_event(account, attempt.pk,
+                'wechat-close-claim' if not claimed else 'wechat-close-retry:'+uuid.uuid4().hex,
+                'unknown', source='local', evidence_hash='')
     if dispatch_close:
         try:
             fields, evidence = _wechat_call(configuration, 'close', attempt)
             if fields is not None:
                 raise ValueError
         except ValueError:
-            record_attempt_event(account, attempt.pk, 'wechat-close-unknown', 'unknown', source='local', evidence_hash='')
+            record_attempt_event(account, attempt.pk, 'wechat-close-unknown' if not claimed else
+                'wechat-close-unknown:'+uuid.uuid4().hex, 'unknown', source='local', evidence_hash='')
         else:
             record_attempt_event(account, attempt.pk, 'wechat-close-accepted', 'unknown',
                 source='provider_close', evidence_hash=evidence)
+    if dispatch_close or retry:
         _wechat_query_result(account, attempt, configuration)
 
 
@@ -1243,8 +1276,7 @@ def close_alipay_payment(account, attempt_id):
     return _reconcile_alipay_payment(account, attempt, configuration, close_evidence=close_evidence)
 
 
-@sensitive_variables()
-def _alipay_refund_context(account, refund_id):
+def _refund_bindings(account, refund_id, channel, unavailable):
     """Read the original refund bindings, also rechecked under the account lock."""
     from .commerce.models import CreditRefund
     try:
@@ -1257,17 +1289,36 @@ def _alipay_refund_context(account, refund_id):
     if (refund.state not in ('reserved', 'refunded') or refund.review_state != 'approved' or
             not isinstance(refund.review_evidence_hash, str) or
             not re.fullmatch(r'[a-f0-9]{64}', refund.review_evidence_hash) or
-            payment.disposition != 'accepted' or payment.channel != 'alipay' or payment.currency != 'CNY' or
+            payment.disposition != 'accepted' or payment.channel != channel or payment.currency != 'CNY' or
             payment.amount_minor != payment.order.amount_minor or not 0 < refund.amount_minor <= payment.amount_minor or
             hold.batch.account_id != account.pk or hold.batch.order_id != payment.order_id or
             hold.batch.source != 'purchased' or
             hold.request_key != 'money-refund:'+hashlib.sha256(refund.request_key.encode()).hexdigest() or
             hold.state != ('frozen' if refund.state == 'reserved' else 'refunded')):
-        raise ValueError('ALIPAY_REFUND_QUERY_UNAVAILABLE')
+        raise ValueError(unavailable)
     attempt = PaymentAttempt.objects.filter(account=account, order_id=payment.order_id).first()
     if (not attempt or not attempt.dispatched_at or attempt.subscription_id or attempt.recovery_of_id or
             type(attempt.dispatch_authorization) is not dict):
-        raise ValueError('ALIPAY_REFUND_QUERY_UNAVAILABLE')
+        raise ValueError(unavailable)
+    return refund, payment, attempt
+
+
+def _refund_claimable(refund, attempt):
+    """Caller holds the account lock; the refund must still be backed by frozen Credits."""
+    from .commerce.billing import _balances, _quantity
+    from .commerce.models import CreditRefund
+    payment, hold = refund.payment, refund.freeze
+    committed = sum(CreditRefund.objects.filter(payment=payment).exclude(state='released')
+        .values_list('amount_minor', flat=True))
+    return not (attempt.state != 'succeeded' or attempt.needs_reconciliation or
+        payment.order.status != 'fulfilled' or not payment.order.paid_at or
+        payment.order.payment_facts.count() != 1 or committed > payment.amount_minor or
+        _balances(hold.batch)['frozen'] < _quantity(hold.quantity, positive=True))
+
+
+@sensitive_variables()
+def _alipay_refund_context(account, refund_id):
+    refund, payment, attempt = _refund_bindings(account, refund_id, 'alipay', 'ALIPAY_REFUND_QUERY_UNAVAILABLE')
     local = settings.ENVIRONMENT == 'test'
     configuration = _alipay_configuration(payment.order, reconciliation=True, sandbox=local)
     identity = _alipay_sandbox_identity(configuration) if local and configuration else (
@@ -1288,8 +1339,7 @@ def submit_alipay_refund(account, refund_id):
     response never resolves credits: only independently verified REFUND_SUCCESS
     from the original refund query may do that.
     """
-    from .commerce.billing import _credit_refund_dict, _lock_account, _balances, _quantity, record_attempt_event
-    from .commerce.models import CreditRefund
+    from .commerce.billing import _credit_refund_dict, _lock_account, record_attempt_event
     if transaction.get_connection().in_atomic_block:
         raise ValueError('QUERY_REQUIRES_AUTOCOMMIT')
     with transaction.atomic():
@@ -1303,13 +1353,7 @@ def submit_alipay_refund(account, refund_id):
             if (settings.ENVIRONMENT == 'production' and
                     getattr(settings, 'BILLING_ALIPAY_LIVE_REFUND_ENABLED', False) is not True):
                 raise ValueError('CHANNEL_UNAVAILABLE')
-            payment, hold = refund.payment, refund.freeze
-            committed = sum(CreditRefund.objects.filter(payment=payment).exclude(state='released')
-                .values_list('amount_minor', flat=True))
-            if (attempt.state != 'succeeded' or attempt.needs_reconciliation or
-                    payment.order.status != 'fulfilled' or not payment.order.paid_at or
-                    payment.order.payment_facts.count() != 1 or committed > payment.amount_minor or
-                    _balances(hold.batch)['frozen'] < _quantity(hold.quantity, positive=True)):
+            if not _refund_claimable(refund, attempt):
                 raise ValueError('ALIPAY_REFUND_QUERY_UNAVAILABLE')
             record_attempt_event(account, attempt.pk, claim_key, 'unknown', source='local', evidence_hash='')
     if dispatch:
@@ -1356,6 +1400,83 @@ def query_alipay_refund(account, refund_id):
         return {**_credit_refund_dict(refund), 'query_status': 'unknown'}
     # Only DB reconciliation holds locks; the completed TLS query never does.
     # A competing verified query can have a different raw response hash.
+    with transaction.atomic():
+        account = _lock_account(account)
+        latest = CreditRefund.objects.select_for_update().get(pk=refund.pk)
+        if latest.state == 'refunded':
+            return _credit_refund_dict(latest)
+        return resolve_credit_refund(account, refund.pk, 'refunded', evidence_hash=evidence)
+
+
+def _wechat_refund_context(account, refund_id):
+    refund, payment, attempt = _refund_bindings(account, refund_id, 'wechat', 'WECHAT_REFUND_QUERY_UNAVAILABLE')
+    attempt, configuration = _wechat_context(account, attempt.pk)
+    if payment.merchant_reference != configuration['merchant_entity']:
+        raise ValueError('WECHAT_REFUND_QUERY_UNAVAILABLE')
+    return refund, attempt, configuration
+
+
+@_payment_error_boundary
+def submit_wechat_refund(account, refund_id):
+    """Claim one refund before I/O; every reentry only queries.
+
+    The refund UUID is the only out_refund_no. A refund response never resolves
+    credits: only an independently verified SUCCESS from the refund query may.
+    """
+    from .commerce.billing import _credit_refund_dict, _lock_account, record_attempt_event
+    if transaction.get_connection().in_atomic_block:
+        raise ValueError('QUERY_REQUIRES_AUTOCOMMIT')
+    refund, attempt, configuration = _wechat_refund_context(account, refund_id)
+    with transaction.atomic():
+        account = _lock_account(account)
+        refund, _, _ = _refund_bindings(account, refund_id, 'wechat', 'WECHAT_REFUND_QUERY_UNAVAILABLE')
+        if refund.state == 'refunded':
+            return _credit_refund_dict(refund)
+        claim_key = 'wechat-refund-claim:'+str(refund.pk)
+        current = PaymentAttempt.objects.select_for_update().get(pk=attempt.pk, account=account)
+        dispatch = not current.events.filter(event_key=claim_key).exists()
+        if dispatch:
+            if (settings.ENVIRONMENT == 'production' and
+                    getattr(settings, 'BILLING_WECHAT_LIVE_REFUND_ENABLED', False) is not True):
+                raise ValueError('CHANNEL_UNAVAILABLE')
+            if not _refund_claimable(refund, current):
+                raise ValueError('WECHAT_REFUND_QUERY_UNAVAILABLE')
+            record_attempt_event(account, attempt.pk, claim_key, 'unknown', source='local', evidence_hash='')
+    if dispatch:
+        try:
+            _wechat_call(configuration, 'refund', attempt, amount_minor=refund.payment.amount_minor,
+                refund_reference=refund.pk, refund_minor=refund.amount_minor)
+        except ValueError:
+            # The durable claim forbids resubmission even if the call failed.
+            record_attempt_event(account, attempt.pk,
+                'wechat-refund-submit-unknown:'+str(refund.pk), 'unknown', source='local', evidence_hash='')
+    return query_wechat_refund(account, refund.pk)
+
+
+@_payment_error_boundary
+def query_wechat_refund(account, refund_id):
+    """Query a reviewed frozen refund; this function cannot submit a refund."""
+    from .commerce.billing import _credit_refund_dict, _lock_account, resolve_credit_refund
+    from .commerce.models import CreditRefund
+    if transaction.get_connection().in_atomic_block:
+        raise ValueError('QUERY_REQUIRES_AUTOCOMMIT')
+    refund, attempt, configuration = _wechat_refund_context(account, refund_id)
+    payment = refund.payment
+    if refund.state == 'refunded':
+        return _credit_refund_dict(refund)
+    try:
+        fields, evidence = _wechat_call(configuration, 'refund_query', attempt, refund_reference=refund.pk)
+        amount = fields.get('amount') if type(fields) is dict else None
+        if (type(amount) is not dict or fields.get('status') != 'SUCCESS' or
+                fields.get('out_refund_no') != refund.pk.hex or
+                fields.get('out_trade_no') != attempt.pk.hex or
+                fields.get('transaction_id') != payment.transaction_reference or
+                type(amount.get('total')) is not int or amount['total'] != payment.amount_minor or
+                type(amount.get('refund')) is not int or amount['refund'] != refund.amount_minor or
+                amount.get('currency') != 'CNY'):
+            raise ValueError
+    except ValueError:
+        return {**_credit_refund_dict(refund), 'query_status': 'unknown'}
     with transaction.atomic():
         account = _lock_account(account)
         latest = CreditRefund.objects.select_for_update().get(pk=refund.pk)

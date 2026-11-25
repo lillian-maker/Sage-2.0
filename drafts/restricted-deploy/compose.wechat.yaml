@@ -1,0 +1,14 @@
+# Optional candidate only: app-only read-only file, with all payment/sales gates unchanged.
+# The file must be owned by the container app UID (10001) and have mode 0400.
+# This reads the file at app startup; independent sales/payment gates remain closed.
+services:
+  app:
+    environment:
+      SAGE_WECHAT_CREDENTIALS_ENABLED: "1"
+    secrets:
+      - source: wechat_credentials
+        target: wechat_native.json
+
+secrets:
+  wechat_credentials:
+    file: "${SAGE_DOCKER_SECRETS_DIR:?Set the private secret directory}/wechat_native.json"

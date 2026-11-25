@@ -868,7 +868,7 @@ def resolve_credit_refund(account, refund_id, outcome, *, evidence_hash):
     if outcome == 'refunded' and item.review_state != 'approved':
         raise ValueError('REFUND_REVIEW_REQUIRED')
     if outcome == 'released' and PaymentAttemptEvent.objects.filter(attempt__order_id=item.payment.order_id,
-            event_key='sandbox-refund-claim:'+str(item.pk)).exists():
+            event_key__in=['sandbox-refund-claim:'+str(item.pk), 'wechat-refund-claim:'+str(item.pk)]).exists():
         raise ValueError('REFUND_RECONCILIATION_REQUIRED')
     _resolve_credit_freeze(account,item.freeze_id,outcome,evidence_hash=evidence_hash)
     item.state,item.evidence_hash,item.resolved_at = outcome,evidence_hash,timezone.now()

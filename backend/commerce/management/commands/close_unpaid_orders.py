@@ -8,7 +8,7 @@ from backend.commerce.models import Order, PaymentAttempt
 
 class Command(BaseCommand):
     help = ('Close unpaid checkout orders past their payment deadline. Undispatched orders close '
-            'locally; dispatched Alipay payments are closed and then queried. Never charges.')
+            'locally; dispatched Alipay and WeChat Pay payments are closed and then queried. Never charges.')
 
     def add_arguments(self, parser):
         parser.add_argument('--limit', type=int, default=500)
@@ -27,11 +27,13 @@ class Command(BaseCommand):
                     counts['expired'] += 1
                 if outcome != 'needs_channel_close':
                     continue
-                if order.snapshot.get('channel') != 'alipay':
+                close = {'alipay': payments.close_alipay_payment,
+                         'wechat': payments.close_wechat_payment}.get(order.snapshot.get('channel'))
+                if close is None:
                     counts['unsupported_channel'] += 1
                     continue
                 attempt = PaymentAttempt.objects.get(order=order)
-                payments.close_alipay_payment(order.account, attempt.pk)
+                close(order.account, attempt.pk)
                 order.refresh_from_db()
                 if order.status == 'closed':
                     counts['channel_closed'] += 1

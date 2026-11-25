@@ -42,7 +42,7 @@ def main():
     assert egress['read_only'] and egress['user'] == '10001:10001' and egress['cap_drop'] == ['ALL']
     assert egress['entrypoint'] == ['python', '/app/deploy/egress_proxy.py']
     assert egress['environment']['SAGE_EGRESS_ALLOW'] == \
-        'ses.tencentcloudapi.com,captcha.tencentcloudapi.com,sms.tencentcloudapi.com,openapi.alipay.com'
+        'ses.tencentcloudapi.com,captcha.tencentcloudapi.com,sms.tencentcloudapi.com,openapi.alipay.com,api.mch.weixin.qq.com'
     assert egress['environment']['SAGE_EGRESS_UPSTREAM_HOSTS'] == 'oauth2.googleapis.com,www.googleapis.com'
     assert egress['environment']['SAGE_EGRESS_UPSTREAM'] == 'relay.example.invalid:3128'
     assert app['environment']['HTTPS_PROXY'] == 'http://egress:3128'

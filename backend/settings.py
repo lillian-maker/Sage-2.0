@@ -195,6 +195,7 @@ if ENVIRONMENT == 'production' and os.environ.get('SAGE_WECHAT_CREDENTIALS_ENABL
 BILLING_WECHAT_EGRESS_PROXY = ''
 # A separate gate for a future reviewed production configuration; default closed.
 BILLING_WECHAT_LIVE_ENABLED = False
+BILLING_WECHAT_LIVE_REFUND_ENABLED = False
 # Approved on 2026-10-16; clients cannot choose their own expiry.
 BILLING_QUOTE_TTL_SECONDS = 600
 BILLING_TOPUP_PRESETS = {}
