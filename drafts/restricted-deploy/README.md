@@ -11,6 +11,9 @@
 | 登录阶段 E/F 启用时叠加 | 上一行 + `-f compose.auth.yaml`（当前生产未部署该文件） |
 | ~~compose.public.yaml~~ | 已被宿主 nginx vhost 取代（2026-11-07），勿在现网执行 |
 | ~~compose.logging.yaml~~ | 未部署为独立文件；日志参数已并入 compose.yaml 与 compose.egress.yaml |
+| G1 Logto staging（未部署） | `-f compose.logto.yaml`（独立 project `sage-logto-staging`；不与生产 compose 叠加） |
+
+G1 Logto staging 是独立 stack：`compose.logto.yaml`、`staging-logto.env.example`、`logto-staging-nginx.conf`。操作单见 [logto-staging-runbook.md](logto-staging-runbook.md)。它不进入 `sage-preview`，不修改生产 compose、DNS 或官网登录代码。
 
 统一参数：`--env-file /dev/null -p sage-preview`；云端禁 build/pull；管理命令经 `exec -T app python /app/deploy/docker-entrypoint.py python manage.py …`（exec 不执行 ENTRYPOINT）。cron 实态见服务器 `/etc/cron.d/sage-prod`（`process_notifications` 以注释预留，阶段 E 启用；`check_operations` 行需补 scope 参数，详见 prod-20261107/acceptance-report-phase-0AB.md 勘误节）。
 
