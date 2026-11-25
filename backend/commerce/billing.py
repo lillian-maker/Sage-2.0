@@ -1340,7 +1340,7 @@ def consume_shared_task(account, task_id, event_key, quantity):
         if task.debits.filter(state='pending').exists():
             return {**_shared_task_dict(task),'accepted':False,'reason':'UNSETTLED_USAGE_REQUIRED'}
         cumulative = _quantity(task.exact_quantity) + exact
-        rounded = Fraction((2*cumulative.numerator*100+cumulative.denominator)//(2*cumulative.denominator),100)
+        rounded = _round_task_credits(cumulative)
         charged = _quantity(_shared_task_dict(task)['credits'])
         amount = rounded - charged
         if amount < 0:
@@ -1423,17 +1423,29 @@ def shared_task_usage(account, actor, *, membership_id, offset=0):
             'total':total,'next_offset':offset+50 if offset+50 < total else None}
 
 
+def _round_task_credits(value):
+    """R10: a task's total actual use is charged once, half-up to 0.01."""
+    return Fraction((2*value.numerator*100+value.denominator)//(2*value.denominator),100)
+
+
 @transaction.atomic
 def settle_credits(account, reservation_id, actual_quantity):
     account = _lock_account(account)
     reservation = _get(Reservation.objects.select_for_update(), account=account, pk=reservation_id)
     actual = _quantity(actual_quantity)
+    # Shared-task debits arrive already rounded and keep the event's exact use in
+    # actual_quantity; a whole-task hold is rounded here, at its only settlement.
+    whole_task = reservation.shared_task_id is None
+    charged = _round_task_credits(actual) if whole_task else actual
     if reservation.state != "reserved":
-        if reservation.state == "settled" and _quantity(reservation.settled_quantity) == actual:
+        if (reservation.state == "settled" and _quantity(reservation.settled_quantity) == min(charged, _quantity(reservation.quantity)) and
+                (not whole_task or reservation.actual_quantity is None or _quantity(reservation.actual_quantity) == actual)):
             return _reservation_dict(reservation)
         raise ValueError("IDEMPOTENCY_CONFLICT")
     if actual > _quantity(reservation.quantity):
         raise ValueError("OVER_RESERVATION")
+    # A hold that is not itself a multiple of 0.01 can be exceeded by rounding up.
+    charged = min(charged, _quantity(reservation.quantity))
     if reservation.shared_period_end and timezone.now() >= reservation.shared_period_end:
         raise ValueError('CONFIG_INCOMPLETE')
     allocations = list(reservation.entries.filter(kind="reserve").select_related("batch").order_by("id"))
@@ -1442,7 +1454,7 @@ def settle_credits(account, reservation_id, actual_quantity):
     if any(entry.batch.expires_at <= timezone.now() for entry in allocations):
         # D11: do not guess whether an expired task allocation may be settled.
         raise ValueError("CONFIG_INCOMPLETE")
-    remaining = actual
+    remaining = charged
     for entry in allocations:
         take = min(remaining, _quantity(entry.quantity))
         unused = _quantity(entry.quantity) - take
@@ -1452,8 +1464,12 @@ def settle_credits(account, reservation_id, actual_quantity):
             CreditEntry.objects.create(batch=entry.batch, reservation=reservation, kind="release", quantity=_text(unused), event_key=f"release:{reservation.pk}")
         remaining -= take
     reservation.state = "settled"
-    reservation.settled_quantity = _text(actual)
-    reservation.save(update_fields=["state", "settled_quantity"])
+    reservation.settled_quantity = _text(charged)
+    fields = ["state", "settled_quantity"]
+    if whole_task:
+        reservation.actual_quantity = _text(actual)
+        fields.append("actual_quantity")
+    reservation.save(update_fields=fields)
     return _reservation_dict(reservation)
 
 

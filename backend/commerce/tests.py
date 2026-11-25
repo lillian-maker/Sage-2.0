@@ -822,6 +822,8 @@ class CommerceTests(TransactionTestCase):
 
     def test_credit_refund_assessment_rejects_expiry_freeze_and_spent_balance(self):
         from .billing import credit_refund_assessment, freeze_credits, resolve_credit_freeze
+        # Task use is charged in hundredths, so a task can only spend a whole pack of hundredths.
+        ProductVersion.objects.filter(pk=self.product.pk).update(credits_quantity='10')
         order = self.order()
         record_confirmed_payment(self.account,order['id'],channel='fixture',merchant_reference='fixture-shenzhen',
             transaction_reference='refund-boundaries',amount_minor=731,currency='CNY',paid_at=self.now,evidence_hash='b'*64)
@@ -1714,11 +1716,33 @@ class CommerceTests(TransactionTestCase):
         settle_credits(self.account, reservation["id"], "0.0000000000001")
         settle_credits(self.account, reservation["id"], "0.0000000000001")
         summary = credits_summary(self.account)
-        self.assertEqual(summary["available"], "100000000000000000000000000000.0000000000009")
-        self.assertEqual(summary["consumed"], "0.0000000000001")
+        # The task total rounds once to 0.01, so this tiny use charges nothing.
+        self.assertEqual(summary["available"], "100000000000000000000000000000.000000000001")
+        self.assertEqual(summary["consumed"], "0")
         self.assertEqual(summary["reserved"], "0")
         with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_CONFLICT"):
             settle_credits(self.account, reservation["id"], "0")
+
+    def test_task_settlement_rounds_the_total_once_to_a_hundredth(self):
+        self.grant("100")
+        for key, actual, charged in (("a", "1.234", "1.23"), ("b", "1.235", "1.24"), ("c", "0.004", "0"),
+                                     ("d", "0.005", "0.01"), ("e", "2.675", "2.68"), ("f", "3", "3")):
+            reservation = reserve_credits(self.account, key, "5")
+            settled = settle_credits(self.account, reservation["id"], actual)
+            self.assertEqual(settled["settled_quantity"], charged, actual)
+            self.assertEqual(Reservation.objects.get(pk=reservation["id"]).actual_quantity, actual)
+            self.assertEqual(settle_credits(self.account, reservation["id"], actual), settled)
+        with self.assertRaisesRegex(ValueError, "IDEMPOTENCY_CONFLICT"):
+            settle_credits(self.account, reservation["id"], "3.001")
+        self.assertEqual(credits_summary(self.account)["consumed"], "8.16")
+
+    def test_rounding_never_exceeds_a_hold_that_is_not_a_hundredth(self):
+        self.grant("10")
+        reservation = reserve_credits(self.account, "odd-hold", "0.995")
+        settled = settle_credits(self.account, reservation["id"], "0.995")
+        self.assertEqual(settled["settled_quantity"], "0.995")
+        summary = credits_summary(self.account)
+        self.assertEqual((summary["consumed"], summary["reserved"]), ("0.995", "0"))
 
     def test_expiry_order_tie_subscription_and_insufficient_atomic(self):
         expiry = self.now + timedelta(days=1)

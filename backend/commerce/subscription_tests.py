@@ -436,6 +436,7 @@ class SeatPurchaseTests(TransactionTestCase):
         activated = activate_subscription_change(self.account, row['id'], activated_at=timezone.now(),
             mandate={**self.mandate, 'agreement_reference':'upgraded-agreement'}, old_authorization_evidence_hash='c'*64)
         plan_change.refresh_from_db()
+        self.now.return_value = datetime(2026, 9, 2, 1, tzinfo=self.anchor.tzinfo)
         assessment = service_refund_assessment(self.account, self.user, plan_change.new_subscription_id)
         self.assertEqual(assessment['amount_minor'], '262744')
         self.assertEqual(len(assessment['items']), 3)
@@ -4062,6 +4063,72 @@ class ApprovedPlanChangeTests(TransactionTestCase):
             mandate={**self.mandate,'agreement_reference':'new-upgrade-mandate'},old_authorization_evidence_hash='d'*64)
         return result
 
+    def upgraded_within_a_day(self):
+        from .models import SubscriptionChange
+        source=self.source();target=self.target()
+        self.now.return_value=self.anchor+(month_boundary(self.anchor,1)-self.anchor)/2
+        result=self.confirm_and_activate(source,self.quote(source,target))
+        return source,SubscriptionChange.objects.get(pk=result['id'])
+
+    def plan_change_receipt(self, refund_id, change, outcome):
+        from .refunds import record_service_refund_receipt
+        payment=PaymentFact.objects.get(order=change.order)
+        return record_service_refund_receipt(self.account,refund_id,payment.pk,event_key='plan-change-'+outcome,
+            outcome=outcome,amount_minor=payment.amount_minor,
+            provider_reference='fixture-plan-change' if outcome=='refunded' else '',evidence_hash='e'*64)
+
+    def test_upgrade_refund_within_24_hours_returns_the_difference_and_restores_the_previous_plan(self):
+        from .refunds import service_refund_assessment, request_service_refund
+        from .subscriptions import active_subscription_periods
+        source,change=self.upgraded_within_a_day()
+        new=change.new_subscription
+        old_batch=CreditBatch.objects.get(subscription_period__subscription=source)
+        self.assertEqual(old_batch.expires_at,change.activated_at)
+        self.now.return_value=change.activated_at+timedelta(hours=23)
+        assessment=service_refund_assessment(self.account,self.user,new.pk)
+        self.assertEqual((assessment['eligible'],assessment['policy'],assessment['amount_minor']),
+            (True,'plan_change_within_24h','18518'))
+        self.assertEqual(assessment['items'],[{'order_id':str(change.order_id),'amount_minor':'18518'}])
+        refund=request_service_refund(self.account,self.user,new.pk,'undo-upgrade')
+        self.assertEqual((refund['status'],refund['amount_minor']),('approved','18518'))
+        source.refresh_from_db();new.refresh_from_db();old_batch.refresh_from_db()
+        self.assertIsNone(source.superseded_at)
+        self.assertEqual(new.refund_cutoff_at,timezone.now())
+        self.assertEqual(old_batch.expires_at,month_boundary(self.anchor,1))
+        self.assertEqual(list(active_subscription_periods(self.account).values_list('subscription_id',flat=True)),[source.pk])
+        self.assertEqual(credits_summary(self.account)['available'],'17.25')
+        self.plan_change_receipt(refund['id'],change,'refunded')
+        source.refresh_from_db()
+        self.assertIsNone(source.superseded_at)
+        self.assertEqual(credits_summary(self.account)['available'],'17.25')
+        self.assertEqual(service_refund_assessment(self.account,self.user,source.pk)['reason'],
+            'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+
+    def test_failed_upgrade_refund_puts_the_paid_upgrade_back(self):
+        from .refunds import request_service_refund
+        source,change=self.upgraded_within_a_day()
+        new=change.new_subscription
+        refund=request_service_refund(self.account,self.user,new.pk,'undo-upgrade')
+        self.assertEqual(self.plan_change_receipt(refund['id'],change,'terminated')['status'],'terminated')
+        source.refresh_from_db();new.refresh_from_db()
+        self.assertEqual(source.superseded_at,change.activated_at)
+        self.assertIsNone(new.refund_cutoff_at)
+        self.assertEqual(CreditBatch.objects.get(subscription_period__subscription=source).expires_at,change.activated_at)
+        self.assertEqual(credits_summary(self.account)['available'],'35')
+
+    def test_upgrade_difference_is_not_refundable_after_24_hours_or_once_its_credits_are_used(self):
+        from .refunds import service_refund_assessment
+        from .billing import reserve_credits, settle_credits
+        source,change=self.upgraded_within_a_day()
+        new=change.new_subscription
+        self.now.return_value=change.activated_at+timedelta(hours=24,seconds=1)
+        self.assertEqual(service_refund_assessment(self.account,self.user,new.pk)['reason'],'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+        self.now.return_value=change.activated_at+timedelta(hours=1)
+        held=reserve_credits(self.account,'upgrade-task','1')
+        settle_credits(self.account,held['id'],'1')
+        self.assertEqual(service_refund_assessment(self.account,self.user,new.pk)['reason'],'MONTHLY_STARTED_TERM_NOT_REFUNDABLE')
+        source.refresh_from_db()
+        self.assertEqual(source.superseded_at,change.activated_at)
     def test_month_to_month_credits_old_unused_cash_and_never_refunds(self):
         source=self.source();target=self.target()
         self.now.return_value=self.anchor+(month_boundary(self.anchor,1)-self.anchor)/2

@@ -30,7 +30,7 @@
 {
   "enabled": true,
   "app_id": "2021007121629097",
-  "seller_id": "<2088 开头的商户 PID>",
+  "seller_id": "2088980686273250",
   "merchant_entity": "shenzhen-zhongmiao",
   "private_key": "-----BEGIN RSA PRIVATE KEY-----\n<应用私钥，PKCS1 格式>\n-----END RSA PRIVATE KEY-----\n",
   "public_key": "-----BEGIN PUBLIC KEY-----\n<支付宝公钥，不是应用公钥>\n-----END PUBLIC KEY-----\n",

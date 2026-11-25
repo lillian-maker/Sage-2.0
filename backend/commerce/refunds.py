@@ -122,6 +122,60 @@ def _full_refund_current(period, now):
         not period.order.snapshot.get('subscription_change_id') and not _credits_used(period))
 
 
+def _reversible_change(period, now):
+    """A plan change paid within 24 hours, with none of the new term's credits used.
+
+    Refunding it returns only the difference paid and puts the previous plan
+    back as it was; the previous plan's own payments stay where they are.
+    """
+    if period.cycle_index != 0 or not period.order.snapshot.get('subscription_change_id'):
+        return None
+    change = SubscriptionChange.objects.filter(new_subscription=period.subscription, order=period.order,
+        state='activated').select_related('subscription').first()
+    paid_at = _paid_at(period)
+    if not change or not paid_at or now - FULL_REFUND_WINDOW > paid_at or _credits_used(period):
+        return None
+    source, subscription = change.subscription, period.subscription
+    if (change.snapshot.get('refund_minor') or source.superseded_at != change.activated_at or source.refund_cutoff_at or
+            subscription.seat_purchases.filter(state='activated').exists() or subscription.seat_reductions.exists()):
+        raise ValueError('PLAN_CHANGE_REFUND_REQUIRES_REVIEW')
+    return change
+
+
+def _reverted_change(subscription):
+    """The plan change into this subscription whose previous plan was restored by a refund."""
+    change = SubscriptionChange.objects.filter(new_subscription=subscription, state='activated').select_related('subscription').first()
+    return change if change and change.subscription.superseded_at is None else None
+
+
+def _restore_previous_plan(account, change):
+    source = _get(Subscription.objects.select_for_update(), account=account, pk=change.subscription_id)
+    if source.superseded_at != change.activated_at or source.refund_cutoff_at:
+        raise ValueError('PLAN_CHANGE_REFUND_REQUIRES_REVIEW')
+    source.superseded_at = None
+    source.save(update_fields=['superseded_at'])
+    months = _months(source)
+    # Activation cut these batches short; give back each one's own month end.
+    for batch in CreditBatch.objects.filter(subscription_period__subscription=source,
+            expires_at=change.activated_at).select_related('subscription_period'):
+        expiry = _boundary(source, batch.subscription_period.cycle_index*months+batch.service_month+1)
+        if expiry > change.activated_at:
+            CreditBatch.objects.filter(pk=batch.pk).update(expires_at=expiry)
+
+
+def _supersede_again(account, refund, change):
+    """The refund did not go through: the paid change stands, as activation left it."""
+    source = _get(Subscription.objects.select_for_update(), account=account, pk=change.subscription_id)
+    if (source.refund_cutoff_at or source.service_refunds.exclude(status='terminated').exists() or
+            SubscriptionChange.objects.filter(subscription=source).exclude(pk=change.pk).exclude(state='quoted').exists()):
+        return False
+    source.superseded_at = change.activated_at
+    source.save(update_fields=['superseded_at'])
+    CreditBatch.objects.filter(subscription_period__subscription=source,
+        expires_at__gt=change.activated_at).update(expires_at=change.activated_at)
+    return True
+
+
 def _assessment(account, subscription):
     from .subscriptions import _seat_purchase_pending, _renewal_delivery_pending
     if subscription.superseded_at:
@@ -141,7 +195,24 @@ def _assessment(account, subscription):
     if not current and not future:
         raise ValueError('NO_REFUNDABLE_SERVICE')
     desired, pending_from, order_ids = {}, None, set()
-    if current and _full_refund_current(current, now):
+    change = _reversible_change(current, now) if current else None
+    if change:
+        payments = list(current.order.payment_facts.filter(disposition='accepted'))
+        if sum(payment.amount_minor for payment in payments) != current.order.amount_minor:
+            raise ValueError('PAYMENT_NOT_CONFIRMED')
+        for payment in payments:
+            desired[str(payment.pk)] = desired.get(str(payment.pk), Fraction())+payment.amount_minor
+        for period in future:
+            if CreditBatch.objects.filter(subscription_period=period).exists():
+                raise ValueError('FUTURE_CREDITS_REQUIRE_REVIEW')
+            weights, _ = _period_cash_weights(period, period.starts_at)
+            for payment_id, value in weights.items():
+                desired[payment_id] = desired.get(payment_id, Fraction())+value
+            order_ids.add(period.order_id)
+        order_ids.add(current.order_id)
+        pending_from = now
+        policy = 'plan_change_within_24h'
+    elif current and _full_refund_current(current, now):
         # Everything paid for this subscription is returned and service ends now.
         for period in [current]+future:
             if period is not current and CreditBatch.objects.filter(subscription_period=period).exists():
@@ -211,7 +282,7 @@ def _assessment(account, subscription):
         '_periods': [period.pk for period in periods if period.order_id in order_ids],
         'items': [{'order_id': str(_get(PaymentFact.objects, pk=item['payment_id']).order_id),
             'amount_minor': str(item['amount_minor'])} for item in allocations],
-        '_allocations': allocations, '_pending_from': pending_from}
+        '_allocations': allocations, '_pending_from': pending_from, '_change': change}
 
 
 def service_refund_assessment(account, user, subscription_id):
@@ -318,8 +389,10 @@ def request_service_refund(account, user, subscription_id, request_key):
         status='approved' if assessment['automatic_review'] else 'review',
         amount_minor=int(assessment['amount_minor']), allocations=assessment['_allocations'],
         pending_from=assessment['_pending_from'])
-    if assessment['policy'] == 'full_within_24h':
+    if assessment['policy'] in ('full_within_24h', 'plan_change_within_24h'):
         _freeze_refunded_credits(account, refund, assessment['_periods'])
+    if assessment['policy'] == 'plan_change_within_24h':
+        _restore_previous_plan(account, assessment['_change'])
     AuditEvent.objects.create(actor=user, account=account, action='service_refund.requested', request_id=refund.pk)
     BillingNotification.objects.create(account=account, subscription=subscription,
         type='service_refund_requested', source_event=f'service-refund:{refund.pk}:requested',
@@ -398,8 +471,14 @@ def record_service_refund_receipt(account, refund_id, payment_id, *, event_key, 
             else:
                 reduction.state = 'reverted'; reduction.save(update_fields=['state'])
         else:
-            subscription.refund_cutoff_at = None
-            subscription.save(update_fields=['refund_cutoff_at'])
+            change = _reverted_change(subscription)
+            if change and not _supersede_again(account, refund, change):
+                refund.status = 'review'
+                BillingIssue.objects.update_or_create(account=account, code='PLAN_CHANGE_RESTORE_REVIEW',
+                    object_type='service_refund', object_id=refund.pk, defaults={'last_seen_at':timezone.now()})
+            else:
+                subscription.refund_cutoff_at = None
+                subscription.save(update_fields=['refund_cutoff_at'])
         # Seat refunds preserve renewal; whole-service refunds keep it off.
     else:
         refund.status = 'unknown' if outcome in ('failed', 'unknown') else 'processing'
