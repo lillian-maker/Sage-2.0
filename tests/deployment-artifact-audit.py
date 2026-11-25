@@ -20,7 +20,7 @@ def main():
     assert 'Unexpected web image platform' in package
     assert 'compose.egress.yaml' in package
     assert 'git -C "$ROOT" archive --format=tar "$SHA"' in package
-    assert package.index('tar -czf "$TMP_BUNDLE" -C "$TMP_CANDIDATE" .') < package.index('mv "$TMP_CANDIDATE" "$CANDIDATE"')
+    assert package.index('COPYFILE_DISABLE=1 tar --no-xattrs -czf "$TMP_BUNDLE" -C "$TMP_CANDIDATE" .') < package.index('mv "$TMP_CANDIDATE" "$CANDIDATE"')
 
     backup = contents(PROD / 'sage-prod-backup.sh')
     assert backup.index('pg_restore --file=/dev/null "$TMP"') < backup.index('mv "$TMP" "$FINAL"')

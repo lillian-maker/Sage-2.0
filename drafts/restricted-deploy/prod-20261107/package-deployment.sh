@@ -85,7 +85,8 @@ echo "== sha256-manifest.json =="
 cat "$TMP_CANDIDATE/sha256-manifest.json"
 
 echo "== 外层包 =="
-tar -czf "$TMP_BUNDLE" -C "$TMP_CANDIDATE" .
+# macOS tar 默认附带 ._* 扩展属性文件，解包后会混入 release 目录
+COPYFILE_DISABLE=1 tar --no-xattrs -czf "$TMP_BUNDLE" -C "$TMP_CANDIDATE" .
 mv "$TMP_BUNDLE" "$FINAL_BUNDLE"
 mv "$TMP_CANDIDATE" "$CANDIDATE"
 TMP_CANDIDATE=''

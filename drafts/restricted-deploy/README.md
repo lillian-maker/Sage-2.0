@@ -13,7 +13,7 @@
 | ~~compose.public.yaml~~ | 已被宿主 nginx vhost 取代（2026-11-07），勿在现网执行 |
 | ~~compose.logging.yaml~~ | 未部署为独立文件；日志参数已并入 compose.yaml 与 compose.egress.yaml |
 
-统一参数：`--env-file /dev/null -p sage-preview`；云端禁 build/pull；管理命令经 `exec -T app python /app/deploy/docker-entrypoint.py python manage.py …`（exec 不执行 ENTRYPOINT）。cron 实态见服务器 `/etc/cron.d/sage-prod`（`process_notifications` 以注释预留，阶段 E 启用；`check_operations` 行需补 scope 参数，详见 prod-20261107/acceptance-report-phase-0AB.md 勘误节）。
+统一参数：`--env-file /dev/null -p sage-preview`；云端禁 build/pull；管理命令经 `exec -T app python /app/deploy/docker-entrypoint.py python manage.py …`（exec 不执行 ENTRYPOINT）。cron 实态见服务器 `/etc/cron.d/sage-prod`（2026-11-25 起：`close_unpaid_orders` 每 5 分钟、`check_operations --billing` 每日 05:00；`process_notifications` 以注释预留，通知渠道开通后启用；放弃自动续费，不接入 `schedule_renewals`）。
 
 ## 独立Docker执行入口 · 2026-10-15
 
