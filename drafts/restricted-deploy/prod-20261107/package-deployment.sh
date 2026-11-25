@@ -56,7 +56,7 @@ ARCH_SHA=$(shasum -a 256 "$IMAGE_ARCHIVE" | cut -d' ' -f1)
 ARCH_BYTES=$(wc -c < "$IMAGE_ARCHIVE" | tr -d ' ')
 
 echo "== 复制部署文件 =="
-for f in compose.yaml compose.offline.yaml compose.egress.yaml docker-init.sql; do
+for f in compose.yaml compose.offline.yaml compose.egress.yaml compose.auth.yaml compose.alipay.yaml compose.sales.yaml docker-init.sql; do
     git -C "$ROOT" show "$SHA:drafts/restricted-deploy/$f" > "$TMP_CANDIDATE/drafts/restricted-deploy/$f"
 done
 git -C "$ROOT" archive --format=tar "$SHA" drafts/restricted-deploy/prod-20261107 | tar -xf - -C "$TMP_CANDIDATE"

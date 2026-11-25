@@ -9,6 +9,7 @@
 | 生产现行（`2e91d5c` 起，cron wrapper 同款） | `-f compose.yaml -f compose.offline.yaml -f compose.egress.yaml` |
 | 本地从源码构建（非离线） | `-f compose.yaml` |
 | 登录阶段 E/F 启用时叠加 | 上一行 + `-f compose.auth.yaml`（当前生产未部署该文件） |
+| 生产统一入口（2026-11-18 起） | `prod-20261107/sage-compose.sh <子命令>`：固定顺序 compose → offline → [auth] → egress → [alipay] → [sales]，可选项由 `deployment.env` 的 `SAGE_COMPOSE_OVERLAYS` 声明；cron wrapper 同样经它执行 |
 | ~~compose.public.yaml~~ | 已被宿主 nginx vhost 取代（2026-11-07），勿在现网执行 |
 | ~~compose.logging.yaml~~ | 未部署为独立文件；日志参数已并入 compose.yaml 与 compose.egress.yaml |
 

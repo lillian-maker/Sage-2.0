@@ -106,11 +106,13 @@ python manage.py publish_billing_products pro:1 pro:2 credits_pack:1 --apply
 
 ## 5. 部署
 
-1. 用本分支构建并审阅新镜像，按既有流程备份数据库。本次改动没有数据库迁移。
-2. Compose 在原有文件之后追加（顺序固定）：
-   `-f compose.yaml [-f compose.auth.yaml] -f compose.egress.yaml -f compose.public.yaml -f compose.alipay.yaml -f compose.sales.yaml`
+1. 用本分支构建并审阅新镜像，按既有流程备份数据库；迁移以服务器上 `migrate --plan` 的结果为准（本仓库迁移不含 RunPython/RunSQL）。
+2. 所有 compose 命令经 `prod-20261107/sage-compose.sh` 执行，它按固定顺序拼接：
+   `compose.yaml → compose.offline.yaml → [compose.auth.yaml] → compose.egress.yaml → [compose.alipay.yaml] → [compose.sales.yaml]`
+   可选文件在 `deployment.env` 中声明，例如 `SAGE_COMPOSE_OVERLAYS="auth alipay sales"`；对应私有文件放好后再加名称，否则 compose 会报缺文件。
    - `compose.egress.yaml` 的出站白名单已加入 `openapi.alipay.com`（查单、关单用；下单签名与异步通知不需要出站）。
    - `compose.alipay.yaml` 挂载密钥文件；`compose.sales.yaml` 挂载销售开关文件。
+   - `compose.public.yaml` 已废弃（公网入口是宿主 nginx），不要叠加。
 3. 重建 `egress` 与 `app` 容器；启动失败说明两个文件之一不合规。
 4. 登录功能必须已上线，否则用户无法下单（独立于支付的前置条件）。
 
@@ -129,8 +131,8 @@ python manage.py publish_billing_products pro:1 pro:2 credits_pack:1 --apply
 
 ## 8. 已知限制
 
-- 已有未到期套餐的账户不能提前续买或换购另一套餐，需到期后重新购买。
+- 已有未到期套餐的账户可在订阅管理中手动续费同一档位（不限次数，从当前到期时间顺延）。
 - 固定期限套餐暂不支持在线升级、在线退款。
-- 生产环境同一订单只签发一次付款链接；用户中途关闭支付宝页面后，需等订单超时关闭（`payment_ttl_seconds`）再重新下单。
+- 生产环境同一订单只签发一次付款链接；用户中途关闭支付宝页面后，可在订单页取消这笔未付订单再重新下单，否则等订单超时关闭（`payment_ttl_seconds`）。
 - 付款后的自动开通依赖支付宝异步通知到达 `https://sagegogo.com/api/payments/webhooks/alipay`；通知失败时支付宝会在约 25 小时内重试。主动查单不会单独生成首笔收款记录。
 - 返回地址固定为中文订单页。

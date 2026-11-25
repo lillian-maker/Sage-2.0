@@ -46,6 +46,18 @@ def main():
     cron = contents(PROD / 'sage-prod-cron.sh')
     assert 'LOCK_DIR=/var/lock/sage-prod' in cron
     assert '/tmp/sage-prod-cron-' not in cron
+    assert 'sage-compose.sh' in cron
+    assert '-f compose.yaml' not in cron
+
+    for name in ('compose.auth.yaml', 'compose.alipay.yaml', 'compose.sales.yaml'):
+        assert name in package
+    helper = contents(PROD / 'sage-compose.sh')
+    order = ['compose.sales.yaml', 'compose.alipay.yaml', 'compose.egress.yaml', 'compose.auth.yaml', 'compose.offline.yaml']
+    positions = [helper.index('/' + name) for name in order]
+    assert positions == sorted(positions), 'overlays must be prepended in reverse order'
+    assert 'compose.public.yaml' not in helper
+    assert 'Unknown compose overlay' in helper
+    assert (PROD / 'sage-compose.sh').stat().st_mode & 0o111
 
     compose = contents(DEPLOY / 'compose.yaml')
     egress = contents(DEPLOY / 'compose.egress.yaml')
