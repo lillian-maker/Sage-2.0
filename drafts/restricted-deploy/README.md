@@ -17,6 +17,8 @@ G1 Logto staging 是独立 stack：`compose.logto.yaml`、`staging-logto.env.exa
 
 G3 连接器操作单见 [logto-staging-connectors.md](logto-staging-connectors.md)。当前 completed（邮件路径）：SES SMTP 已配置并通过真实登录验证码发送；SMS 拆分为 Sage 票据 `G3-SMS` 待办；Google 按用户决定不启用。
 
+G6 生产 Logto 核心已部署但未切流量：`compose.logto.prod.yaml`、`prod-logto.env.example`、`logto-prod-nginx.conf`。生产 issuer `https://auth.sagegogo.com/oidc`；核心 127.0.0.1:3201，管理台 127.0.0.1:3202 仅 SSH 隧道；公网 `/console` 返回 404。生产官网/App 未切换。
+
 ## G4 staging 官网 OIDC 接线（已部署 voc.sagegogo.com）
 
 `compose.auth.yaml` 已接 `SAGE_OIDC_*` 与 `SAGE_AUTH_OIDC_ENABLED`；`docker-entrypoint.py` 白名单新增 `SAGE_OIDC_CLIENT_SECRET`，仅从 `auth_credentials.json`（10001:10001、0400）加载。非秘密值由操作者环境提供：
