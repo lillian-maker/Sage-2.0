@@ -33,6 +33,9 @@ x-app: &app
     SAGE_AUTH_GOOGLE_ENABLED: "0"
     SAGE_AUTH_REGISTRATION_ENABLED: "0"
     SAGE_AUTH_CAPTCHA_ENABLED: "0"
+    # G6: keep legacy entries open and OIDC closed until the production switch is approved.
+    SAGE_AUTH_LEGACY_LOGIN_ENABLED: ${SAGE_AUTH_LEGACY_LOGIN_ENABLED:-1}
+    SAGE_AUTH_OIDC_ENABLED: ${SAGE_AUTH_OIDC_ENABLED:-0}
     SAGE_ACCOUNT_DELETION_ENABLED: "0"
   networks: [backend]
 

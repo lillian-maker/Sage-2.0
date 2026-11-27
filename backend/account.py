@@ -32,7 +32,7 @@ from django.http import FileResponse, JsonResponse
 from django.utils import timezone
 
 from .http import client_ip, error
-from .models import AccountProfile, AccountSession, AuditEvent, LoginIdentity, Membership
+from .models import AccountProfile, AccountSession, AuditEvent, ExternalIdentity, LoginIdentity, Membership
 from .models import (AccountDeletionChallenge, AccountDeletionRequest, AccountDeletionAudit,
                      TrialIdentityMarker, TrialAttempt, BillingAccount)
 from .models import (AccountPasskey, PasskeyChallenge, PasskeyRecovery, PasskeyRecoveryCode,
@@ -440,6 +440,7 @@ def _erase_account(user, row):
     for identity in identities:
         AuthFlow.objects.filter(method=identity.method,identifier=identity.identifier).exclude(purpose='google').delete()
         LoginChallenge.objects.filter(method=identity.method, identifier=identity.identifier).delete()
+    ExternalIdentity.objects.filter(user=user).delete()
     LoginIdentity.objects.filter(user=user).delete()
     AccountDeletionChallenge.objects.filter(user=user).delete()
     AccountPasskey.objects.filter(user=user).delete()

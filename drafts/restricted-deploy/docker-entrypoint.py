@@ -15,6 +15,7 @@ auth_keys = {
     'SAGE_SES_SECRET_ID', 'SAGE_SES_SECRET_KEY',
     'SAGE_CAPTCHA_SECRET_ID', 'SAGE_CAPTCHA_SECRET_KEY', 'SAGE_CAPTCHA_APP_SECRET_KEY',
     'SAGE_GOOGLE_CLIENT_SECRET', 'SAGE_SMS_SECRET_ID', 'SAGE_SMS_SECRET_KEY',
+    'SAGE_OIDC_CLIENT_SECRET',
 }
 auth_path = Path('/run/secrets/auth_credentials.json')
 credentials = {}
@@ -38,7 +39,8 @@ try:
             ('SAGE_AUTH_CAPTCHA_ENABLED', ('SAGE_CAPTCHA_SECRET_ID', 'SAGE_CAPTCHA_SECRET_KEY',
                                           'SAGE_CAPTCHA_APP_SECRET_KEY')),
             ('SAGE_AUTH_GOOGLE_ENABLED', ('SAGE_GOOGLE_CLIENT_SECRET',)),
-            ('SAGE_AUTH_PHONE_ENABLED', ('SAGE_SMS_SECRET_ID', 'SAGE_SMS_SECRET_KEY'))):
+            ('SAGE_AUTH_PHONE_ENABLED', ('SAGE_SMS_SECRET_ID', 'SAGE_SMS_SECRET_KEY')),
+            ('SAGE_AUTH_OIDC_ENABLED', ('SAGE_OIDC_CLIENT_SECRET',))):
         if os.environ.get(gate) == '1' and (
                 any(not credentials.get(key) for key in required)):
             raise ValueError

@@ -109,6 +109,16 @@ GOOGLE_CLIENT_ID = os.environ.get('SAGE_GOOGLE_CLIENT_ID', '')
 GOOGLE_CLIENT_SECRET = os.environ.get('SAGE_GOOGLE_CLIENT_SECRET', '')
 GOOGLE_REDIRECT_URI = os.environ.get('SAGE_GOOGLE_REDIRECT_URI', '')
 GOOGLE_BRAND_READY = os.environ.get('SAGE_GOOGLE_BRAND_READY') == '1'
+# Website OIDC RP (Logto). Default closed; production values arrive in G6.
+AUTH_OIDC_ENABLED = os.environ.get('SAGE_AUTH_OIDC_ENABLED') == '1'
+OIDC_ISSUER = os.environ.get('SAGE_OIDC_ISSUER', '')
+OIDC_CLIENT_ID = os.environ.get('SAGE_OIDC_CLIENT_ID', '')
+OIDC_CLIENT_SECRET = os.environ.get('SAGE_OIDC_CLIENT_SECRET', '')
+OIDC_REDIRECT_URI = os.environ.get('SAGE_OIDC_REDIRECT_URI', '')
+OIDC_POST_LOGOUT_REDIRECT_URI = os.environ.get('SAGE_OIDC_POST_LOGOUT_REDIRECT_URI', '')
+OIDC_SCOPE = os.environ.get('SAGE_OIDC_SCOPE', 'openid profile email phone')
+# Legacy email/phone/Google entries stay until G7; G6 flips this off after OIDC is verified.
+AUTH_LEGACY_LOGIN_ENABLED = os.environ.get('SAGE_AUTH_LEGACY_LOGIN_ENABLED', '0') == '1'
 AUTH_REGISTRATION_ENABLED = os.environ.get('SAGE_AUTH_REGISTRATION_ENABLED') == '1'
 AUTH_REGISTRATION_TERMS_VERSION = os.environ.get('SAGE_AUTH_REGISTRATION_TERMS_VERSION', '')
 AUTH_REGISTRATION_TERMS_URL = os.environ.get('SAGE_AUTH_REGISTRATION_TERMS_URL', '')

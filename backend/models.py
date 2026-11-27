@@ -81,6 +81,22 @@ class LoginIdentity(models.Model):
         constraints = [models.UniqueConstraint(fields=['method', 'identifier'], name='verified_identity_unique')]
 
 
+class ExternalIdentity(models.Model):
+    """Verified external IdP subject mapped to one Django user.
+
+    This is a deletable credential mapping, not a business fact. It must not be
+    copied into audit events, BusinessMatter/AuthorityEvidence, logs or exports.
+    """
+    issuer = models.CharField(max_length=512)
+    subject = models.CharField(max_length=255)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    linked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['issuer', 'subject'], name='external_identity_unique')]
+        indexes = [models.Index(fields=['user'], name='external_identity_user_idx')]
+
+
 class LoginChallenge(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     purpose = models.CharField(max_length=20, default='login',

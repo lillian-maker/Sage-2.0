@@ -2733,10 +2733,12 @@ window.SAGE_CATALOG = {
     try{
      if(!session.csrf_token)throw Error('SESSION_UNAVAILABLE');
      const response=await fetch('/api/auth/logout',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/json','X-CSRFToken':session.csrf_token},body:'{}',signal:AbortSignal.timeout(10000)});
-     if(!response.ok||(await response.json()).ok!==true)throw Error('LOGOUT_UNCONFIRMED');
+     const result=response.ok?await response.json():null;
+     if(!result||result.ok!==true)throw Error('LOGOUT_UNCONFIRMED');
      const check=await fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'},signal:AbortSignal.timeout(10000)});
      if(!check.ok||(await check.json()).authenticated!==false)throw Error('LOGOUT_UNCONFIRMED');
-     location.reload();
+     const target=typeof result.logout_url==='string'?new URL(result.logout_url):null;
+     if(target?.protocol==='https:')location.assign(target.href);else location.reload();
     }catch(_){status.hidden=false;status.textContent=text('退出未能确认，请重试。','Sign-out could not be confirmed. Try again.');logout.disabled=false;}
    });
    panel.append(settings,logout,status);menu.append(summary,panel);link.replaceWith(menu);wireAccountHover(menu);

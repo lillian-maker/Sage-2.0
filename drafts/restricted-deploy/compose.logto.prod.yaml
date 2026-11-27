@@ -1,0 +1,99 @@
+# G6 production Logto. Independent of `sage-preview` and of the staging Logto stack.
+# Do not append it to compose.yaml; it has its own project name, database and volume.
+# Required inputs (see prod-logto.env.example):
+#   LOGTO_IMAGE             pinned image digest, never `latest`
+#   LOGTO_ENDPOINT          public https endpoint, e.g. https://auth.sagegogo.com
+#   LOGTO_ENV_FILE          absolute path to the private env file (0400)
+#   LOGTO_SECRETS_DIR       absolute private directory holding logto_db_pass
+# The host nginx vhost proxies 127.0.0.1:${LOGTO_HTTP_PORT} to the core service.
+# The admin console is bound to loopback only; use an SSH tunnel.
+
+name: sage-logto-production
+
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "10m", max-file: "36"}
+
+services:
+  logto-db:
+    image: postgres:16-bookworm@sha256:0ea6700a3b4f0ae6ce746519073558aed4d88a79d8d07622a9a644946c7319c4
+    platform: linux/amd64
+    user: "999:999"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    cpus: 1
+    mem_limit: 512m
+    logging: *logging
+    environment:
+      POSTGRES_DB: logto
+      POSTGRES_USER: logto
+      POSTGRES_PASSWORD_FILE: /run/secrets/logto_db_pass
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256 --auth-local=trust
+    secrets: [logto_db_pass]
+    volumes:
+      - logto_pgdata:/var/lib/postgresql/data
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+      - /var/run/postgresql:size=16m,uid=999,gid=999,mode=0755
+    networks: [logto_backend]
+    healthcheck:
+      test: [CMD, pg_isready, -h, "127.0.0.1", -U, logto, -d, logto]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    stop_grace_period: 60s
+
+  logto:
+    image: "${LOGTO_IMAGE:?Set a pinned Logto image digest}"
+    platform: linux/amd64
+    restart: unless-stopped
+    init: true
+    # The image is not forced to read-only root before its writable paths are tested.
+    # Keep cap_drop and no-new-privileges; do not add capabilities to make it start.
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    cpus: 1
+    mem_limit: 1g
+    logging: *logging
+    env_file:
+      - "${LOGTO_ENV_FILE:?Set the path to staging-logto.env}"
+    environment:
+      TRUST_PROXY_HEADER: "1"
+      ENDPOINT: "${LOGTO_ENDPOINT:?Set the public Logto endpoint}"
+      ADMIN_ENDPOINT: "${LOGTO_ADMIN_ENDPOINT:-}"
+      NODE_ENV: production
+    ports:
+      - "127.0.0.1:${LOGTO_HTTP_PORT:-3101}:3001"
+      - "127.0.0.1:${LOGTO_ADMIN_PORT:-3102}:3002"
+    depends_on:
+      logto-db: {condition: service_healthy}
+    networks: [logto_backend, logto_edge]
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/oidc/.well-known/openid-configuration').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    stop_grace_period: 30s
+
+networks:
+  logto_backend:
+    internal: true
+  logto_edge:
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+
+volumes:
+  logto_pgdata: {}
+
+secrets:
+  logto_db_pass:
+    file: "${LOGTO_SECRETS_DIR:?Set the private secrets directory}/logto_db_pass"
